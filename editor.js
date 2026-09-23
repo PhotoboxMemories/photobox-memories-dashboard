@@ -6,36 +6,37 @@
   const CSS = `
   #le{position:fixed;inset:0;z-index:100;background:#f1f1f4;display:flex;flex-direction:column;font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#1d1d24}
   #le *{box-sizing:border-box}
-  #le .top{height:56px;background:#221b45;color:#fff;display:flex;align-items:center;gap:10px;padding:0 14px}
+  #le .top{height:56px;background:#1D1D1B;color:#fff;display:flex;align-items:center;gap:10px;padding:0 14px}
   #le .top input{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:6px 10px;font:inherit;width:220px}
   #le .tb{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit;white-space:nowrap}
   #le .tb:hover{background:rgba(255,255,255,.22)} #le .tb:disabled{opacity:.35;cursor:default}
-  #le .tb.pri{background:#ff3d7f;border-color:#ff3d7f}
+  #le .tb.pri{background:#F7C838;border-color:#F7C838;color:#1D1D1B;font-weight:700}
   #le .sp{flex:1} #le .st{font-size:12px;opacity:.7}
   #le .body{flex:1;display:flex;min-height:0}
   #le .side{width:300px;background:#fff;border-right:1px solid #e3e3ea;display:flex;flex-direction:column;min-height:0}
   #le .rail{display:flex;flex-direction:column;align-items:center;gap:18px;padding:40px 0;width:100%}
   #le .tool{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;background:none;border:0;font:inherit;color:#333;font-size:12px}
-  #le .tool i{width:46px;height:46px;border-radius:50%;background:#e83f78;color:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:20px;box-shadow:0 4px 12px rgba(232,63,120,.3)}
+  #le .tool i{width:46px;height:46px;border-radius:50%;background:#F7C838;color:#1D1D1B;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:20px;box-shadow:0 4px 12px rgba(247,200,56,.45)}
   #le .tool:hover i{transform:scale(1.07)}
   #le .ph{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px}
-  #le .ph h3{margin:0;font-size:18px}
+  #le .ph h3{margin:0;font-size:18px;font-family:Fredoka,system-ui,sans-serif}
+  #le .ico-svg{vertical-align:-3px}
   #le .x{background:none;border:0;font-size:20px;cursor:pointer;color:#777}
   #le .tabs{display:flex;border-bottom:1px solid #eee}
   #le .tabs button{flex:1;background:none;border:0;padding:10px;cursor:pointer;font:inherit;color:#666;border-bottom:2px solid transparent}
-  #le .tabs button.on{color:#e83f78;border-color:#e83f78;font-weight:600}
+  #le .tabs button.on{color:#1D1D1B;border-color:#F7C838;font-weight:700}
   #le .pb{padding:12px 16px;overflow:auto;flex:1}
   #le label.l{display:block;font-size:12px;color:#666;margin:10px 0 4px;text-transform:uppercase;letter-spacing:.04em}
   #le .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   #le input[type=text],#le input[type=number],#le select,#le textarea{width:100%;border:1px solid #d9d9e2;border-radius:8px;padding:7px 9px;font:inherit;background:#fff;color:#1d1d24}
   #le input[type=color]{width:100%;height:34px;border:1px solid #d9d9e2;border-radius:8px;padding:2px;background:#fff}
   #le .bt{border:1px solid #d9d9e2;background:#fff;border-radius:8px;padding:7px 8px;cursor:pointer;font:inherit;display:flex;align-items:center;gap:6px;justify-content:center}
-  #le .bt:hover{border-color:#e83f78} #le .bt.on{background:#fde8f0;border-color:#e83f78;color:#c2185b}
+  #le .bt:hover{border-color:#F7C838} #le .bt.on{background:#FFF3C4;border-color:#F7C838;color:#8a6400}
   #le .chip{display:inline-block;border:1px solid #d9d9e2;border-radius:999px;padding:3px 9px;margin:3px 3px 0 0;font-size:12px;cursor:pointer;background:#fff}
-  #le .chip:hover{border-color:#e83f78}
+  #le .chip:hover{border-color:#F7C838}
   #le .row{display:flex;gap:8px;align-items:center}
   #le .lay{display:flex;align-items:center;gap:8px;border:1px solid #e3e3ea;border-radius:8px;padding:7px 9px;margin-bottom:6px;cursor:pointer;background:#fff}
-  #le .lay.on{border-color:#e83f78;background:#fde8f0}
+  #le .lay.on{border-color:#F7C838;background:#FFF3C4}
   #le .lay .n{flex:1;font-size:13px} #le .lay button{background:none;border:0;cursor:pointer;font-size:14px;padding:2px 4px}
   #le .stage{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
   #le .page{position:relative;box-shadow:0 10px 40px rgba(0,0,0,.18);background:#fff}
@@ -44,7 +45,7 @@
   #le .sel{position:absolute;border:2px solid #1976d2;pointer-events:none;transform-origin:center}
   #le .h{position:absolute;width:13px;height:13px;border-radius:50%;background:#1976d2;border:2px solid #fff;pointer-events:auto;margin:-6.5px 0 0 -6.5px}
   #le .h.r{background:#fff;border-color:#1976d2;cursor:grab}
-  #le .guide{position:absolute;background:#ff3d7f;pointer-events:none}
+  #le .guide{position:absolute;background:#F7C838;pointer-events:none}
   #le .hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:12px;color:#888}
   #le .sw{width:18px;height:18px;border-radius:4px;border:1px solid #ccc;display:inline-block;vertical-align:middle}
   `;
@@ -52,7 +53,7 @@
   const clone = o => JSON.parse(JSON.stringify(o));
   const PH = ['titel', 'untertitel', 'datum', 'uhrzeit', 'event', 'name'];
   const TYPE_NAME = { photo: 'Fotobox-Foto', image: 'Bild', text: 'Text', shape: 'Form', deco: 'Vorlagen-Deko' };
-  const TYPE_ICON = { photo: '📷', image: '🖼', text: '𝐀', shape: '◼︎', deco: '✨' };
+  const TYPE_ICON = { photo: 'camera', image: 'image', text: 'type', shape: 'shapes', deco: 'sparkles' };
 
   function open(opts) {
     if (!document.getElementById('le-css')) { const st = document.createElement('style'); st.id = 'le-css'; st.textContent = CSS; document.head.appendChild(st); }
@@ -61,15 +62,15 @@
     const root = document.createElement('div'); root.id = 'le';
     root.innerHTML = `
       <div class="top">
-        <button class="tb" data-a="close">‹ Zurück</button>
+        <button class="tb" data-a="close">${ICON('chevronLeft', 15)} Zurück</button>
         <input data-a="name" title="Name des Layouts">
         <span class="st" data-a="fmt"></span>
         <span class="sp"></span>
         <span class="st" data-a="status"></span>
-        <button class="tb" data-a="del" style="display:none">🗑 Löschen</button>
-        <button class="tb" data-a="undo" title="Rückgängig (⌘Z)">↶</button>
-        <button class="tb" data-a="redo" title="Wiederholen (⇧⌘Z)">↷</button>
-        <button class="tb pri" data-a="done">✓ Fertig</button>
+        <button class="tb" data-a="del" style="display:none">${ICON('trash', 15)} Löschen</button>
+        <button class="tb" data-a="undo" title="Rückgängig (⌘Z)">${ICON('undo', 16)}</button>
+        <button class="tb" data-a="redo" title="Wiederholen (⇧⌘Z)">${ICON('redo', 16)}</button>
+        <button class="tb pri" data-a="done">${ICON('check', 16)} Fertig</button>
       </div>
       <div class="body">
         <div class="side"></div>
@@ -144,7 +145,7 @@
       const w = Math.round(L.w * .7), h = Math.round(Math.min(L.w, L.h) * .09);
       add({ type: 'text', text: 'Dein Text', font: 'modern', size: 'auto', color: '#222222', weight: 700, align: 'center', ...center(w, h), w, h });
     }
-    function addShape() { const w = Math.round(L.w * .4), h = Math.round(L.h * .12); add({ type: 'shape', shape: 'rect', fill: '#ff3d7f', stroke: '', strokeW: 0, radius: 0, opacity: 1, ...center(w, h), w, h }); }
+    function addShape() { const w = Math.round(L.w * .4), h = Math.round(L.h * .12); add({ type: 'shape', shape: 'rect', fill: '#F7C838', stroke: '', strokeW: 0, radius: 0, opacity: 1, ...center(w, h), w, h }); }
     function pickFile(accept) {
       return new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => res(i.files[0] || null); i.click(); });
     }
@@ -262,12 +263,12 @@
       if (panel === 'el' && !e) panel = 'tools';
       if (panel === 'tools') {
         side.innerHTML = `<div class="rail">
-          <button class="tool" data-t="photo"><i>📷</i>Foto von der Fotobox</button>
-          <button class="tool" data-t="image"><i>🖼</i>Bild</button>
-          <button class="tool" data-t="text"><i>A</i>Text</button>
-          <button class="tool" data-t="shape"><i>◼︎</i>Form</button>
-          <button class="tool" data-t="layers"><i>☰</i>Ebenen</button>
-          <button class="tool" data-t="print"><i>🖨</i>Drucken</button></div>`;
+          <button class="tool" data-t="photo"><i>${ICON('camera')}</i>Foto von der Fotobox</button>
+          <button class="tool" data-t="image"><i>${ICON('image')}</i>Bild</button>
+          <button class="tool" data-t="text"><i>${ICON('type')}</i>Text</button>
+          <button class="tool" data-t="shape"><i>${ICON('shapes')}</i>Form</button>
+          <button class="tool" data-t="layers"><i>${ICON('layers')}</i>Ebenen</button>
+          <button class="tool" data-t="print"><i>${ICON('printer')}</i>Drucken</button></div>`;
         return;
       }
       if (panel === 'print') { side.innerHTML = printPanel(); return; }
@@ -336,8 +337,8 @@
     }
     function layersList() {
       return [...L.elements].reverse().map(e => `<div class="lay ${e.id === sel ? 'on' : ''}" data-id="${e.id}">
-        <span>${TYPE_ICON[e.type]}</span><span class="n">${e.type === 'photo' ? 'Fotobox-Foto ' + e.n : e.type === 'text' ? esc(FBR.fillText(e.text, opts.values)).slice(0, 26) : e.type === 'deco' ? 'Deko ' + FBR.templateById(e.tpl).name + (e.layer === 'over' ? ' (oben)' : ' (unten)') : TYPE_NAME[e.type]}</span>
-        <button data-hide="${e.id}" title="${e.hidden ? 'einblenden' : 'ausblenden'}">${e.hidden ? '🚫' : '👁'}</button></div>`).join('') +
+        ${ICON(TYPE_ICON[e.type], 16)}<span class="n">${e.type === 'photo' ? 'Fotobox-Foto ' + e.n : e.type === 'text' ? esc(FBR.fillText(e.text, opts.values)).slice(0, 26) : e.type === 'deco' ? 'Deko ' + FBR.templateById(e.tpl).name + (e.layer === 'over' ? ' (oben)' : ' (unten)') : TYPE_NAME[e.type]}</span>
+        <button data-hide="${e.id}" title="${e.hidden ? 'einblenden' : 'ausblenden'}">${ICON(e.hidden ? 'eyeOff' : 'eye', 15)}</button></div>`).join('') +
         `<p style="font-size:12px;color:#888">Oben in der Liste = vorne im Bild.</p>`;
     }
     function printPanel() {
@@ -415,7 +416,7 @@
 
     // ---------- Kopfzeile ----------
     root.querySelector('.top').addEventListener('click', ev => {
-      const a = ev.target.dataset.a;
+      const a = ev.target.closest('[data-a]')?.dataset.a;
       if (a === 'undo') jump(-1); else if (a === 'redo') jump(1); else if (a === 'del') remove();
       else if (a === 'close' || a === 'done') close();
     });
