@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photobox Memories – Dashboard</title>
+<script src="config.js"></script>
+<script src="render.js"></script>
+<script src="editor.js"></script>
+<script src="event.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#ff3d7f;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0f13;--card:#18181e;--fg:#f0f0f4;--muted:#9a9aa8;--line:#2a2a33;--soft:#1d1d24}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button{font:inherit;cursor:pointer}
+a{color:var(--accent)}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+input[type=checkbox]{width:auto}
+input[type=color]{padding:2px;width:48px;height:36px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+h1{font-size:22px}h2{font-size:18px;margin-bottom:12px}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--fg);padding:8px 16px;border-radius:8px;font-weight:600;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.small{padding:4px 10px;font-size:13px}
+.btn.danger{color:var(--bad)}
+.hidden{display:none!important}
+.muted{color:var(--muted)}.small{font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
+
+/* Login */
+#auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+#auth .card{width:min(400px,100%);display:flex;flex-direction:column;gap:14px}
+.logo{font-weight:800;font-size:24px}.logo span{color:var(--accent)}
+.msg{font-size:14px;padding:10px 12px;border-radius:8px;background:var(--soft)}
+.msg.err{color:var(--bad)}.msg.ok{color:var(--ok)}
+
+/* App */
+header{background:var(--card);border-bottom:1px solid var(--line);padding:12px 24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+nav{display:flex;gap:4px;flex:1;flex-wrap:wrap}
+nav button{background:none;border:0;padding:8px 14px;border-radius:8px;color:var(--muted);font-weight:600}
+nav button.on{background:var(--soft);color:var(--fg)}
+main{max-width:1200px;margin:0 auto;padding:24px 16px 80px}
+.pagehead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.ev{cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:border-color .15s}
+.ev:hover{border-color:var(--accent)}
+.swatch{height:8px;border-radius:4px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--soft)}
+tr:last-child td{border-bottom:0}
+.tablewrap{overflow-x:auto}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--muted)}
+.dot.on{background:var(--ok)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--soft);border:1px solid var(--line)}
+.badge.ok{color:var(--ok)}.badge.warn{color:var(--warn)}.badge.bad{color:var(--bad)}
+.badge:empty{display:none}
+code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;background:var(--soft);padding:2px 6px;border-radius:6px;cursor:pointer}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+
+.checks{display:flex;flex-wrap:wrap;gap:6px 16px}
+.checks label{display:flex;gap:6px;align-items:center;color:var(--fg);font-size:14px;margin:0}
+.evgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:18px}
+.evc{cursor:pointer}
+.evc .cv{aspect-ratio:1;border-radius:12px;background:var(--soft);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.evc .cv img{width:100%;height:100%;object-fit:contain}
+.evc:hover .cv{border-color:var(--accent)}
+.evc b{display:block;margin-top:8px;font-size:14px}.evc small{color:var(--muted);font-size:12px}
+.evnew .cv{border:2px dashed var(--line);flex-direction:column;gap:6px;font-weight:600;text-align:center;padding:10px}
+.evnew .cv span{font-size:34px;line-height:1}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:10px;font-weight:600;z-index:30;display:none}
+</style>
+</head>
+<body>
+
+<!-- ============ Login ============ -->
+<section id="auth" class="hidden">
+  <div class="card">
+    <div class="logo">📸 Photobox <span>Memories</span></div>
+    <div class="muted small" id="authHint">Melde dich an, um deine Events und Fotoboxen zu verwalten.</div>
+    <div><label>E-Mail</label><input type="email" id="aEmail" autocomplete="email"></div>
+    <div id="aPwWrap"><label>Passwort</label><input type="password" id="aPw" autocomplete="current-password"></div>
+    <button class="btn primary" id="aGo">Anmelden</button>
+    <div class="row small" style="justify-content:space-between">
+      <a href="#" id="aSwitch">Neues Konto erstellen</a>
+      <a href="#" id="aForgot">Passwort vergessen?</a>
+    </div>
+    <div id="aMsg" class="msg hidden"></div>
+  </div>
+</section>
+
+<!-- Neues Passwort nach Reset-Link -->
+<section id="reset" class="hidden" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px">
+  <div class="card" style="width:min(400px,100%);display:flex;flex-direction:column;gap:14px">
+    <h2>Neues Passwort festlegen</h2>
+    <div><label>Neues Passwort</label><input type="password" id="rPw" autocomplete="new-password"></div>
+    <button class="btn primary" id="rGo">Speichern</button>
+    <div id="rMsg" class="msg hidden"></div>
+  </div>
+</section>
+
+<!-- ============ App ============ -->
+<section id="app" class="hidden">
+  <header>
+    <div class="logo">📸 Photobox <span>Memories</span></div>
+    <nav id="nav">
+      <button data-tab="events" class="on">Events</button>
+      <button data-tab="devices">Geräte</button>
+      <button data-tab="leads">Gäste-Daten</button>
+      <button data-tab="licenses">Meine Lizenzen</button>
+      <button data-tab="admin" class="hidden" id="navAdmin">⚙︎ Verwaltung</button>
+    </nav>
+    <div class="row small"><span class="muted" id="who"></span><button class="btn small" id="logout">Abmelden</button></div>
+  </header>
+
+  <main>
+    <!-- Events -->
+    <div data-page="events">
+      <div class="pagehead"><h1>Laufende Ereignisse</h1><input id="evSearch" placeholder="🔍 Ereignisname" style="max-width:260px"></div>
+      <div class="evgrid" id="eventList"></div>
+      <h1 style="margin:28px 0 16px">Abgeschlossene Ereignisse</h1>
+      <div class="evgrid" id="eventDone"></div>
+    </div>
+
+    <!-- Geräte -->
+    <div data-page="devices" class="hidden">
+      <div class="pagehead"><h1>Geräte</h1><button class="btn" id="reloadDevices">↻ Aktualisieren</button></div>
+      <p class="muted small" style="margin-bottom:14px">Jede FotoBox erscheint hier, sobald sie mit einem Lizenzschlüssel aktiviert wurde. Weise ein Event zu – die Box übernimmt die Einstellungen innerhalb einer Minute.</p>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Gerät</th><th>Status</th><th>Event</th><th>Fotos</th><th>Version</th><th class="adminCol hidden">Kunde</th><th></th></tr></thead>
+        <tbody id="deviceList"></tbody>
+      </table></div>
+    </div>
+
+    <!-- Gäste-Daten -->
+    <div data-page="leads" class="hidden">
+      <div class="pagehead"><h1>Gäste-Daten</h1>
+        <div class="row"><select id="leadEvent" style="width:auto"></select><button class="btn" id="leadCsv">⬇ CSV exportieren</button></div></div>
+      <p class="muted small" style="margin-bottom:14px">Daten aus dem Gäste-Formular der FotoBox (Einverständnis, Name, E-Mail …). Bitte DSGVO beachten: nur für den angegebenen Zweck nutzen und nach dem Event löschen.</p>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Datum</th><th>Event</th><th>Name</th><th>E-Mail</th><th>Telefon</th><th>Newsletter</th><th>Datei</th></tr></thead>
+        <tbody id="leadList"></tbody>
+      </table></div>
+      <div class="row" style="margin-top:14px"><button class="btn danger" id="leadDelete">Angezeigte Einträge löschen</button></div>
+    </div>
+
+    <!-- Meine Lizenzen -->
+    <div data-page="licenses" class="hidden">
+      <div class="pagehead"><h1>Meine Lizenzen</h1></div>
+      <p class="muted small" style="margin-bottom:14px">In der FotoBox <b>Esc → System</b> öffnen und mit diesem Konto (gleiche E-Mail & Passwort) anmelden – oder den Schlüssel eintragen.</p>
+      <div class="cards" id="myLicenses"></div>
+    </div>
+
+    <!-- Admin -->
+    <div data-page="admin" class="hidden">
+      <div class="pagehead"><h1>Verwaltung</h1><span class="badge" id="releaseInfo"></span></div>
+      <div class="card" style="margin-bottom:20px">
+        <h2>Neue Lizenz erstellen</h2>
+        <div class="grid3">
+          <div><label>Kunde / Firma</label><input id="lName" placeholder="Musterfoto GmbH"></div>
+          <div><label>E-Mail des Kunden</label><input id="lEmail" type="email" placeholder="kunde@beispiel.de"></div>
+          <div><label>Art</label><select id="lKind"><option value="subscription">Abo</option><option value="lifetime">Einmalkauf</option></select></div>
+          <div id="lValidWrap"><label>Abo bezahlt bis</label><input id="lValid" type="date"></div>
+          <div id="lUpdWrap" class="hidden"><label>Updates inklusive bis (leer = immer)</label><input id="lUpd" type="date"></div>
+          <div><label>Anzahl Geräte</label><input id="lMax" type="number" min="1" value="1"></div>
+          <div style="grid-column:1/-1"><label>Notiz (z.B. Rechnungsnummer)</label><input id="lNotes"></div>
+        </div>
+        <div class="row" style="margin-top:14px"><button class="btn primary" id="lCreate">Lizenz erstellen</button><span class="small muted">Der Kunde registriert sich im Dashboard mit derselben E-Mail – die Lizenz wird automatisch zugeordnet.</span></div>
+      </div>
+      <div class="pagehead"><h2 style="margin:0">Alle Lizenzen</h2><input id="lSearch" placeholder="Suchen…" style="max-width:260px"></div>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Kunde</th><th>Schlüssel</th><th>Art</th><th>Gültig</th><th>Geräte</th><th>Aktionen</th></tr></thead>
+        <tbody id="licList"></tbody>
+      </table></div>
+    </div>
+  </main>
+</section>
+
+<div id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmtDate = d => d ? new Date(d).toLocaleDateString('de-DE') : '–';
+const toast = (t, ms = 2200) => { const e = $('#toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => e.style.display = 'none', ms); };
+
+const CFG = window.FOTOBOX_CONFIG || {};
+// Demo-Modus: ohne Supabase mit Beispieldaten (Adresse mit ?demo aufrufen oder solange config.js leer ist)
+const DEMO = /[?&]demo\b/.test(location.search) || !CFG.supabaseUrl || CFG.supabaseUrl.includes('DEIN-PROJEKT');
+const sb = DEMO ? demoClient() : supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
+function demoClient() {
+  const now = Date.now(), iso = d => new Date(now + d * 864e5).toISOString();
+  const D = {
+    profiles: { id: 'demo', email: 'demo@fotobox.de', is_admin: true },
+    events: [
+      { id: 'e1', owner_id: 'demo', name: 'Hochzeit Anna & Tim', event_date: '2026-10-10', logo_url: null,
+        settings: { title: 'Anna & Tim', subtitle: '10. Oktober 2026', template: 'wedding', frame: '#fbf7ef', textColor: '#6b5a3a', accent: '#c9a45c', font: 'script', guestTemplates: true, templateChoices: ['wedding', 'floral', 'elegant'] } },
+      { id: 'e2', owner_id: 'demo', name: 'Firmenfeier Müller AG', event_date: '2026-12-05', logo_url: null,
+        settings: { title: 'Müller AG', subtitle: 'Weihnachtsfeier 2026', template: 'business', frame: '#0d1b2a', textColor: '#ffffff', accent: '#e0b64a', font: 'modern' } },
+      { id: 'e3', owner_id: 'demo', name: 'Geburtstag Lea (30)', event_date: '2026-11-14', logo_url: null,
+        settings: { title: 'Lea wird 30!', subtitle: '14.11.2026', template: 'birthday', frame: '#fff6e5', textColor: '#3b3355', accent: '#ff7b54', font: 'modern' } }
+    ],
+    devices: [
+      { id: 'd1', name: 'FotoBox Weiß', event_id: 'e1', photos_total: 412, app_version: '1.5.0', last_seen: new Date().toISOString(), licenses: { customer_name: 'Fotoexakt', owner_id: 'demo' } },
+      { id: 'd2', name: 'FotoBox Schwarz', event_id: 'e2', photos_total: 187, app_version: '1.5.0', last_seen: iso(-2), licenses: { customer_name: 'Fotoexakt', owner_id: 'demo' } },
+      { id: 'd3', name: 'Mietbox 1', event_id: null, photos_total: 1204, app_version: '1.4.0', last_seen: iso(-6), licenses: { customer_name: 'Studio Lichtblick', owner_id: 'k2' } }
+    ],
+    licenses: [
+      { id: 'l1', key: 'FBX-7KQM-2XRT-P9DW-HJ4N', customer_name: 'Fotoexakt', customer_email: 'demo@fotobox.de', owner_id: 'demo', kind: 'lifetime', updates_until: iso(365), max_devices: 3, active: true, devices: [{ id: 'd1' }, { id: 'd2' }] },
+      { id: 'l2', key: 'FBX-N4VB-8CEL-TT2Z-QW7S', customer_name: 'Studio Lichtblick', customer_email: 'info@lichtblick.de', owner_id: 'k2', kind: 'subscription', valid_until: iso(9), max_devices: 1, active: true, notes: 'RE-2026-041', devices: [{ id: 'd3' }] },
+      { id: 'l3', key: 'FBX-ZP3R-6YHA-M2KD-UE8F', customer_name: 'Event Kids GmbH', customer_email: 'hallo@eventkids.de', owner_id: null, kind: 'subscription', valid_until: iso(-20), max_devices: 2, active: true, devices: [] }
+    ],
+    leads: [
+      { id: 'g1', captured_at: iso(-0.1), event_name: 'Hochzeit Anna & Tim', events: { name: 'Hochzeit Anna & Tim' }, name: 'Lisa Berger', email: 'lisa@example.de', phone: '', newsletter: true, photo_name: 'fotobox_20261010_2011.jpg' },
+      { id: 'g2', captured_at: iso(-0.12), event_name: 'Hochzeit Anna & Tim', events: { name: 'Hochzeit Anna & Tim' }, name: 'Jonas Weber', email: 'jonas@example.de', phone: '0170 1234567', newsletter: false, photo_name: 'fotobox_20261010_2004.jpg' }
+    ]
+  };
+  const q = t => {
+    let single = false, write = false;
+    const h = { get: (o, k) => {
+      if (k === 'then') return r => r({ data: write ? (single ? {} : []) : single && t !== 'profiles' ? (D[t] || [])[0] : D[t], error: null });
+      if (k === 'single') single = true;
+      if (['insert', 'update', 'delete', 'upsert'].includes(k)) { write = true; toast('Demo-Modus – Änderungen werden nicht gespeichert', 2600); }
+      return () => new Proxy({}, h);
+    } };
+    return new Proxy({}, h);
+  };
+  return {
+    from: q,
+    auth: {
+      onAuthStateChange: cb => setTimeout(() => cb('SIGNED_IN', { user: { id: 'demo', email: 'demo@fotobox.de' } }), 0),
+      signOut: () => { toast('Demo-Modus'); }, signInWithPassword: async () => ({}), signUp: async () => ({}),
+      resetPasswordForEmail: async () => ({}), updateUser: async () => ({})
+    },
+    storage: { from: () => ({ upload: async () => ({ error: { message: 'Demo-Modus – kein Upload' } }), getPublicUrl: () => ({ data: {} }) }) }
+  };
+}
+if (DEMO) document.addEventListener('DOMContentLoaded', () => {
+  const b = document.createElement('div');
+  b.textContent = '🎬 Demo-Modus mit Beispieldaten – Änderungen werden nicht gespeichert';
+  b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#ff3d7f;color:#fff;text-align:center;padding:6px;font-weight:600;font-size:13px;z-index:50';
+  document.body.appendChild(b);
+});
+
+let me = null, profile = null, events = [], devices = [], licenses = [];
+
+/* ---------- Login ---------- */
+let signup = false;
+function authMsg(t, ok) { const m = $('#aMsg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
+$('#aSwitch').onclick = e => {
+  e.preventDefault(); signup = !signup;
+  $('#aGo').textContent = signup ? 'Konto erstellen' : 'Anmelden';
+  $('#aSwitch').textContent = signup ? 'Ich habe schon ein Konto' : 'Neues Konto erstellen';
+  $('#authHint').textContent = signup ? 'Verwende die E-Mail-Adresse, mit der du die Lizenz gekauft hast.' : 'Melde dich an, um deine Events und Fotoboxen zu verwalten.';
+};
+$('#aGo').onclick = async () => {
+  const email = $('#aEmail').value.trim(), password = $('#aPw').value;
+  if (!email || password.length < 6) return authMsg('Bitte E-Mail und ein Passwort mit mindestens 6 Zeichen eingeben.');
+  $('#aGo').disabled = true;
+  const { data, error } = signup
+    ? await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.href.split('#')[0] } })
+    : await sb.auth.signInWithPassword({ email, password });
+  $('#aGo').disabled = false;
+  if (error) return authMsg(error.message === 'Invalid login credentials' ? 'E-Mail oder Passwort falsch.' : error.message);
+  if (signup && !data.session) authMsg('Fast geschafft! Bitte bestätige deine E-Mail über den Link, den wir dir geschickt haben.', true);
+};
+$('#aForgot').onclick = async e => {
+  e.preventDefault();
+  const email = $('#aEmail').value.trim();
+  if (!email) return authMsg('Bitte zuerst die E-Mail-Adresse eingeben.');
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0] });
+  error ? authMsg(error.message) : authMsg('Wir haben dir einen Link zum Zurücksetzen geschickt.', true);
+};
+$('#rGo').onclick = async () => {
+  const { error } = await sb.auth.updateUser({ password: $('#rPw').value });
+  const m = $('#rMsg'); m.classList.remove('hidden');
+  if (error) { m.className = 'msg err'; m.textContent = error.message; return; }
+  location.hash = ''; location.reload();
+};
+$('#logout').onclick = () => sb.auth.signOut();
+
+sb.auth.onAuthStateChange((ev, session) => {
+  if (ev === 'PASSWORD_RECOVERY') { show('reset'); return; }
+  if (session?.user) { if (me?.id !== session.user.id) { me = session.user; boot(); } }
+  else { me = null; show('auth'); }
+});
+function show(id) { ['auth', 'reset', 'app'].forEach(s => $('#' + s).classList.toggle('hidden', s !== id)); }
+
+async function boot() {
+  show('app');
+  $('#who').textContent = me.email;
+  const { data } = await sb.from('profiles').select('*').eq('id', me.id).single();
+  profile = data || {};
+  $('#navAdmin').classList.toggle('hidden', !profile.is_admin);
+  $$('.adminCol').forEach(e => e.classList.toggle('hidden', !profile.is_admin));
+  await Promise.all([loadEvents(), loadDevices(), loadLicenses()]);
+  if (profile.is_admin) loadRelease();
+}
+
+/* ---------- Tabs ---------- */
+$('#nav').onclick = e => {
+  const t = e.target.dataset.tab; if (!t) return;
+  $$('#nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  $$('[data-page]').forEach(p => p.classList.toggle('hidden', p.dataset.page !== t));
+  if (t === 'devices') loadDevices();
+  if (t === 'leads') loadLeads();
+};
+
+/* ---------- Events ---------- */
+async function loadEvents() {
+  let q = sb.from('events').select('*').order('event_date', { ascending: false, nullsFirst: true });
+  if (profile.is_admin) q = q.eq('owner_id', me.id); // Admin sieht hier nur die eigenen Events
+  const { data, error } = await q;
+  if (error) return toast('Fehler: ' + error.message);
+  events = data; renderEvents();
+}
+// Vorschaubild eines Events: erstes Layout (oder Standard-Vorlage)
+const coverCache = {};
+function eventCover(e) {
+  const L = e.settings?.layouts?.[0];
+  const key = e.id + (e.updated_at || '');
+  if (coverCache[key]) return coverCache[key];
+  const vals = { titel: e.settings?.title || e.name, untertitel: e.settings?.subtitle || '', datum: fmtDate(e.event_date), event: e.name };
+  const big = L ? FBR.renderLayout(L, { placeholders: true, values: vals })
+    : FBR.render(FBR.LAYOUTS.single, [0, 1].map(i => FBR.placeholder(i)), { template: e.settings?.template || 'classic', title: vals.titel, subtitle: vals.untertitel });
+  const k = 320 / Math.max(big.width, big.height), c = document.createElement('canvas');
+  c.width = Math.round(big.width * k); c.height = Math.round(big.height * k); c.getContext('2d').drawImage(big, 0, 0, c.width, c.height);
+  if (L) FBR.preloadLayout(L).then(() => { delete coverCache[key]; const img = document.querySelector(`.evc[data-id="${e.id}"] img`); if (img) img.src = eventCover(e); });
+  return coverCache[key] = c.toDataURL('image/jpeg', .8);
+}
+function renderEvents() {
+  const q = ($('#evSearch')?.value || '').toLowerCase();
+  const today = new Date().toISOString().slice(0, 10);
+  const list = events.filter(e => !q || e.name.toLowerCase().includes(q));
+  const card = e => {
+    const n = devices.filter(d => d.event_id === e.id).length;
+    return `<div class="evc" data-id="${e.id}"><div class="cv"><img src="${eventCover(e)}" alt=""></div>
+      <b>${esc(e.name)}</b><small>${fmtDate(e.event_date)}${n ? ` · 📸 ${n}` : ''}</small></div>`;
+  };
+  const running = list.filter(e => !e.event_date || e.event_date >= today), done = list.filter(e => e.event_date && e.event_date < today);
+  $('#eventList').innerHTML = `<div class="evc evnew" id="newEventCard"><div class="cv"><span>+</span>Erstellen Sie ein neues Ereignis</div></div>` + running.map(card).join('');
+  $('#eventDone').innerHTML = done.map(card).join('') || '<div class="small muted">Noch keine abgeschlossenen Ereignisse.</div>';
+  $$('.evc[data-id]').forEach(c => c.onclick = () => openEvent(events.find(e => e.id === c.dataset.id)));
+  $('#newEventCard').onclick = newEvent;
+}
+$('#evSearch').oninput = renderEvents;
+
+// Datei (Logo, Bild, Design, Hintergrund) in den Speicher laden → öffentliche Adresse
+async function uploadFile(file) {
+  if (DEMO) return URL.createObjectURL(file);
+  let blob = file, ext = (file.name.split('.').pop() || 'png').toLowerCase();
+  if (file.type.startsWith('image/') && file.type !== 'image/gif') { // große Bilder verkleinern (max. 2400 px)
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(file); });
+    const k = Math.min(1, 2400 / Math.max(img.width, img.height));
+    if (k < 1) {
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      const png = file.type === 'image/png';
+      blob = await new Promise(r => c.toBlob(r, png ? 'image/png' : 'image/jpeg', .9)); ext = png ? 'png' : 'jpg';
+    }
+  }
+  const path = `${me.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await sb.storage.from('logos').upload(path, blob, { contentType: blob.type || file.type, upsert: false });
+  if (error) throw error;
+  return sb.storage.from('logos').getPublicUrl(path).data.publicUrl;
+}
+function openEvent(ev) {
+  EventWS.open(ev, {
+    sb, me, toast, uploadFile, devices,
+    leadsCount: id => (typeof leads !== 'undefined' && leads.length) ? leads.filter(l => l.event_id === id).length : '–',
+    onClose: () => loadEvents(),
+    onDelete: async (e, closeWs) => {
+      if (!confirm(`Ereignis „${e.name}“ wirklich löschen? Zugewiesene Fotoboxen behalten ihre letzten Einstellungen.`)) return;
+      const { error } = await sb.from('events').delete().eq('id', e.id);
+      if (error) return toast('Fehler: ' + error.message);
+      toast('Ereignis gelöscht'); closeWs();
+    }
+  });
+}
+async function newEvent() {
+  const today = new Date().toISOString().slice(0, 10);
+  const row = { owner_id: me.id, name: new Date().toLocaleDateString('de-DE'), event_date: today, settings: {} };
+  const { data, error } = await sb.from('events').insert(row).select().single();
+  if (error) return toast('Fehler: ' + error.message);
+  openEvent(DEMO ? { ...row, id: 'demo-' + Date.now() } : data);
+}
+
+/* ---------- Geräte ---------- */
+$('#reloadDevices').onclick = loadDevices;
+async function loadDevices() {
+  const { data, error } = await sb.from('devices').select('*, licenses(customer_name, customer_email, owner_id)').order('last_seen', { ascending: false, nullsFirst: false });
+  if (error) return toast('Fehler: ' + error.message);
+  devices = data; renderDevices(); renderEvents();
+}
+function renderDevices() {
+  const el = $('#deviceList');
+  if (!devices.length) { el.innerHTML = `<tr><td colspan="7" class="empty">Noch keine Geräte. Trage deinen Lizenzschlüssel in der FotoBox-App ein.</td></tr>`; return; }
+  el.innerHTML = devices.map(d => {
+    const online = d.last_seen && Date.now() - new Date(d.last_seen) < 3 * 60 * 1000;
+    const mine = d.licenses?.owner_id === me.id;
+    const opts = mine
+      ? `<select data-dev="${d.id}" data-act="event"><option value="">– kein Event –</option>${events.map(e => `<option value="${e.id}" ${e.id === d.event_id ? 'selected' : ''}>${esc(e.name)}</option>`).join('')}</select>`
+      : `<span class="muted small">${d.event_id ? 'zugewiesen' : '–'}</span>`;
+    return `<tr>
+      <td><input value="${esc(d.name || 'FotoBox')}" data-dev="${d.id}" data-act="name" style="max-width:200px"></td>
+      <td><span class="dot ${online ? 'on' : ''}"></span>${online ? 'Online' : d.last_seen ? 'zuletzt ' + new Date(d.last_seen).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : 'nie'}</td>
+      <td>${opts}</td>
+      <td>${d.photos_total}</td>
+      <td class="small">${esc(d.app_version || '–')}</td>
+      <td class="adminCol small ${profile.is_admin ? '' : 'hidden'}">${esc(d.licenses?.customer_name || d.licenses?.customer_email || '')}</td>
+      <td><button class="btn small danger" data-dev="${d.id}" data-act="remove" title="Gerät entfernen, um den Platz für ein neues Gerät freizugeben">Entfernen</button></td>
+    </tr>`;
+  }).join('');
+}
+$('#deviceList').addEventListener('change', async e => {
+  const id = e.target.dataset.dev, act = e.target.dataset.act; if (!id) return;
+  const patch = act === 'event' ? { event_id: e.target.value || null } : { name: e.target.value.trim() || null };
+  const { error } = await sb.from('devices').update(patch).eq('id', id);
+  if (error) return toast('Fehler: ' + error.message);
+  toast(act === 'event' ? 'Event zugewiesen – die Box übernimmt es in Kürze' : 'Name gespeichert');
+  loadDevices();
+});
+$('#deviceList').addEventListener('click', async e => {
+  if (e.target.dataset.act !== 'remove') return;
+  if (!confirm('Gerät entfernen? Es muss danach mit dem Lizenzschlüssel neu aktiviert werden.')) return;
+  const { error } = await sb.from('devices').delete().eq('id', e.target.dataset.dev);
+  if (error) return toast('Fehler: ' + error.message);
+  loadDevices();
+});
+
+/* ---------- Gäste-Daten ---------- */
+let leads = [];
+async function loadLeads() {
+  const { data, error } = await sb.from('leads').select('*, events(name)').order('captured_at', { ascending: false }).limit(5000);
+  if (error) return toast('Fehler: ' + error.message);
+  leads = data;
+  const names = [...new Set(leads.map(l => l.events?.name || l.event_name || '–'))];
+  const cur = $('#leadEvent').value;
+  $('#leadEvent').innerHTML = '<option value="">Alle Events</option>' + names.map(n => `<option ${n === cur ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  renderLeads();
+}
+const leadEv = l => l.events?.name || l.event_name || '–';
+const shownLeads = () => leads.filter(l => !$('#leadEvent').value || leadEv(l) === $('#leadEvent').value);
+function renderLeads() {
+  const list = shownLeads();
+  $('#leadList').innerHTML = list.length ? list.map(l => `<tr>
+      <td class="small">${l.captured_at ? new Date(l.captured_at).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : '–'}</td>
+      <td>${esc(leadEv(l))}</td><td>${esc(l.name || '')}</td><td>${esc(l.email || '')}</td><td>${esc(l.phone || '')}</td>
+      <td>${l.newsletter ? '✅' : ''}</td><td class="small muted">${esc(l.photo_name || '')}</td></tr>`).join('')
+    : '<tr><td colspan="7" class="empty">Noch keine Gäste-Daten. Aktiviere das Gäste-Formular in einem Event.</td></tr>';
+}
+$('#leadEvent').onchange = renderLeads;
+$('#leadCsv').onclick = () => {
+  const list = shownLeads(); if (!list.length) return toast('Keine Daten');
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = '\ufeff' + ['Datum;Event;Name;E-Mail;Telefon;Newsletter;Datei',
+    ...list.map(l => [l.captured_at, leadEv(l), l.name, l.email, l.phone, l.newsletter ? 'ja' : 'nein', l.photo_name].map(q).join(';'))].join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = `gaeste-daten_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+};
+$('#leadDelete').onclick = async () => {
+  const list = shownLeads(); if (!list.length) return;
+  if (!confirm(`${list.length} Einträge endgültig löschen?`)) return;
+  const { error } = await sb.from('leads').delete().in('id', list.map(l => l.id));
+  if (error) return toast('Fehler: ' + error.message);
+  toast('Gelöscht'); loadLeads();
+};
+
+/* ---------- Lizenzen ---------- */
+function licStatus(l) {
+  if (!l.active) return '<span class="badge bad">deaktiviert</span>';
+  if (l.kind === 'lifetime') {
+    const upd = !l.updates_until || new Date(l.updates_until) > new Date();
+    return `<span class="badge ok">unbegrenzt</span> <span class="badge ${upd ? '' : 'warn'}">Updates ${l.updates_until ? (upd ? 'bis ' : 'abgelaufen ') + fmtDate(l.updates_until) : 'inklusive'}</span>`;
+  }
+  if (!l.valid_until) return '<span class="badge warn">nicht bezahlt</span>';
+  const days = Math.ceil((new Date(l.valid_until) - new Date()) / 864e5);
+  return days < 0 ? `<span class="badge bad">abgelaufen ${fmtDate(l.valid_until)}</span>`
+    : `<span class="badge ${days < 14 ? 'warn' : 'ok'}">bis ${fmtDate(l.valid_until)}</span>`;
+}
+const kindName = k => k === 'lifetime' ? 'Einmalkauf' : 'Abo';
+async function loadLicenses() {
+  const { data, error } = await sb.from('licenses').select('*, devices(id)').order('created_at', { ascending: false });
+  if (error) return toast('Fehler: ' + error.message);
+  licenses = data;
+  const mine = licenses.filter(l => l.owner_id === me.id);
+  $('#myLicenses').innerHTML = mine.length ? mine.map(l => `<div class="card" style="display:flex;flex-direction:column;gap:8px">
+      <b>${kindName(l.kind)}</b>
+      <div><code class="key" data-copy="${esc(l.key)}" title="Klicken zum Kopieren">${esc(l.key)}</code></div>
+      <div>${licStatus(l)}</div>
+      <div class="small muted">Geräte: ${l.devices.length} von ${l.max_devices}</div>
+    </div>`).join('') : '<div class="card empty" style="grid-column:1/-1">Keine Lizenz mit deiner E-Mail gefunden. Bitte melde dich beim Verkäufer.</div>';
+  if (profile.is_admin) renderAdmin();
+}
+document.addEventListener('click', e => {
+  const k = e.target.dataset?.copy; if (!k) return;
+  navigator.clipboard.writeText(k).then(() => toast('Schlüssel kopiert'));
+});
+
+/* ---------- Verwaltung (Admin) ---------- */
+$('#lKind').onchange = () => {
+  const life = $('#lKind').value === 'lifetime';
+  $('#lValidWrap').classList.toggle('hidden', life); $('#lUpdWrap').classList.toggle('hidden', !life);
+};
+const inDays = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
+$('#lValid').value = inDays(30); $('#lUpd').value = inDays(365);
+$('#lCreate').onclick = async () => {
+  const email = $('#lEmail').value.trim();
+  if (!email.includes('@')) return toast('Bitte E-Mail des Kunden eingeben');
+  const life = $('#lKind').value === 'lifetime';
+  const row = {
+    customer_name: $('#lName').value.trim() || null, customer_email: email, kind: $('#lKind').value,
+    valid_until: life ? null : ($('#lValid').value ? new Date($('#lValid').value + 'T23:59:59').toISOString() : null),
+    updates_until: life && $('#lUpd').value ? new Date($('#lUpd').value + 'T23:59:59').toISOString() : null,
+    max_devices: Math.max(1, +$('#lMax').value || 1), notes: $('#lNotes').value.trim() || null
+  };
+  const { data, error } = await sb.from('licenses').insert(row).select().single();
+  if (error) return toast('Fehler: ' + error.message, 4000);
+  navigator.clipboard?.writeText(data.key).catch(() => {});
+  toast('Lizenz erstellt – Schlüssel kopiert: ' + data.key, 5000);
+  ['#lName', '#lEmail', '#lNotes'].forEach(s => $(s).value = '');
+  loadLicenses();
+};
+$('#lSearch').oninput = renderAdmin;
+function renderAdmin() {
+  const q = $('#lSearch').value.toLowerCase();
+  const list = licenses.filter(l => !q || [l.customer_name, l.customer_email, l.key, l.notes].some(v => (v || '').toLowerCase().includes(q)));
+  $('#licList').innerHTML = list.length ? list.map(l => `<tr>
+      <td><b>${esc(l.customer_name || '–')}</b><br><span class="small muted">${esc(l.customer_email)}${l.owner_id ? '' : ' · noch nicht registriert'}</span>${l.notes ? `<br><span class="small muted">📝 ${esc(l.notes)}</span>` : ''}</td>
+      <td><code class="key" data-copy="${esc(l.key)}" title="Klicken zum Kopieren">${esc(l.key)}</code></td>
+      <td>${kindName(l.kind)}</td>
+      <td>${licStatus(l)}</td>
+      <td>${l.devices.length} / <input type="number" min="1" value="${l.max_devices}" data-lic="${l.id}" data-act="max" style="width:60px;padding:4px 6px"></td>
+      <td><div class="row">
+        ${l.kind === 'subscription'
+          ? `<button class="btn small" data-lic="${l.id}" data-act="m1">+1 Monat</button><button class="btn small" data-lic="${l.id}" data-act="y1">+1 Jahr</button>`
+          : `<button class="btn small" data-lic="${l.id}" data-act="u1">+1 Jahr Updates</button>`}
+        <button class="btn small ${l.active ? 'danger' : ''}" data-lic="${l.id}" data-act="toggle">${l.active ? 'Sperren' : 'Entsperren'}</button>
+      </div></td>
+    </tr>`).join('') : '<tr><td colspan="6" class="empty">Keine Lizenzen</td></tr>';
+}
+function extend(date, months) {
+  const d = new Date(Math.max(Date.now(), date ? new Date(date).getTime() : 0));
+  d.setMonth(d.getMonth() + months); return d.toISOString();
+}
+$('#licList').addEventListener('click', async e => {
+  const id = e.target.dataset.lic, act = e.target.dataset.act; if (!id || act === 'max') return;
+  const l = licenses.find(x => x.id === id);
+  const patch = act === 'm1' ? { valid_until: extend(l.valid_until, 1) }
+    : act === 'y1' ? { valid_until: extend(l.valid_until, 12) }
+    : act === 'u1' ? { updates_until: extend(l.updates_until, 12) }
+    : { active: !l.active };
+  if (act === 'toggle' && l.active && !confirm(`Lizenz von ${l.customer_name || l.customer_email} sperren? Die FotoBox läuft dann nur noch im Demo-Modus.`)) return;
+  const { error } = await sb.from('licenses').update(patch).eq('id', id);
+  if (error) return toast('Fehler: ' + error.message);
+  toast('Lizenz aktualisiert'); loadLicenses();
+});
+$('#licList').addEventListener('change', async e => {
+  if (e.target.dataset.act !== 'max') return;
+  const { error } = await sb.from('licenses').update({ max_devices: Math.max(1, +e.target.value || 1) }).eq('id', e.target.dataset.lic);
+  error ? toast('Fehler: ' + error.message) : toast('Geräteanzahl gespeichert');
+});
+async function loadRelease() {
+  if (!CFG.releasesRepo) return;
+  try {
+    const r = await fetch(`https://api.github.com/repos/${CFG.releasesRepo}/releases/latest`).then(r => r.json());
+    if (r.tag_name) $('#releaseInfo').textContent = `Aktuelle App-Version: ${r.tag_name} (${fmtDate(r.published_at)})`;
+  } catch {}
+}
+</script>
+</body>
+</html>
