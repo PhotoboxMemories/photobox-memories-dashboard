@@ -196,7 +196,7 @@
       if (t.dataset.flt) { const id = t.dataset.flt; S.filters = S.filters.includes(id) ? S.filters.filter(x => x !== id) : [...S.filters, id]; save(); render(); return; }
       const a = t.dataset.a;
       if (a === 'newlay') { $(main, '.dd .menu').classList.toggle('hidden-m'); $(main, '.dd .menu').style.display = $(main, '.dd .menu').style.display === 'block' ? 'none' : 'block'; }
-      if (a === 'fromtpl') pickTemplate();
+      if (a === 'fromtpl') pickTemplate(vals(), addLayout);
       if (a === 'fromimg') fromImage();
       if (a === 'editlay') editLayout(t.dataset.id);
       if (a === 'dellay') { if (confirm('Layout löschen?')) { S.layouts = S.layouts.filter(l => l.id !== t.dataset.id); save(); render(); } }
@@ -214,17 +214,13 @@
       if (a === 'upbg') { const f = await pick('image/*'); if (f) { status('Lädt Hintergrund hoch …'); S.bgUrls = [...(S.bgUrls || []), await ctx.uploadFile(f)]; save(); render(); } }
       if (a === 'delbg') { S.bgUrls = S.bgUrls.filter((_, i) => i !== +t.dataset.i); save(); render(); }
       if (a === 'delev') ctx.onDelete?.(ev, close);
-      if (a === 'edit1') { const l = S.layouts[0]; if (l) editLayout(l.id); else pickTemplate(); }
+      if (a === 'edit1') { const l = S.layouts[0]; if (l) editLayout(l.id); else pickTemplate(vals(), addLayout); }
     });
     const pick = accept => new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => res(i.files[0] || null); i.click(); });
 
     // ---------- Seiten ----------
-    function layoutThumb(L, px = 300) {
-      const c = FBR.renderLayout(L, { placeholders: true, values: vals() });
-      const s = px / Math.max(c.width, c.height), t = document.createElement('canvas');
-      t.width = Math.round(c.width * s); t.height = Math.round(c.height * s); t.getContext('2d').drawImage(c, 0, 0, t.width, t.height);
-      return t.toDataURL('image/jpeg', .85);
-    }
+    const addLayout = L => { S.layouts.push(L); save(); render(); editLayout(L.id); };
+    const layoutThumb = (L, px = 300) => thumbOf(L, px, vals());
     const vals = () => ({ titel: S.title || E.name, untertitel: S.subtitle || (E.event_date ? new Date(E.event_date).toLocaleDateString('de-DE') : ''), datum: new Date().toLocaleDateString('de-DE'), uhrzeit: '20:15', event: E.name, name: 'Lisa' });
     function layoutCards() {
       return `<div class="dd"><button class="btn" data-a="newlay">${ICON('plus', 16)} Neues Layout ${ICON('chevronDown', 16)}</button><div class="menu" style="display:none">
@@ -366,46 +362,6 @@
         onClose: () => render()
       });
     }
-    function modal(html) {
-      const m = document.createElement('div'); m.id = 'wsModal'; m.innerHTML = `<div class="box">${html}</div>`;
-      m.addEventListener('click', e => { if (e.target === m || e.target.dataset.x) m.remove(); });
-      document.body.appendChild(m); return m;
-    }
-    function pickTemplate() {
-      const cats = ['Alle', ...new Set(FBR.TEMPLATES.map(t => t.cat))];
-      let cat = 'Alle', q = '';
-      const m = modal(`<div class="mh"><h3>Vorlage wählen</h3><input placeholder="Vorlagen suchen …" data-q><button class="x" data-x="1">×</button></div>
-        <div class="cats">${cats.map(c => `<button data-c="${c}" class="${c === cat ? 'on' : ''}">${c}</button>`).join('')}</div><div class="grid"></div>`);
-      const thumbs = {};
-      const grid = () => {
-        $(m, '.grid').innerHTML = FBR.TEMPLATES.filter(t => (cat === 'Alle' || t.cat === cat) && t.name.toLowerCase().includes(q)).map(t => {
-          thumbs[t.id] ||= layoutThumb(FBR.createLayout('4x6p', 3, t.id), 260);
-          return `<div class="tp" data-t="${t.id}"><img src="${thumbs[t.id]}"><div>${esc(t.name)}</div></div>`;
-        }).join('');
-      };
-      grid();
-      m.addEventListener('click', e => {
-        const c = e.target.closest('[data-c]'); if (c) { cat = c.dataset.c; $$(m, '[data-c]').forEach(b => b.classList.toggle('on', b === c)); grid(); }
-        const t = e.target.closest('[data-t]'); if (t) pickFormat(m, t.dataset.t);
-      });
-      $(m, '[data-q]').oninput = e => { q = e.target.value.toLowerCase(); grid(); };
-    }
-    function pickFormat(m, tplId) {
-      const t = FBR.templateById(tplId);
-      const items = FBR.PRESETS.map(([f, n]) => ({ f, n, L: FBR.createLayout(f, n, tplId) }));
-      let cur = 0;
-      $(m, '.box').innerHTML = `<div class="mh"><button class="x" data-back="1">‹</button><h3>${esc(t.name)}</h3><button class="x" data-x="1">×</button></div>
-        <div class="two"><div class="fl">${items.map((it, i) => `<div class="fi ${i === cur ? 'on' : ''}" data-i="${i}"><img src="${layoutThumb(it.L, 160)}"><div>${FBR.FORMATS[it.f].label.replace(' Streifen', '')} · 📷 ${it.n}</div></div>`).join('')}</div>
-        <div class="bigpv"><img><div class="ft"><div><b class="fn"></b><br><small class="fs"></small></div><button class="btn" data-go="1">Layout auswählen</button></div></div></div>`;
-      const show = () => { const it = items[cur]; $(m, '.bigpv img').src = layoutThumb(it.L, 700); $(m, '.fn').textContent = `${FBR.FORMATS[it.f].label} (${it.n} Foto${it.n > 1 ? 's' : ''})`; $(m, '.fs').textContent = `${it.L.w} × ${it.L.h} px`; $$(m, '.fi').forEach((e, i) => e.classList.toggle('on', i === cur)); };
-      show();
-      m.onclick = e => {
-        if (e.target === m || e.target.dataset.x) return m.remove();
-        if (e.target.dataset.back) { m.remove(); return pickTemplate(); }
-        const fi = e.target.closest('[data-i]'); if (fi) { cur = +fi.dataset.i; show(); }
-        if (e.target.dataset.go) { const L = items[cur].L; S.layouts.push(L); save(); m.remove(); render(); editLayout(L.id); }
-      };
-    }
     async function fromImage() {
       const f = await pick('image/png,image/*'); if (!f) return;
       status('Analysiere Design …');
@@ -430,6 +386,57 @@
     renderNav(); render(); status('✓ Alle Änderungen gespeichert');
     return { close };
   }
+  // ---------- Gemeinsam für Dashboard und FotoBox-Software ----------
+  function ensureCss() { if (!document.getElementById('ws-css')) { const s = document.createElement('style'); s.id = 'ws-css'; s.textContent = CSS; document.head.appendChild(s); } }
+  function thumbOf(L, px, values) {
+    const c = FBR.renderLayout(L, { placeholders: true, values });
+    const s = px / Math.max(c.width, c.height), t = document.createElement('canvas');
+    t.width = Math.round(c.width * s); t.height = Math.round(c.height * s); t.getContext('2d').drawImage(c, 0, 0, t.width, t.height);
+    return t.toDataURL('image/jpeg', .85);
+  }
+  function modal(html) {
+    ensureCss();
+    const m = document.createElement('div'); m.id = 'wsModal'; m.innerHTML = `<div class="box">${html}</div>`;
+    m.addEventListener('click', e => { if (e.target === m || e.target.closest('[data-x]')) m.remove(); });
+    document.body.appendChild(m); return m;
+  }
+  // Vorlagen-Galerie → Format wählen → onPick(neues Layout)
+  function pickTemplate(values, onPick) {
+    const cats = ['Alle', ...new Set(FBR.TEMPLATES.map(t => t.cat))];
+    let cat = 'Alle', q = '';
+    const m = modal(`<div class="mh"><h3>Vorlage wählen</h3><input placeholder="Vorlagen suchen …" data-q><button class="x" data-x="1">${ICON('x', 20)}</button></div>
+      <div class="cats">${cats.map(c => `<button data-c="${c}" class="${c === cat ? 'on' : ''}">${c}</button>`).join('')}</div><div class="grid"></div>`);
+    const thumbs = {};
+    const grid = () => {
+      $(m, '.grid').innerHTML = FBR.TEMPLATES.filter(t => (cat === 'Alle' || t.cat === cat) && t.name.toLowerCase().includes(q)).map(t => {
+        thumbs[t.id] ||= thumbOf(FBR.createLayout('4x6p', 3, t.id), 260, values);
+        return `<div class="tp" data-t="${t.id}"><img src="${thumbs[t.id]}"><div>${esc(t.name)}</div></div>`;
+      }).join('');
+    };
+    grid();
+    m.addEventListener('click', e => {
+      const c = e.target.closest('[data-c]'); if (c) { cat = c.dataset.c; $$(m, '[data-c]').forEach(b => b.classList.toggle('on', b === c)); grid(); }
+      const t = e.target.closest('[data-t]'); if (t) pickFormat(m, t.dataset.t, values, onPick);
+    });
+    $(m, '[data-q]').oninput = e => { q = e.target.value.toLowerCase(); grid(); };
+  }
+  function pickFormat(m, tplId, values, onPick) {
+    const t = FBR.templateById(tplId);
+    const items = FBR.PRESETS.map(([f, n]) => ({ f, n, L: FBR.createLayout(f, n, tplId) }));
+    let cur = 0;
+    $(m, '.box').innerHTML = `<div class="mh"><button class="x" data-back="1">${ICON('chevronLeft', 20)}</button><h3>${esc(t.name)}</h3><button class="x" data-x="1">${ICON('x', 20)}</button></div>
+      <div class="two"><div class="fl">${items.map((it, i) => `<div class="fi ${i === cur ? 'on' : ''}" data-i="${i}"><img src="${thumbOf(it.L, 160, values)}"><div>${FBR.FORMATS[it.f].label.replace(' Streifen', '')} · ${it.n} Foto${it.n > 1 ? 's' : ''}</div></div>`).join('')}</div>
+      <div class="bigpv"><img><div class="ft"><div><b class="fn"></b><br><small class="fs"></small></div><button class="btn" data-go="1">Layout auswählen</button></div></div></div>`;
+    const show = () => { const it = items[cur]; $(m, '.bigpv img').src = thumbOf(it.L, 700, values); $(m, '.fn').textContent = `${FBR.FORMATS[it.f].label} (${it.n} Foto${it.n > 1 ? 's' : ''})`; $(m, '.fs').textContent = `${it.L.w} × ${it.L.h} px`; $$(m, '.fi').forEach((e, i) => e.classList.toggle('on', i === cur)); };
+    show();
+    m.onclick = e => {
+      if (e.target === m || e.target.closest('[data-x]')) return m.remove();
+      if (e.target.closest('[data-back]')) { m.remove(); return pickTemplate(values, onPick); }
+      const fi = e.target.closest('[data-i]'); if (fi) { cur = +fi.dataset.i; show(); }
+      if (e.target.closest('[data-go]')) { m.remove(); onPick(items[cur].L); }
+    };
+  }
+
   // „Erstellen Sie ein neues Ereignis“ – Ereignisart wählen
   const TYPES = [
     ['FOTO', 'photo', 'camera', 'PHOTO BOOTH', 'Fotos für den Druck oder die digitale Weitergabe', {}],
@@ -458,5 +465,5 @@
     });
     document.body.appendChild(m);
   }
-  G.EventWS = { open, newEventDialog };
+  G.EventWS = { open, newEventDialog, pickTemplate, thumbOf, modal };
 })(window);
