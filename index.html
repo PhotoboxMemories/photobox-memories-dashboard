@@ -4,18 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Photobox Memories – Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="config.js"></script>
+<script src="icons.js"></script>
 <script src="render.js"></script>
 <script src="editor.js"></script>
 <script src="event.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#ff3d7f;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
+:root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
 @media (prefers-color-scheme:dark){:root{--bg:#0f0f13;--card:#18181e;--fg:#f0f0f4;--muted:#9a9aa8;--line:#2a2a33;--soft:#1d1d24}}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 button{font:inherit;cursor:pointer}
-a{color:var(--accent)}
+a{color:#b88a00}
 input,select,textarea{font:inherit;color:var(--fg);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
 input[type=checkbox]{width:auto}
 input[type=color]{padding:2px;width:48px;height:36px}
@@ -23,7 +26,9 @@ label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
 h1{font-size:22px}h2{font-size:18px;margin-bottom:12px}
 .btn{border:1px solid var(--line);background:var(--card);color:var(--fg);padding:8px 16px;border-radius:8px;font-weight:600;white-space:nowrap}
 .btn:hover{border-color:var(--muted)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+h1,h2,.pm-logo{font-family:Fredoka,system-ui,sans-serif}
+.ico-svg{vertical-align:-4px}
 .btn.small{padding:4px 10px;font-size:13px}
 .btn.danger{color:var(--bad)}
 .hidden{display:none!important}
@@ -42,10 +47,11 @@ h1{font-size:22px}h2{font-size:18px;margin-bottom:12px}
 .msg.err{color:var(--bad)}.msg.ok{color:var(--ok)}
 
 /* App */
-header{background:var(--card);border-bottom:1px solid var(--line);padding:12px 24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+header{background:var(--brand-dark);color:#fff;border-bottom:1px solid var(--line);padding:12px 24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;position:sticky;top:0;z-index:5}
 nav{display:flex;gap:4px;flex:1;flex-wrap:wrap}
-nav button{background:none;border:0;padding:8px 14px;border-radius:8px;color:var(--muted);font-weight:600}
-nav button.on{background:var(--soft);color:var(--fg)}
+nav button{background:none;border:0;padding:8px 14px;border-radius:8px;color:#bdbdb8;font-weight:600;display:inline-flex;gap:7px;align-items:center}
+nav button.on{background:rgba(247,200,56,.16);color:var(--accent)}
+header .muted{color:#bdbdb8}
 main{max-width:1200px;margin:0 auto;padding:24px 16px 80px}
 .pagehead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
@@ -83,7 +89,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
 <!-- ============ Login ============ -->
 <section id="auth" class="hidden">
   <div class="card">
-    <div class="logo">📸 Photobox <span>Memories</span></div>
+    <div class="logo" data-logo></div>
     <div class="muted small" id="authHint">Melde dich an, um deine Events und Fotoboxen zu verwalten.</div>
     <div><label>E-Mail</label><input type="email" id="aEmail" autocomplete="email"></div>
     <div id="aPwWrap"><label>Passwort</label><input type="password" id="aPw" autocomplete="current-password"></div>
@@ -109,13 +115,13 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
 <!-- ============ App ============ -->
 <section id="app" class="hidden">
   <header>
-    <div class="logo">📸 Photobox <span>Memories</span></div>
+    <div class="logo" data-logo></div>
     <nav id="nav">
-      <button data-tab="events" class="on">Events</button>
-      <button data-tab="devices">Geräte</button>
-      <button data-tab="leads">Gäste-Daten</button>
-      <button data-tab="licenses">Meine Lizenzen</button>
-      <button data-tab="admin" class="hidden" id="navAdmin">⚙︎ Verwaltung</button>
+      <button data-tab="events" class="on" data-ic="calendar">Ereignisse</button>
+      <button data-tab="devices" data-ic="monitor">Geräte</button>
+      <button data-tab="leads" data-ic="users">Gäste-Daten</button>
+      <button data-tab="licenses" data-ic="key">Meine Lizenzen</button>
+      <button data-tab="admin" class="hidden" id="navAdmin" data-ic="settings">Verwaltung</button>
     </nav>
     <div class="row small"><span class="muted" id="who"></span><button class="btn small" id="logout">Abmelden</button></div>
   </header>
@@ -246,7 +252,7 @@ function demoClient() {
 if (DEMO) document.addEventListener('DOMContentLoaded', () => {
   const b = document.createElement('div');
   b.textContent = '🎬 Demo-Modus mit Beispieldaten – Änderungen werden nicht gespeichert';
-  b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#ff3d7f;color:#fff;text-align:center;padding:6px;font-weight:600;font-size:13px;z-index:50';
+  b.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#F7C838;color:#1D1D1B;text-align:center;padding:6px;font-weight:600;font-size:13px;z-index:50';
   document.body.appendChild(b);
 });
 
@@ -306,8 +312,11 @@ async function boot() {
 }
 
 /* ---------- Tabs ---------- */
+// Logo & Icons einsetzen
+document.querySelectorAll('[data-logo]').forEach(el => { el.innerHTML = LOGO(34, !el.closest('header')); });
+document.querySelectorAll('[data-ic]').forEach(el => el.insertAdjacentHTML('afterbegin', ICON(el.dataset.ic, 17)));
 $('#nav').onclick = e => {
-  const t = e.target.dataset.tab; if (!t) return;
+  const t = e.target.closest('[data-tab]')?.dataset.tab; if (!t) return;
   $$('#nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   $$('[data-page]').forEach(p => p.classList.toggle('hidden', p.dataset.page !== t));
   if (t === 'devices') loadDevices();
@@ -385,9 +394,13 @@ function openEvent(ev) {
     }
   });
 }
-async function newEvent() {
+function newEvent() {
+  EventWS.newEventDialog(events, (settings, logo_url, name, typeName) => createEvent(settings, logo_url, name, typeName));
+}
+async function createEvent(settings, logo_url, name, typeName) {
   const today = new Date().toISOString().slice(0, 10);
-  const row = { owner_id: me.id, name: new Date().toLocaleDateString('de-DE'), event_date: today, settings: {} };
+  const row = { owner_id: me.id, name: name || new Date().toLocaleDateString('de-DE') + (typeName ? ' · ' + typeName.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase()) : ''),
+    event_date: today, settings: settings || {}, logo_url: logo_url || null };
   const { data, error } = await sb.from('events').insert(row).select().single();
   if (error) return toast('Fehler: ' + error.message);
   openEvent(DEMO ? { ...row, id: 'demo-' + Date.now() } : data);
