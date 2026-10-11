@@ -2,6 +2,108 @@
 // EventWS.open(eventRow, { sb, me, toast, uploadFile(file) → url, devices, leadsCount, onClose, onDelete })
 (function (G) {
   'use strict';
+  // KI-Stil-Bibliothek (Aufbau wie bei LumaBooth): ein Stil = Motiv („Porträtstil“) und/oder Kunststil.
+  // Beispielbilder liegen optional unter ai-styles/<key>.jpg; ohne Bild erscheint die farbige Kachel.
+  const AI_KEEP = 'Bearbeite das Gästefoto. Behalte die Anzahl der Personen, ihre erkennbaren Gesichter, Frisuren und ihre Pose bei. Keine zusätzliche Person, kein Schriftzug. ';
+  const aiGroup = (kind, list) => list.flatMap(([cat, colors, items]) => items.map(([key, name, icon, text]) => ({ kind, cat, colors, key, name, icon, text })));
+  const AI_MOTIFS = aiGroup('p', [
+    ['Film & Bühne', '#2b1055,#d53369', [
+      ['hollywood', 'Roter Teppich', '🎬', 'Motiv: elegante Abendgarderobe wie bei einer Filmpremiere. Szene: roter Teppich mit Scheinwerfern und goldenem Licht.'],
+      ['noir', 'Detektiv', '🕵️', 'Motiv: Trenchcoat und Hut wie in einem Detektivfilm der 1940er. Szene: verrauchtes Büro mit Jalousien-Schatten.'],
+      ['action', 'Actionheld', '💥', 'Motiv: taktische Einsatzkleidung wie Actionfilm-Helden. Szene: Großstadt mit Explosion im Hintergrund.'],
+      ['agent', 'Geheimagent', '🕶️', 'Motiv: maßgeschneiderter Smoking beziehungsweise elegantes Abendkleid wie Geheimagenten. Szene: nächtliches Casino an der Küste.'],
+      ['western', 'Wilder Westen', '🤠', 'Motiv: Cowboyhut, Weste und Stiefel. Szene: staubige Hauptstraße einer Westernstadt bei Sonnenuntergang.'],
+      ['musical', 'Musicalstar', '🎤', 'Motiv: glitzernde Bühnenkostüme. Szene: große Showbühne mit buntem Scheinwerferlicht.']]],
+    ['Helden & Fantasy', '#1e3c72,#e63946', [
+      ['hero', 'Superheld', '🦸', 'Motiv: originelle Superhelden-Kostüme mit Umhang. Szene: Dach über einer nächtlichen Großstadt, dramatisches Gegenlicht.'],
+      ['fantasy', 'Fantasyreich', '🧝', 'Motiv: edle Gewänder und Rüstungen eines Fantasyreichs. Szene: verzauberter Wald mit leuchtenden Lichtern.'],
+      ['pirate', 'Pirat', '🏴‍☠️', 'Motiv: Piratenkleidung mit Dreispitz. Szene: Deck eines Segelschiffs auf stürmischer See.'],
+      ['viking', 'Wikinger', '🪓', 'Motiv: Wikingerkleidung mit Fell und Leder. Szene: Langschiff in einem nebligen Fjord.'],
+      ['dragon', 'Drachenreiter', '🐉', 'Motiv: Lederrüstung eines Drachenreiters, ein freundlicher Drache im Hintergrund. Szene: Berggipfel über den Wolken.'],
+      ['steampunk', 'Steampunk', '⚙️', 'Motiv: viktorianische Kleidung mit Messingbrillen und Zahnrädern. Szene: Werkstatt voller Dampfmaschinen.'],
+      ['cyber', 'Cyberpunk', '🌃', 'Motiv: futuristische Kleidung mit leuchtenden Details. Szene: regennasse Straße mit Neonreklamen bei Nacht.'],
+      ['scifi', 'Science-Fiction', '🚀', 'Motiv: schimmernde Raumfahrer-Uniformen. Szene: Brücke eines Raumschiffs mit Blick auf eine Galaxie.']]],
+    ['Zeitreise', '#5b3a1e,#c79a4b', [
+      ['egypt', 'Altes Ägypten', '🏺', 'Motiv: Gewänder und Goldschmuck des alten Ägypten. Szene: Tempel mit Hieroglyphen und Fackellicht.'],
+      ['greek', 'Antikes Griechenland', '🏛️', 'Motiv: weiße Gewänder mit Lorbeerkranz. Szene: Marmortempel über dem Meer.'],
+      ['rome', 'Römisches Reich', '🛡️', 'Motiv: römische Toga beziehungsweise Legionärsrüstung. Szene: Forum mit Säulen im warmen Abendlicht.'],
+      ['knight', 'Ritter', '⚔️', 'Motiv: glänzende Ritterrüstung beziehungsweise mittelalterliches Kleid. Szene: Burghof mit Bannern.'],
+      ['samurai', 'Samurai', '🎎', 'Motiv: traditionelle Samurai-Rüstung beziehungsweise Kimono. Szene: Garten mit Kirschblüten und Pagode.'],
+      ['royal', 'Königshof', '👑', 'Motiv: prunkvolle königliche Gewänder und Kronen. Szene: Thronsaal eines Schlosses.'],
+      ['twenties', 'Goldene Zwanziger', '🎩', 'Motiv: elegante Abendmode der 1920er-Jahre. Szene: Art-déco-Ballsaal mit goldenem Licht.'],
+      ['disco', '70er-Disco', '🪩', 'Motiv: Schlaghosen und Glitzeroutfits der 1970er. Szene: Tanzfläche unter einer Discokugel.'],
+      ['eighties', '80er-Jahre', '📼', 'Motiv: bunte Mode der 1980er mit Neonfarben. Szene: Spielhalle mit Neonlicht.']]],
+    ['Reise', '#0f9b8e,#f9d423', [
+      ['paris', 'Paris', '🗼', 'Motiv: schicke Stadtkleidung. Szene: Pariser Straße mit Blick auf den Eiffelturm am Abend.'],
+      ['newyork', 'New York', '🗽', 'Motiv: moderne Stadtkleidung. Szene: Dachterrasse mit Skyline von New York bei Sonnenuntergang.'],
+      ['venice', 'Venedig', '🛶', 'Motiv: elegante Sommerkleidung. Szene: Gondel auf einem Kanal in Venedig.'],
+      ['hawaii', 'Südsee', '🌺', 'Motiv: Blumenhemden und Blumenketten. Szene: Palmenstrand mit türkisfarbenem Wasser.'],
+      ['safari', 'Safari', '🦁', 'Motiv: Safarikleidung mit Hut. Szene: Savanne mit Elefanten und Akazien im Abendlicht.'],
+      ['alps', 'Alpen', '🏔️', 'Motiv: Wanderkleidung. Szene: Berggipfel mit Alpenpanorama und blauem Himmel.'],
+      ['santorini', 'Santorin', '🏖️', 'Motiv: helle Leinenkleidung. Szene: weiße Häuser mit blauen Kuppeln über dem Meer.'],
+      ['tokyo', 'Tokio', '🏮', 'Motiv: moderne Streetwear. Szene: belebte Straße in Tokio mit Leuchtreklamen.']]],
+    ['Sport', '#11998e,#38ef7d', [
+      ['soccer', 'Fußball', '⚽', 'Motiv: Fußballtrikots ohne Vereinslogo. Szene: Stadion mit Flutlicht und jubelndem Publikum.'],
+      ['basketball', 'Basketball', '🏀', 'Motiv: Basketballtrikots ohne Vereinslogo. Szene: Halle mit Scheinwerfern.'],
+      ['boxing', 'Boxen', '🥊', 'Motiv: Boxkleidung mit Handschuhen. Szene: Boxring im Scheinwerferlicht.'],
+      ['tennis', 'Tennis', '🎾', 'Motiv: weiße Tenniskleidung mit Schläger. Szene: Rasenplatz in einem großen Stadion.'],
+      ['ski', 'Wintersport', '⛷️', 'Motiv: bunte Skikleidung mit Skibrille. Szene: verschneite Piste bei Sonnenschein.'],
+      ['racing', 'Rennfahrer', '🏎️', 'Motiv: Rennoveralls ohne Markenlogo. Szene: Boxengasse einer Rennstrecke.']]],
+    ['Feste', '#c31432,#f7b733', [
+      ['winter', 'Winterzauber', '❄️', 'Motiv: warme, festliche Winterkleidung. Szene: verschneiter Tannenwald mit Lichterketten und sanftem Schneefall.'],
+      ['christmas', 'Weihnachten', '🎄', 'Motiv: gemütliche Weihnachtspullover. Szene: Wohnzimmer mit geschmücktem Baum und Kaminfeuer.'],
+      ['halloween', 'Halloween', '🎃', 'Motiv: fantasievolle Halloween-Kostüme. Szene: nebliger Garten mit Kürbislaternen.'],
+      ['newyear', 'Silvester', '🎆', 'Motiv: glitzernde Partykleidung. Szene: Dachterrasse mit Feuerwerk über der Stadt.'],
+      ['carnival', 'Karneval', '🎭', 'Motiv: bunte Karnevalskostüme mit Masken. Szene: Straßenumzug mit Konfetti.'],
+      ['oktoberfest', 'Oktoberfest', '🥨', 'Motiv: Dirndl und Lederhose. Szene: festlich geschmücktes Bierzelt.'],
+      ['summer', 'Sommerparty', '🍹', 'Motiv: leichte Sommerkleidung. Szene: Strandbar mit Lichterketten bei Sonnenuntergang.']]],
+    ['Berufe', '#0b1026,#3a6ea5', [
+      ['astronaut', 'Astronaut', '🧑‍🚀', 'Motiv: realistische weiße Raumanzüge, Helm unter dem Arm. Szene: Raumstation mit Blick auf die Erde.'],
+      ['chef', 'Sternekoch', '👨‍🍳', 'Motiv: weiße Kochjacken und Kochmützen. Szene: moderne Restaurantküche.'],
+      ['pilot', 'Pilot', '✈️', 'Motiv: Pilotenuniformen. Szene: Cockpit mit Blick über die Wolken.'],
+      ['firefighter', 'Feuerwehr', '🚒', 'Motiv: Feuerwehr-Einsatzkleidung mit Helm. Szene: Feuerwache mit Löschfahrzeug.'],
+      ['scientist', 'Wissenschaft', '🔬', 'Motiv: weiße Laborkittel und Schutzbrillen. Szene: modernes Labor mit bunten Flüssigkeiten.'],
+      ['dj', 'DJ', '🎧', 'Motiv: lässige Clubkleidung mit Kopfhörern. Szene: DJ-Pult vor einer feiernden Menge.']]]
+  ]);
+  const AI_ARTS = aiGroup('a', [
+    ['Alte Meister', '#3e2723,#bf8f4a', [
+      ['oil', 'Ölgemälde', '🖼️', 'elegantes klassisches Ölgemälde mit sichtbaren Pinselstrichen und warmem Licht.'],
+      ['renaissance', 'Renaissance', '🏰', 'Gemälde im Stil der italienischen Renaissance mit feinen Details und sanftem Licht.'],
+      ['impression', 'Impressionismus', '🌼', 'impressionistisches Gemälde mit lockeren, leuchtenden Farbtupfern.'],
+      ['swirl', 'Wirbelnder Pinselstrich', '🌌', 'postimpressionistisches Gemälde mit wirbelnden, kräftigen Pinselstrichen.'],
+      ['artdeco', 'Art déco', '💎', 'Art-déco-Plakat mit geometrischen Ornamenten, Gold und Schwarz.'],
+      ['ukiyo', 'Japanischer Holzschnitt', '🌊', 'japanischer Farbholzschnitt mit klaren Linien und flächigen Farben.']]],
+    ['Comic & Trickfilm', '#ffd400,#ff5a36', [
+      ['comic', 'Comic', '💬', 'farbiger Comic mit klaren schwarzen Konturen, kräftigen Farben und Rasterpunkten.'],
+      ['popart', 'Pop-Art', '🟡', 'Pop-Art-Siebdruck mit knalligen Kontrastfarben.'],
+      ['anime', 'Anime', '🌸', 'detailreiche Anime-Illustration mit großen ausdrucksstarken Augen und weichen Farbverläufen.'],
+      ['toon3d', '3D-Trickfilm', '🎞️', 'liebevoll gestaltete 3D-Animationsfilm-Figuren mit weicher Beleuchtung.'],
+      ['pulp', 'Retro-Comic', '📰', 'Retro-Comic der 1950er auf vergilbtem Papier mit grobem Druckraster.'],
+      ['chibi', 'Chibi-Figur', '🧸', 'niedliche Chibi-Figuren mit großen Köpfen und kleinen Körpern.']]],
+    ['Zeichnen & Malen', '#a1c4fd,#fbc2eb', [
+      ['watercolor', 'Aquarell', '🎨', 'zartes Aquarell auf strukturiertem Papier mit fließenden Farbrändern.'],
+      ['sketch', 'Bleistift', '✏️', 'feine Bleistiftzeichnung mit detaillierter Schraffur, schwarz-weiß.'],
+      ['charcoal', 'Kohle', '🖤', 'ausdrucksstarke Kohlezeichnung mit weichen Schatten, schwarz-weiß.'],
+      ['lineart', 'Strichzeichnung', '〰️', 'minimalistische schwarze Strichzeichnung auf weißem Grund.'],
+      ['glass', 'Buntglas', '🪟', 'leuchtendes Buntglasfenster mit dunklen Bleistegen.'],
+      ['mosaic', 'Mosaik', '🧩', 'Mosaik aus kleinen farbigen Steinchen.']]],
+    ['Trend', '#12002b,#ff2bd6', [
+      ['graffiti', 'Graffiti', '🧱', 'Street-Art-Graffiti auf einer Ziegelwand mit Sprühfarben.'],
+      ['neon', 'Neon', '💡', 'leuchtende Neonlinien auf dunklem Hintergrund.'],
+      ['vaporwave', 'Vaporwave', '🌴', 'Vaporwave-Ästhetik mit Pastell-Pink, Türkis und Sonnenuntergangsraster.'],
+      ['lowpoly', 'Low Poly', '🔺', 'Low-Poly-Grafik aus kantigen farbigen Flächen.'],
+      ['brick', 'Klötzchenfigur', '🧱', 'Spielzeugfiguren aus Kunststoff-Bausteinen in einer Bausteinwelt, ohne Markenlogo.'],
+      ['bobble', 'Wackelkopf', '🙂', 'Wackelkopf-Sammelfiguren mit übergroßen Köpfen auf einem Sockel.'],
+      ['pastel', 'Pastell-Kawaii', '🍬', 'niedlicher Kawaii-Stil in zarten Pastellfarben mit Sternchen und Herzen.']]]
+  ]);
+  const aiFind = (list, key) => list.find(x => x.key === key) || null;
+  // Stil-ID „lib-<motiv>--<kunst>“ hält fest, aus welchen Bausteinen ein Stil stammt (für Kachelbild und Bearbeiten).
+  const aiParts = id => { const m = /^lib-([a-z0-9]*)--([a-z0-9]*)$/.exec(id || ''); return m ? { p: aiFind(AI_MOTIFS, m[1]), a: aiFind(AI_ARTS, m[2]) } : { p: null, a: null }; };
+  const aiCompose = (pp, aa) => ({ id: 'lib-' + (pp?.key || '') + '--' + (aa?.key || ''), name: [pp?.name, aa?.name].filter(Boolean).join(' · '),
+    prompt: AI_KEEP + (pp ? pp.text + ' ' : '') + 'Bildstil: ' + (aa ? aa.text : 'fotorealistisches, hochwertiges Porträtfoto.') });
+  const aiTile = x => x ? `<span class="pic" style="background:linear-gradient(135deg,${x.colors})">${x.icon}<img src="ai-styles/${x.key}.jpg" alt="" loading="lazy" onerror="this.remove()"></span>`
+    : '<span class="pic" style="background:linear-gradient(135deg,#F7C838,#ff9f43)">✨</span>';
+  const aiPic = id => { const { p, a } = aiParts(id); return aiTile(p || a); };
   const CSS = `
   #ws{position:fixed;inset:0;z-index:40;background:#f4f4f7;color:#1d1d24;display:flex;flex-direction:column;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
   #ws *{box-sizing:border-box}
@@ -77,6 +179,35 @@
   #ws .stat b{display:block;font-size:26px}
   #ws .soon{display:inline-block;font-size:11px;background:#FFF3C4;color:#8a6400;border-radius:999px;padding:2px 8px;margin-left:6px;font-weight:600}
   #ws .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  #ws .pic{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:44px;aspect-ratio:3/4;width:100%}
+  #ws .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  #ws .aitiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-top:12px}
+  #ws .aitiles button{position:relative;border:2px solid transparent;background:none;border-radius:14px;padding:0;cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:6px;align-items:center;color:inherit}
+  #ws .aitiles button b{font-size:13px;padding:0 4px 6px;text-align:center}
+  #ws .aitiles button.on{border-color:#F7C838;background:#fffbea}
+  #ws .aitiles button:hover .pic{filter:brightness(1.08)}
+  #ws .aitiles .del{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px}
+  #ws .aislots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+  @media(max-width:700px){#ws .aislots{grid-template-columns:1fr}}
+  #ws .aislot{border:2px dashed #cfcfd8;background:#fafafc;border-radius:12px;padding:10px;min-height:76px;cursor:pointer;font:inherit;display:flex;align-items:center;gap:10px;text-align:left;color:inherit}
+  #ws .aislot.set{border-style:solid;border-color:#F7C838;background:#fffbea}
+  #ws .aislot .pic{width:46px;font-size:22px;flex:none;border-radius:8px}
+  #ws .aislot small{display:block;color:#6b6b78;font-size:12px}
+  #ws .aislot .x{margin-left:auto;color:#6b6b78;padding:4px 8px}
+  #ws .aimodal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+  #ws .aimodal>div{background:#fff;border-radius:16px;width:min(900px,100%);max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+  #ws .aimodal .mh{display:flex;gap:12px;align-items:center;padding:16px 18px;border-bottom:1px solid #eeeef2}
+  #ws .aimodal .mh b{font-size:18px;flex:1}
+  #ws .aimodal .mh input{width:200px}
+  #ws .aichips{display:flex;gap:6px;flex-wrap:wrap;padding:12px 18px 0}
+  #ws .aichips button{border:1px solid #dcdce4;background:#fff;border-radius:999px;padding:5px 12px;cursor:pointer;font:inherit;font-size:13px;color:inherit}
+  #ws .aichips button.on{background:#F7C838;border-color:#F7C838;color:#1D1D1B;font-weight:700}
+  #ws .aimodal .body{overflow:auto;padding:4px 18px 18px}
+  #ws .aimodal h4{margin:16px 0 0;font-size:15px}
+  #ws .card button:disabled{opacity:.45;cursor:default}
+  #ws .aibar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  #ws .aibar .bal{font-weight:700;font-size:16px}
+  #ws details.adv summary{cursor:pointer;font-weight:600}
   #ws .thumbs div{position:relative}#ws .thumbs img{height:70px;border-radius:6px;display:block}
   #ws .thumbs button{position:absolute;top:2px;right:2px;border:0;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:11px}
   #wsModal{position:fixed;inset:0;background:rgba(20,16,40,.55);z-index:60;display:flex;align-items:center;justify-content:center;font:14px system-ui,sans-serif;color:#1d1d24}
@@ -150,6 +281,7 @@
 
     // ---------- Speichern (automatisch) ----------
     let saveT = 0;
+    const ai = { p: '', a: '', pick: '', cat: '', custom: false, edit: -1 }; // Baukasten-Zustand der KI-Seite
     const status = t => { $(root, '.st').textContent = t; };
     function save() {
       status('Speichert …'); clearTimeout(saveT);
@@ -179,7 +311,9 @@
     const titleSw = (t, p) => `<h1>${t}${p ? ` <label class="sw"><input type="checkbox" data-s="${p}" ${getP(S, p) ? 'checked' : ''}><i></i></label><span class="swl">${getP(S, p) ? 'Ein' : 'Aus'}</span>` : ''}</h1>`;
 
     main.addEventListener('input', e => {
-      const t = e.target, p = t.dataset.s; if (!p) return;
+      const t = e.target, p = t.dataset.s;
+      if (t.dataset.aiSearch !== undefined) { const q = t.value.trim().toLowerCase(); $$(main, '.aimodal [data-n]').forEach(b => { b.style.display = !q || b.dataset.n.includes(q) ? '' : 'none'; }); return; }
+      if (!p) return;
       const v = t.type === 'checkbox' ? t.checked : t.dataset.num ? +t.value : t.value;
       setP(S, p, v);
       if (p.startsWith('ai.prompts.')) {
@@ -189,7 +323,7 @@
       if (t.type === 'checkbox') { const l = t.closest('.row,h1')?.querySelector('.swl'); if (l) l.textContent = v ? 'Ein' : 'Aus'; }
       if (t.dataset.num) $$(main, `[data-s="${p}"]`).forEach(x => { if (x !== t) x.value = v; });
       save(); drawPreview();
-      if (t.type === 'radio' || p === 'startDisplay') render();
+      if (t.type === 'radio' || p === 'startDisplay' || t.dataset.rerender) render();
     });
     main.addEventListener('change', e => {
       const t = e.target;
@@ -206,9 +340,31 @@
         catch { ctx.toast('Guthaben nicht erreichbar. Zentrale KI muss zuerst freigeschaltet werden.', 5000); }
         return;
       }
-      if (a === 'ai-add') { if (S.ai.prompts.length >= 30) return ctx.toast('Maximal 30 Prompts pro Event.'); S.ai.prompts.push({ id: crypto.randomUUID(), name: 'Neuer Stil', prompt: '' }); save(); render(); return; }
-      if (a === 'ai-delete') { S.ai.prompts.splice(+t.dataset.i, 1); S.ai = AIEvent.normalize(S.ai); save(); render(); return; }
-      if (a === 'ai-copy') { if (S.ai.prompts.length >= 30) return ctx.toast('Maximal 30 Prompts pro Event.'); const item = S.ai.prompts[+t.dataset.i]; S.ai.prompts.push({ ...item, id: crypto.randomUUID(), name: item.name + ' (Kopie)' }); save(); render(); return; }
+      if (a === 'ai-clear') { ai[t.dataset.k] = ''; render(); return; }
+      if (a === 'ai-pick') { ai.pick = t.dataset.k; ai.cat = ''; render(); return; }
+      if (a === 'ai-close') { ai.pick = ''; render(); return; }
+      if (a === 'ai-cat') { ai.cat = t.dataset.c; render(); return; }
+      if (a === 'ai-choose') { ai[ai.pick] = t.dataset.k; ai.pick = ''; ai.custom = false; render(); return; }
+      if (a === 'ai-custom') { ai.p = ai.a = ''; ai.custom = true; ai.edit = -1; render(); return; }
+      if (a === 'ai-new') { e.preventDefault(); ai.p = ai.a = ''; ai.custom = false; ai.edit = -1; render(); return; }
+      if (a === 'ai-save') {
+        const item = ai.custom
+          ? { id: ai.edit >= 0 ? S.ai.prompts[ai.edit].id : crypto.randomUUID(), name: ($(main, '[data-ai-cname]').value.trim() || 'Eigener Stil').slice(0, 60), prompt: $(main, '[data-ai-ctext]').value.trim().slice(0, 1200) }
+          : aiCompose(aiFind(AI_MOTIFS, ai.p), aiFind(AI_ARTS, ai.a));
+        if (!item.prompt) return ctx.toast('Bitte zuerst eine Beschreibung eingeben.');
+        if (S.ai.prompts.some((x, i) => x.id === item.id && i !== ai.edit)) return ctx.toast('Dieser Stil ist bereits gespeichert.');
+        if (ai.edit >= 0) S.ai.prompts[ai.edit] = item;
+        else { if (S.ai.prompts.length >= 15) return ctx.toast('Maximal 15 Stile pro Event.'); S.ai.prompts.push(item); }
+        ai.p = ai.a = ''; ai.custom = false; ai.edit = -1;
+        S.ai = AIEvent.normalize(S.ai); save(); render(); ctx.toast('Stil gespeichert'); return;
+      }
+      if (a === 'ai-open') {
+        const item = S.ai.prompts[+t.dataset.i], parts = aiParts(item.id), same = aiCompose(parts.p, parts.a);
+        ai.edit = +t.dataset.i; ai.custom = !(parts.p || parts.a) || same.prompt !== item.prompt || same.name !== item.name;
+        ai.p = ai.custom ? '' : parts.p?.key || ''; ai.a = ai.custom ? '' : parts.a?.key || '';
+        render(); main.querySelector('[data-ai-builder]')?.scrollIntoView({ block: 'center' }); return;
+      }
+      if (a === 'ai-delete') { S.ai.prompts.splice(+t.dataset.i, 1); ai.edit = -1; ai.custom = false; ai.p = ai.a = ''; S.ai = AIEvent.normalize(S.ai); save(); render(); return; }
       if (a === 'ai-status') {
         t.disabled = true;
         try {
@@ -221,8 +377,9 @@
         return;
       }
       if (a === 'ai-test') {
-        const item = S.ai.prompts[+t.dataset.i];
-        if (!item?.prompt.trim()) return ctx.toast('Bitte zuerst einen Prompt eingeben.');
+        const item = ai.custom ? { name: $(main, '[data-ai-cname]').value, prompt: $(main, '[data-ai-ctext]').value } : aiCompose(aiFind(AI_MOTIFS, ai.p), aiFind(AI_ARTS, ai.a));
+        if (!ai.custom && !ai.p && !ai.a) return ctx.toast('Bitte zuerst ein Motiv oder einen Kunststil wählen.');
+        if (!item.prompt.trim()) return ctx.toast('Bitte zuerst eine Beschreibung eingeben.');
         const central = S.ai.connection === 'central';
         if (central && !S.ai.enabled) return ctx.toast('Bitte zuerst KI-Porträts für dieses Event einschalten.');
         if (central) {
@@ -345,17 +502,43 @@
           <button class="ghost" data-a="upbg" style="margin-top:10px">${ICON('upload', 15)} Bild hochladen (JPG/PNG, empfohlen 1800×1200)</button></div>`;
       },
       ai() {
-        return `${titleSw('KI-Porträts automatisch', 'ai.enabled')}<div class="card">
-          <button class="btn" data-a="ai-status">Grok-Verbindung prüfen</button><button class="btn" data-a="ai-balance">KI-Guthaben anzeigen</button><label class="l">KI-Verbindung</label><select data-s="ai.connection"><option value="local" ${S.ai.connection !== 'central' ? 'selected' : ''}>Eigener API-Schlüssel auf der Fotobox</option><option value="central" ${S.ai.connection === 'central' ? 'selected' : ''}>Photobox Memories · zentrale Grok-API</option></select><p>Zentrale KI nutzt das Guthaben des angemeldeten Betreibers. Kein eigener API-Schlüssel auf der Fotobox nötig. Freischaltung durch den Betreiber erforderlich. 1K: 1 Credit, 2K: 2 Credits.</p><label class="l">Bildanbieter (eigener Zugang)</label><select data-s="ai.provider"><option value="grok" ${S.ai.provider === 'grok' ? 'selected' : ''}>Grok (xAI)</option><option value="openai" ${S.ai.provider === 'openai' ? 'selected' : ''}>OpenAI</option><option value="gemini" ${S.ai.provider === 'gemini' ? 'selected' : ''}>Google Gemini</option></select><label class="l">Auflösung für Grok</label><select data-s="ai.resolution"><option value="1k" ${S.ai.resolution === '1k' ? 'selected' : ''}>1K</option><option value="2k" ${S.ai.resolution === '2k' ? 'selected' : ''}>2K · hohe Auflösung</option></select><p>Lege mehrere Stile für dieses Event an. Jeder Stil hat einen Namen und deinen eigenen Prompt.</p>
-          ${sw('ai.guestChoice', 'Gäste wählen ihren Stil', 'Bei mehreren Prompts erscheint vor der Aufnahme eine Auswahl. Aus = der unten gewählte Standard-Stil gilt automatisch.')}
-          <label class="l">Standard-Stil</label><select data-s="ai.selectedId"><option value="">Erster Stil</option>${S.ai.prompts.map(p => `<option value="${esc(p.id)}" ${p.id === S.ai.selectedId ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>
-          <p><button class="btn pri" data-a="ai-add">+ Prompt hinzufügen</button></p></div>
-          ${S.ai.prompts.map((p, i) => `<div class="card"><label class="l">Name des Stils</label><input type="text" maxlength="60" data-s="ai.prompts.${i}.name" value="${esc(p.name)}">
-          <label class="l">Dein Prompt</label><textarea rows="5" maxlength="1200" data-s="ai.prompts.${i}.prompt" placeholder="Beschreibe Kleidung, Hintergrund, Licht und Bildstil …">${esc(p.prompt)}</textarea>
-          <div class="row" style="margin-top:12px"><button class="btn pri" data-a="ai-test" data-i="${i}">Testbild generieren</button><button class="ghost" data-a="ai-copy" data-i="${i}">Duplizieren</button><button class="ghost" data-a="ai-delete" data-i="${i}">Entfernen</button></div></div>`).join('')}
-          <div class="card"><p>Änderungen werden automatisch im Event gespeichert. Die zugewiesene Fotobox übernimmt sie beim nächsten Abgleich.</p><p>Test: Foto auswählen → Übertragung an den ausgewählten Anbieter bestätigen → Testbild erstellen. Der Test startet keine Fotobox-Aufnahme.</p>
-          <p>Einmal pro Fotobox den passenden API-Schlüssel unter System → KI-Kreativstudio hinterlegen. Schlüssel und Testfotos werden nicht im Event gespeichert.</p>
-          <small>Pro Aufnahme eine KI-Anfrage. Internet erforderlich; Kosten gemäß Anbieter. Bei KI-Fehlern: Hinweis und Originalaufnahmen. Videos, GIFs und Boomerangs bleiben unverändert. Maximal 30 Prompts, je 1200 Zeichen.</small></div>`;
+        const central = S.ai.connection === 'central';
+        if (central) Promise.resolve(ctx.sb.from('ai_wallets').select('balance').eq('owner_id', ctx.me.id).maybeSingle()).then(({ data, error }) => {
+          const el = main.querySelector('[data-ai-bal]'); if (el) el.textContent = error ? 'Guthaben nicht abrufbar' : (data?.balance || 0) + ' Credits';
+        });
+        const pp = aiFind(AI_MOTIFS, ai.p), aa = aiFind(AI_ARTS, ai.a), editing = ai.edit >= 0 ? S.ai.prompts[ai.edit] : null;
+        const slot = (k, x, label) => x
+          ? `<div class="aislot set" data-a="ai-pick" data-k="${k}">${aiTile(x)}<div><small>${label}</small><b>${esc(x.name)}</b></div><span class="x" data-a="ai-clear" data-k="${k}">✕</span></div>`
+          : `<button class="aislot" data-a="ai-pick" data-k="${k}"><span style="font-size:22px">+</span><div><b>${label}</b><small>aus der Bibliothek wählen</small></div></button>`;
+        const list = ai.pick === 'a' ? AI_ARTS : AI_MOTIFS, cats = [...new Set(list.map(x => x.cat))];
+        const modal = !ai.pick ? '' : `<div class="aimodal"><div><div class="mh"><b>${ai.pick === 'a' ? 'Kunststil' : 'Motiv'} auswählen</b><input type="search" placeholder="Stile suchen …" data-ai-search><button class="ghost" data-a="ai-close">✕</button></div>
+          <div class="aichips"><button data-a="ai-cat" data-c="" class="${ai.cat ? '' : 'on'}">Alle</button>${cats.map(c => `<button data-a="ai-cat" data-c="${esc(c)}" class="${ai.cat === c ? 'on' : ''}">${esc(c)}</button>`).join('')}</div>
+          <div class="body">${cats.filter(c => !ai.cat || ai.cat === c).map(c => `<h4>${esc(c)}</h4><div class="aitiles">${list.filter(x => x.cat === c).map(x => `<button data-a="ai-choose" data-k="${x.key}" data-n="${esc(x.name.toLowerCase())}" class="${ai[ai.pick] === x.key ? 'on' : ''}">${aiTile(x)}<b>${esc(x.name)}</b></button>`).join('')}</div>`).join('')}</div></div></div>`;
+        return `${titleSw('KI-Porträts', 'ai.enabled')}
+          <div class="card"><div class="aibar">${central
+            ? `<span>KI-Guthaben:</span><span class="bal" data-ai-bal>…</span><small>${S.ai.resolution === '2k' ? '2 Credits' : '1 Credit'} pro Bild</small><span class="sp" style="flex:1"></span><button class="ghost" data-a="ai-status">Verbindung prüfen</button>`
+            : `<span>Eigener API-Schlüssel auf der Fotobox · ${({ grok: 'Grok (xAI)', openai: 'OpenAI', gemini: 'Google Gemini' })[S.ai.provider]}</span>`}</div></div>
+          <div class="card" data-ai-builder><b>${editing ? 'Stil bearbeiten: ' + esc(editing.name) : 'Stil erstellen'}</b>
+          ${ai.custom ? `<label class="l">Name (sehen die Gäste)</label><input type="text" maxlength="60" data-ai-cname value="${esc(editing?.name || '')}" placeholder="z. B. Unser Firmenlook">
+            <label class="l">Beschreibung für die KI</label><textarea rows="5" maxlength="1200" data-ai-ctext placeholder="Motiv: was die Gäste werden · Szene: wo sie sind · Stil: wie das Bild aussieht">${esc(editing?.prompt || AI_KEEP)}</textarea>
+            <p><a href="#" data-a="ai-new">← Zurück zur Bibliothek</a></p>`
+            : `<div class="aislots">${slot('p', pp, 'Motiv')}${slot('a', aa, 'Kunststil')}<button class="aislot" data-a="ai-custom"><span style="font-size:22px">✎</span><div><b>Eigener Text</b><small>selbst beschreiben</small></div></button></div>
+            <small>Wähle ein Motiv, einen Kunststil oder beides zusammen.</small>`}
+          <div class="row" style="margin-top:12px"><button class="btn pri" data-a="ai-save" ${ai.custom || pp || aa ? '' : 'disabled'}>${editing ? 'Änderung speichern' : 'Stil speichern'}</button>
+          <button class="ghost" data-a="ai-test" ${ai.custom || pp || aa ? '' : 'disabled'}>Mit eigenem Foto testen</button>${editing ? '<button class="ghost" data-a="ai-new">Abbrechen</button>' : ''}</div></div>
+          <div class="card"><b>Stile für dieses Event (${S.ai.prompts.length}/15)</b>
+          <div class="aitiles"><button data-a="ai-new"><span class="pic" style="background:#fafafc;border:2px dashed #cfcfd8;color:#6b6b78">+</span><b>Neuer Stil</b></button>
+          ${S.ai.prompts.map((p, i) => `<button data-a="ai-open" data-i="${i}" class="${ai.edit === i ? 'on' : ''}">${aiPic(p.id)}<span class="del" data-a="ai-delete" data-i="${i}" title="Entfernen">🗑</span><b>${esc(p.name)}</b></button>`).join('')}</div></div>
+          <div class="card"><b>An der Fotobox</b>
+          ${sw('ai.guestChoice', 'Gäste wählen ihren Stil', 'Aus = alle Fotos bekommen automatisch den Standard-Stil.')}
+          <label class="l">Standard-Stil</label><select data-s="ai.selectedId"><option value="">Erster Stil</option>${S.ai.prompts.map(p => `<option value="${esc(p.id)}" ${p.id === S.ai.selectedId ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>
+          <div class="card"><details class="adv"><summary>Erweitert: Verbindung und Bildqualität</summary>
+          <label class="l">KI-Verbindung</label><select data-s="ai.connection" data-rerender="1"><option value="local" ${!central ? 'selected' : ''}>Eigener API-Schlüssel auf der Fotobox</option><option value="central" ${central ? 'selected' : ''}>Photobox Memories · zentrale KI (Credits)</option></select>
+          <p>Zentrale KI nutzt das Guthaben des angemeldeten Kontos; auf der Fotobox ist kein eigener Schlüssel nötig.</p>
+          ${central ? '' : `<label class="l">Bildanbieter (eigener Zugang)</label><select data-s="ai.provider" data-rerender="1"><option value="grok" ${S.ai.provider === 'grok' ? 'selected' : ''}>Grok (xAI)</option><option value="openai" ${S.ai.provider === 'openai' ? 'selected' : ''}>OpenAI</option><option value="gemini" ${S.ai.provider === 'gemini' ? 'selected' : ''}>Google Gemini</option></select>
+          <p>Den passenden API-Schlüssel einmal pro Fotobox unter System hinterlegen. Schlüssel werden nie im Event gespeichert.</p>`}
+          <label class="l">Auflösung</label><select data-s="ai.resolution" data-rerender="1"><option value="1k" ${S.ai.resolution === '1k' ? 'selected' : ''}>1K · schneller${central ? ' · 1 Credit' : ''}</option><option value="2k" ${S.ai.resolution === '2k' ? 'selected' : ''}>2K · hohe Auflösung${central ? ' · 2 Credits' : ''}</option></select>
+          <p><small>Pro Foto eine KI-Anfrage, Internet erforderlich. Schlägt die KI fehl, erhalten die Gäste einen Hinweis und ihre Originalfotos. Videos, GIFs und Boomerangs bleiben unverändert. Testfotos werden nicht gespeichert.</small></p></details></div>${modal}`;
       },
       survey() {
         return `<h1>Umfrage & Haftungsausschluss</h1>${tabs('sv', [['survey', 'Umfrage'], ['disc', 'Haftungsausschluss']])}
