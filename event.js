@@ -376,7 +376,7 @@
       <div class="row"><label class="sw"><input type="checkbox" data-s="${p}" ${getP(S, p) ? 'checked' : ''}><i></i></label><span class="swl">${getP(S, p) ? 'Ein' : 'Aus'}</span></div></div>`;
     const slider = (p, label, min, max, step = 1, unit = 'sec') => `<label class="l">${label}</label><div class="slider"><input type="range" min="${min}" max="${max}" step="${step}" data-s="${p}" data-num="1" value="${getP(S, p)}">
       <input type="number" min="${min}" max="${max}" step="${step}" data-s="${p}" data-num="1" value="${getP(S, p)}"><span class="swl">${unit}</span></div>`;
-    const text = (p, label, ph = '') => `<label class="l">${label}</label><input type="text" data-s="${p}" value="${esc(getP(S, p))}" placeholder="${esc(ph)}">`;
+    const text = (p, label, ph = '') => `<div><label class="l">${label}</label><input type="text" data-s="${p}" value="${esc(getP(S, p) ?? '')}" placeholder="${esc(ph)}"></div>`;
     const sel = (p, label, opts) => `<label class="l">${label}</label><select data-s="${p}">${opts.map(([k, n]) => `<option value="${esc(k)}" ${String(getP(S, p)) === String(k) ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>`;
     const fileName = u => decodeURIComponent(String(u).split('/').pop().split('?')[0]).replace(/^\d+-[a-z0-9]+\./, 'Datei.');
     const up = (p, label, accept, hint = '') => { const u = getP(S, p); return `${label ? `<label class="l">${label}</label>` : ''}<div class="row">${u ? `<span>${ICON('image', 16)} ${esc(fileName(u))}</span><button class="ghost" data-a="x-del" data-p="${p}">${ICON('trash', 14)} Entfernen</button>` : ''}
@@ -685,9 +685,9 @@
           ${sw('ai.guestChoice', 'Gäste wählen ihren Stil', 'Aus = alle Fotos bekommen automatisch den Standard-Stil.')}
           <label class="l">Standard-Stil</label><select data-s="ai.selectedId"><option value="">Erster Stil</option>${S.ai.prompts.map(p => `<option value="${esc(p.id)}" ${p.id === S.ai.selectedId ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>
           <div class="card">${sw('x.ai.skip', 'Option zum Überspringen der KI-Porträts hinzufügen ' + NEWAPP, 'Gäste können ihr Foto auch ohne KI-Stil behalten')}</div>
-          <div class="card"><details class="adv"><summary>Anpassbarer Text ${NEWAPP}</summary><div class="grid3x">
-            ${text('x.ai.texts.choose', 'Stil auswählen')}${text('x.ai.texts.chooseBtn', 'Schaltfläche Stil auswählen')}${text('x.ai.texts.createBtn', 'Schaltfläche KI-Porträt erstellen')}${text('x.ai.texts.creating', 'Ich erstelle das Porträt mit KI')}
-            ${text('x.ai.texts.retrying', 'Ich versuche es erneut')}${text('x.ai.texts.retryBtn', 'Schaltfläche Erneuter Versuch')}${text('x.ai.texts.skipBtn', 'Schaltfläche Überspringen')}${text('x.ai.texts.failed', 'Fehlermeldung')}</div></details></div>
+          <div class="card"><details class="adv"><summary>Texte für die Gäste anpassen ${NEWAPP}</summary><p style="color:#6b6b78;font-size:13px;margin:8px 0">Diese Texte sehen deine Gäste an der Fotobox, wenn sie ein KI-Porträt erstellen. Du kannst jede Formulierung ändern, zum Beispiel in eine andere Sprache oder in euren Ton.</p><div class="grid3x">
+            ${text('x.ai.texts.choose', 'Überschrift der Stilauswahl')}${text('x.ai.texts.chooseBtn', 'Knopf: Stil auswählen')}${text('x.ai.texts.createBtn', 'Knopf: KI-Porträt erstellen')}${text('x.ai.texts.creating', 'Hinweis während der Erstellung')}
+            ${text('x.ai.texts.retrying', 'Hinweis beim zweiten Versuch')}${text('x.ai.texts.retryBtn', 'Knopf: erneut versuchen')}${text('x.ai.texts.skipBtn', 'Knopf: ohne KI weiter')}${text('x.ai.texts.failed', 'Meldung, wenn es nicht geklappt hat')}</div></details></div>
           <div class="card"><details class="adv"><summary>Erweitert: Verbindung und Bildqualität</summary>
           <label class="l">KI-Verbindung</label><select data-s="ai.connection" data-rerender="1"><option value="local" ${!central ? 'selected' : ''}>Eigener API-Schlüssel auf der Fotobox</option><option value="central" ${central ? 'selected' : ''}>Photobox Memories · zentrale KI (Credits)</option></select>
           <p>Zentrale KI nutzt das Guthaben des angemeldeten Kontos; auf der Fotobox ist kein eigener Schlüssel nötig.</p>
