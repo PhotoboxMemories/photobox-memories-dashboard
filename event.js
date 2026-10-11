@@ -115,7 +115,8 @@
   const FILTERS = [['normal', 'Original', 'none'], ['bw', 'Schwarz-Weiß', 'grayscale(1) contrast(1.15)'], ['vintage', 'Vintage', 'sepia(.35) contrast(1.1) saturate(1.2) brightness(1.05)'],
     ['warm', 'Warm', 'sepia(.18) saturate(1.3) brightness(1.04)'], ['cool', 'Kühl', 'saturate(.9) hue-rotate(12deg) brightness(1.05)'], ['glam', 'Glamour', 'brightness(1.12) contrast(1.08) saturate(1.1)']];
   const DEF = {
-    title: '', subtitle: '', startText: 'Tippen zum Starten', accent: '#F7C838', attractUrl: '', attractType: '', attractFit: 'cover', font: 'modern', frame: '#ffffff', textColor: '#222222', template: 'classic',
+    ai: { enabled: false, prompt: '' },
+    title: '', subtitle: '', startText: 'Tippen zum Starten', accent: '#F7C838', attractUrl: '', attractType: '', attractFit: 'cover', startDisplay: 'live', font: 'modern', frame: '#ffffff', textColor: '#222222', template: 'classic',
     layouts: [], guestLayouts: false, gifFromPhotos: false,
     countdown: 3, countdownNext: 3, between: 2, autoReturn: 30, sound: true, mirror: true, mirrorPhoto: false, cropLive: true,
     modes: { single: true, strip: true, grid: true, gif: true, boomerang: true, video: true }, gifFrames: 4, boomerangLen: 'mittel', videoSecs: 10, videoAudio: true,
@@ -136,6 +137,7 @@
     if (!document.getElementById('ws-css')) { const s = document.createElement('style'); s.id = 'ws-css'; s.textContent = CSS; document.head.appendChild(s); }
     const S = { ...structuredClone(DEF), ...(ev.settings || {}) };
     S.modes = { ...DEF.modes, ...(ev.settings?.modes || {}) }; S.form = { ...DEF.form, ...(ev.settings?.form || {}) };
+    S.ai = AIEvent.normalize(ev.settings?.ai);
     S.layouts = S.layouts || [];
     let E = { name: ev.name, event_date: ev.event_date, logo_url: ev.logo_url };
     let page = 'layout', sub = {};
@@ -180,10 +182,14 @@
       const t = e.target, p = t.dataset.s; if (!p) return;
       const v = t.type === 'checkbox' ? t.checked : t.dataset.num ? +t.value : t.value;
       setP(S, p, v);
+      if (p.startsWith('ai.prompts.')) {
+        const select = main.querySelector('[data-s="ai.selectedId"]');
+        if (select) { const selected = select.value; select.innerHTML = '<option value="">Erster Stil</option>' + S.ai.prompts.map(item => `<option value="${esc(item.id)}">${esc(item.name)}</option>`).join(''); select.value = selected; }
+      }
       if (t.type === 'checkbox') { const l = t.closest('.row,h1')?.querySelector('.swl'); if (l) l.textContent = v ? 'Ein' : 'Aus'; }
       if (t.dataset.num) $$(main, `[data-s="${p}"]`).forEach(x => { if (x !== t) x.value = v; });
       save(); drawPreview();
-      if (t.type === 'radio') render();
+      if (t.type === 'radio' || p === 'startDisplay') render();
     });
     main.addEventListener('change', e => {
       const t = e.target;
@@ -195,6 +201,49 @@
       if (t.dataset.mode) { sub.mode = t.dataset.mode; render(); return; }
       if (t.dataset.flt) { const id = t.dataset.flt; S.filters = S.filters.includes(id) ? S.filters.filter(x => x !== id) : [...S.filters, id]; save(); render(); return; }
       const a = t.dataset.a;
+      if (a === 'ai-balance') {
+        try { const {data,error} = await ctx.sb.from('ai_wallets').select('balance').eq('owner_id', ctx.me.id).maybeSingle(); if(error) throw error; ctx.toast('Dein KI-Guthaben: ' + (data?.balance || 0) + ' Credits', 5000); }
+        catch { ctx.toast('Guthaben nicht erreichbar. Zentrale KI muss zuerst freigeschaltet werden.', 5000); }
+        return;
+      }
+      if (a === 'ai-add') { if (S.ai.prompts.length >= 30) return ctx.toast('Maximal 30 Prompts pro Event.'); S.ai.prompts.push({ id: crypto.randomUUID(), name: 'Neuer Stil', prompt: '' }); save(); render(); return; }
+      if (a === 'ai-delete') { S.ai.prompts.splice(+t.dataset.i, 1); S.ai = AIEvent.normalize(S.ai); save(); render(); return; }
+      if (a === 'ai-copy') { if (S.ai.prompts.length >= 30) return ctx.toast('Maximal 30 Prompts pro Event.'); const item = S.ai.prompts[+t.dataset.i]; S.ai.prompts.push({ ...item, id: crypto.randomUUID(), name: item.name + ' (Kopie)' }); save(); render(); return; }
+      if (a === 'ai-status') {
+        t.disabled = true;
+        try {
+          const {data,error} = await ctx.sb.functions.invoke('ai-status');
+          let result = data;
+          if (error?.context?.json) { try { result = await error.context.json(); } catch {} }
+          ctx.toast(result?.error || (error ? 'KI-Verbindung konnte nicht geprüft werden: ' + error.message : result?.message || 'Verbindung geprüft.'), 12000);
+        } catch (error) { ctx.toast('KI-Verbindung nicht erreichbar: ' + error.message, 8000); }
+        finally { t.disabled = false; }
+        return;
+      }
+      if (a === 'ai-test') {
+        const item = S.ai.prompts[+t.dataset.i];
+        if (!item?.prompt.trim()) return ctx.toast('Bitte zuerst einen Prompt eingeben.');
+        const central = S.ai.connection === 'central';
+        if (central && !S.ai.enabled) return ctx.toast('Bitte zuerst KI-Porträts für dieses Event einschalten.');
+        if (central) {
+          clearTimeout(saveT);
+          const {error} = await ctx.sb.from('events').update({name: E.name, event_date: E.event_date || null, logo_url: E.logo_url || null, settings: S}).eq('id', ev.id);
+          if (error) return ctx.toast('Event konnte nicht gespeichert werden: ' + error.message);
+          status('✓ Alle Änderungen gespeichert');
+        }
+        AITest.open({ ...item, provider: central ? 'grok' : S.ai.provider, resolution: S.ai.resolution,
+          ...(central ? {generate: async input => {
+            const {data,error} = await ctx.sb.functions.invoke('ai-generate', {body: {...input, eventId: ev.id, requestId: crypto.randomUUID()}});
+            let result = data;
+            if (error?.context?.json) { try { result = await error.context.json(); } catch {} }
+            if (error || result?.error) throw new Error(result?.error || error.message);
+            if (!result?.image) throw new Error('Der KI-Dienst hat kein Bild geliefert.');
+            return result;
+          }} : {})
+        });
+        return;
+      }
+
       if (a === 'newlay') { $(main, '.dd .menu').classList.toggle('hidden-m'); $(main, '.dd .menu').style.display = $(main, '.dd .menu').style.display === 'block' ? 'none' : 'block'; }
       if (a === 'fromtpl') pickTemplate(vals(), addLayout);
       if (a === 'fromimg') fromImage();
@@ -274,7 +323,7 @@
           ${text('title', 'Titel', E.name)}${text('subtitle', 'Untertitel / Datum')}${text('startText', 'Text auf dem Start-Knopf')}
           <label class="l">Logo</label><div class="row">${E.logo_url ? `<img src="${esc(E.logo_url)}" style="height:50px;border-radius:6px"><button class="ghost" data-a="dellogo">Entfernen</button>` : ''}<button class="ghost" data-a="uplogo">${ICON('upload', 15)} Logo hochladen</button></div>
           <div class="row" style="margin-top:12px"><div><label class="l">Akzentfarbe</label><input type="color" data-s="accent" value="${S.accent}"></div></div></div>
-          <h2>Startbildschirm-Video</h2><div class="card">Das Video läuft in Dauerschleife, bis ein Gast den Bildschirm berührt. Hoch- oder Querformat, MP4 (max. 50 MB) – oder ein Bild.
+          <h2>Startbildschirm-Anzeige</h2><div class="card"><label class="l">Anzeige wählen</label><select data-s="startDisplay"><option value="live" ${S.startDisplay !== 'media' ? 'selected' : ''}>Live-Ansicht der Kamera</option><option value="media" ${S.startDisplay === 'media' ? 'selected' : ''}>Hochgeladenes Video oder Bild</option></select><p>Ein Upload ändert diese Auswahl nicht. Während der Aufnahme erscheint immer die Live-Ansicht.</p></div><h2>Startbildschirm-Video</h2><div class="card">Das Video läuft in Dauerschleife, bis ein Gast den Bildschirm berührt. Hoch- oder Querformat, MP4 (max. 50 MB) – oder ein Bild.
             <div class="row" style="margin-top:12px">${S.attractUrl ? `<span>${ICON(S.attractType === 'video' ? 'video' : 'image', 18)} ${S.attractType === 'video' ? 'Video' : 'Bild'} hinterlegt</span><button class="ghost" data-a="delattract">${ICON('trash', 14)} Entfernen</button>` : ''}
               <button class="ghost" data-a="upattract">${ICON('upload', 15)} Video oder Bild hochladen</button></div>
             <label class="l">Anpassen an den Bildschirm</label><select data-s="attractFit"><option value="cover" ${S.attractFit !== 'contain' ? 'selected' : ''}>Füllen (Ränder werden abgeschnitten)</option><option value="contain" ${S.attractFit === 'contain' ? 'selected' : ''}>Einpassen (ganzes Video sichtbar)</option></select></div>
@@ -295,7 +344,19 @@
           <label class="l">Hintergründe</label><div class="thumbs">${(S.bgUrls || []).map((u, i) => `<div><img src="${esc(u)}"><button data-a="delbg" data-i="${i}">✕</button></div>`).join('')}</div>
           <button class="ghost" data-a="upbg" style="margin-top:10px">${ICON('upload', 15)} Bild hochladen (JPG/PNG, empfohlen 1800×1200)</button></div>`;
       },
-      ai() { return `<h1>KI-Porträts <span class="soon">bald</span></h1><div class="card">Verwandelt Gästefotos per KI in Stile wie Superheld, Gemälde oder Comic. Kommt in einem der nächsten Updates.</div>`; },
+      ai() {
+        return `${titleSw('KI-Porträts automatisch', 'ai.enabled')}<div class="card">
+          <button class="btn" data-a="ai-status">Grok-Verbindung prüfen</button><button class="btn" data-a="ai-balance">KI-Guthaben anzeigen</button><label class="l">KI-Verbindung</label><select data-s="ai.connection"><option value="local" ${S.ai.connection !== 'central' ? 'selected' : ''}>Eigener API-Schlüssel auf der Fotobox</option><option value="central" ${S.ai.connection === 'central' ? 'selected' : ''}>Photobox Memories · zentrale Grok-API</option></select><p>Zentrale KI nutzt das Guthaben des angemeldeten Betreibers. Kein eigener API-Schlüssel auf der Fotobox nötig. Freischaltung durch den Betreiber erforderlich. 1K: 1 Credit, 2K: 2 Credits.</p><label class="l">Bildanbieter (eigener Zugang)</label><select data-s="ai.provider"><option value="grok" ${S.ai.provider === 'grok' ? 'selected' : ''}>Grok (xAI)</option><option value="openai" ${S.ai.provider === 'openai' ? 'selected' : ''}>OpenAI</option><option value="gemini" ${S.ai.provider === 'gemini' ? 'selected' : ''}>Google Gemini</option></select><label class="l">Auflösung für Grok</label><select data-s="ai.resolution"><option value="1k" ${S.ai.resolution === '1k' ? 'selected' : ''}>1K</option><option value="2k" ${S.ai.resolution === '2k' ? 'selected' : ''}>2K · hohe Auflösung</option></select><p>Lege mehrere Stile für dieses Event an. Jeder Stil hat einen Namen und deinen eigenen Prompt.</p>
+          ${sw('ai.guestChoice', 'Gäste wählen ihren Stil', 'Bei mehreren Prompts erscheint vor der Aufnahme eine Auswahl. Aus = der unten gewählte Standard-Stil gilt automatisch.')}
+          <label class="l">Standard-Stil</label><select data-s="ai.selectedId"><option value="">Erster Stil</option>${S.ai.prompts.map(p => `<option value="${esc(p.id)}" ${p.id === S.ai.selectedId ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>
+          <p><button class="btn pri" data-a="ai-add">+ Prompt hinzufügen</button></p></div>
+          ${S.ai.prompts.map((p, i) => `<div class="card"><label class="l">Name des Stils</label><input type="text" maxlength="60" data-s="ai.prompts.${i}.name" value="${esc(p.name)}">
+          <label class="l">Dein Prompt</label><textarea rows="5" maxlength="1200" data-s="ai.prompts.${i}.prompt" placeholder="Beschreibe Kleidung, Hintergrund, Licht und Bildstil …">${esc(p.prompt)}</textarea>
+          <div class="row" style="margin-top:12px"><button class="btn pri" data-a="ai-test" data-i="${i}">Testbild generieren</button><button class="ghost" data-a="ai-copy" data-i="${i}">Duplizieren</button><button class="ghost" data-a="ai-delete" data-i="${i}">Entfernen</button></div></div>`).join('')}
+          <div class="card"><p>Änderungen werden automatisch im Event gespeichert. Die zugewiesene Fotobox übernimmt sie beim nächsten Abgleich.</p><p>Test: Foto auswählen → Übertragung an den ausgewählten Anbieter bestätigen → Testbild erstellen. Der Test startet keine Fotobox-Aufnahme.</p>
+          <p>Einmal pro Fotobox den passenden API-Schlüssel unter System → KI-Kreativstudio hinterlegen. Schlüssel und Testfotos werden nicht im Event gespeichert.</p>
+          <small>Pro Aufnahme eine KI-Anfrage. Internet erforderlich; Kosten gemäß Anbieter. Bei KI-Fehlern: Hinweis und Originalaufnahmen. Videos, GIFs und Boomerangs bleiben unverändert. Maximal 30 Prompts, je 1200 Zeichen.</small></div>`;
+      },
       survey() {
         return `<h1>Umfrage & Haftungsausschluss</h1>${tabs('sv', [['survey', 'Umfrage'], ['disc', 'Haftungsausschluss']])}
           ${sub.sv === 'survey' ? `${titleSw('Umfrage', 'form.enabled')}<div class="card">Stellen Sie Ihren Gästen Fragen vor der Aufnahme. Die Antworten findest du unter „Gäste-Daten“.
@@ -324,7 +385,7 @@
         <button class="btn pri" data-a="edit1">${ICON('pen', 15)} Bearbeiten</button><small style="color:#777">${S.layouts[0] ? esc(S.layouts[0].name) : 'Standard-Vorlage'}</small></div></div></div>`;
     }
     function startPreview() {
-      const media = S.attractUrl ? (S.attractType === 'video' ? `<video src="${esc(S.attractUrl)}" autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:${S.attractFit === 'contain' ? 'contain' : 'cover'};background:#000"></video>`
+      const media = S.startDisplay === 'media' && S.attractUrl ? (S.attractType === 'video' ? `<video src="${esc(S.attractUrl)}" autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:${S.attractFit === 'contain' ? 'contain' : 'cover'};background:#000"></video>`
         : `<img src="${esc(S.attractUrl)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${S.attractFit === 'contain' ? 'contain' : 'cover'};background:#000">`) : '';
       return `<div class="pv"><div class="frame"><div id="wsStart" style="position:relative;overflow:hidden;aspect-ratio:3/4;border-radius:10px;background:linear-gradient(160deg,#1D1D1B,#4a4a45);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:20px">${media}<div style="position:relative;display:flex;flex-direction:column;align-items:center">
         ${E.logo_url ? `<img src="${esc(E.logo_url)}" style="max-height:70px;margin-bottom:14px">` : ''}<div style="font-size:30px;font-weight:800">${esc(S.title || E.name)}</div>
