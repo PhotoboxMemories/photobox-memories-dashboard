@@ -385,7 +385,9 @@
       <button class="ghost" data-a="x-up" data-p="${p}" data-accept="${accept}">${ICON('upload', 15)} Datei hochladen</button>${hint ? `<small style="color:#777">${hint}</small>` : ''}</div>`; };
     const upList = (p, accept, label) => { const list = getP(S, p) || []; return `<div>${list.map((u, i) => `<div class="row" style="margin-bottom:6px"><span>${ICON('image', 16)} ${esc(fileName(u))}</span><button class="ghost" data-a="x-del" data-p="${p}" data-i="${i}">${ICON('trash', 14)}</button></div>`).join('')}
       <button class="ghost" data-a="x-up" data-p="${p}" data-accept="${accept}" data-list="1">${ICON('upload', 15)} ${label}</button></div>`; };
-    const tabs = (key, list) => { sub[key] ||= list[0][0]; return `<div class="tabs">${list.map(([k, n]) => `<button data-tab="${key}:${k}" class="${sub[key] === k ? 'on' : ''}">${n}</button>`).join('')}</div>`; };
+    const tabLists = {};
+    const allTabs = (key, body) => { const cur = sub[key]; const html = tabLists[key].map(([k]) => { sub[key] = k; return `<section id="sec-${key}-${k}">${body()}</section>`; }).join(''); sub[key] = cur; return html; };
+    const tabs = (key, list) => { tabLists[key] = list; sub[key] ||= list[0][0]; return `<div class="tabs">${list.map(([k, n]) => `<button data-tab="${key}:${k}" class="${sub[key] === k ? 'on' : ''}">${n}</button>`).join('')}</div>`; };
     const titleSw = (t, p) => `<h1>${t}${p ? ` <label class="sw"><input type="checkbox" data-s="${p}" ${getP(S, p) ? 'checked' : ''}><i></i></label><span class="swl">${getP(S, p) ? 'Ein' : 'Aus'}</span>` : ''}</h1>`;
 
     main.addEventListener('input', e => {
@@ -412,7 +414,7 @@
     });
     main.addEventListener('click', async e => {
       const t = e.target.closest('[data-tab],[data-a],[data-mode],[data-flt],[data-lay]'); if (!t) return;
-      if (t.dataset.tab) { const [k, v] = t.dataset.tab.split(':'); sub[k] = v; render(); return; }
+      if (t.dataset.tab) { const [k, v] = t.dataset.tab.split(':'); sub[k] = v; render(); main.querySelector(`#sec-${k}-${v}`)?.scrollIntoView({ block: 'start' }); return; }
       if (t.dataset.mode) { sub.mode = t.dataset.mode; render(); return; }
       if (t.dataset.flt) { const id = t.dataset.flt; S.filters = S.filters.includes(id) ? S.filters.filter(x => x !== id) : [...S.filters, id]; save(); render(); return; }
       const a = t.dataset.a;
@@ -538,6 +540,7 @@
       if (a === 'q-add') { if (S.x.survey.questions.length >= 20) return ctx.toast('Maximal 20 Fragen.'); S.x.survey.questions.push({ id: crypto.randomUUID(), text: '', type: 'short', required: false, options: '' }); save(); render(); return; }
       if (a === 'q-del') { S.x.survey.questions.splice(+t.dataset.i, 1); save(); render(); return; }
       if (a === 'q-up' || a === 'q-down') { const i = +t.dataset.i, j = a === 'q-up' ? i - 1 : i + 1, Q = S.x.survey.questions; if (j < 0 || j >= Q.length) return; [Q[i], Q[j]] = [Q[j], Q[i]]; save(); render(); return; }
+      if (a === 'bgon') { S.bgMode = t.checked ? 'ai' : 'off'; save(); render(); return; }
       if (a === 'bgchoice') { S.bgGuestChoice = t.dataset.v === '1'; save(); return; }
       if (a === 'upbg') { const f = await pick('image/*'); if (f) { status('Lädt Hintergrund hoch …'); S.bgUrls = [...(S.bgUrls || []), await ctx.uploadFile(f)]; save(); render(); } }
       if (a === 'delbg') { S.bgUrls = S.bgUrls.filter((_, i) => i !== +t.dataset.i); save(); render(); }
@@ -572,14 +575,14 @@
       },
       layout() {
         return `<h1>Photo booth experience</h1>${tabs('layout', [['layouts', 'Photo layout'], ['countdown', 'Countdown']])}
-          ${sub.layout === 'layouts' ? `<h2>Fotolayout</h2><div class="card">Wird für Foto- oder Drucksitzungen verwendet
+          ${true ? `<section id="sec-layout-layouts"></section><h2>Fotolayout</h2><div class="card">Wird für Foto- oder Drucksitzungen verwendet
             ${layoutCards()}${S.layouts.length > 1 ? sw('guestLayouts', 'Gäste wählen das Layout', 'Bei mehreren Layouts wählen die Gäste vor der Aufnahme') : ''}
             ${sw('gifFromPhotos', 'Auch ein GIF aus den Fotos erstellen')}</div>` : ''}
-          <h2>Countdown</h2><div class="card">${slider('countdown', 'Countdown vor Foto 1', 1, 10)}${slider('countdownNext', 'Countdown vor weiteren Fotos', 1, 10)}${slider('between', 'Anzeigedauer des Fotos', 0, 10, .5)}</div>`;
+          <section id="sec-layout-countdown"></section><h2>Countdown</h2><div class="card">${slider('countdown', 'Countdown vor Foto 1', 1, 10)}${slider('countdownNext', 'Countdown vor weiteren Fotos', 1, 10)}${slider('between', 'Anzeigedauer des Fotos', 0, 10, .5)}</div>`;
       },
       capture() {
         sub.mode ||= 'photo';
-        const M = [['photo', 'camera', 'Foto', 'single'], ['gif', 'film', 'GIF', 'gif'], ['boom', 'repeat', 'Boomerang', 'boomerang'], ['slowmo', 'repeat', '360/Zeitlupe', ''], ['video', 'video', 'Video', 'video']];
+        const M = [['photo', 'camera', 'Foto', 'single'], ['gif', 'film', 'GIF', 'gif'], ['boom', 'repeat', 'Boomerang', 'boomerang'], ['slowmo', 'repeat', '360/Video in Zeitlupe', ''], ['video', 'video', 'Video', 'video']];
         const photoOn = S.modes.single || S.modes.strip || S.modes.grid || S.layouts.length;
         const isOn = (k, key) => k === 'photo' ? photoOn : k === 'slowmo' ? S.x.slowmo.enabled : S.modes[key];
         const sizes = [['720p-16:9', 'Rechteck 720p 16:9'], ['1080p-16:9', 'Rechteck 1080p 16:9'], ['720p-9:16', 'Hochformat 720p 9:16'], ['1080p-9:16', 'Hochformat 1080p 9:16'], ['square-720', 'Quadrat 720 1:1'], ['square-1080', 'Quadrat 1080 1:1']];
@@ -636,18 +639,18 @@
       },
       fx() {
         return `<h1>Filter & Effekte</h1>${tabs('fx', [['beauty', 'Schönheitsfilter'], ['color', 'Farbfilter'], ['sticker', 'Aufkleber']])}
-          ${sub.fx === 'beauty' ? `${titleSw('Schönheitsfilter', 'beauty')}<div class="card">Tragen Sie einen Schönheitsfilter auf, um die Haut zu glätten und Schönheitsfehler zu entfernen.${slider('beautyStrength', 'Stärke', 0, 100, 5, '%')}</div>`
+          ${allTabs('fx', () => sub.fx === 'beauty' ? `${titleSw('Schönheitsfilter', 'beauty')}<div class="card">Tragen Sie einen Schönheitsfilter auf, um die Haut zu glätten und Schönheitsfehler zu entfernen.${slider('beautyStrength', 'Stärke', 0, 100, 5, '%')}</div>`
           : sub.fx === 'color' ? `${titleSw('Farbfilter', 'filtersOn')}<div class="card">Wenden Sie einen Farbfilter an, um Töne zu verändern und Farben anzupassen.
               <label class="l">Filter</label><div class="row">${[['auto', 'Automatisch durchwechseln'], ['guest', 'Gäste wählen den Filter']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="fxm" data-s="x.fx.mode" value="${k}" ${S.x.fx.mode === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
               <div class="filters" style="margin-top:12px">${FILTERS.map(([id, n, css]) => `<div class="flt ${S.filters.includes(id) ? 'on' : ''}" data-flt="${id}"><img src="${filterThumb(css)}"><span>${n}</span></div>`).join('')}</div>
               <div style="margin-top:14px">${up('x.fx.lut', 'Eigener Farb-Look (LUT) ' + NEWAPP, '.cube', 'nur .cube-Dateien')}</div></div>`
           : `${titleSw('Aufkleber', 'stickers')}<div class="card">Lassen Sie Ihre Gäste ihre Fotos mit lustigen Aufklebern verzieren.
               <label class="l">Aufkleberstil</label><div class="row">${[['standard', 'Standard'], ['custom', 'Benutzerdefinierte']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="stm" data-s="x.fx.stickerStyle" value="${k}" ${S.x.fx.stickerStyle === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
-              ${S.x.fx.stickerStyle === 'custom' ? upList('x.fx.stickers', 'image/png', 'Aufkleber hinzufügen (PNG mit Transparenz)') + ' ' + NEWAPP : ''}</div>`}`;
+              ${S.x.fx.stickerStyle === 'custom' ? upList('x.fx.stickers', 'image/png', 'Aufkleber hinzufügen (PNG mit Transparenz)') + ' ' + NEWAPP : ''}</div>`)}`;
       },
       bg() {
-        return `${titleSw('Hintergrundentfernung', '')}<div class="card"><b>Ersetzen Sie den Hintergrund Ihrer Fotos</b>
-          <label class="l">Modus</label><div class="row">${[['off', 'Aus'], ['ai', 'KI-Hintergrundentfernung'], ['green', 'Greenscreen']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="bgm" data-s="bgMode" value="${k}" ${S.bgMode === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
+        return `<h1>Hintergrundentfernung <label class="sw"><input type="checkbox" data-a="bgon" ${S.bgMode !== 'off' ? 'checked' : ''}><i></i></label><span class="swl">${S.bgMode !== 'off' ? 'Ein' : 'Aus'}</span></h1><div class="card"><b>Ersetzen Sie den Hintergrund Ihrer Fotos</b>
+          <label class="l">Modus</label><div class="row">${[['ai', 'KI-Hintergrundentfernung'], ['green', 'Greenscreen']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="bgm" data-rerender="1" data-s="bgMode" value="${k}" ${S.bgMode === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
           ${S.bgMode === 'green' ? slider('x.bg.smooth', 'Glättung ' + NEWAPP, 1, 15, 1, '') + slider('keyStrength', 'Empfindlichkeit', 0, 100, 1, '') : ''}
           <label class="l">Hintergründe</label><div class="row">${[[false, 'Automatisch durchwechseln'], [true, 'Gäste wählen das Hintergrundbild']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="bgc" data-a="bgchoice" data-v="${k ? 1 : 0}" ${!!S.bgGuestChoice === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
           <div class="thumbs">${(S.bgUrls || []).map((u, i) => `<div><img src="${esc(u)}"><button data-a="delbg" data-i="${i}">✕</button></div>`).join('')}</div>
@@ -712,7 +715,7 @@
       survey() {
         const Q = S.x.survey.questions, types = [['short', 'Kurze Antwort'], ['long', 'Lange Antwort'], ['choice', 'Mehrfachauswahl'], ['email', 'E-Mail'], ['phone', 'Telefon']];
         return `<h1>Umfrage & Haftungsausschluss</h1>${tabs('sv', [['survey', 'Umfrage'], ['disc', 'Haftungsausschluss']])}
-          ${sub.sv === 'survey' ? `${titleSw('Umfrage', 'form.enabled')}<div class="card"><b>Stellen Sie Ihren Gästen Fragen, die diese beantworten sollen</b>
+          ${allTabs('sv', () => sub.sv === 'survey' ? `${titleSw('Umfrage', 'form.enabled')}<div class="card"><b>Stellen Sie Ihren Gästen Fragen, die diese beantworten sollen</b>
               <p style="color:#777;font-size:13px">Umfrageantworten können auf dem Ausdruck angezeigt werden. Die Antworten findest du unter „Gäste-Daten“.</p>
               <p style="font-weight:600;margin-top:10px">Feste Felder</p>${sw('form.name', 'Name abfragen')}${sw('form.email', 'E-Mail abfragen')}${sw('form.phone', 'Telefon abfragen')}${sw('form.newsletter', 'Newsletter-Einwilligung anbieten')}
               <p style="font-weight:600;margin-top:14px">Eigene Fragen ${NEWAPP}</p>
@@ -730,13 +733,12 @@
               ${text('x.disc.title', 'Titel für Haftungsausschluss ' + NEWAPP)}
               <label class="l">Text des Haftungsausschlusses</label><textarea rows="5" data-s="form.text">${esc(S.form.text)}</textarea>
               <p style="color:#777;font-size:13px">Wenn der Gast den Haftungsausschluss nicht akzeptiert, wird seine Sitzung abgebrochen und seine Fotos werden gelöscht.</p>
-              <div class="grid3x">${text('x.disc.warn', 'Warnung ' + NEWAPP)}${text('x.disc.agree', 'Vereinbarung')}${text('x.disc.cancel', 'Abbrechen')}</div></div>`}`;
+              <div class="grid3x">${text('x.disc.warn', 'Warnung ' + NEWAPP)}${text('x.disc.agree', 'Vereinbarung')}${text('x.disc.cancel', 'Abbrechen')}</div></div>`)}`;
       },
       share() {
         const X = S.x.share;
-        return `<h1>Einstellungen für Teilen</h1>${tabs('sh', [['qr', 'QR-Code'], ['mail', 'E-Mail'], ['sms', 'SMS'], ['wa', 'WhatsApp'], ['screen', 'Bildschirm zum Teilen'], ['more', 'Weitere Optionen']])}
-          ${sub.sh === 'qr' ? `${titleSw('QR-Code', 'share')}<div class="card">Teilen Sie Fotos über einen QR-Code, den Gäste scannen können. Aktuell muss das Handy im selben WLAN wie die Fotobox sein.</div>`
-          : sub.sh === 'mail' ? `${titleSw('E-Mail', 'x.share.email.on')}<div class="card">${NEEDSRV}
+        return `<h1>Einstellungen für Teilen</h1>${tabs('sh', [['mail', 'E-Mail'], ['sms', 'SMS'], ['wa', 'WhatsApp'], ['screen', 'Bildschirm zum Teilen'], ['more', 'Weitere Optionen']])}
+          ${allTabs('sh', () => sub.sh === 'mail' ? `${titleSw('E-Mail', 'x.share.email.on')}<div class="card">${NEEDSRV}
               <label class="l">Von (Antwort an)</label><input type="email" data-s="x.share.email.from" value="${esc(X.email.from)}" placeholder="name@deinefirma.de">
               ${text('x.share.email.subject', 'Betreff')}<label class="l">HTML-Text</label><textarea rows="6" data-s="x.share.email.body">${esc(X.email.body)}</textarea>
               <p style="color:#777;font-size:13px">Platzhalter: {image} Bild · {image_url} Bild-Adresse · {share_url} Freigabe-Link</p>
@@ -747,21 +749,21 @@
           : sub.sh === 'wa' ? `${titleSw('WhatsApp', 'x.share.wa.on')}<div class="card">Erfordert eine Internetverbindung. ${NEEDSRV}
               <label class="l">Nachricht (max. 128 Zeichen)</label><textarea rows="2" maxlength="128" data-s="x.share.wa.message">${esc(X.wa.message)}</textarea>
               <div class="grid3x">${text('x.share.wa.cc', 'Ländercode (+)')}${text('x.share.wa.inputText', 'Text für die Eingabe der Telefonnummer')}${text('x.share.wa.scanText', 'Text für „Mit dem Handy scannen“')}</div></div>`
-          : sub.sh === 'screen' ? `<div class="card">${slider('autoReturn', 'Anzeigedauer des Bildschirms zum Teilen', 0, 120, 5)}
+          : sub.sh === 'screen' ? `<h2>Bildschirm zum Teilen</h2><div class="card">${slider('autoReturn', 'Anzeigedauer des Bildschirms zum Teilen', 0, 120, 5)}
               ${sw('x.share.originals', 'Originalfotos anzeigen ' + NEWAPP, 'Gäste können die einzelnen Originalfotos ansehen und teilen')}
               ${sw('x.share.deleteBtn', 'Schaltfläche „Löschen“ anzeigen', 'Gäste können die Aufnahme verwerfen und wiederholen')}${text('x.share.deleteText', 'Text für die Schaltfläche „Löschen“')}</div>`
-          : `<div class="card">${sw('x.share.cloud', 'Cloud-Freigabe ' + NEEDSRV_S, 'Fotos werden hochgeladen und sind über einen Link abrufbar')}
+          : `<h2>Weitere Optionen</h2><div class="card">${sw('x.share.cloud', 'Cloud-Freigabe ' + NEEDSRV_S, 'Fotos werden hochgeladen und sind über einen Link abrufbar')}
               ${sw('x.share.uploadOriginals', 'Originalfotos hochladen', 'Gäste können die Originalbilder in hoher Auflösung herunterladen')}
-              ${sw('share', 'QR-Code', 'Teilen Sie Fotos über einen QR-Code, den Gäste scannen können')}</div>`}`;
+              ${sw('share', 'QR Code', 'Teilen Sie Fotos über einen QR-Code, den Gäste scannen können. Aktuell muss das Handy im selben WLAN wie die Fotobox sein.')}</div>`)}`;
       },
       print() {
         return `<h1>Druckeinstellungen</h1>${tabs('pr', [['gen', 'Allgemein'], ['lim', 'Drucklimits']])}
-          ${sub.pr === 'gen' ? `<div class="card">${sw('autoPrint', 'Automatisch drucken', 'Automatisches Drucken jeder Session')}${sw('printButton', 'Schaltfläche „Drucken“ anzeigen', 'Fügt dem Freigabebildschirm eine Schaltfläche zum Drucken einer oder mehrerer zusätzlicher Kopien hinzu')}
+          ${allTabs('pr', () => sub.pr === 'gen' ? `<div class="card">${sw('autoPrint', 'Automatisch drucken', 'Automatisches Drucken jeder Session')}${sw('printButton', 'Schaltfläche „Drucken“ anzeigen', 'Fügt dem Freigabebildschirm eine Schaltfläche zum Drucken einer oder mehrerer zusätzlicher Kopien hinzu')}
               ${sw('askCopies', '„Wie viele Kopien?“ fragen')}<label class="l">Kopien pro Druck (Standard)</label><input type="number" min="1" max="10" data-s="copies" data-num="1" value="${S.copies}">
               <p style="font-weight:600;margin-top:14px">Texte ${NEWAPP}</p><div class="grid3x">${text('x.print.btnText', 'Drucken')}${text('x.print.printingText', 'Drucken...')}${text('x.print.copiesText', 'Wie viele Kopien?')}</div></div>`
           : `${titleSw('Drucklimits', '')}<div class="card">Ein Limit für die erlaubten Ausdrucke festlegen.
               <div class="row"><div style="flex:1"><label class="l">Maximale Anzahl an Ausdrucken pro Ereignis (0 = kein Limit)</label><input type="number" min="0" data-s="printLimit" data-num="1" value="${S.printLimit}"></div>
-              <div style="flex:1"><label class="l">Maximale Anzahl an Kopien pro Gast</label><input type="number" min="1" max="20" data-s="maxCopies" data-num="1" value="${S.maxCopies}"></div></div></div>`}`;
+              <div style="flex:1"><label class="l">Maximale Anzahl an Kopien pro Gast</label><input type="number" min="1" max="20" data-s="maxCopies" data-num="1" value="${S.maxCopies}"></div></div></div>`)}`;
       },
       gallery() {
         return `<h1>Online-Galerie</h1><div class="card">${NEEDSRV}
