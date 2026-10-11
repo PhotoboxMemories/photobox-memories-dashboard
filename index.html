@@ -6,13 +6,13 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=20261011-16"></script>
-<script src="icons.js?v=20261011-16"></script>
-<script src="render.js?v=20261011-16"></script>
-<script src="editor.js?v=20261011-16"></script>
-<script src="ai-event.js?v=20261011-16"></script>
-<script src="ai-test.js?v=20261011-16"></script>
-<script src="event.js?v=20261011-16"></script>
+<script src="config.js?v=20261011-17"></script>
+<script src="icons.js?v=20261011-17"></script>
+<script src="render.js?v=20261011-17"></script>
+<script src="editor.js?v=20261011-17"></script>
+<script src="ai-event.js?v=20261011-17"></script>
+<script src="ai-test.js?v=20261011-17"></script>
+<script src="event.js?v=20261011-17"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -39,6 +39,8 @@ h1,h2,.pm-logo{font-family:Fredoka,system-ui,sans-serif}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:20px}
+.stats .card{margin:0}.stats b{display:block;font-size:28px;line-height:1.2}.stats span{display:block}
 @media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
 
 /* Login */
@@ -169,6 +171,21 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
     <!-- Admin -->
     <div data-page="admin" class="hidden">
       <div class="pagehead"><h1>Verwaltung</h1><span class="badge" id="releaseInfo"></span></div>
+      <div class="stats" id="ovStats"></div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="pagehead" style="margin-bottom:10px"><h2 style="margin:0">Kunden</h2><input id="ovSearch" placeholder="Suchen…" style="max-width:260px"></div>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Kunde</th><th>Registriert</th><th>Lizenz</th><th>Fotoboxen</th><th>Guthaben</th><th>Erhalten</th><th>KI-Bilder</th></tr></thead>
+          <tbody id="ovCustomers"><tr><td colspan="7" class="empty">Lädt …</td></tr></tbody>
+        </table></div>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <h2>Guthaben-Buchungen</h2>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Datum</th><th>Kunde</th><th>Credits</th><th>Notiz</th></tr></thead>
+          <tbody id="ovLedger"><tr><td colspan="4" class="empty">Lädt …</td></tr></tbody>
+        </table></div>
+      </div>
       <div class="card" style="margin-bottom:20px">
         <h2>Neue Lizenz erstellen</h2>
         <div class="grid3">
@@ -337,7 +354,7 @@ async function boot() {
   $('#navAdmin').classList.toggle('hidden', !profile.is_admin);
   $$('.adminCol').forEach(e => e.classList.toggle('hidden', !profile.is_admin));
   await Promise.all([loadEvents(), loadDevices(), loadLicenses()]);
-  if (profile.is_admin) { loadRelease(); loadCredits(); }
+  if (profile.is_admin) { loadRelease(); loadCredits(); loadOverview(); }
 }
 
 /* ---------- Tabs ---------- */
@@ -541,7 +558,7 @@ async function loadLicenses() {
       <div>${licStatus(l)}</div>
       <div class="small muted">Geräte: ${l.devices.length} von ${l.max_devices}</div>
     </div>`).join('') : '<div class="card empty" style="grid-column:1/-1">Keine Lizenz mit deiner E-Mail gefunden. Bitte melde dich beim Verkäufer.</div>';
-  if (profile.is_admin) renderAdmin();
+  if (profile.is_admin) { renderAdmin(); renderOverview(); }
 }
 document.addEventListener('click', e => {
   const k = e.target.dataset?.copy; if (!k) return;
@@ -635,8 +652,57 @@ $('#cGrant').onclick = async () => {
   const { data, error } = await sb.rpc('ai_grant', { p_email: email, p_amount: amount, p_note: $('#cNote').value.trim() || null });
   $('#cGrant').disabled = false;
   if (error) return toast(/ai_grant|schema cache|does not exist/i.test(error.message) ? 'Die Guthaben-Funktion ist auf dem Server noch nicht eingerichtet (Migration fehlt).' : 'Fehler: ' + error.message, 6000);
-  toast(`Gebucht. Neues Guthaben von ${email}: ${data} Credits`, 5000); $('#cNote').value = ''; loadCredits();
+  toast(`Gebucht. Neues Guthaben von ${email}: ${data} Credits`, 5000); $('#cNote').value = ''; loadCredits(); loadOverview();
 };
+/* ---------- Übersicht (Verwaltung): wer ist registriert, wer hat wie viel Guthaben bekommen und verbraucht ---------- */
+let ov = null;
+async function loadOverview() {
+  if (!profile?.is_admin || !$('#ovStats')) return;
+  const [p, w, l, j] = await Promise.all([
+    sb.from('profiles').select('id,email,name,is_admin,created_at').order('created_at', { ascending: false }),
+    sb.from('ai_wallets').select('owner_id,balance'),
+    sb.from('ai_ledger').select('owner_id,amount,note,created_at').order('created_at', { ascending: false }).limit(1000),
+    sb.from('ai_jobs').select('owner_id,cost,status,created_at').order('created_at', { ascending: false }).limit(5000)
+  ]);
+  ov = { profiles: [].concat(p.data || []), wallets: [].concat(w.data || []), ledger: [].concat(l.data || []), jobs: [].concat(j.data || []).filter(x => x.status === 'succeeded') };
+  renderOverview();
+}
+function renderOverview() {
+  if (!ov) return;
+  const month = new Date().toISOString().slice(0, 7), d30 = Date.now() - 30 * 864e5, soon = Date.now() + 14 * 864e5;
+  const inMonth = x => String(x.created_at).startsWith(month), sum = (a, f) => a.reduce((n, x) => n + f(x), 0);
+  const bal = Object.fromEntries(ov.wallets.map(x => [x.owner_id, x.balance])), got = {}, pics = {}, used = {};
+  for (const x of ov.ledger) if (x.amount > 0) got[x.owner_id] = (got[x.owner_id] || 0) + x.amount;
+  for (const x of ov.jobs) { pics[x.owner_id] = (pics[x.owner_id] || 0) + 1; used[x.owner_id] = (used[x.owner_id] || 0) + x.cost; }
+  const lic = o => licenses.filter(x => x.owner_id === o), boxes = o => sum(lic(o), x => x.devices?.length || 0);
+  const live = licenses.filter(x => x.active && (x.kind === 'lifetime' || !x.valid_until || new Date(x.valid_until) > Date.now()));
+  const ending = live.filter(x => x.kind === 'subscription' && x.valid_until && new Date(x.valid_until) < soon);
+  const online = devices.filter(d => d.last_seen && Date.now() - new Date(d.last_seen) < 3 * 60 * 1000).length;
+  const jm = ov.jobs.filter(inMonth), lm = ov.ledger.filter(x => x.amount > 0 && inMonth(x));
+  const tile = (n, t, sub) => `<div class="card"><b>${n}</b><span>${t}</span><span class="small muted">${sub}</span></div>`;
+  $('#ovStats').innerHTML =
+    tile(ov.profiles.length, 'Registrierte Kunden', `${ov.profiles.filter(x => new Date(x.created_at) > d30).length} neu in 30 Tagen`) +
+    tile(live.length, 'Aktive Lizenzen', ending.length ? `${ending.length === 1 ? '1 läuft' : ending.length + ' laufen'} in 14 Tagen ab` : 'keine läuft bald ab') +
+    tile(`${online} / ${devices.length}`, 'Fotoboxen online', 'gerade verbunden / gesamt') +
+    tile(sum(lm, x => x.amount), 'Credits vergeben', `diesen Monat · gesamt ${sum(ov.ledger.filter(x => x.amount > 0), x => x.amount)}`) +
+    tile(jm.length, 'KI-Bilder', `diesen Monat · ${sum(jm, x => x.cost)} Credits verbraucht`) +
+    tile(sum(ov.wallets, x => x.balance), 'Offenes Guthaben', 'Credits aller Kunden zusammen');
+  const q = $('#ovSearch').value.toLowerCase(), mail = Object.fromEntries(ov.profiles.map(x => [x.id, x.email]));
+  const rows = ov.profiles.filter(x => !q || [x.email, x.name].some(v => (v || '').toLowerCase().includes(q)));
+  $('#ovCustomers').innerHTML = rows.length ? rows.map(x => { const ls = lic(x.id); return `<tr>
+      <td><b>${esc(x.name || x.email)}</b>${x.is_admin ? ' <span class="badge">Betreiber</span>' : ''}${x.name ? `<br><span class="small muted">${esc(x.email)}</span>` : ''}</td>
+      <td>${fmtDate(x.created_at)}</td>
+      <td>${ls.length ? ls.map(licStatus).join('<br>') : '<span class="small muted">keine</span>'}</td>
+      <td>${boxes(x.id)}</td>
+      <td><b>${bal[x.id] ?? 0}</b></td>
+      <td>${got[x.id] || 0}</td>
+      <td>${pics[x.id] || 0}${used[x.id] ? ` <span class="small muted">(${used[x.id]} Credits)</span>` : ''}</td>
+    </tr>`; }).join('') : '<tr><td colspan="7" class="empty">Keine Kunden gefunden</td></tr>';
+  $('#ovLedger').innerHTML = ov.ledger.length ? ov.ledger.slice(0, 50).map(x => `<tr><td>${fmtDate(x.created_at)}</td><td>${esc(mail[x.owner_id] || x.owner_id)}</td>
+      <td><b>${x.amount > 0 ? '+' : ''}${x.amount}</b></td><td class="small">${esc(x.note || '–')}</td></tr>`).join('')
+    : '<tr><td colspan="4" class="empty">Noch keine Buchungen</td></tr>';
+}
+$('#ovSearch').oninput = renderOverview;
 async function loadRelease() {
   if (!CFG.releasesRepo) return;
   try {
