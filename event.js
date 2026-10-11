@@ -205,6 +205,18 @@
   #ws .aimodal .body{overflow:auto;padding:4px 18px 18px}
   #ws .aimodal h4{margin:16px 0 0;font-size:15px}
   #ws .card button:disabled{opacity:.45;cursor:default}
+  #ws .aigrid{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+  #ws .aigrid>.left{flex:1;min-width:340px;max-width:620px}
+  #ws .aigrid>.right{flex:1;min-width:280px;max-width:420px;position:sticky;top:0}
+  #ws .aiphoto{background:#f4f4f7;border-radius:12px;min-height:220px;display:flex;align-items:center;justify-content:center;overflow:hidden;text-align:center;color:#6b6b78;padding:0}
+  #ws .aiphoto img{max-width:100%;max-height:420px;display:block}
+  #ws .aiphoto .ph{padding:28px 16px;cursor:pointer}
+  #ws .aipair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #ws .aipair figure{margin:0;text-align:center;font-size:12px;color:#6b6b78}
+  #ws .aipair img{width:100%;border-radius:10px;display:block;margin-bottom:4px}
+  #ws .airecent{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  #ws .airecent img{height:64px;border-radius:6px;cursor:pointer}
+  #ws .aiwait{padding:40px 16px;font-weight:600}
   #ws .aibar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   #ws .aibar .bal{font-weight:700;font-size:16px}
   #ws details.adv summary{cursor:pointer;font-weight:600}
@@ -281,7 +293,10 @@
 
     // ---------- Speichern (automatisch) ----------
     let saveT = 0;
-    const ai = { p: '', a: '', pick: '', cat: '', custom: false, edit: -1 }; // Baukasten-Zustand der KI-Seite
+    // Baukasten-Zustand der KI-Seite. Das Testfoto bleibt nur in diesem Browser (localStorage), nie im Event.
+    const ai = { p: '', a: '', pick: '', cat: '', custom: false, edit: -1, photo: '', result: '', busy: false, recent: [] };
+    try { ai.photo = localStorage.getItem('pm-ai-testphoto') || ''; } catch {}
+    const aiShrink = file => new Promise((res, rej) => { const img = new Image(); img.onload = () => { const k = Math.min(1, 1536 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(img.src); res(c.toDataURL('image/jpeg', .9)); }; img.onerror = () => rej(new Error('Bild nicht lesbar')); img.src = URL.createObjectURL(file); });
     const status = t => { $(root, '.st').textContent = t; };
     function save() {
       status('Speichert …'); clearTimeout(saveT);
@@ -312,6 +327,7 @@
 
     main.addEventListener('input', e => {
       const t = e.target, p = t.dataset.s;
+      if (t.dataset.aiConsent !== undefined) { ai.consentOk = t.checked; return; }
       if (t.dataset.aiSearch !== undefined) { const q = t.value.trim().toLowerCase(); $$(main, '.aimodal [data-n]').forEach(b => { b.style.display = !q || b.dataset.n.includes(q) ? '' : 'none'; }); return; }
       if (!p) return;
       const v = t.type === 'checkbox' ? t.checked : t.dataset.num ? +t.value : t.value;
@@ -376,6 +392,13 @@
         finally { t.disabled = false; }
         return;
       }
+      if (a === 'ai-photo') {
+        const f = await pick('image/jpeg,image/png,image/webp'); if (!f) return;
+        try { ai.photo = await aiShrink(f); ai.result = ''; try { localStorage.setItem('pm-ai-testphoto', ai.photo); } catch {} render(); }
+        catch (error) { ctx.toast(error.message); }
+        return;
+      }
+      if (a === 'ai-recent') { ai.result = ai.recent[+t.dataset.i]?.image || ''; render(); return; }
       if (a === 'ai-test') {
         const item = ai.custom ? { name: $(main, '[data-ai-cname]').value, prompt: $(main, '[data-ai-ctext]').value } : aiCompose(aiFind(AI_MOTIFS, ai.p), aiFind(AI_ARTS, ai.a));
         if (!ai.custom && !ai.p && !ai.a) return ctx.toast('Bitte zuerst ein Motiv oder einen Kunststil wählen.');
@@ -388,16 +411,21 @@
           if (error) return ctx.toast('Event konnte nicht gespeichert werden: ' + error.message);
           status('✓ Alle Änderungen gespeichert');
         }
-        AITest.open({ ...item, provider: central ? 'grok' : S.ai.provider, resolution: S.ai.resolution,
-          ...(central ? {generate: async input => {
-            const {data,error} = await ctx.sb.functions.invoke('ai-generate', {body: {...input, eventId: ev.id, requestId: crypto.randomUUID()}});
-            let result = data;
-            if (error?.context?.json) { try { result = await error.context.json(); } catch {} }
-            if (error || result?.error) throw new Error(result?.error || error.message);
-            if (!result?.image) throw new Error('Der KI-Dienst hat kein Bild geliefert.');
-            return result;
-          }} : {})
-        });
+        if (!central) { AITest.open({ ...item, provider: S.ai.provider, resolution: S.ai.resolution }); return; }
+        // Zentrale KI: direkt mit dem Testfoto generieren, Ergebnis erscheint rechts neben dem Original.
+        if (ai.busy) return;
+        if (!ai.photo) return ctx.toast('Bitte zuerst rechts ein Testfoto hochladen.');
+        if (!$(main, '[data-ai-consent]')?.checked) return ctx.toast('Bitte bestätigen, dass das Testfoto an den KI-Dienst übertragen werden darf.');
+        ai.busy = true; ai.result = ''; render();
+        try {
+          const {data,error} = await ctx.sb.functions.invoke('ai-generate', {body: {image: ai.photo, prompt: item.prompt.trim(), consent: true, eventId: ev.id, requestId: crypto.randomUUID()}});
+          let result = data;
+          if (error?.context?.json) { try { result = await error.context.json(); } catch {} }
+          if (error || result?.error) throw new Error(result?.error || error.message);
+          if (!result?.image) throw new Error('Der KI-Dienst hat kein Bild geliefert.');
+          ai.result = result.image; ai.recent.unshift({ image: result.image, name: item.name || 'Test' }); ai.recent.length = Math.min(ai.recent.length, 8);
+        } catch (error) { ctx.toast(error instanceof TypeError ? 'KI-Dienst ist nicht erreichbar. Bitte Internet prüfen.' : error.message, 9000); }
+        ai.busy = false; ai.consentOk = true; render();
         return;
       }
 
@@ -405,7 +433,7 @@
       if (a === 'fromtpl') pickTemplate(vals(), addLayout);
       if (a === 'fromimg') fromImage();
       if (a === 'editlay') editLayout(t.dataset.id);
-      if (a === 'dellay') { if (confirm('Layout löschen?')) { S.layouts = S.layouts.filter(l => l.id !== t.dataset.id); save(); render(); } }
+      if (a === 'dellay') { if (await (G.pmConfirm || (async text => confirm(text)))('Layout löschen?')) { S.layouts = S.layouts.filter(l => l.id !== t.dataset.id); save(); render(); } }
       if (a === 'duplay') { const l = structuredClone(S.layouts.find(x => x.id === t.dataset.id)); l.id = FBR.uid(); l.name += ' (Kopie)'; S.layouts.push(l); save(); render(); }
       if (a === 'uplogo') { const f = await pick('image/*'); if (f) { status('Lädt Logo hoch …'); E.logo_url = await ctx.uploadFile(f); save(); render(); } }
       if (a === 'dellogo') { E.logo_url = null; save(); render(); }
@@ -514,10 +542,16 @@
         const modal = !ai.pick ? '' : `<div class="aimodal"><div><div class="mh"><b>${ai.pick === 'a' ? 'Kunststil' : 'Motiv'} auswählen</b><input type="search" placeholder="Stile suchen …" data-ai-search><button class="ghost" data-a="ai-close">✕</button></div>
           <div class="aichips"><button data-a="ai-cat" data-c="" class="${ai.cat ? '' : 'on'}">Alle</button>${cats.map(c => `<button data-a="ai-cat" data-c="${esc(c)}" class="${ai.cat === c ? 'on' : ''}">${esc(c)}</button>`).join('')}</div>
           <div class="body">${cats.filter(c => !ai.cat || ai.cat === c).map(c => `<h4>${esc(c)}</h4><div class="aitiles">${list.filter(x => x.cat === c).map(x => `<button data-a="ai-choose" data-k="${x.key}" data-n="${esc(x.name.toLowerCase())}" class="${ai[ai.pick] === x.key ? 'on' : ''}">${aiTile(x)}<b>${esc(x.name)}</b></button>`).join('')}</div>`).join('')}</div></div></div>`;
-        return `${titleSw('KI-Porträts', 'ai.enabled')}
+        const right = `<div class="card"><div class="aiphoto">${ai.busy ? '<div class="aiwait">KI-Porträt wird erstellt …<br><small>Das dauert meist 10–40 Sekunden.</small></div>'
+            : ai.result ? `<div class="aipair" style="padding:8px"><figure><img src="${ai.photo}" alt="">Testfoto</figure><figure><img src="${ai.result}" alt="">KI-Porträt</figure></div>`
+            : ai.photo ? `<img src="${ai.photo}" alt="Testfoto">` : '<div class="ph" data-a="ai-photo"><div style="font-size:34px">📷</div><b>Testfoto hochladen</b><br><small>Ein eigenes Foto, um Stile auszuprobieren. Es bleibt in diesem Browser.</small></div>'}</div>
+          <div class="between" style="margin-top:10px"><small>Testfoto</small><a href="#" data-a="ai-photo">${ai.photo ? 'Bild ändern' : 'Bild wählen'}</a></div>
+          ${central ? `<label style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:13px"><input type="checkbox" data-ai-consent style="margin-top:3px" ${ai.consentOk ? 'checked' : ''}> Dieses Foto darf zum Testen an den KI-Dienst (xAI) übertragen werden.</label>` : ''}
+          ${ai.recent.length ? `<small style="display:block;margin-top:10px">Letzte Generierungen</small><div class="airecent">${ai.recent.map((r, n) => `<img src="${r.image}" title="${esc(r.name)}" data-a="ai-recent" data-i="${n}">`).join('')}</div>` : ''}</div>
           <div class="card"><div class="aibar">${central
             ? `<span>KI-Guthaben:</span><span class="bal" data-ai-bal>…</span><small>${S.ai.resolution === '2k' ? '2 Credits' : '1 Credit'} pro Bild</small><span class="sp" style="flex:1"></span><button class="ghost" data-a="ai-status">Verbindung prüfen</button>`
-            : `<span>Eigener API-Schlüssel auf der Fotobox · ${({ grok: 'Grok (xAI)', openai: 'OpenAI', gemini: 'Google Gemini' })[S.ai.provider]}</span>`}</div></div>
+            : `<span>Eigener API-Schlüssel auf der Fotobox · ${({ grok: 'Grok (xAI)', openai: 'OpenAI', gemini: 'Google Gemini' })[S.ai.provider]}</span>`}</div></div>`;
+        return `${titleSw('KI-Porträts', 'ai.enabled')}<p class="sub" style="margin:-6px 0 14px;color:#6b6b78">Verwandle deine Gäste mit generativer KI</p><div class="aigrid"><div class="left">
           <div class="card" data-ai-builder><b>${editing ? 'Stil bearbeiten: ' + esc(editing.name) : 'Stil erstellen'}</b>
           ${ai.custom ? `<label class="l">Name (sehen die Gäste)</label><input type="text" maxlength="60" data-ai-cname value="${esc(editing?.name || '')}" placeholder="z. B. Unser Firmenlook">
             <label class="l">Beschreibung für die KI</label><textarea rows="5" maxlength="1200" data-ai-ctext placeholder="Motiv: was die Gäste werden · Szene: wo sie sind · Stil: wie das Bild aussieht">${esc(editing?.prompt || AI_KEEP)}</textarea>
@@ -525,7 +559,7 @@
             : `<div class="aislots">${slot('p', pp, 'Motiv')}${slot('a', aa, 'Kunststil')}<button class="aislot" data-a="ai-custom"><span style="font-size:22px">✎</span><div><b>Eigener Text</b><small>selbst beschreiben</small></div></button></div>
             <small>Wähle ein Motiv, einen Kunststil oder beides zusammen.</small>`}
           <div class="row" style="margin-top:12px"><button class="btn pri" data-a="ai-save" ${ai.custom || pp || aa ? '' : 'disabled'}>${editing ? 'Änderung speichern' : 'Stil speichern'}</button>
-          <button class="ghost" data-a="ai-test" ${ai.custom || pp || aa ? '' : 'disabled'}>Mit eigenem Foto testen</button>${editing ? '<button class="ghost" data-a="ai-new">Abbrechen</button>' : ''}</div></div>
+          <button class="ghost" data-a="ai-test" ${(ai.custom || pp || aa) && !ai.busy ? '' : 'disabled'}>✨ Generieren</button>${editing ? '<button class="ghost" data-a="ai-new">Abbrechen</button>' : ''}</div></div>
           <div class="card"><b>Stile für dieses Event (${S.ai.prompts.length}/15)</b>
           <div class="aitiles"><button data-a="ai-new"><span class="pic" style="background:#fafafc;border:2px dashed #cfcfd8;color:#6b6b78">+</span><b>Neuer Stil</b></button>
           ${S.ai.prompts.map((p, i) => `<button data-a="ai-open" data-i="${i}" class="${ai.edit === i ? 'on' : ''}">${aiPic(p.id)}<span class="del" data-a="ai-delete" data-i="${i}" title="Entfernen">🗑</span><b>${esc(p.name)}</b></button>`).join('')}</div></div>
@@ -538,7 +572,7 @@
           ${central ? '' : `<label class="l">Bildanbieter (eigener Zugang)</label><select data-s="ai.provider" data-rerender="1"><option value="grok" ${S.ai.provider === 'grok' ? 'selected' : ''}>Grok (xAI)</option><option value="openai" ${S.ai.provider === 'openai' ? 'selected' : ''}>OpenAI</option><option value="gemini" ${S.ai.provider === 'gemini' ? 'selected' : ''}>Google Gemini</option></select>
           <p>Den passenden API-Schlüssel einmal pro Fotobox unter System hinterlegen. Schlüssel werden nie im Event gespeichert.</p>`}
           <label class="l">Auflösung</label><select data-s="ai.resolution" data-rerender="1"><option value="1k" ${S.ai.resolution === '1k' ? 'selected' : ''}>1K · schneller${central ? ' · 1 Credit' : ''}</option><option value="2k" ${S.ai.resolution === '2k' ? 'selected' : ''}>2K · hohe Auflösung${central ? ' · 2 Credits' : ''}</option></select>
-          <p><small>Pro Foto eine KI-Anfrage, Internet erforderlich. Schlägt die KI fehl, erhalten die Gäste einen Hinweis und ihre Originalfotos. Videos, GIFs und Boomerangs bleiben unverändert. Testfotos werden nicht gespeichert.</small></p></details></div>${modal}`;
+          <p><small>Pro Foto eine KI-Anfrage, Internet erforderlich. Schlägt die KI fehl, erhalten die Gäste einen Hinweis und ihre Originalfotos. Videos, GIFs und Boomerangs bleiben unverändert. Testfotos werden nicht gespeichert.</small></p></details></div></div><div class="right">${right}</div></div>${modal}`;
       },
       survey() {
         return `<h1>Umfrage & Haftungsausschluss</h1>${tabs('sv', [['survey', 'Umfrage'], ['disc', 'Haftungsausschluss']])}
@@ -581,7 +615,7 @@
       if (css !== 'none') x.filter = css; x.drawImage(FBR.placeholder(1, 400, 400), 0, 0, 160, 160);
       return fThumbCache[css] = c.toDataURL('image/jpeg', .8);
     }
-    function drawPreview() {
+    function drawPreview(fromRender) {
       const c = $(root, '#wsPv');
       if (c) {
         const L = S.layouts[0];
@@ -589,11 +623,13 @@
           : FBR.render(FBR.LAYOUTS.single, [0, 1, 2, 3].map(i => FBR.placeholder(i)), { template: S.template, title: S.title || E.name, subtitle: S.subtitle });
         c.width = img.width / 3; c.height = img.height / 3; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
       }
-      if ($(root, '#wsStart') && page === 'start') { clearTimeout(drawPreview.t); drawPreview.t = setTimeout(() => { const s = main.scrollTop; render(); main.scrollTop = s; }, 400); }
+      // Startbildschirm: nur die Vorschau erneuern, und nur nach einer Eingabe. Ein komplettes render() von hier aus
+      // würde sich über render() → drawPreview() endlos selbst auslösen und Auswahllisten und Textfelder ständig zurücksetzen.
+      if (!fromRender && page === 'start' && $(root, '#wsStart')) { clearTimeout(drawPreview.t); drawPreview.t = setTimeout(() => { const box = $(root, '#wsStart')?.closest('.pv'); if (box && page === 'start') box.outerHTML = startPreview(); }, 400); }
     }
     function render() {
       main.innerHTML = PAGES[page]();
-      drawPreview();
+      drawPreview(true);
       if (page === 'layout') S.layouts.forEach(L => FBR.preloadLayout(L).then(() => { const img = main.querySelector(`.lay[data-id="${L.id}"] img`); if (img) img.src = layoutThumb(L); }));
     }
 
