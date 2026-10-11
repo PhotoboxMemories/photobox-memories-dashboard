@@ -622,7 +622,7 @@
       },
       start() {
         return `<h1>Startbildschirm</h1><div class="cols"><div class="left"><div class="card">
-          ${text('title', 'Titel', E.name)}${text('subtitle', 'Untertitel / Datum')}${text('startText', 'Text auf dem Start-Knopf')}
+          ${text('title', 'Titel', E.name)}${text('subtitle', 'Untertitel / Datum')}${text('startText', 'Text auf dem Start-Knopf', 'leer = kein Knopf, Antippen startet trotzdem')}
           <label class="l">Logo</label><div class="row">${E.logo_url ? `<img src="${esc(E.logo_url)}" style="height:50px;border-radius:6px"><button class="ghost" data-a="dellogo">Entfernen</button>` : ''}<button class="ghost" data-a="uplogo">${ICON('upload', 15)} Logo hochladen</button></div>
           <div class="row" style="margin-top:12px"><div><label class="l">Akzentfarbe</label><input type="color" data-s="accent" value="${S.accent}"></div></div></div>
           <h2>Startbildschirm-Anzeige</h2><div class="card"><label class="l">Anzeige wählen</label><select data-s="startDisplay"><option value="live" ${S.startDisplay !== 'media' ? 'selected' : ''}>Live-Ansicht der Kamera</option><option value="media" ${S.startDisplay === 'media' ? 'selected' : ''}>Hochgeladenes Video oder Bild</option></select><p>Ein Upload ändert diese Auswahl nicht. Während der Aufnahme erscheint immer die Live-Ansicht.</p></div><h2>Startbildschirm-Video</h2><div class="card">Das Video läuft in Dauerschleife, bis ein Gast den Bildschirm berührt. Hoch- oder Querformat, MP4 (max. 50 MB) – oder ein Bild.
@@ -778,7 +778,7 @@
         : `<img src="${esc(S.attractUrl)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${S.attractFit === 'contain' ? 'contain' : 'cover'};background:#000">`) : '';
       return `<div class="pv"><div class="frame"><div id="wsStart" style="position:relative;overflow:hidden;aspect-ratio:3/4;border-radius:10px;background:linear-gradient(160deg,#1D1D1B,#4a4a45);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:20px">${media}<div style="position:relative;display:flex;flex-direction:column;align-items:center">
         ${E.logo_url ? `<img src="${esc(E.logo_url)}" style="max-height:70px;margin-bottom:14px">` : ''}<div style="font-size:30px;font-weight:800">${esc(S.title || E.name)}</div>
-        <div style="opacity:.85">${esc(S.subtitle)}</div><div style="margin-top:30px;background:${S.accent};color:#1D1D1B;padding:10px 22px;border-radius:999px;font-weight:700">${esc(S.startText)}</div></div></div></div></div>`;
+        <div style="opacity:.85">${esc(S.subtitle)}</div>${String(S.startText || '').trim() ? `<div style="margin-top:30px;background:${S.accent};color:#1D1D1B;padding:10px 22px;border-radius:999px;font-weight:700">${esc(S.startText)}</div>` : ''}</div></div></div></div>`;
     }
     const fThumbCache = {};
     function filterThumb(css) {
