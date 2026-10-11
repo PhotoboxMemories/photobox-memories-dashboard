@@ -4,7 +4,9 @@
     const prompts = Array.isArray(value?.prompts) ? value.prompts.slice(0, 30).map((p, i) => ({
       id: typeof p?.id === 'string' ? p.id : 'prompt-' + i,
       name: typeof p?.name === 'string' ? p.name.slice(0, 60) : 'Stil ' + (i + 1),
-      prompt: typeof p?.prompt === 'string' ? p.prompt.slice(0, 1200) : ''
+      prompt: typeof p?.prompt === 'string' ? p.prompt.slice(0, 1200) : '',
+      // optionales Vorschaubild (öffentliche https-Adresse), im Dashboard beim Speichern eines getesteten Stils gesetzt
+      ...(typeof p?.thumb === 'string' && /^https:\/\/[^\s"'<>]{1,500}$/.test(p.thumb) ? { thumb: p.thumb } : {})
     })) : typeof value?.prompt === 'string' && value.prompt.trim() ? [{ id: 'legacy', name: 'Mein Stil', prompt: value.prompt.slice(0, 1200) }] : [];
     const selected = prompts.find(p => p.id === value?.selectedId) || prompts[0];
     return { connection: value?.connection === 'central' ? 'central' : 'local', resolution: value?.resolution === '1k' ? '1k' : '2k', provider: value?.connection === 'central' ? 'grok' : ['openai','grok'].includes(value?.provider) ? value.provider : 'gemini', enabled: value?.enabled === true, prompts, guestChoice: value?.guestChoice !== false,
