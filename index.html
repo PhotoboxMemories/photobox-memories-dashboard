@@ -6,13 +6,13 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=20261011-1"></script>
-<script src="icons.js?v=20261011-1"></script>
-<script src="render.js?v=20261011-1"></script>
-<script src="editor.js?v=20261011-1"></script>
-<script src="ai-event.js?v=20261011-1"></script>
-<script src="ai-test.js?v=20261011-1"></script>
-<script src="event.js?v=20261011-1"></script>
+<script src="config.js?v=20261011-2"></script>
+<script src="icons.js?v=20261011-2"></script>
+<script src="render.js?v=20261011-2"></script>
+<script src="editor.js?v=20261011-2"></script>
+<script src="ai-event.js?v=20261011-2"></script>
+<script src="ai-test.js?v=20261011-2"></script>
+<script src="event.js?v=20261011-2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -334,7 +334,7 @@ async function loadEvents() {
   events = data; renderEvents();
 }
 // Vorschaubild eines Events: erstes Layout (oder Standard-Vorlage)
-const coverCache = {};
+const coverCache = {}, coverLoaded = new Set();
 function eventCover(e) {
   const L = e.settings?.layouts?.[0];
   const key = e.id + (e.updated_at || '');
@@ -344,7 +344,8 @@ function eventCover(e) {
     : FBR.render(FBR.LAYOUTS.single, [0, 1].map(i => FBR.placeholder(i)), { template: e.settings?.template || 'classic', title: vals.titel, subtitle: vals.untertitel });
   const k = 320 / Math.max(big.width, big.height), c = document.createElement('canvas');
   c.width = Math.round(big.width * k); c.height = Math.round(big.height * k); c.getContext('2d').drawImage(big, 0, 0, c.width, c.height);
-  if (L) FBR.preloadLayout(L).then(() => { delete coverCache[key]; const img = document.querySelector(`.evc[data-id="${e.id}"] img`); if (img) img.src = eventCover(e); });
+  // Nur einmal pro Stand neu zeichnen – sonst ruft sich die Vorschau endlos selbst auf, sobald die Bilder geladen sind.
+  if (L && !coverLoaded.has(key)) FBR.preloadLayout(L).then(() => { coverLoaded.add(key); delete coverCache[key]; const img = document.querySelector(`.evc[data-id="${e.id}"] img`); if (img) img.src = eventCover(e); });
   return coverCache[key] = c.toDataURL('image/jpeg', .8);
 }
 function renderEvents() {
