@@ -6,13 +6,13 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=20261011-8"></script>
-<script src="icons.js?v=20261011-8"></script>
-<script src="render.js?v=20261011-8"></script>
-<script src="editor.js?v=20261011-8"></script>
-<script src="ai-event.js?v=20261011-8"></script>
-<script src="ai-test.js?v=20261011-8"></script>
-<script src="event.js?v=20261011-8"></script>
+<script src="config.js?v=20261011-10"></script>
+<script src="icons.js?v=20261011-10"></script>
+<script src="render.js?v=20261011-10"></script>
+<script src="editor.js?v=20261011-10"></script>
+<script src="ai-event.js?v=20261011-10"></script>
+<script src="ai-test.js?v=20261011-10"></script>
+<script src="event.js?v=20261011-10"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -182,6 +182,19 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         </div>
         <div class="row" style="margin-top:14px"><button class="btn primary" id="lCreate">Lizenz erstellen</button><span class="small muted">Der Kunde registriert sich im Dashboard mit derselben E-Mail – die Lizenz wird automatisch zugeordnet.</span></div>
       </div>
+      <div class="card" style="margin-bottom:20px">
+        <h2>KI-Guthaben vergeben</h2>
+        <div class="grid3">
+          <div><label>E-Mail des Kunden</label><input id="cEmail" type="email" placeholder="kunde@beispiel.de"></div>
+          <div><label>Credits (Minus zieht ab)</label><input id="cAmount" type="number" step="1" value="100"></div>
+          <div><label>Notiz (z.B. Rechnungsnummer)</label><input id="cNote" maxlength="200"></div>
+        </div>
+        <div class="row" style="margin-top:14px"><button class="btn primary" id="cGrant">Guthaben buchen</button><span class="small muted">1 Credit = 1 Bild in 1K, 2 Credits = 1 Bild in 2K. Der Kunde muss im Dashboard registriert sein.</span></div>
+        <div class="tablewrap" style="margin-top:16px"><table>
+          <thead><tr><th>Kunde</th><th>Guthaben</th><th>Letzte Buchung</th></tr></thead>
+          <tbody id="creditList"><tr><td colspan="3" class="empty">Lädt …</td></tr></tbody>
+        </table></div>
+      </div>
       <div class="pagehead"><h2 style="margin:0">Alle Lizenzen</h2><input id="lSearch" placeholder="Suchen…" style="max-width:260px"></div>
       <div class="tablewrap"><table>
         <thead><tr><th>Kunde</th><th>Schlüssel</th><th>Art</th><th>Gültig</th><th>Geräte</th><th>Aktionen</th></tr></thead>
@@ -254,6 +267,9 @@ function demoClient() {
   };
   return {
     from: q,
+    rpc: async () => { toast('Demo-Modus – Änderungen werden nicht gespeichert', 2600); return { data: 0, error: null }; },
+    // Demo: „KI“ gibt einfach das Testfoto zurück, damit sich der Ablauf ohne Kosten zeigen lässt
+    functions: { invoke: async (name, o) => name === 'ai-generate' ? { data: { image: o.body.image, model: 'demo' }, error: null } : { data: { message: 'Demo-Modus – keine echte Verbindung' }, error: null } },
     auth: {
       onAuthStateChange: cb => setTimeout(() => cb('SIGNED_IN', { user: { id: 'demo', email: 'demo@fotobox.de' } }), 0),
       signOut: () => { toast('Demo-Modus'); }, signInWithPassword: async () => ({}), signUp: async () => ({}),
@@ -321,7 +337,7 @@ async function boot() {
   $('#navAdmin').classList.toggle('hidden', !profile.is_admin);
   $$('.adminCol').forEach(e => e.classList.toggle('hidden', !profile.is_admin));
   await Promise.all([loadEvents(), loadDevices(), loadLicenses()]);
-  if (profile.is_admin) loadRelease();
+  if (profile.is_admin) { loadRelease(); loadCredits(); }
 }
 
 /* ---------- Tabs ---------- */
@@ -595,6 +611,32 @@ $('#licList').addEventListener('change', async e => {
   const { error } = await sb.from('licenses').update({ max_devices: Math.max(1, +e.target.value || 1) }).eq('id', e.target.dataset.lic);
   error ? toast('Fehler: ' + error.message) : toast('Geräteanzahl gespeichert');
 });
+/* ---------- KI-Guthaben (Verwaltung) ---------- */
+async function loadCredits() {
+  const el = $('#creditList'); if (!el || !profile?.is_admin) return;
+  const [w, l, p] = await Promise.all([
+    sb.from('ai_wallets').select('owner_id,balance'),
+    sb.from('ai_ledger').select('owner_id,amount,note,created_at').order('created_at', { ascending: false }).limit(200),
+    sb.from('profiles').select('id,email')
+  ]);
+  if (w.error) { el.innerHTML = `<tr><td colspan="3" class="empty">${esc(w.error.message)}</td></tr>`; return; }
+  const mail = Object.fromEntries([].concat(p.data || []).map(x => [x.id, x.email])), last = {};
+  for (const x of [].concat(l.data || [])) last[x.owner_id] ||= x; // absteigend sortiert: erster Treffer = neueste Buchung
+  const rows = [].concat(w.data || []).sort((a, b) => (mail[a.owner_id] || '').localeCompare(mail[b.owner_id] || ''));
+  el.innerHTML = rows.length ? rows.map(x => { const b = last[x.owner_id]; return `<tr><td>${esc(mail[x.owner_id] || x.owner_id)}</td><td><b>${x.balance}</b> Credits</td>
+    <td class="small">${b ? `${b.amount > 0 ? '+' : ''}${b.amount} · ${fmtDate(b.created_at)}${b.note ? ' · ' + esc(b.note) : ''}` : '–'}</td></tr>`; }).join('')
+    : '<tr><td colspan="3" class="empty">Noch kein Guthaben vergeben</td></tr>';
+}
+$('#cGrant').onclick = async () => {
+  const email = $('#cEmail').value.trim(), amount = Math.trunc(+$('#cAmount').value);
+  if (!email || !amount) return toast('Bitte E-Mail und eine Menge ungleich 0 eingeben.');
+  if (!await pmConfirm(`${amount > 0 ? amount + ' Credits gutschreiben für' : Math.abs(amount) + ' Credits abziehen bei'} ${email}?`, 'Buchen')) return;
+  $('#cGrant').disabled = true;
+  const { data, error } = await sb.rpc('ai_grant', { p_email: email, p_amount: amount, p_note: $('#cNote').value.trim() || null });
+  $('#cGrant').disabled = false;
+  if (error) return toast(/ai_grant|schema cache|does not exist/i.test(error.message) ? 'Die Guthaben-Funktion ist auf dem Server noch nicht eingerichtet (Migration fehlt).' : 'Fehler: ' + error.message, 6000);
+  toast(`Gebucht. Neues Guthaben von ${email}: ${data} Credits`, 5000); $('#cNote').value = ''; loadCredits();
+};
 async function loadRelease() {
   if (!CFG.releasesRepo) return;
   try {
