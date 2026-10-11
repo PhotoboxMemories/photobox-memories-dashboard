@@ -103,7 +103,9 @@
     prompt: AI_KEEP + (pp ? pp.text + ' ' : '') + 'Bildstil: ' + (aa ? aa.text : 'fotorealistisches, hochwertiges Porträtfoto.') });
   const aiTile = x => x ? `<span class="pic" style="background:linear-gradient(135deg,${x.colors})">${x.icon}<img src="ai-styles/${x.key}.jpg" alt="" loading="lazy" onerror="this.remove()"></span>`
     : '<span class="pic" style="background:linear-gradient(135deg,#F7C838,#ff9f43)">✨</span>';
-  const aiPic = id => { const { p, a } = aiParts(id); return aiTile(p || a); };
+  const aiPic = (id, thumb) => { const { p, a } = aiParts(id), x = p || a;
+    if (!thumb) return aiTile(x);
+    return `<span class="pic" style="background:linear-gradient(135deg,${x ? x.colors : '#F7C838,#ff9f43'})">${x ? x.icon : '✨'}<img src="${thumb.replace(/"/g, '&quot;')}" alt="" loading="lazy" onerror="this.remove()"></span>`; };
   const CSS = `
   #ws{position:fixed;inset:0;z-index:40;background:#f4f4f7;color:#1d1d24;display:flex;flex-direction:column;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
   #ws *{box-sizing:border-box}
@@ -296,6 +298,7 @@
     // Baukasten-Zustand der KI-Seite. Das Testfoto bleibt nur in diesem Browser (localStorage), nie im Event.
     const ai = { p: '', a: '', pick: '', cat: '', custom: false, edit: -1, photo: '', result: '', busy: false, recent: [] };
     try { ai.photo = localStorage.getItem('pm-ai-testphoto') || ''; } catch {}
+    const aiThumbFile = dataUrl => new Promise((res, rej) => { const img = new Image(); img.onload = () => { const k = Math.min(1, 480 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); c.toBlob(b => b ? res(new File([b], 'ki-stil.jpg', { type: 'image/jpeg' })) : rej(new Error('Bild nicht lesbar')), 'image/jpeg', .85); }; img.onerror = () => rej(new Error('Bild nicht lesbar')); img.src = dataUrl; });
     const aiShrink = file => new Promise((res, rej) => { const img = new Image(); img.onload = () => { const k = Math.min(1, 1536 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(img.src); res(c.toDataURL('image/jpeg', .9)); }; img.onerror = () => rej(new Error('Bild nicht lesbar')); img.src = URL.createObjectURL(file); });
     const status = t => { $(root, '.st').textContent = t; };
     function save() {
@@ -361,26 +364,38 @@
       if (a === 'ai-close') { ai.pick = ''; render(); return; }
       if (a === 'ai-cat') { ai.cat = t.dataset.c; render(); return; }
       if (a === 'ai-choose') { ai[ai.pick] = t.dataset.k; ai.pick = ''; ai.custom = false; render(); return; }
-      if (a === 'ai-custom') { ai.p = ai.a = ''; ai.custom = true; ai.edit = -1; render(); return; }
-      if (a === 'ai-new') { e.preventDefault(); ai.p = ai.a = ''; ai.custom = false; ai.edit = -1; render(); return; }
+      if (a === 'ai-custom') { // vorhandene Auswahl oder den bearbeiteten Stil als Text übernehmen
+        ai.seed = ai.edit >= 0 && !(ai.p || ai.a) ? S.ai.prompts[ai.edit] : (ai.p || ai.a) ? aiCompose(aiFind(AI_MOTIFS, ai.p), aiFind(AI_ARTS, ai.a)) : null;
+        ai.p = ai.a = ''; ai.custom = true; render(); return;
+      }
+      if (a === 'ai-new') { e.preventDefault(); ai.p = ai.a = ''; ai.custom = false; ai.edit = -1; ai.seed = null; render(); return; }
       if (a === 'ai-save') {
+        const before = ai.edit >= 0 ? S.ai.prompts[ai.edit] : null;
         const item = ai.custom
-          ? { id: ai.edit >= 0 ? S.ai.prompts[ai.edit].id : crypto.randomUUID(), name: ($(main, '[data-ai-cname]').value.trim() || 'Eigener Stil').slice(0, 60), prompt: $(main, '[data-ai-ctext]').value.trim().slice(0, 1200) }
+          ? { id: before && !before.id.startsWith('lib-') ? before.id : crypto.randomUUID(), name: ($(main, '[data-ai-cname]').value.trim() || 'Eigener Stil').slice(0, 60), prompt: $(main, '[data-ai-ctext]').value.trim().slice(0, 1200) }
           : aiCompose(aiFind(AI_MOTIFS, ai.p), aiFind(AI_ARTS, ai.a));
         if (!item.prompt) return ctx.toast('Bitte zuerst eine Beschreibung eingeben.');
         if (S.ai.prompts.some((x, i) => x.id === item.id && i !== ai.edit)) return ctx.toast('Dieser Stil ist bereits gespeichert.');
-        if (ai.edit >= 0) S.ai.prompts[ai.edit] = item;
-        else { if (S.ai.prompts.length >= 15) return ctx.toast('Maximal 15 Stile pro Event.'); S.ai.prompts.push(item); }
-        ai.p = ai.a = ''; ai.custom = false; ai.edit = -1;
-        S.ai = AIEvent.normalize(S.ai); save(); render(); ctx.toast('Stil gespeichert'); return;
+        if (!before && S.ai.prompts.length >= 15) return ctx.toast('Maximal 15 Stile pro Event.');
+        // Vorschaubild: das zuletzt mit genau dieser Beschreibung erzeugte Testbild; sonst bleibt das bisherige stehen
+        if (ai.result && ai.resultPrompt === item.prompt) {
+          t.disabled = true; status('Lädt Vorschaubild hoch …');
+          try { item.thumb = await ctx.uploadFile(await aiThumbFile(ai.result)); }
+          catch (error) { ctx.toast('Vorschaubild konnte nicht hochgeladen werden: ' + error.message, 5000); }
+          t.disabled = false;
+        }
+        if (!item.thumb && before?.thumb && before.prompt === item.prompt) item.thumb = before.thumb;
+        if (before) { if (S.ai.selectedId === before.id) S.ai.selectedId = item.id; S.ai.prompts[ai.edit] = item; } else S.ai.prompts.push(item);
+        ai.p = ai.a = ''; ai.custom = false; ai.edit = -1; ai.seed = null;
+        S.ai = AIEvent.normalize(S.ai); save(); render(); ctx.toast(item.thumb ? 'Stil mit Vorschaubild gespeichert' : 'Stil gespeichert'); return;
       }
       if (a === 'ai-open') {
         const item = S.ai.prompts[+t.dataset.i], parts = aiParts(item.id), same = aiCompose(parts.p, parts.a);
-        ai.edit = +t.dataset.i; ai.custom = !(parts.p || parts.a) || same.prompt !== item.prompt || same.name !== item.name;
+        ai.edit = +t.dataset.i; ai.seed = null; ai.custom = !(parts.p || parts.a) || same.prompt !== item.prompt || same.name !== item.name;
         ai.p = ai.custom ? '' : parts.p?.key || ''; ai.a = ai.custom ? '' : parts.a?.key || '';
         render(); main.querySelector('[data-ai-builder]')?.scrollIntoView({ block: 'center' }); return;
       }
-      if (a === 'ai-delete') { S.ai.prompts.splice(+t.dataset.i, 1); ai.edit = -1; ai.custom = false; ai.p = ai.a = ''; S.ai = AIEvent.normalize(S.ai); save(); render(); return; }
+      if (a === 'ai-delete') { S.ai.prompts.splice(+t.dataset.i, 1); ai.edit = -1; ai.custom = false; ai.p = ai.a = ''; ai.seed = null; S.ai = AIEvent.normalize(S.ai); save(); render(); return; }
       if (a === 'ai-status') {
         t.disabled = true;
         try {
@@ -398,7 +413,7 @@
         catch (error) { ctx.toast(error.message); }
         return;
       }
-      if (a === 'ai-recent') { ai.result = ai.recent[+t.dataset.i]?.image || ''; render(); return; }
+      if (a === 'ai-recent') { const r = ai.recent[+t.dataset.i]; ai.result = r?.image || ''; ai.resultPrompt = r?.prompt || ''; render(); return; }
       if (a === 'ai-test') {
         const item = ai.custom ? { name: $(main, '[data-ai-cname]').value, prompt: $(main, '[data-ai-ctext]').value } : aiCompose(aiFind(AI_MOTIFS, ai.p), aiFind(AI_ARTS, ai.a));
         if (!ai.custom && !ai.p && !ai.a) return ctx.toast('Bitte zuerst ein Motiv oder einen Kunststil wählen.');
@@ -423,7 +438,7 @@
           if (error?.context?.json) { try { result = await error.context.json(); } catch {} }
           if (error || result?.error) throw new Error(result?.error || error.message);
           if (!result?.image) throw new Error('Der KI-Dienst hat kein Bild geliefert.');
-          ai.result = result.image; ai.recent.unshift({ image: result.image, name: item.name || 'Test' }); ai.recent.length = Math.min(ai.recent.length, 8);
+          ai.result = result.image; ai.resultPrompt = item.prompt.trim(); ai.recent.unshift({ image: result.image, name: item.name || 'Test', prompt: item.prompt.trim() }); ai.recent.length = Math.min(ai.recent.length, 8);
         } catch (error) { ctx.toast(error instanceof TypeError ? 'KI-Dienst ist nicht erreichbar. Bitte Internet prüfen.' : error.message, 9000); }
         ai.busy = false; ai.consentOk = true; render();
         return;
@@ -553,16 +568,17 @@
             : `<span>Eigener API-Schlüssel auf der Fotobox · ${({ grok: 'Grok (xAI)', openai: 'OpenAI', gemini: 'Google Gemini' })[S.ai.provider]}</span>`}</div></div>`;
         return `${titleSw('KI-Porträts', 'ai.enabled')}<p class="sub" style="margin:-6px 0 14px;color:#6b6b78">Verwandle deine Gäste mit generativer KI</p><div class="aigrid"><div class="left">
           <div class="card" data-ai-builder><b>${editing ? 'Stil bearbeiten: ' + esc(editing.name) : 'Stil erstellen'}</b>
-          ${ai.custom ? `<label class="l">Name (sehen die Gäste)</label><input type="text" maxlength="60" data-ai-cname value="${esc(editing?.name || '')}" placeholder="z. B. Unser Firmenlook">
-            <label class="l">Beschreibung für die KI</label><textarea rows="5" maxlength="1200" data-ai-ctext placeholder="Motiv: was die Gäste werden · Szene: wo sie sind · Stil: wie das Bild aussieht">${esc(editing?.prompt || AI_KEEP)}</textarea>
+          ${ai.custom ? `<label class="l">Name (sehen die Gäste)</label><input type="text" maxlength="60" data-ai-cname value="${esc((ai.seed || editing)?.name || '')}" placeholder="z. B. Unser Firmenlook">
+            <label class="l">Beschreibung für die KI</label><textarea rows="5" maxlength="1200" data-ai-ctext placeholder="Motiv: was die Gäste werden · Szene: wo sie sind · Stil: wie das Bild aussieht">${esc((ai.seed || editing)?.prompt || AI_KEEP)}</textarea>
             <p><a href="#" data-a="ai-new">← Zurück zur Bibliothek</a></p>`
             : `<div class="aislots">${slot('p', pp, 'Motiv')}${slot('a', aa, 'Kunststil')}<button class="aislot" data-a="ai-custom"><span style="font-size:22px">✎</span><div><b>Eigener Text</b><small>selbst beschreiben</small></div></button></div>
-            <small>Wähle ein Motiv, einen Kunststil oder beides zusammen.</small>`}
+            <small>Wähle ein Motiv, einen Kunststil oder beides zusammen. ${pp || aa ? '<a href="#" data-a="ai-custom">Text selbst anpassen</a>' : ''}</small>`}
+          ${central ? '<p class="small" style="margin-top:8px;color:#6b6b78">Tipp: Erst „Generieren“, dann speichern – das erzeugte Bild wird als Vorschaubild des Stils verwendet. Es ist danach für jeden sichtbar, der die Stile sieht; nimm dafür ein Foto, das gezeigt werden darf.</p>' : ''}
           <div class="row" style="margin-top:12px"><button class="btn pri" data-a="ai-save" ${ai.custom || pp || aa ? '' : 'disabled'}>${editing ? 'Änderung speichern' : 'Stil speichern'}</button>
           <button class="ghost" data-a="ai-test" ${(ai.custom || pp || aa) && !ai.busy ? '' : 'disabled'}>✨ Generieren</button>${editing ? '<button class="ghost" data-a="ai-new">Abbrechen</button>' : ''}</div></div>
           <div class="card"><b>Stile für dieses Event (${S.ai.prompts.length}/15)</b>
           <div class="aitiles"><button data-a="ai-new"><span class="pic" style="background:#fafafc;border:2px dashed #cfcfd8;color:#6b6b78">+</span><b>Neuer Stil</b></button>
-          ${S.ai.prompts.map((p, i) => `<button data-a="ai-open" data-i="${i}" class="${ai.edit === i ? 'on' : ''}">${aiPic(p.id)}<span class="del" data-a="ai-delete" data-i="${i}" title="Entfernen">🗑</span><b>${esc(p.name)}</b></button>`).join('')}</div></div>
+          ${S.ai.prompts.map((p, i) => `<button data-a="ai-open" data-i="${i}" class="${ai.edit === i ? 'on' : ''}">${aiPic(p.id, p.thumb)}<span class="del" data-a="ai-delete" data-i="${i}" title="Entfernen">🗑</span><b>${esc(p.name)}</b></button>`).join('')}</div></div>
           <div class="card"><b>An der Fotobox</b>
           ${sw('ai.guestChoice', 'Gäste wählen ihren Stil', 'Aus = alle Fotos bekommen automatisch den Standard-Stil.')}
           <label class="l">Standard-Stil</label><select data-s="ai.selectedId"><option value="">Erster Stil</option>${S.ai.prompts.map(p => `<option value="${esc(p.id)}" ${p.id === S.ai.selectedId ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>
