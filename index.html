@@ -6,13 +6,13 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=20261011-17"></script>
-<script src="icons.js?v=20261011-17"></script>
-<script src="render.js?v=20261011-17"></script>
-<script src="editor.js?v=20261011-17"></script>
-<script src="ai-event.js?v=20261011-17"></script>
-<script src="ai-test.js?v=20261011-17"></script>
-<script src="event.js?v=20261011-17"></script>
+<script src="config.js?v=20261011-19"></script>
+<script src="icons.js?v=20261011-19"></script>
+<script src="render.js?v=20261011-19"></script>
+<script src="editor.js?v=20261011-19"></script>
+<script src="ai-event.js?v=20261011-19"></script>
+<script src="ai-test.js?v=20261011-19"></script>
+<script src="event.js?v=20261011-19"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -166,6 +166,12 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <div class="pagehead"><h1>Meine Lizenzen</h1></div>
       <p class="muted small" style="margin-bottom:14px">In der FotoBox <b>Esc → System</b> öffnen und mit diesem Konto (gleiche E-Mail & Passwort) anmelden – oder den Schlüssel eintragen.</p>
       <div class="cards" id="myLicenses"></div>
+      <div class="card hidden" id="creditCard" style="margin-top:20px">
+        <h2>KI-Guthaben</h2>
+        <p style="margin:6px 0 14px">Dein Guthaben: <b id="myCredits">–</b> Credits <span class="small muted">· 1 Credit = 1 KI-Bild in 1K, 2 Credits = 1 KI-Bild in 2K</span></p>
+        <div class="cards" id="creditPacks"></div>
+        <p class="small muted" id="creditHint" style="margin-top:10px"></p>
+      </div>
     </div>
 
     <!-- Admin -->
@@ -182,8 +188,8 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <div class="card" style="margin-bottom:20px">
         <h2>Guthaben-Buchungen</h2>
         <div class="tablewrap"><table>
-          <thead><tr><th>Datum</th><th>Kunde</th><th>Credits</th><th>Notiz</th></tr></thead>
-          <tbody id="ovLedger"><tr><td colspan="4" class="empty">Lädt …</td></tr></tbody>
+          <thead><tr><th>Datum</th><th>Kunde</th><th>Credits</th><th>Bezahlt</th><th>Notiz</th></tr></thead>
+          <tbody id="ovLedger"><tr><td colspan="5" class="empty">Lädt …</td></tr></tbody>
         </table></div>
       </div>
       <div class="card" style="margin-bottom:20px">
@@ -354,6 +360,7 @@ async function boot() {
   $('#navAdmin').classList.toggle('hidden', !profile.is_admin);
   $$('.adminCol').forEach(e => e.classList.toggle('hidden', !profile.is_admin));
   await Promise.all([loadEvents(), loadDevices(), loadLicenses()]);
+  loadMyCredits();
   if (profile.is_admin) { loadRelease(); loadCredits(); loadOverview(); }
 }
 
@@ -654,6 +661,32 @@ $('#cGrant').onclick = async () => {
   if (error) return toast(/ai_grant|schema cache|does not exist/i.test(error.message) ? 'Die Guthaben-Funktion ist auf dem Server noch nicht eingerichtet (Migration fehlt).' : 'Fehler: ' + error.message, 6000);
   toast(`Gebucht. Neues Guthaben von ${email}: ${data} Credits`, 5000); $('#cNote').value = ''; loadCredits(); loadOverview();
 };
+/* ---------- KI-Guthaben kaufen (Stripe) ---------- */
+const euro = c => (c / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+async function loadMyCredits() {
+  if (!me || !$('#myCredits')) return;
+  const w = await sb.from('ai_wallets').select('balance').eq('owner_id', me.id).maybeSingle();
+  $('#myCredits').textContent = w.data?.balance ?? 0;
+  const { data, error } = await sb.functions.invoke('credits-checkout', { body: { action: 'packs' } });
+  const packs = [].concat(data?.packs || []);
+  $('#creditCard').classList.toggle('hidden', !!error || !packs.length || !data.ready); // erst sichtbar, wenn der Kauf auf dem Server eingerichtet ist
+  $('#creditPacks').innerHTML = packs.map(p => `<div class="card" style="display:flex;flex-direction:column;gap:8px">
+      <b>${esc(p.name)}</b><div>${euro(p.cents)} <span class="small muted">· ${euro(p.cents / p.credits)} pro Credit</span></div>
+      <button class="btn primary" data-pack="${esc(p.id)}" ${data.ready ? '' : 'disabled'}>Kaufen</button></div>`).join('');
+  $('#creditHint').textContent = error || !packs.length ? 'Der Guthaben-Kauf ist noch nicht eingerichtet. Bitte wende dich an den Verkäufer.'
+    : data.ready ? 'Bezahlung sicher über Stripe. Das Guthaben wird direkt nach der Zahlung gutgeschrieben.' : 'Der Guthaben-Kauf wird gerade eingerichtet und ist bald verfügbar.';
+}
+$('#creditPacks').addEventListener('click', async e => {
+  const b = e.target.closest('[data-pack]'); if (!b) return;
+  b.disabled = true;
+  const { data, error } = await sb.functions.invoke('credits-checkout', { body: { pack: b.dataset.pack } });
+  if (error || !/^https:\/\/checkout\.stripe\.com\//.test(data?.url || '')) { b.disabled = false; return toast(data?.error || 'Die Bezahlseite konnte nicht geöffnet werden.', 5000); }
+  location.href = data.url;
+});
+{ // Rückkehr von der Bezahlseite
+  const k = new URLSearchParams(location.search).get('kauf');
+  if (k) { history.replaceState(null, '', location.pathname); setTimeout(() => toast(k === 'ok' ? 'Danke! Die Zahlung ist eingegangen – das Guthaben wird in wenigen Sekunden gutgeschrieben.' : 'Kauf abgebrochen – es wurde nichts berechnet.', 7000), 800); }
+}
 /* ---------- Übersicht (Verwaltung): wer ist registriert, wer hat wie viel Guthaben bekommen und verbraucht ---------- */
 let ov = null;
 async function loadOverview() {
@@ -661,7 +694,10 @@ async function loadOverview() {
   const [p, w, l, j] = await Promise.all([
     sb.from('profiles').select('id,email,name,is_admin,created_at').order('created_at', { ascending: false }),
     sb.from('ai_wallets').select('owner_id,balance'),
-    sb.from('ai_ledger').select('owner_id,amount,note,created_at').order('created_at', { ascending: false }).limit(1000),
+    (async () => { // Spalte „cents“ gibt es erst nach der Stripe-Migration
+      const r = await sb.from('ai_ledger').select('owner_id,amount,note,created_at,cents').order('created_at', { ascending: false }).limit(1000);
+      return r.error ? sb.from('ai_ledger').select('owner_id,amount,note,created_at').order('created_at', { ascending: false }).limit(1000) : r;
+    })(),
     sb.from('ai_jobs').select('owner_id,cost,status,created_at').order('created_at', { ascending: false }).limit(5000)
   ]);
   ov = { profiles: [].concat(p.data || []), wallets: [].concat(w.data || []), ledger: [].concat(l.data || []), jobs: [].concat(j.data || []).filter(x => x.status === 'succeeded') };
@@ -686,7 +722,8 @@ function renderOverview() {
     tile(`${online} / ${devices.length}`, 'Fotoboxen online', 'gerade verbunden / gesamt') +
     tile(sum(lm, x => x.amount), 'Credits vergeben', `diesen Monat · gesamt ${sum(ov.ledger.filter(x => x.amount > 0), x => x.amount)}`) +
     tile(jm.length, 'KI-Bilder', `diesen Monat · ${sum(jm, x => x.cost)} Credits verbraucht`) +
-    tile(sum(ov.wallets, x => x.balance), 'Offenes Guthaben', 'Credits aller Kunden zusammen');
+    tile(sum(ov.wallets, x => x.balance), 'Offenes Guthaben', 'Credits aller Kunden zusammen') +
+    tile(euro(sum(ov.ledger.filter(inMonth), x => x.cents || 0)), 'Umsatz Guthaben', `diesen Monat über Stripe · gesamt ${euro(sum(ov.ledger, x => x.cents || 0))}`);
   const q = $('#ovSearch').value.toLowerCase(), mail = Object.fromEntries(ov.profiles.map(x => [x.id, x.email]));
   const rows = ov.profiles.filter(x => !q || [x.email, x.name].some(v => (v || '').toLowerCase().includes(q)));
   $('#ovCustomers').innerHTML = rows.length ? rows.map(x => { const ls = lic(x.id); return `<tr>
@@ -699,8 +736,8 @@ function renderOverview() {
       <td>${pics[x.id] || 0}${used[x.id] ? ` <span class="small muted">(${used[x.id]} Credits)</span>` : ''}</td>
     </tr>`; }).join('') : '<tr><td colspan="7" class="empty">Keine Kunden gefunden</td></tr>';
   $('#ovLedger').innerHTML = ov.ledger.length ? ov.ledger.slice(0, 50).map(x => `<tr><td>${fmtDate(x.created_at)}</td><td>${esc(mail[x.owner_id] || x.owner_id)}</td>
-      <td><b>${x.amount > 0 ? '+' : ''}${x.amount}</b></td><td class="small">${esc(x.note || '–')}</td></tr>`).join('')
-    : '<tr><td colspan="4" class="empty">Noch keine Buchungen</td></tr>';
+      <td><b>${x.amount > 0 ? '+' : ''}${x.amount}</b></td><td>${x.cents ? euro(x.cents) : '<span class="small muted">von Hand</span>'}</td><td class="small">${esc(x.note || '–')}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty">Noch keine Buchungen</td></tr>';
 }
 $('#ovSearch').oninput = renderOverview;
 async function loadRelease() {
