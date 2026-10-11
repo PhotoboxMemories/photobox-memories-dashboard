@@ -6,13 +6,13 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=20261011-5"></script>
-<script src="icons.js?v=20261011-5"></script>
-<script src="render.js?v=20261011-5"></script>
-<script src="editor.js?v=20261011-5"></script>
-<script src="ai-event.js?v=20261011-5"></script>
-<script src="ai-test.js?v=20261011-5"></script>
-<script src="event.js?v=20261011-5"></script>
+<script src="config.js?v=20261011-8"></script>
+<script src="icons.js?v=20261011-8"></script>
+<script src="render.js?v=20261011-8"></script>
+<script src="editor.js?v=20261011-8"></script>
+<script src="ai-event.js?v=20261011-8"></script>
+<script src="ai-test.js?v=20261011-8"></script>
+<script src="event.js?v=20261011-8"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -198,6 +198,17 @@ const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmtDate = d => d ? new Date(d).toLocaleDateString('de-DE') : '–';
+// Eigene Rückfrage statt confirm(): Browser-Dialoge werden in eingebetteten Fenstern und manchen Kiosk-Browsern unterdrückt.
+const pmConfirm = (text, ok = 'Löschen') => new Promise(res => {
+  const o = document.createElement('div');
+  o.style.cssText = 'position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px';
+  o.innerHTML = `<div style="background:#fff;color:#1d1d24;border-radius:14px;padding:22px;width:min(420px,100%);font:15px/1.5 system-ui,sans-serif"><p style="margin-bottom:18px">${esc(text)}</p><div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn" data-r="0">Abbrechen</button><button class="btn" data-r="1" style="background:#d23b3b;border-color:#d23b3b;color:#fff">${esc(ok)}</button></div></div>`;
+  const done = v => { o.remove(); document.removeEventListener('keydown', key); res(v); };
+  const key = e => { if (e.key === 'Escape') done(false); };
+  o.addEventListener('click', e => { if (e.target === o) done(false); const r = e.target.closest('[data-r]'); if (r) done(r.dataset.r === '1'); });
+  document.addEventListener('keydown', key); document.body.appendChild(o);
+});
+window.pmConfirm = pmConfirm;
 const toast = (t, ms = 2200) => { const e = $('#toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => e.style.display = 'none', ms); };
 
 const CFG = window.FOTOBOX_CONFIG || {};
@@ -390,7 +401,7 @@ function openEvent(ev) {
     leadsCount: id => (typeof leads !== 'undefined' && leads.length) ? leads.filter(l => l.event_id === id).length : '–',
     onClose: () => loadEvents(),
     onDelete: async (e, closeWs) => {
-      if (!confirm(`Ereignis „${e.name}“ wirklich löschen? Zugewiesene Fotoboxen behalten ihre letzten Einstellungen.`)) return;
+      if (!await pmConfirm(`Ereignis „${e.name}“ wirklich löschen? Zugewiesene Fotoboxen behalten ihre letzten Einstellungen.`)) return;
       const { error } = await sb.from('events').delete().eq('id', e.id);
       if (error) return toast('Fehler: ' + error.message);
       toast('Ereignis gelöscht'); closeWs();
@@ -446,7 +457,7 @@ $('#deviceList').addEventListener('change', async e => {
 });
 $('#deviceList').addEventListener('click', async e => {
   if (e.target.dataset.act !== 'remove') return;
-  if (!confirm('Gerät entfernen? Es muss danach mit dem Lizenzschlüssel neu aktiviert werden.')) return;
+  if (!await pmConfirm('Gerät entfernen? Es muss danach mit dem Lizenzschlüssel neu aktiviert werden.', 'Entfernen')) return;
   const { error } = await sb.from('devices').delete().eq('id', e.target.dataset.dev);
   if (error) return toast('Fehler: ' + error.message);
   loadDevices();
@@ -484,7 +495,7 @@ $('#leadCsv').onclick = () => {
 };
 $('#leadDelete').onclick = async () => {
   const list = shownLeads(); if (!list.length) return;
-  if (!confirm(`${list.length} Einträge endgültig löschen?`)) return;
+  if (!await pmConfirm(`${list.length} Einträge endgültig löschen?`)) return;
   const { error } = await sb.from('leads').delete().in('id', list.map(l => l.id));
   if (error) return toast('Fehler: ' + error.message);
   toast('Gelöscht'); loadLeads();
@@ -574,7 +585,7 @@ $('#licList').addEventListener('click', async e => {
     : act === 'y1' ? { valid_until: extend(l.valid_until, 12) }
     : act === 'u1' ? { updates_until: extend(l.updates_until, 12) }
     : { active: !l.active };
-  if (act === 'toggle' && l.active && !confirm(`Lizenz von ${l.customer_name || l.customer_email} sperren? Die FotoBox läuft dann nur noch im Demo-Modus.`)) return;
+  if (act === 'toggle' && l.active && !await pmConfirm(`Lizenz von ${l.customer_name || l.customer_email} sperren? Die FotoBox läuft dann nur noch im Demo-Modus.`, 'Sperren')) return;
   const { error } = await sb.from('licenses').update(patch).eq('id', id);
   if (error) return toast('Fehler: ' + error.message);
   toast('Lizenz aktualisiert'); loadLicenses();
