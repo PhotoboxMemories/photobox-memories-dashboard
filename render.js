@@ -348,7 +348,85 @@
     const i = new Image(); i.crossOrigin = 'anonymous'; imgCache.set(src, i);
     return new Promise(r => { i.onload = () => r(i); i.onerror = () => r(null); i.src = src; });
   }
-  const preloadLayout = L => Promise.all(L.elements.filter(e => e.type === 'image').map(e => loadImg(e.src)));
+  const preloadLayout = L => Promise.all([L.bgImage, ...L.elements.filter(e => (e.type === 'image' || e.type === 'button') && e.src).map(e => e.src)].filter(Boolean).map(loadImg));
+
+  // ---------- Startbildschirm (frei gestaltbar wie ein Layout, aber in Bildschirmgröße) ----------
+  const SCREEN_SIZES = { portrait: { w: 1080, h: 1920, label: 'Hochformat' }, landscape: { w: 1920, h: 1080, label: 'Querformat' } };
+  // Themen: [Verlauf von, Verlauf bis, Winkel°], Textfarbe, Knopffarbe, Symbolfarbe
+  const T = (id, name, cat, a, b, ang, text, btn, ico) => ({ id, name, cat, grad: [a, b, ang], text, btn, ico });
+  const SCREEN_THEMES = [
+    T('luma', 'Morgenlicht', 'Neutral', '#5b8fa8', '#8fb56a', 160, '#ffffff', '#ffffff', '#222222'),
+    T('night', 'Nachtschwarz', 'Neutral', '#1D1D1B', '#4a4a45', 160, '#ffffff', '#F7C838', '#1D1D1B'),
+    T('white', 'Reinweiß', 'Neutral', '#ffffff', '#eef0f3', 180, '#1d1d24', '#1D1D1B', '#ffffff'),
+    T('sand', 'Sand', 'Neutral', '#f3e7d3', '#d9c2a0', 170, '#4a3b28', '#ffffff', '#4a3b28'),
+    T('wedgold', 'Gold & Creme', 'Hochzeit', '#fbf7ef', '#e8d5a8', 170, '#6b5a3a', '#c9a45c', '#ffffff'),
+    T('wedrose', 'Rosé', 'Hochzeit', '#fbe9ec', '#e8b7c0', 165, '#7a3b4a', '#ffffff', '#7a3b4a'),
+    T('wedgreen', 'Eukalyptus', 'Hochzeit', '#eef3ea', '#a9c0a2', 170, '#33452f', '#ffffff', '#33452f'),
+    T('wednavy', 'Navy & Gold', 'Hochzeit', '#0d1b2a', '#243b55', 160, '#f1dfae', '#e0b64a', '#0d1b2a'),
+    T('party', 'Neon-Party', 'Party', '#3a0ca3', '#f72585', 150, '#ffffff', '#4cc9f0', '#1d1d24'),
+    T('disco', 'Disco', 'Party', '#0f0c29', '#7b2ff7', 150, '#ffffff', '#f72585', '#ffffff'),
+    T('sunset', 'Sonnenuntergang', 'Party', '#ff7b54', '#ffd56b', 170, '#3b2b1a', '#ffffff', '#ff7b54'),
+    T('bday', 'Konfetti', 'Geburtstag', '#fff6e5', '#ffc7a6', 165, '#3b3355', '#ff7b54', '#ffffff'),
+    T('kids', 'Kunterbunt', 'Geburtstag', '#4cc9f0', '#b5e48c', 150, '#1d3557', '#ffd60a', '#1d3557'),
+    T('xmas', 'Tannengrün', 'Weihnachten', '#0b3d2e', '#14532d', 165, '#f8f1d8', '#c1121f', '#ffffff'),
+    T('xmasred', 'Festlich Rot', 'Weihnachten', '#7f1d1d', '#b91c1c', 165, '#fff7e6', '#f1dfae', '#7f1d1d'),
+    T('newyear', 'Silvester', 'Weihnachten', '#0b0b0f', '#2b2b36', 160, '#f1dfae', '#f1dfae', '#0b0b0f'),
+    T('corp', 'Business Blau', 'Firma', '#0d1b2a', '#1b4b7a', 160, '#ffffff', '#e0b64a', '#0d1b2a'),
+    T('corplight', 'Business Hell', 'Firma', '#f4f6f9', '#d8dee8', 180, '#1b2a3a', '#1b4b7a', '#ffffff'),
+  ];
+  function createScreen(orient, o = {}) {
+    const F = SCREEN_SIZES[orient] || SCREEN_SIZES.portrait, t = SCREEN_THEMES.find(x => x.id === o.theme) || SCREEN_THEMES[1], u = Math.min(F.w, F.h) / 1080;
+    const mid = (w, y, h) => ({ x: Math.round((F.w - w) / 2), y: Math.round(y), w: Math.round(w), h: Math.round(h), rot: 0 });
+    const els = [];
+    if (o.logo) els.push({ id: uid(), type: 'image', src: o.logo, fit: 'contain', opacity: 1, ...mid(300 * u, F.h * .06, 190 * u) });
+    els.push({ id: uid(), type: 'text', role: 'title', text: '{titel}', font: 'modern', size: 'auto', color: t.text, weight: 800, align: 'center', ...mid(F.w * .84, F.h * .2, 120 * u) });
+    els.push({ id: uid(), type: 'text', role: 'subtitle', text: '{untertitel}', font: 'modern', size: 'auto', color: t.text, weight: 400, align: 'center', opacity: .9, ...mid(F.w * .7, F.h * .2 + 130 * u, 56 * u) });
+    els.push({ id: uid(), type: 'button', text: o.startText ?? 'Tippen zum Starten', font: 'modern', fill: t.btn, color: t.text, icon: t.ico, hidden: o.startText === '', ...mid(420 * u, F.h * .78, 260 * u) });
+    return { id: uid(), screen: true, orient: SCREEN_SIZES[orient] ? orient : 'portrait', w: F.w, h: F.h, theme: t.id, bg: t.grad[0], bgGrad: [...t.grad], bgImage: '', bgFit: 'cover', live: false, elements: els };
+  }
+  function applyTheme(L, id) {
+    const t = SCREEN_THEMES.find(x => x.id === id); if (!t) return;
+    L.theme = t.id; L.bg = t.grad[0]; L.bgGrad = [...t.grad]; L.bgImage = ''; L.live = false;
+    for (const e of L.elements) { if (e.type === 'text') e.color = t.text; if (e.type === 'button') { e.fill = t.btn; e.color = t.text; e.icon = t.ico; } }
+  }
+  function drawScreenBg(x, L, o) {
+    if (L.live && !o.placeholders) { x.clearRect(0, 0, L.w, L.h); return; } // Fotobox: dahinter läuft das Kamerabild
+    if (L.bgGrad) {
+      const a = (L.bgGrad[2] - 90) * Math.PI / 180, r = Math.hypot(L.w, L.h) / 2, cx = L.w / 2, cy = L.h / 2;
+      const g = x.createLinearGradient(cx - Math.cos(a) * r, cy - Math.sin(a) * r, cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+      g.addColorStop(0, L.bgGrad[0]); g.addColorStop(1, L.bgGrad[1]); x.fillStyle = g;
+    } else x.fillStyle = L.bg || '#1D1D1B';
+    x.fillRect(0, 0, L.w, L.h);
+    const img = L.bgImage && imgCache.get(L.bgImage);
+    if (img && img.complete && img.naturalWidth) {
+      if (L.bgFit === 'contain') { const k = Math.min(L.w / img.naturalWidth, L.h / img.naturalHeight), w = img.naturalWidth * k, h = img.naturalHeight * k; x.drawImage(img, (L.w - w) / 2, (L.h - h) / 2, w, h); }
+      else drawCover(x, img, 0, 0, L.w, L.h);
+    }
+    if (L.live) { // Editor: Hinweis statt Kamerabild
+      x.fillStyle = 'rgba(0,0,0,.45)'; x.fillRect(0, 0, L.w, L.h);
+      x.fillStyle = 'rgba(255,255,255,.75)'; x.font = `600 ${Math.min(L.w, L.h) * .035}px system-ui,sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText('Hier läuft an der Fotobox das Live-Kamerabild', L.w / 2, L.h / 2);
+    }
+  }
+  // Start-Knopf: runder Knopf mit Kamera (oder eigenem Bild), Beschriftung darunter
+  function drawButtonEl(x, e) {
+    const w = e.w, h = e.h, label = String(e.text || '').trim(), d = Math.min(w, label ? h * .68 : h), cy = -h / 2 + d / 2;
+    const img = e.src && imgCache.get(e.src);
+    if (img && img.complete && img.naturalWidth) { const k = Math.min(d / img.naturalWidth, d / img.naturalHeight); x.drawImage(img, -img.naturalWidth * k / 2, cy - img.naturalHeight * k / 2, img.naturalWidth * k, img.naturalHeight * k); }
+    else {
+      x.save(); x.shadowColor = 'rgba(0,0,0,.3)'; x.shadowBlur = d * .12; x.shadowOffsetY = d * .04;
+      x.fillStyle = e.fill || '#ffffff'; x.beginPath(); x.arc(0, cy, d / 2, 0, 7); x.fill(); x.restore();
+      const s = d * .2; x.strokeStyle = e.icon || '#222222'; x.lineWidth = d * .045; x.lineJoin = 'round';
+      rr(x, -s * 1.15, cy - s * .75, s * 2.3, s * 1.7, s * .3); x.stroke();
+      x.beginPath(); x.arc(0, cy + s * .1, s * .5, 0, 7); x.stroke();
+      x.beginPath(); x.moveTo(-s * .45, cy - s * .75); x.lineTo(-s * .25, cy - s * 1.1); x.lineTo(s * .25, cy - s * 1.1); x.lineTo(s * .45, cy - s * .75); x.stroke();
+    }
+    if (label) {
+      const lh = h - d; let size = lh * .5; const fam = FONTS[e.font] || FONTS.modern, setF = () => { x.font = `700 ${size}px ${fam}`; };
+      setF(); while (size > 8 && x.measureText(label).width > w) { size -= 1; setF(); }
+      x.fillStyle = e.color || '#ffffff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(label, 0, -h / 2 + d + lh * .55);
+    }
+  }
 
   function fillText(t, v) {
     return String(t || '').replace(/\{(\w+)\}/g, (m, k) => v && v[k] != null ? v[k] : m);
@@ -382,7 +460,7 @@
     if (c.width !== L.w || c.height !== L.h) { c.width = L.w; c.height = L.h; }
     const x = c.getContext('2d');
     x.setTransform(1, 0, 0, 1, 0, 0);
-    x.fillStyle = L.bg || '#ffffff'; x.fillRect(0, 0, L.w, L.h);
+    if (L.screen) drawScreenBg(x, L, o); else { x.fillStyle = L.bg || '#ffffff'; x.fillRect(0, 0, L.w, L.h); }
     const photos = o.photos || [];
     const slots = L.elements.filter(e => e.type === 'photo').map(e => [e.x, e.y, e.w, e.h]);
     const texts = L.elements.filter(e => e.type === 'text');
@@ -411,8 +489,11 @@
         const img = imgCache.get(e.src);
         if (img && img.complete && img.naturalWidth) {
           if (e.fit === 'cover') drawCover(x, img, -w / 2, -h / 2, w, h);
+          else if (e.fit === 'contain') { const k = Math.min(w / img.naturalWidth, h / img.naturalHeight); x.drawImage(img, -img.naturalWidth * k / 2, -img.naturalHeight * k / 2, img.naturalWidth * k, img.naturalHeight * k); }
           else x.drawImage(img, -w / 2, -h / 2, w, h);
         } else if (o.placeholders) { x.fillStyle = 'rgba(0,0,0,.08)'; x.fillRect(-w / 2, -h / 2, w, h); }
+      } else if (e.type === 'button') {
+        drawButtonEl(x, e);
       } else if (e.type === 'text') {
         drawTextEl(x, e, o.values);
       } else if (e.type === 'shape') {
@@ -435,5 +516,6 @@
   }
 
   G.FBR = { FONTS, FONT_NAMES, LAYOUTS, TEMPLATES, templateById: byId, render, drawBand, drawCover, placeholder,
-    FORMATS, PRESETS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid };
+    FORMATS, PRESETS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid,
+    SCREEN_SIZES, SCREEN_THEMES, createScreen, applyTheme };
 })(window);
