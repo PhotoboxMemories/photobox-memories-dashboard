@@ -494,6 +494,21 @@
         } else if (o.placeholders) { x.fillStyle = 'rgba(0,0,0,.08)'; x.fillRect(-w / 2, -h / 2, w, h); }
       } else if (e.type === 'button') {
         drawButtonEl(x, e);
+      } else if (e.type === 'answer') { // Antwort des Gastes auf Umfrage-Frage Nr. e.q
+        const a = o.values && Array.isArray(o.values.antworten) ? o.values.antworten[(e.q || 1) - 1] : null;
+        const t = a != null && a !== '' ? String(a) : o.placeholders ? `Umfrageantwort ${e.q || 1}` : '';
+        if (t) drawTextEl(x, { ...e, text: t.replace(/[{}]/g, '') }, null);
+      } else if (e.type === 'signature') { // Unterschrift des Gastes (an der Fotobox gezeichnet), eingefärbt
+        const sig = o.values && o.values.unterschrift;
+        if (sig && sig.width) {
+          const t = document.createElement('canvas'); t.width = sig.width; t.height = sig.height; const tx = t.getContext('2d');
+          tx.drawImage(sig, 0, 0); tx.globalCompositeOperation = 'source-in'; tx.fillStyle = e.color || '#000000'; tx.fillRect(0, 0, t.width, t.height);
+          const k = Math.min(w / t.width, h / t.height); x.drawImage(t, -t.width * k / 2, -t.height * k / 2, t.width * k, t.height * k);
+        } else if (o.placeholders) {
+          x.strokeStyle = e.color || '#000000'; x.lineWidth = Math.max(2, h * .035); x.lineCap = 'round'; x.lineJoin = 'round'; x.beginPath();
+          const n = 7; for (let i = 0; i <= n * 8; i++) { const p = i / (n * 8), px = -w * .42 + w * .84 * p, py = Math.sin(p * n * Math.PI * 2) * h * .22 * (1 - p * .5) - Math.sin(p * Math.PI) * h * .08; i ? x.lineTo(px, py) : x.moveTo(px, py); }
+          x.stroke(); x.globalAlpha *= .5; x.lineWidth = Math.max(1, h * .012); x.beginPath(); x.moveTo(-w * .46, h * .36); x.lineTo(w * .46, h * .36); x.stroke();
+        }
       } else if (e.type === 'text') {
         drawTextEl(x, e, o.values);
       } else if (e.type === 'shape') {
