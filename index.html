@@ -6,17 +6,18 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=20261012-6"></script>
-<script src="icons.js?v=20261012-6"></script>
-<script src="render.js?v=20261012-6"></script>
-<script src="editor.js?v=20261012-6"></script>
-<script src="ai-event.js?v=20261012-6"></script>
-<script src="ai-test.js?v=20261012-6"></script>
-<script src="event.js?v=20261012-6"></script>
+<script src="config.js?v=20261013-1"></script>
+<script src="icons.js?v=20261013-1"></script>
+<script src="render.js?v=20261013-1"></script>
+<script src="editor.js?v=20261013-1"></script>
+<script src="ai-event.js?v=20261013-1"></script>
+<script src="ai-test.js?v=20261013-1"></script>
+<script src="event.js?v=20261013-1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
-@media (prefers-color-scheme:dark){:root{--bg:#0f0f13;--card:#18181e;--fg:#f0f0f4;--muted:#9a9aa8;--line:#2a2a33;--soft:#1d1d24}}
+/* Wie bei LumaBooth immer hell – unabhängig vom Dunkelmodus des Geräts */
+:root{color-scheme:light}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 button{font:inherit;cursor:pointer}
@@ -81,6 +82,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
 .evc{cursor:pointer}
 .evc .cv{aspect-ratio:1;border-radius:12px;background:var(--soft);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden}
 .evc .cv img{width:100%;height:100%;object-fit:contain}
+.evc .cv.photo img{object-fit:cover}
 .evc:hover .cv{border-color:var(--accent)}
 .evc b{display:block;margin-top:8px;font-size:14px}.evc small{color:var(--muted);font-size:12px}
 .evnew .cv{border:2px dashed var(--line);flex-direction:column;gap:6px;font-weight:600;text-align:center;padding:10px}
@@ -384,6 +386,19 @@ async function loadEvents() {
   const { data, error } = await q;
   if (error) return toast('Fehler: ' + error.message);
   events = data; renderEvents();
+  loadPhotoCovers();
+}
+// Wie bei LumaBooth zeigt die Kachel das neueste Foto des Ereignisses, sobald es Fotos in der Online-Galerie gibt
+let photoCovers = {};
+async function loadPhotoCovers() {
+  if (DEMO) return;
+  try {
+    const { data, error } = await sb.from('photos').select('event_id,thumb,path,kind').order('created_at', { ascending: false }).limit(800);
+    if (error || !data) return;
+    const next = {};
+    for (const x of data) if (!next[x.event_id] && x.kind !== 'video') next[x.event_id] = sb.storage.from('photos').getPublicUrl(x.thumb || x.path).data.publicUrl;
+    photoCovers = next; if (Object.keys(next).length) renderEvents();
+  } catch {}
 }
 // Vorschaubild eines Events: erstes Layout (oder Standard-Vorlage)
 const coverCache = {}, coverLoaded = new Set();
@@ -406,7 +421,7 @@ function renderEvents() {
   const list = events.filter(e => !q || e.name.toLowerCase().includes(q));
   const card = e => {
     const n = devices.filter(d => d.event_id === e.id).length;
-    return `<div class="evc" data-id="${e.id}"><div class="cv"><img src="${eventCover(e)}" alt=""></div>
+    return `<div class="evc" data-id="${e.id}"><div class="cv ${photoCovers[e.id] ? 'photo' : ''}"><img src="${photoCovers[e.id] || eventCover(e)}" alt=""></div>
       <b>${esc(e.name)}</b><small>${fmtDate(e.event_date)}${n ? ` · 📸 ${n}` : ''}</small></div>`;
   };
   const running = list.filter(e => !e.event_date || e.event_date >= today), done = list.filter(e => e.event_date && e.event_date < today);
