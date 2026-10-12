@@ -194,6 +194,39 @@
   #wsLight .nav{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;padding:0;font-size:24px}
   #wsLight .nav.l{left:14px}#wsLight .nav.r{right:14px}
   #ws .stat{background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  /* Übersicht eines Ereignisses im LumaBooth-Aufbau: Name und Datum, drei Karten, Symbolleiste, Galerie */
+  #ws .evhead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:-4px 0 14px}
+  #ws .evhead input{border:0;background:transparent;font:600 18px system-ui,sans-serif;padding:4px 6px;border-radius:8px;min-width:0;width:auto;color:#1D1D1B}
+  #ws .evhead input:hover,#ws .evhead input:focus{background:#fff;outline:0;box-shadow:0 0 0 2px #F9CB38}
+  #ws .evhead .sep{width:1px;height:26px;background:#bbb}
+  #ws .dcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;max-width:1120px}
+  #ws .dcard{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06);min-width:0}
+  #ws .dcard .nums{display:flex;justify-content:space-around;gap:10px;text-align:center}
+  #ws .dcard .nums span{font-size:13px;color:#333}#ws .dcard .nums b{display:block;font-size:24px;font-weight:600;margin-top:4px}
+  #ws .dcard .foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:13px;color:#555}
+  #ws .dcard .more{background:none;border:0;padding:0;font:600 13px system-ui,sans-serif;color:#1D1D1B;cursor:pointer;border-bottom:2px solid #F9CB38}
+  #ws .dcard .between{padding:2px 0 6px}
+  #ws .dcard .linkbox{margin-top:4px;flex-wrap:nowrap}#ws .dcard .linkbox input{min-width:0;background:#f4f4f6;border:0;font-size:12px}
+  #ws .dacts{display:flex;gap:8px 30px;flex-wrap:wrap;margin:18px 0 6px;max-width:1120px;justify-content:center;border-bottom:1px solid #cfcfd6;padding-bottom:14px}
+  #ws .dacts button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:6px;font:500 13px system-ui,sans-serif;cursor:pointer;color:#1D1D1B;padding:6px 4px;border-radius:10px;min-width:74px}
+  #ws .dacts button:hover{background:#fff}#ws .dacts button:disabled{opacity:.35;cursor:default;background:none}
+  #ws .dempty{text-align:center;color:#8a8a92;font-size:20px;line-height:1.5;padding:26px 10px;max-width:1120px}
+  #ws .gal.wide{max-width:1120px}
+  #ws .embed{max-width:1120px;background:#fff;border-radius:14px;padding:14px 18px;margin-top:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  #ws .embed textarea{width:100%;font:12px ui-monospace,Menlo,Consolas,monospace;margin-top:8px}
+  #ws .backl{background:none;border:0;padding:0;font:500 14px system-ui,sans-serif;cursor:pointer;color:#1D1D1B;display:inline-flex;align-items:center;gap:4px;margin-bottom:10px}
+  #ws .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;max-width:1120px}
+  #ws .chart{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  #ws .chart h3{margin:0 0 12px;font-size:15px}
+  #ws .bars{display:flex;align-items:flex-end;gap:3px;height:150px}
+  #ws .bars i{flex:1;background:#F9CB38;border-radius:3px 3px 0 0;min-height:2px;position:relative}
+  #ws .bars i[title]:hover{background:#1D1D1B}
+  #ws .axis{display:flex;justify-content:space-between;font-size:11px;color:#777;margin-top:4px}
+  #ws .hbar{display:grid;grid-template-columns:90px 1fr 46px;gap:8px;align-items:center;font-size:13px;margin:7px 0}
+  #ws .hbar i{display:block;height:14px;background:#F9CB38;border-radius:7px;min-width:2px}
+  #ws table.shares{width:100%;max-width:1120px;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  #ws table.shares th,#ws table.shares td{text-align:left;padding:9px 14px;font-size:13px;border-bottom:1px solid #eee}
+  #ws table.shares th{background:#fafafa;font-weight:600}
   #ws .stat b{display:block;font-size:26px}
   #ws .grid3x{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:6px}
   #ws .soon{display:inline-block;font-size:11px;background:#FFF3C4;color:#8a6400;border-radius:999px;padding:2px 8px;margin-left:6px;font-weight:600}
@@ -329,10 +362,10 @@
     S.x = deepMerge(X_DEF, ev.settings?.x);
     S.layouts = S.layouts || [];
     let E = { name: ev.name, event_date: ev.event_date, logo_url: ev.logo_url };
-    let page = 'layout', sub = {};
+    let page = 'dash', sub = {};
     const root = document.createElement('div'); root.id = 'ws';
     root.innerHTML = `<div class="wtop"><div class="logo">${LOGO(28)}</div><span class="en"></span><span class="sp"></span>
-      <span class="st"></span><button class="tb" data-a="preview">${ICON('eye', 16)} Vorschau</button></div>
+      <span class="st"></span><button class="tb" data-a="sharelink">${ICON('share', 16)} Teilen</button><button class="tb" data-a="preview">${ICON('eye', 16)} Vorschau</button></div>
       <div class="wbody"><nav class="side"></nav><main class="wm"></main></div>`;
     document.body.appendChild(root);
     const side = $(root, 'nav.side'), main = $(root, 'main.wm');
@@ -385,7 +418,14 @@
       const a = e.target.closest('a[data-p]'); if (a) { page = a.dataset.p; renderNav(); render(); }
       if (e.target.closest('[data-a="back"]')) close();
     });
-    $(root, '.wtop').addEventListener('click', e => { if (e.target.closest('[data-a="preview"]')) previewAll(); });
+    $(root, '.wtop').addEventListener('click', async e => {
+      if (e.target.closest('[data-a="preview"]')) previewAll();
+      if (e.target.closest('[data-a="sharelink"]')) { // Link zur Online-Galerie kopieren
+        const link = shareLink();
+        if (!link) return ctx.toast('Der Freigabe-Link ist noch nicht eingerichtet.', 4000);
+        try { await navigator.clipboard.writeText(link); ctx.toast(S.x.gallery.link ? 'Link zur Galerie kopiert' : 'Link kopiert – er funktioniert erst, wenn „Freigabe von Links“ eingeschaltet ist', 5000); } catch { ctx.toast(link, 8000); }
+      }
+    });
 
     // ---------- Bausteine ----------
     const sw = (p, label, hint = '') => `<div class="between"><div>${label}${hint ? `<small>${hint}</small>` : ''}</div>
@@ -425,6 +465,9 @@
     main.addEventListener('change', e => {
       const t = e.target;
       if (t.dataset.e) { E[t.dataset.e] = t.value; renderNav(); save(); }
+      if (t.dataset.sub) { sub[t.dataset.sub] = t.value; render(); }
+      // Schalter auf der Übersicht ändern auch den Link-Text und den Hinweis in der Galerie
+      if (page === 'dash' && (t.dataset.s === 'x.gallery.link' || t.dataset.s === 'x.share.cloud')) render();
     });
     let dragLay = '';
     main.addEventListener('dragstart', e => { const l = e.target.closest?.('.lay[data-id]'); if (l) { dragLay = l.dataset.id; e.dataTransfer.effectAllowed = 'move'; } });
@@ -577,6 +620,12 @@
       if (a === 'upbg') { const f = await pick('image/*'); if (f) { status('Lädt Hintergrund hoch …'); S.bgUrls = [...(S.bgUrls || []), await ctx.uploadFile(f)]; save(); render(); } }
       if (a === 'delbg') { S.bgUrls = S.bgUrls.filter((_, i) => i !== +t.dataset.i); save(); render(); }
       if (a === 'delev') ctx.onDelete?.(ev, close);
+      if (a === 'go') { page = t.dataset.pg; renderNav(); render(); return; }
+      if (a === 'gal-embed') { sub.embed = !sub.embed; render(); return; }
+      if (a === 'gal-slide') { const link = shareLink(); if (!link) return ctx.toast('Der Freigabe-Link ist noch nicht eingerichtet.', 4000);
+        if (!S.x.gallery.link) return ctx.toast('Für die Slideshow bitte zuerst „Freigabe von Links“ einschalten.', 5000); window.open(link + '&show=1', '_blank', 'noopener'); return; }
+      if (a === 'gal-upload') return uploadToGallery();
+      if (a === 'shares-csv') return sharesCsv();
       if (a === 'gal-open') return openLightbox(+t.dataset.i);
       if (a === 'gal-reload') { gal.list = null; render(); return loadGallery(true); }
       if (a === 'gal-zip') return downloadAll();
@@ -619,7 +668,7 @@
         gal.list = error ? [] : [].concat(data || []);
       } catch (e) { gal.error = e.message; gal.list = []; }
       gal.loading = false; gal.at = Date.now();
-      if (page === 'dash') render();
+      if (['dash', 'analytics', 'shares'].includes(page)) render();
     }
     const fetchBlob = async path => { const r = await fetch(galUrl(path)); if (!r.ok) throw new Error('Datei nicht abrufbar'); return r.blob(); };
     const saveBlob = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 20000); };
@@ -662,27 +711,103 @@
         saveBlob(await zip.generateAsync({ type: 'blob', compression: 'STORE' }), (E.name || 'Ereignis').replace(/[^\w\-äöüÄÖÜß ]/g, '_') + '-Fotos.zip'); status('');
       } catch (e) { status(''); ctx.toast('Herunterladen fehlgeschlagen: ' + e.message, 5000); }
     }
+    // Fotos von Hand in die Online-Galerie laden (z. B. Bilder vom Fotografen)
+    async function uploadToGallery() {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*,video/mp4,video/webm'; inp.multiple = true;
+      inp.onchange = async () => {
+        const files = [...inp.files].slice(0, 100); if (!files.length) return;
+        const uid = ctx.me?.id; if (!uid) return ctx.toast('Bitte neu anmelden.', 4000);
+        let ok = 0, n = 0;
+        for (const f of files) {
+          status(`Lädt ${++n} von ${files.length} hoch …`);
+          if (f.size > 25 * 1024 * 1024) continue;
+          try {
+            const ext = (f.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, ''), id = crypto.randomUUID(), base = `${uid}/${ev.id}/${id}`;
+            const video = f.type.startsWith('video'); let thumb = null;
+            if (!video) try { const bmp = await createImageBitmap(f), k = Math.min(1, 480 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas');
+              c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+              thumb = await new Promise(r => c.toBlob(r, 'image/jpeg', .8)); } catch {}
+            const r1 = await ctx.sb.storage.from('photos').upload(`${base}.${ext}`, f, { contentType: f.type, cacheControl: '31536000' }); if (r1.error) throw r1.error;
+            if (thumb) await ctx.sb.storage.from('photos').upload(`${base}_t.jpg`, thumb, { contentType: 'image/jpeg', cacheControl: '31536000' });
+            const r2 = await ctx.sb.from('photos').insert({ event_id: ev.id, path: `${base}.${ext}`, thumb: thumb ? `${base}_t.jpg` : null, kind: ext === 'gif' ? 'gif' : video ? 'video' : 'photo', bytes: f.size, name: f.name.slice(0, 120) });
+            if (r2.error) throw r2.error; ok++;
+          } catch (e) { ctx.toast('Hochladen fehlgeschlagen: ' + (e.message || e), 5000); break; }
+        }
+        status(''); if (ok) ctx.toast(`${ok} Datei(en) hochgeladen`); gal.list = null; render(); loadGallery(true);
+      };
+      inp.click();
+    }
+    const isExtra = x => /_original\d*\.|_fotos\.gif$/i.test(x.name || ''); // Einzelaufnahmen und Zusatz-GIF zählen nicht als eigene Sitzung
+    const kindName = x => x.kind === 'video' ? 'Video' : x.kind === 'gif' ? 'GIF' : isExtra(x) ? 'Originalfoto' : 'Foto';
+    function sharesCsv() {
+      const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const rows = (gal.list || []).map(x => [new Date(x.created_at).toLocaleString('de-DE'), kindName(x), x.name || '', Math.round((x.bytes || 0) / 1024) + ' KB', galUrl(x.path)].map(q).join(';'));
+      saveBlob(new Blob(['\ufeff' + ['Datum;Art;Datei;Größe;Adresse', ...rows].join('\r\n')], { type: 'text/csv;charset=utf-8' }), (E.name || 'Ereignis').replace(/[^\w\-äöüÄÖÜß ]/g, '_') + '-Shares.csv');
+    }
     const PAGES = {
+      // Analysen: Auswertung der Aufnahmen dieses Ereignisses
+      analytics() {
+        loadGallery(); const P = gal.list || [], S0 = P.filter(x => !isExtra(x));
+        const days = [...Array(30)].map((_, i) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (29 - i)); return d; });
+        const perDay = days.map(d => S0.filter(x => { const t = new Date(x.created_at); return t >= d && t < new Date(+d + 864e5); }).length), maxD = Math.max(1, ...perDay);
+        const perHour = [...Array(24)].map((_, h) => S0.filter(x => new Date(x.created_at).getHours() === h).length), maxH = Math.max(1, ...perHour);
+        const kinds = [['Fotos', P.filter(x => x.kind === 'photo' && !isExtra(x)).length], ['Originalfotos', P.filter(x => x.kind === 'photo' && isExtra(x)).length], ['GIFs', P.filter(x => x.kind === 'gif').length], ['Videos', P.filter(x => x.kind === 'video').length]], maxK = Math.max(1, ...kinds.map(k => k[1]));
+        const devs = (ctx.devices || []).filter(d => d.event_id === ev.id), prints = devs.reduce((n, d) => n + (d.status?.prints || 0), 0), limit = +S.printLimit || 0;
+        const hb = (n, v, max) => `<div class="hbar"><span>${n}</span><span><i style="width:${Math.round(v / max * 100)}%"></i></span><b>${v}</b></div>`;
+        return `<button class="backl" data-a="go" data-pg="dash">${ICON('chevronLeft', 14)} Zurück zum Dashboard</button>
+          <h1>${esc(E.name)}</h1><p style="margin:-8px 0 14px;color:#555">${E.event_date ? new Date(E.event_date).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }) : ''} · Letzte 30 Tage</p>
+          ${gal.error ? `<div class="dempty">${esc(gal.error)}</div>` : `<div class="charts">
+            <div class="chart"><h3>Sitzungen pro Tag</h3><div class="bars">${perDay.map((v, i) => `<i style="height:${Math.round(v / maxD * 100)}%" title="${days[i].toLocaleDateString('de-DE')}: ${v}"></i>`).join('')}</div>
+              <div class="axis"><span>${days[0].toLocaleDateString('de-DE')}</span><span>heute</span></div></div>
+            <div class="chart"><h3>Sitzungen nach Uhrzeit</h3><div class="bars">${perHour.map((v, h) => `<i style="height:${Math.round(v / maxH * 100)}%" title="${h} Uhr: ${v}"></i>`).join('')}</div>
+              <div class="axis"><span>0 Uhr</span><span>12 Uhr</span><span>23 Uhr</span></div></div>
+            <div class="chart"><h3>Art der Aufnahmen</h3>${kinds.map(([n, v]) => hb(n, v, maxK)).join('')}</div>
+            <div class="chart"><h3>Ausdrucke</h3>${hb('Gedruckt', prints, Math.max(1, limit || prints))}${limit ? hb('Drucklimit', limit, limit) + `<p style="font-size:13px;color:#555;margin:8px 0 0">Noch ${Math.max(0, limit - prints)} von ${limit} Ausdrucken übrig.</p>` : '<p style="font-size:13px;color:#555;margin:8px 0 0">Kein Drucklimit eingestellt.</p>'}</div>
+          </div>`}`;
+      },
+      // Shares: alle hochgeladenen Dateien als Liste (mit CSV-Export)
+      shares() {
+        loadGallery(); const f = sub.shareKind || 'all', P = (gal.list || []).filter(x => f === 'all' || (f === 'video' ? x.kind === 'video' : f === 'gif' ? x.kind === 'gif' : x.kind === 'photo'));
+        return `<button class="backl" data-a="go" data-pg="dash">${ICON('chevronLeft', 14)} Zurück zum Dashboard</button>
+          <div class="between" style="max-width:1120px;padding:0 0 12px"><div class="row"><h1 style="margin:0">Shares</h1>
+            <select data-sub="shareKind" style="width:auto"><option value="all" ${f === 'all' ? 'selected' : ''}>Alle Shares</option><option value="photo" ${f === 'photo' ? 'selected' : ''}>Fotos</option><option value="gif" ${f === 'gif' ? 'selected' : ''}>GIFs</option><option value="video" ${f === 'video' ? 'selected' : ''}>Videos</option></select></div>
+            <button class="ghost" data-a="shares-csv" ${P.length ? '' : 'disabled'}>${ICON('download', 15)} CSV</button></div>
+          ${gal.error ? `<div class="dempty">${esc(gal.error)}</div>` : !gal.list ? '<div class="dempty">Lädt …</div>'
+            : P.length ? `<table class="shares"><thead><tr><th>Datum</th><th>Art</th><th>Datei</th><th>Größe</th><th></th></tr></thead><tbody>${P.slice(0, 500).map(x => `<tr><td>${esc(new Date(x.created_at).toLocaleString('de-DE'))}</td><td>${kindName(x)}</td><td>${esc(x.name || '')}</td><td>${Math.round((x.bytes || 0) / 1024)} KB</td><td><a href="${esc(galUrl(x.path))}" target="_blank" rel="noopener">Öffnen</a></td></tr>`).join('')}</tbody></table>`
+            : '<div class="dcard" style="max-width:1120px;text-align:center;color:#555">Für dieses Ereignis wurden keine Shares gefunden.</div>'}`;
+      },
       dash() {
         const devs = (ctx.devices || []).filter(d => d.event_id === ev.id);
         const prints = devs.reduce((n, d) => n + (d.status?.prints || 0), 0), P = gal.list || [];
         loadGallery();
+        const link = shareLink(), n = v => gal.list ? v : '…', sessions = P.filter(x => !isExtra(x)).length;
+        const act = (a, ic, label, extra = '') => `<button data-a="${a}" ${extra}>${ICON(ic, 26)}<span>${label}</span></button>`;
         return `<h1>Dashboard</h1>
-          <div class="stats"><div class="stat"><b>${gal.list ? P.filter(x => x.kind !== 'video').length : '…'}</b>Bilder</div><div class="stat"><b>${gal.list ? P.filter(x => x.kind === 'video').length : '…'}</b>Videos</div>
-            <div class="stat"><b>${prints}</b>Ausdrucke</div><div class="stat"><b>${ctx.leadsCount?.(ev.id) ?? '–'}</b>Gäste-Daten</div><div class="stat"><b>${devs.length}</b>Fotoboxen</div></div>
-          <div class="card" style="margin-top:16px"><b>Online-Galerie</b>${shareBox()}</div>
-          <div class="card"><div class="between" style="padding:0"><b>Galerie</b><div class="row">
-              <button class="ghost" data-a="gal-reload">${ICON('refresh', 15)} Aktualisieren</button>
-              ${P.length ? `<button class="ghost" data-a="gal-zip">${ICON('download', 15)} Alle herunterladen</button>` : ''}</div></div>
-            ${gal.error ? `<div class="empty" style="margin-top:12px">${esc(gal.error)}</div>`
-              : !gal.list ? '<div class="empty" style="margin-top:12px">Lädt …</div>'
-              : P.length ? `<div class="gal">${P.map((x, i) => `<figure data-a="gal-open" data-i="${i}" title="${esc(new Date(x.created_at).toLocaleString('de-DE'))}"><img loading="lazy" src="${esc(galUrl(x.thumb || x.path))}" alt="">${x.kind !== 'photo' ? `<span class="tag">${x.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}</figure>`).join('')}</div>`
-              : `<div class="empty" style="margin-top:12px">Noch keine Fotos oder Videos.<br><small>${S.x.share.cloud ? 'Die Galerie füllt sich, sobald an der Fotobox Aufnahmen gemacht werden. Die Fotobox muss mit deinem Konto angemeldet sein, dieses Ereignis gewählt haben und Internet haben.' : 'Schalte oben „Fotos in die Online-Galerie hochladen“ ein.'}</small></div>`}</div>
-          <div class="card"><label class="l">Name des Ereignisses</label><input type="text" data-e="name" value="${esc(E.name)}">
-            <label class="l">Datum</label><input type="date" data-e="event_date" value="${E.event_date || ''}"></div>
-          <div class="card"><b>Zugewiesene Fotoboxen</b>${devs.length ? devs.map(d => `<div class="between"><span>📸 ${esc(d.name || 'FotoBox')}${d.status?.uploads ? ` <small style="display:inline">· ${d.status.uploads} Foto(s) warten auf den Upload</small>` : ''}</span><small>${d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? '🟢 online' : 'offline'}</small></div>`).join('')
-            : '<p style="color:#777">Noch keine. In der FotoBox anmelden und dieses Event auswählen – oder oben unter „Geräte“ zuweisen.</p>'}</div>
-          <button class="ghost" data-a="delev" style="color:#d23b3b">${ICON('trash', 15)} Ereignis löschen</button>`;
+          <div class="evhead"><input type="text" data-e="name" value="${esc(E.name)}" size="${Math.max(8, Math.min(40, (E.name || '').length + 1))}" title="Name des Ereignisses ändern"><span class="sep"></span><input type="date" data-e="event_date" value="${E.event_date || ''}" title="Datum ändern"></div>
+          <div class="dcards">
+            <div class="dcard"><div class="nums"><span>Sitzungen<b>${n(sessions)}</b></span><span>Bilder<b>${n(P.filter(x => x.kind !== 'video').length)}</b></span><span>Videos<b>${n(P.filter(x => x.kind === 'video').length)}</b></span></div>
+              <div class="foot"><span></span><button class="more" data-a="go" data-pg="analytics">Analysen →</button></div></div>
+            <div class="dcard"><div class="nums"><span>Uploads<b>${n(P.length)}</b></span><span>Ausdrucke<b>${prints}</b></span><span>Gäste-Daten<b>${ctx.leadsCount?.(ev.id) ?? '–'}</b></span><span>Fotoboxen<b>${devs.length}</b></span></div>
+              <div class="foot"><span>${n(P.length)} Shares insgesamt</span><button class="more" data-a="go" data-pg="shares">Shares →</button></div></div>
+            <div class="dcard">${sw('x.gallery.link', '<b>Freigabe von Links</b>')}
+              ${!link ? '<p style="color:#b26a00;font-size:13px;margin:4px 0 0">Der Freigabe-Link ist auf dem Server noch nicht eingerichtet.</p>'
+                : `<div class="linkbox"><input type="text" readonly value="${S.x.gallery.link ? esc(link) : 'Der Ereignis-Link ist deaktiviert.'}" onclick="this.select()"><button class="ghost" data-a="gal-copy" title="Link kopieren">${ICON('copy', 15)}</button>${S.x.gallery.link ? `<a class="ghost" href="${esc(link)}" target="_blank" rel="noopener" title="Galerie öffnen" style="text-decoration:none">${ICON('share', 15)}</a>` : ''}</div>`}
+              ${S.x.gallery.password ? `<p style="font-size:12px;color:#555;margin:6px 0 0">Passwort: <b>${esc(S.x.gallery.password)}</b></p>` : ''}
+              <div style="margin-top:8px;border-top:1px solid #eee;padding-top:6px">${sw('x.share.cloud', 'Fotos hochladen', 'Die Fotobox lädt jedes fertige Foto in diese Galerie')}</div></div>
+          </div>
+          <div class="dacts">
+            ${act('gal-zip', 'download', 'Alle herunterladen', P.length ? '' : 'disabled')}${act('gal-upload', 'upload', 'Hochladen')}${act('gal-embed', 'copy', 'Einbetten', link ? '' : 'disabled')}
+            <button data-a="go" data-pg="analytics">${ICON('sliders', 26)}<span>Analysen</span></button>${act('gal-slide', 'play', 'Slideshow')}
+            <button data-a="go" data-pg="shares">${ICON('share', 26)}<span>Shares</span></button>${act('gal-reload', 'refresh', 'Aktualisieren')}${act('delev', 'trash', 'Ereignis löschen')}
+          </div>
+          ${sub.embed && link ? `<div class="embed"><b>Einbetten</b><div style="font-size:13px;color:#555;margin-top:4px">Diesen Baustein auf deiner Internetseite einfügen, dann erscheint dort die Galerie dieses Ereignisses (nur wenn „Freigabe von Links“ eingeschaltet ist).</div>
+            <textarea rows="3" readonly onclick="this.select()">&lt;iframe src="${esc(link)}" style="width:100%;height:900px;border:0" loading="lazy"&gt;&lt;/iframe&gt;</textarea></div>` : ''}
+          ${gal.error ? `<div class="dempty">${esc(gal.error)}</div>`
+            : !gal.list ? '<div class="dempty">Lädt …</div>'
+            : P.length ? `<div class="gal wide">${P.map((x, i) => `<figure data-a="gal-open" data-i="${i}" title="${esc(new Date(x.created_at).toLocaleString('de-DE'))}"><img loading="lazy" src="${esc(galUrl(x.thumb || x.path))}" alt="">${x.kind !== 'photo' ? `<span class="tag">${x.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}</figure>`).join('')}</div>`
+            : `<div class="dempty">Noch keine Fotos oder Videos.<br><small style="font-size:15px">${S.x.share.cloud ? 'Die Galerie füllt sich, sobald an der Fotobox Sitzungen durchgeführt werden.' : 'Schalte rechts oben „Fotos hochladen“ ein – dann füllt sich die Galerie, sobald an der Fotobox Sitzungen durchgeführt werden.'}</small></div>`}
+          <div class="card" style="margin-top:18px"><b>Zugewiesene Fotoboxen</b>${devs.length ? devs.map(d => `<div class="between"><span>📸 ${esc(d.name || 'FotoBox')}${d.status?.uploads ? ` <small style="display:inline">· ${d.status.uploads} Foto(s) warten auf den Upload</small>` : ''}</span><small>${d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? '🟢 online' : 'offline'}</small></div>`).join('')
+            : '<p style="color:#777">Noch keine. In der FotoBox anmelden und dieses Event auswählen – oder oben unter „Geräte“ zuweisen.</p>'}</div>`;
       },
       layout() {
         const sel = S.layouts.find(l => l.id === sub.laySel), F = sel && FBR.FORMATS[sel.format];
