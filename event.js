@@ -268,7 +268,7 @@
     ['warm', 'Warm', 'sepia(.18) saturate(1.3) brightness(1.04)'], ['cool', 'Kühl', 'saturate(.9) hue-rotate(12deg) brightness(1.05)'], ['glam', 'Glamour', 'brightness(1.12) contrast(1.08) saturate(1.1)']];
   const DEF = {
     ai: { enabled: false, prompt: '' },
-    title: '', subtitle: '', startText: 'Tippen zum Starten', accent: '#F7C838', attractUrl: '', attractType: '', attractFit: 'cover', startDisplay: 'live', font: 'modern', frame: '#ffffff', textColor: '#222222', template: 'classic',
+    title: '', subtitle: '', startText: 'Tippen zum Starten', startScreen: null, accent: '#F7C838', attractUrl: '', attractType: '', attractFit: 'cover', startDisplay: 'live', font: 'modern', frame: '#ffffff', textColor: '#222222', template: 'classic',
     layouts: [], guestLayouts: false, gifFromPhotos: false,
     countdown: 3, countdownNext: 3, between: 2, autoReturn: 30, sound: true, mirror: true, mirrorPhoto: false, cropLive: true,
     modes: { single: true, strip: true, grid: true, gif: true, boomerang: true, video: true }, gifFrames: 4, boomerangLen: 'mittel', videoSecs: 10, videoAudio: true,
@@ -520,6 +520,8 @@
       if (a === 'duplay') { const l = structuredClone(S.layouts.find(x => x.id === t.dataset.id)); l.id = FBR.uid(); l.name += ' (Kopie)'; S.layouts.push(l); save(); render(); }
       if (a === 'uplogo') { const f = await pick('image/*'); if (f) { status('Lädt Logo hoch …'); E.logo_url = await ctx.uploadFile(f); save(); render(); } }
       if (a === 'dellogo') { E.logo_url = null; save(); render(); }
+      if (a === 'editscreen') { editScreen(); return; }
+      if (a === 'resetscreen') { if (await (G.pmConfirm || (async t => confirm(t)))('Gestaltung des Startbildschirms verwerfen?', 'Zurücksetzen')) { S.startScreen = null; save(); render(); } return; }
       if (a === 'upattract') {
         const f = await pick('video/mp4,video/*,image/*'); if (!f) return;
         if (f.size > 50 * 1024 * 1024) { ctx.toast('Datei ist zu groß (max. 50 MB). Bitte das Video kürzer oder kleiner exportieren.', 5000); return; }
@@ -627,14 +629,14 @@
           ${step('processing', 'Während der Verarbeitung', 'video/mp4,audio/mpeg', 'MP4 oder MP3')}${step('done', 'Nach der Verarbeitung', 'video/mp4,audio/mpeg', 'MP4 oder MP3')}`;
       },
       start() {
-        return `<h1>Startbildschirm</h1><div class="cols"><div class="left"><div class="card">
-          ${text('title', 'Titel', E.name)}${text('subtitle', 'Untertitel / Datum')}${text('startText', 'Text auf dem Start-Knopf', 'leer = kein Knopf, Antippen startet trotzdem')}
-          <label class="l">Logo</label><div class="row">${E.logo_url ? `<img src="${esc(E.logo_url)}" style="height:50px;border-radius:6px"><button class="ghost" data-a="dellogo">Entfernen</button>` : ''}<button class="ghost" data-a="uplogo">${ICON('upload', 15)} Logo hochladen</button></div>
-          <div class="row" style="margin-top:12px"><div><label class="l">Akzentfarbe</label><input type="color" data-s="accent" value="${S.accent}"></div></div></div>
-          <h2>Startbildschirm-Anzeige</h2><div class="card"><label class="l">Anzeige wählen</label><select data-s="startDisplay"><option value="live" ${S.startDisplay !== 'media' ? 'selected' : ''}>Live-Ansicht der Kamera</option><option value="media" ${S.startDisplay === 'media' ? 'selected' : ''}>Hochgeladenes Video oder Bild</option></select><p>Ein Upload ändert diese Auswahl nicht. Während der Aufnahme erscheint immer die Live-Ansicht.</p></div><h2>Startbildschirm-Video</h2><div class="card">Das Video läuft in Dauerschleife, bis ein Gast den Bildschirm berührt. Hoch- oder Querformat, MP4 (max. 50 MB) – oder ein Bild.
-            <div class="row" style="margin-top:12px">${S.attractUrl ? `<span>${ICON(S.attractType === 'video' ? 'video' : 'image', 18)} ${S.attractType === 'video' ? 'Video' : 'Bild'} hinterlegt</span><button class="ghost" data-a="delattract">${ICON('trash', 14)} Entfernen</button>` : ''}
-              <button class="ghost" data-a="upattract">${ICON('upload', 15)} Video oder Bild hochladen</button></div>
-            <label class="l">Anpassen an den Bildschirm</label><select data-s="attractFit"><option value="cover" ${S.attractFit !== 'contain' ? 'selected' : ''}>Füllen (Ränder werden abgeschnitten)</option><option value="contain" ${S.attractFit === 'contain' ? 'selected' : ''}>Einpassen (ganzes Video sichtbar)</option></select></div>
+        return `<h1>Startbildschirm</h1><div class="cols"><div class="left"><div class="card"><b>Startbildschirm gestalten</b>
+          <p style="color:#6b6b78;margin:6px 0 12px">Thema, Texte, Bilder, Start-Schaltfläche, Hintergrund und Startbildschirm-Video – frei anordnen wie beim Fotolayout.</p>
+          <div class="row"><button class="btn pri" data-a="editscreen">${ICON('pen', 16)} Bearbeiten</button>${S.startScreen ? `<button class="ghost" data-a="resetscreen">Zurücksetzen</button>` : ''}</div>
+          ${S.startScreen ? '' : '<p style="color:#6b6b78;font-size:13px;margin-top:10px">Noch nicht gestaltet – die Fotobox zeigt bis dahin den einfachen Standard-Startbildschirm.</p>'}
+          <p style="font-size:13px;margin-top:10px">${NEWAPP}</p></div>
+          <h2>Angaben zum Ereignis</h2><div class="card"><p style="color:#6b6b78;font-size:13px;margin-bottom:6px">Diese Angaben erscheinen überall, wo {titel} und {untertitel} stehen – auf dem Startbildschirm und auf den Ausdrucken.</p>
+          ${text('title', 'Titel', E.name)}${text('subtitle', 'Untertitel / Datum')}
+          <label class="l">Logo</label><div class="row">${E.logo_url ? `<img src="${esc(E.logo_url)}" style="height:50px;border-radius:6px"><button class="ghost" data-a="dellogo">Entfernen</button>` : ''}<button class="ghost" data-a="uplogo">${ICON('upload', 15)} Logo hochladen</button></div></div>
           </div>${startPreview()}</div>`;
       },
       fx() {
@@ -779,12 +781,32 @@
       return `<div class="pv"><div class="frame"><canvas id="wsPv"></canvas><div class="row" style="justify-content:space-between;margin-top:12px">
         <button class="btn pri" data-a="edit1">${ICON('pen', 15)} Bearbeiten</button><small style="color:#777">${S.layouts[0] ? esc(S.layouts[0].name) : 'Standard-Vorlage'}</small></div></div></div>`;
     }
+    // Startbildschirm als frei gestaltbares „Layout“ in Bildschirmgröße (wie LumaBooth). Ohne Gestaltung: Vorschlag aus den bisherigen Angaben.
+    const screenDraft = () => { const L = FBR.createScreen('portrait', { logo: E.logo_url, startText: S.startText, theme: 'night' }); return L; };
     function startPreview() {
-      const media = S.startDisplay === 'media' && S.attractUrl ? (S.attractType === 'video' ? `<video src="${esc(S.attractUrl)}" autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:${S.attractFit === 'contain' ? 'contain' : 'cover'};background:#000"></video>`
-        : `<img src="${esc(S.attractUrl)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${S.attractFit === 'contain' ? 'contain' : 'cover'};background:#000">`) : '';
-      return `<div class="pv"><div class="frame"><div id="wsStart" style="position:relative;overflow:hidden;aspect-ratio:3/4;border-radius:10px;background:linear-gradient(160deg,#1D1D1B,#4a4a45);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:20px">${media}<div style="position:relative;display:flex;flex-direction:column;align-items:center">
-        ${E.logo_url ? `<img src="${esc(E.logo_url)}" style="max-height:70px;margin-bottom:14px">` : ''}<div style="font-size:30px;font-weight:800">${esc(S.title || E.name)}</div>
-        <div style="opacity:.85">${esc(S.subtitle)}</div>${String(S.startText || '').trim() ? `<div style="margin-top:30px;background:${S.accent};color:#1D1D1B;padding:10px 22px;border-radius:999px;font-weight:700">${esc(S.startText)}</div>` : ''}</div></div></div></div>`;
+      return `<div class="pv"><div class="frame"><canvas id="wsStart" data-a="editscreen" title="Anklicken zum Bearbeiten" style="width:100%;border-radius:10px;display:block;cursor:pointer"></canvas></div></div>`;
+    }
+    function drawStart() {
+      const c = $(root, '#wsStart'); if (!c) return;
+      const L = S.startScreen || screenDraft();
+      FBR.preloadLayout(L).then(() => { const big = FBR.renderLayout(L, { values: vals(), placeholders: true }); c.width = Math.round(big.width / 3); c.height = Math.round(big.height / 3); c.getContext('2d').drawImage(big, 0, 0, c.width, c.height); });
+    }
+    async function uploadAttract() {
+      const f = await pick('video/mp4,video/*,image/*'); if (!f) return;
+      if (f.size > 50 * 1024 * 1024) { ctx.toast('Datei ist zu groß (max. 50 MB). Bitte das Video kürzer oder kleiner exportieren.', 5000); return; }
+      status('Lädt ' + (f.type.startsWith('video') ? 'Video' : 'Bild') + ' hoch …');
+      try { S.attractUrl = await ctx.uploadFile(f); S.attractType = f.type.startsWith('video') ? 'video' : 'image'; S.startDisplay = 'media'; save(); }
+      catch (e) { ctx.toast('Hochladen fehlgeschlagen: ' + e.message, 5000); status(''); }
+    }
+    function editScreen() {
+      const L = S.startScreen || screenDraft();
+      LayoutEditor.open({
+        layout: L, values: vals(), uploadImage: ctx.uploadFile,
+        video: () => ({ url: S.attractUrl, type: S.attractType }), uploadVideo: uploadAttract,
+        removeVideo: () => { S.attractUrl = ''; S.attractType = ''; save(); },
+        onSave: async nl => { S.startScreen = nl; const b = nl.elements.find(e => e.type === 'button'); S.startText = b && !b.hidden ? String(b.text || '') : ''; save(); },
+        onClose: () => render()
+      });
     }
     const fThumbCache = {};
     function filterThumb(css) {
@@ -801,9 +823,7 @@
           : FBR.render(FBR.LAYOUTS.single, [0, 1, 2, 3].map(i => FBR.placeholder(i)), { template: S.template, title: S.title || E.name, subtitle: S.subtitle });
         c.width = img.width / 3; c.height = img.height / 3; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
       }
-      // Startbildschirm: nur die Vorschau erneuern, und nur nach einer Eingabe. Ein komplettes render() von hier aus
-      // würde sich über render() → drawPreview() endlos selbst auslösen und Auswahllisten und Textfelder ständig zurücksetzen.
-      if (!fromRender && page === 'start' && $(root, '#wsStart')) { clearTimeout(drawPreview.t); drawPreview.t = setTimeout(() => { const box = $(root, '#wsStart')?.closest('.pv'); if (box && page === 'start') box.outerHTML = startPreview(); }, 400); }
+      if (page === 'start') { clearTimeout(drawPreview.t); drawPreview.t = setTimeout(drawStart, fromRender ? 0 : 400); }
     }
     function render() {
       main.innerHTML = PAGES[page]();
