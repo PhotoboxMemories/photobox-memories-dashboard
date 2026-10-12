@@ -180,7 +180,19 @@
   #ws .flt.on{border-color:#F7C838}
   #ws .flt img{width:100%;display:block;aspect-ratio:1}
   #ws .flt span{position:absolute;left:0;right:0;bottom:0;padding:4px 6px;color:#fff;font-size:12px;background:linear-gradient(transparent,rgba(0,0,0,.6))}
-  #ws .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:900px}
+  #ws .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;max-width:900px}
+  #ws .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:14px}
+  #ws .gal figure{margin:0;position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#ececf1;cursor:zoom-in}
+  #ws .gal img{width:100%;height:100%;object-fit:cover;display:block}
+  #ws .gal .tag{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;border-radius:6px;padding:2px 6px}
+  #ws .linkbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  #ws .linkbox input{flex:1;min-width:220px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #wsLight{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px}
+  #wsLight img,#wsLight video{max-width:94vw;max-height:78vh;border-radius:8px;background:#000}
+  #wsLight .bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  #wsLight button{background:#fff;border:0;border-radius:999px;padding:10px 18px;font:600 14px system-ui,sans-serif;cursor:pointer}
+  #wsLight .nav{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;padding:0;font-size:24px}
+  #wsLight .nav.l{left:14px}#wsLight .nav.r{right:14px}
   #ws .stat{background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06)}
   #ws .stat b{display:block;font-size:26px}
   #ws .grid3x{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:6px}
@@ -292,7 +304,7 @@
     share: { email: { on: false, from: '', subject: 'Hier ist Ihr Foto', body: '<h2>Hier ist Ihr Foto</h2>{image}<br>', inputText: 'E-Mail eingeben', sendText: 'E-Mail senden' },
       sms: { on: false, message: 'Hier ist Ihr Foto', cc: '49', inputText: 'Telefonnummer eingeben', sendText: 'SMS senden' },
       wa: { on: false, message: 'Hier ist Ihr Foto', cc: '49', inputText: 'Telefonnummer eingeben', scanText: 'Mit dem Handy scannen' },
-      originals: true, deleteBtn: true, deleteText: 'Wiederholen', cloud: false, uploadOriginals: true },
+      originals: true, deleteBtn: true, deleteText: 'Wiederholen', cloud: false, uploadOriginals: true, origUp: false },
     print: { btnText: 'Drucken', printingText: 'Drucken...', copiesText: 'Wie viele Kopien?' },
     gallery: { link: false, guests: false, downloadAll: false, password: '' },
     ai: { skip: false, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Porträt erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
@@ -565,6 +577,10 @@
       if (a === 'upbg') { const f = await pick('image/*'); if (f) { status('Lädt Hintergrund hoch …'); S.bgUrls = [...(S.bgUrls || []), await ctx.uploadFile(f)]; save(); render(); } }
       if (a === 'delbg') { S.bgUrls = S.bgUrls.filter((_, i) => i !== +t.dataset.i); save(); render(); }
       if (a === 'delev') ctx.onDelete?.(ev, close);
+      if (a === 'gal-open') return openLightbox(+t.dataset.i);
+      if (a === 'gal-reload') { gal.list = null; render(); return loadGallery(true); }
+      if (a === 'gal-zip') return downloadAll();
+      if (a === 'gal-copy') { const link = shareLink(); try { await navigator.clipboard.writeText(link); ctx.toast('Link kopiert'); } catch { ctx.toast(link, 8000); } return; }
       if (a === 'edit1') { const l = S.layouts[0]; if (l) editLayout(l.id); else pickTemplate(vals(), addLayout); }
     });
     const pick = accept => new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => res(i.files[0] || null); i.click(); });
@@ -582,15 +598,89 @@
             <img src="${layoutThumb(L)}" alt=""><div class="nm">${esc(L.name)} · ${FBR.photoCount(L)} Foto(s)</div></div>`).join('')
           : `<div class="empty" style="flex:1">Noch keine Layouts hinzugefügt</div>`}</div>`;
     }
+    // ---------- Online-Galerie: Fotos dieses Ereignisses aus dem Speicher ----------
+    const gal = { list: null, error: '', loading: false, at: 0 };
+    const galUrl = path => ctx.sb.storage.from('photos').getPublicUrl(path).data?.publicUrl || '';
+    const shareLink = () => E.share_token ? location.origin + location.pathname.replace(/[^/]*$/, '') + 'galerie.html?g=' + E.share_token : '';
+    function shareBox() {
+      const link = shareLink();
+      return `${sw('x.share.cloud', 'Fotos in die Online-Galerie hochladen ' + NEWAPP, 'Die Fotobox lädt jedes fertige Foto hoch. Sie muss mit deinem Konto angemeldet sein und Internet haben.')}
+        ${sw('x.gallery.link', 'Freigabe von Links', 'Jeder mit dem Link zum Ereignis darf dieses Ereignis sehen')}
+        ${!link ? '<p style="color:#b26a00;font-size:13px;margin-top:8px">Der Freigabe-Link ist auf dem Server noch nicht eingerichtet.</p>'
+          : `<div class="linkbox"><input type="text" readonly value="${esc(link)}" onclick="this.select()"><button class="btn pri" data-a="gal-copy">${ICON('copy', 15)} Link kopieren</button><a class="ghost" href="${esc(link)}" target="_blank" rel="noopener" style="text-decoration:none">Öffnen</a></div>
+            <p style="color:#777;font-size:13px;margin-top:6px">${S.x.gallery.link ? 'Diesen Link kannst du dem Kunden schicken.' : 'Der Link funktioniert erst, wenn „Freigabe von Links“ eingeschaltet ist.'}${S.x.gallery.password ? ' Passwort: <b>' + esc(S.x.gallery.password) + '</b>' : ''}</p>`}`;
+    }
+    async function loadGallery(force) {
+      if (gal.loading || (!force && gal.list && Date.now() - gal.at < 30000)) return;
+      gal.loading = true;
+      try {
+        const { data, error } = await ctx.sb.from('photos').select('id,path,thumb,kind,name,bytes,created_at').eq('event_id', ev.id).order('created_at', { ascending: false }).limit(2000);
+        gal.error = error ? (/relation|does not exist|schema cache/i.test(error.message) ? 'Die Online-Galerie ist auf dem Server noch nicht eingerichtet.' : error.message) : '';
+        gal.list = error ? [] : [].concat(data || []);
+      } catch (e) { gal.error = e.message; gal.list = []; }
+      gal.loading = false; gal.at = Date.now();
+      if (page === 'dash') render();
+    }
+    const fetchBlob = async path => { const r = await fetch(galUrl(path)); if (!r.ok) throw new Error('Datei nicht abrufbar'); return r.blob(); };
+    const saveBlob = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 20000); };
+    const galName = x => (x.name || x.path.split('/').pop()).replace(/[^\w.\-äöüÄÖÜß ]/g, '_');
+    function openLightbox(i) {
+      const L = gal.list || []; let n = i;
+      const o = document.createElement('div'); o.id = 'wsLight';
+      const draw = () => { const x = L[n]; if (!x) return o.remove();
+        o.innerHTML = `${x.kind === 'video' ? `<video src="${esc(galUrl(x.path))}" controls autoplay loop playsinline></video>` : `<img src="${esc(galUrl(x.path))}" alt="">`}
+          <div class="bar"><button data-k="dl">${ICON('download', 15)} Herunterladen</button><button data-k="del" style="color:#d23b3b">${ICON('trash', 15)} Löschen</button><button data-k="x">Schließen</button></div>
+          <div style="color:#bbb;font:13px system-ui,sans-serif">${n + 1} von ${L.length} · ${esc(new Date(x.created_at).toLocaleString('de-DE'))}</div>
+          ${L.length > 1 ? '<button class="nav l" data-k="prev">‹</button><button class="nav r" data-k="next">›</button>' : ''}`; };
+      const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') { n = (n + L.length - 1) % L.length; draw(); } if (e.key === 'ArrowRight') { n = (n + 1) % L.length; draw(); } };
+      const close = () => { o.remove(); document.removeEventListener('keydown', key); };
+      o.addEventListener('click', async e => {
+        const k = e.target.closest('[data-k]')?.dataset.k; if (!k) { if (e.target === o) close(); return; }
+        const x = L[n];
+        if (k === 'x') return close();
+        if (k === 'prev') { n = (n + L.length - 1) % L.length; return draw(); }
+        if (k === 'next') { n = (n + 1) % L.length; return draw(); }
+        if (k === 'dl') { try { saveBlob(await fetchBlob(x.path), galName(x)); } catch (err) { ctx.toast('Herunterladen fehlgeschlagen: ' + err.message, 4000); } return; }
+        if (k === 'del') {
+          if (!await (G.pmConfirm || (async t => confirm(t)))('Dieses Foto endgültig aus der Online-Galerie löschen? Auf der Fotobox bleibt es gespeichert.')) return;
+          const r1 = await ctx.sb.storage.from('photos').remove([x.path, x.thumb].filter(Boolean));
+          const r2 = await ctx.sb.from('photos').delete().eq('id', x.id);
+          if (r1?.error || r2?.error) return ctx.toast('Löschen fehlgeschlagen: ' + (r1?.error || r2?.error).message, 5000);
+          L.splice(n, 1); if (!L.length) close(); else { n = Math.min(n, L.length - 1); draw(); } render();
+        }
+      });
+      document.addEventListener('keydown', key); draw(); document.body.appendChild(o);
+    }
+    async function downloadAll() {
+      const L = gal.list || []; if (!L.length) return;
+      if (L.length > 400 && !await (G.pmConfirm || (async t => confirm(t)))(`${L.length} Dateien in eine ZIP-Datei packen? Das kann einige Minuten dauern und braucht viel Arbeitsspeicher.`, 'Herunterladen')) return;
+      try {
+        if (!G.JSZip) await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; sc.onload = ok; sc.onerror = () => no(new Error('ZIP-Baustein nicht ladbar')); document.head.appendChild(sc); });
+        const zip = new G.JSZip(); let done = 0;
+        for (const x of L) { status(`Lade ${++done} von ${L.length} …`); try { zip.file(String(done).padStart(4, '0') + '_' + galName(x), await fetchBlob(x.path)); } catch {} }
+        status('Packe ZIP-Datei …');
+        saveBlob(await zip.generateAsync({ type: 'blob', compression: 'STORE' }), (E.name || 'Ereignis').replace(/[^\w\-äöüÄÖÜß ]/g, '_') + '-Fotos.zip'); status('');
+      } catch (e) { status(''); ctx.toast('Herunterladen fehlgeschlagen: ' + e.message, 5000); }
+    }
     const PAGES = {
       dash() {
         const devs = (ctx.devices || []).filter(d => d.event_id === ev.id);
-        const photos = devs.reduce((a, d) => a + (d.photos_total || 0), 0);
+        const prints = devs.reduce((n, d) => n + (d.status?.prints || 0), 0), P = gal.list || [];
+        loadGallery();
         return `<h1>Dashboard</h1>
-          <div class="stats"><div class="stat"><b>${devs.length}</b>Fotoboxen</div><div class="stat"><b>${photos}</b>Fotos (Geräte gesamt)</div><div class="stat"><b>${ctx.leadsCount?.(ev.id) ?? '–'}</b>Gäste-Daten</div></div>
-          <div class="card" style="margin-top:16px"><label class="l">Name des Ereignisses</label><input type="text" data-e="name" value="${esc(E.name)}">
+          <div class="stats"><div class="stat"><b>${gal.list ? P.filter(x => x.kind !== 'video').length : '…'}</b>Bilder</div><div class="stat"><b>${gal.list ? P.filter(x => x.kind === 'video').length : '…'}</b>Videos</div>
+            <div class="stat"><b>${prints}</b>Ausdrucke</div><div class="stat"><b>${ctx.leadsCount?.(ev.id) ?? '–'}</b>Gäste-Daten</div><div class="stat"><b>${devs.length}</b>Fotoboxen</div></div>
+          <div class="card" style="margin-top:16px"><b>Online-Galerie</b>${shareBox()}</div>
+          <div class="card"><div class="between" style="padding:0"><b>Galerie</b><div class="row">
+              <button class="ghost" data-a="gal-reload">${ICON('refresh', 15)} Aktualisieren</button>
+              ${P.length ? `<button class="ghost" data-a="gal-zip">${ICON('download', 15)} Alle herunterladen</button>` : ''}</div></div>
+            ${gal.error ? `<div class="empty" style="margin-top:12px">${esc(gal.error)}</div>`
+              : !gal.list ? '<div class="empty" style="margin-top:12px">Lädt …</div>'
+              : P.length ? `<div class="gal">${P.map((x, i) => `<figure data-a="gal-open" data-i="${i}" title="${esc(new Date(x.created_at).toLocaleString('de-DE'))}"><img loading="lazy" src="${esc(galUrl(x.thumb || x.path))}" alt="">${x.kind !== 'photo' ? `<span class="tag">${x.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}</figure>`).join('')}</div>`
+              : `<div class="empty" style="margin-top:12px">Noch keine Fotos oder Videos.<br><small>${S.x.share.cloud ? 'Die Galerie füllt sich, sobald an der Fotobox Aufnahmen gemacht werden. Die Fotobox muss mit deinem Konto angemeldet sein, dieses Ereignis gewählt haben und Internet haben.' : 'Schalte oben „Fotos in die Online-Galerie hochladen“ ein.'}</small></div>`}</div>
+          <div class="card"><label class="l">Name des Ereignisses</label><input type="text" data-e="name" value="${esc(E.name)}">
             <label class="l">Datum</label><input type="date" data-e="event_date" value="${E.event_date || ''}"></div>
-          <div class="card"><b>Zugewiesene Fotoboxen</b>${devs.length ? devs.map(d => `<div class="between"><span>📸 ${esc(d.name || 'FotoBox')}</span><small>${d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? '🟢 online' : 'offline'}</small></div>`).join('')
+          <div class="card"><b>Zugewiesene Fotoboxen</b>${devs.length ? devs.map(d => `<div class="between"><span>📸 ${esc(d.name || 'FotoBox')}${d.status?.uploads ? ` <small style="display:inline">· ${d.status.uploads} Foto(s) warten auf den Upload</small>` : ''}</span><small>${d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? '🟢 online' : 'offline'}</small></div>`).join('')
             : '<p style="color:#777">Noch keine. In der FotoBox anmelden und dieses Event auswählen – oder oben unter „Geräte“ zuweisen.</p>'}</div>
           <button class="ghost" data-a="delev" style="color:#d23b3b">${ICON('trash', 15)} Ereignis löschen</button>`;
       },
@@ -778,8 +868,8 @@
           : sub.sh === 'screen' ? `<h2>Bildschirm zum Teilen</h2><div class="card">${slider('autoReturn', 'Anzeigedauer des Bildschirms zum Teilen', 0, 120, 5)}
               ${sw('x.share.originals', 'Originalfotos anzeigen ' + NEWAPP, 'Gäste können die einzelnen Originalfotos ansehen und teilen')}
               ${sw('x.share.deleteBtn', 'Schaltfläche „Löschen“ anzeigen', 'Gäste können die Aufnahme verwerfen und wiederholen')}${text('x.share.deleteText', 'Text für die Schaltfläche „Löschen“')}</div>`
-          : `<h2>Weitere Optionen</h2><div class="card">${sw('x.share.cloud', 'Cloud-Freigabe ' + NEEDSRV_S, 'Fotos werden hochgeladen und sind über einen Link abrufbar')}
-              ${sw('x.share.uploadOriginals', 'Originalfotos hochladen', 'Gäste können die Originalbilder in hoher Auflösung herunterladen')}
+          : `<h2>Weitere Optionen</h2><div class="card">${sw('x.share.cloud', 'Cloud-Freigabe ' + NEWAPP, 'Fotos werden in die Online-Galerie hochgeladen und sind über einen Link abrufbar')}
+              ${sw('x.share.origUp', 'Originalfotos hochladen ' + NEWAPP, 'Zusätzlich zum fertigen Ausdruck werden die einzelnen Aufnahmen in die Online-Galerie hochgeladen (braucht mehr Speicher)')}
               ${sw('share', 'QR Code', 'Teilen Sie Fotos über einen QR-Code, den Gäste scannen können. Aktuell muss das Handy im selben WLAN wie die Fotobox sein.')}</div>`)}`;
       },
       print() {
@@ -793,13 +883,13 @@
               ${sw('showPrintsLeft', 'Restlimit an der Fotobox anzeigen ' + NEWAPP, 'Unter dem Drucken-Symbol steht, wie viele Ausdrucke noch übrig sind, zum Beispiel „Noch 37 Drucke“. Nur wenn oben ein Limit eingetragen ist.')}</div>`)}`;
       },
       gallery() {
-        return `<h1>Online-Galerie</h1><div class="card">${NEEDSRV}
-          <p style="font-weight:600;margin-top:8px">Datenschutz</p>
-          ${sw('x.gallery.link', 'Freigabe von Links', 'Jeder mit dem Link zum Ereignis darf dieses Ereignis sehen')}
-          ${sw('x.gallery.guests', 'Gastzugriff', 'Erlauben Sie Gästen, Bilder und Videos anderer Gäste zu sehen')}
+        return `<h1>Online-Galerie</h1><div class="card"><b>Freigabe</b>${shareBox()}</div><div class="card">
+          <p style="font-weight:600">Datenschutz</p>
           ${sw('x.gallery.downloadAll', 'Alle herunterladen', 'Ermöglichen Sie Besuchern, alle Inhalte des Ereignisses herunterzuladen')}
           ${text('x.gallery.password', 'Passwort', 'leer = kein Passwort')}
-          <p style="color:#777;font-size:13px">Gäste müssen dieses Passwort eingeben, um das Ereignis anzusehen.</p></div>`;
+          <p style="color:#777;font-size:13px">Gäste müssen dieses Passwort eingeben, um das Ereignis anzusehen. Lassen Sie das Feld leer, um das Passwort zu deaktivieren.</p>
+          ${sw('x.gallery.guests', 'Gastzugriff ' + NEEDSRV_S, 'Erlauben Sie Gästen, Bilder und Videos anderer Gäste zu sehen')}</div>
+          <p style="color:#777;font-size:13px">Die Fotos selbst siehst du unter „Dashboard“ dieses Ereignisses.</p>`;
       }
     };
     function previewBox() {
