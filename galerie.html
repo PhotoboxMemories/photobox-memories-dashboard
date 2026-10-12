@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Fotogalerie – Photobox Memories</title>
+<style>
+  :root{--y:#F9CB38;--k:#1D1D1B;--bg:#111110;--card:#1c1c1f;--line:#2e2e33;--muted:#a3a3ad}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:#fff;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:26px 16px 18px;text-align:center;border-bottom:3px solid var(--y);background:var(--k)}
+  header .brand{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--y);font-weight:700}
+  header h1{margin:8px 0 4px;font-size:clamp(24px,5vw,40px);line-height:1.15;overflow-wrap:anywhere}
+  header p{margin:0;color:var(--muted)}
+  main{max-width:1200px;margin:0 auto;padding:16px}
+  .bar{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:14px;color:var(--muted);font-size:14px}
+  .btn{background:var(--y);color:var(--k);border:0;border-radius:999px;padding:11px 20px;font:700 15px system-ui,sans-serif;cursor:pointer}
+  .btn.ghost{background:#2a2a2e;color:#fff}
+  .btn:disabled{opacity:.5;cursor:default}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  @media(max-width:520px){.grid{grid-template-columns:repeat(2,1fr);gap:8px}}
+  .grid figure{margin:0;position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--card);cursor:zoom-in}
+  .grid img{width:100%;height:100%;object-fit:cover;display:block}
+  .grid .tag{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.65);font-size:11px;border-radius:6px;padding:2px 6px}
+  .box{max-width:440px;margin:8vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;text-align:center}
+  .box h2{margin:0 0 8px}
+  .box p{color:var(--muted);margin:0 0 16px}
+  .box input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:#0f0f12;color:#fff;font:inherit;margin-bottom:12px;text-align:center}
+  .err{color:#ff8f8f;min-height:1.4em;font-size:14px}
+  #light{position:fixed;inset:0;z-index:10;background:rgba(0,0,0,.94);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:12px}
+  #light.on{display:flex}
+  #light img,#light video{max-width:96vw;max-height:76vh;border-radius:8px;background:#000}
+  #light .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  #light .nav{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;padding:0;font-size:26px;background:rgba(255,255,255,.9);color:var(--k);border:0;cursor:pointer}
+  #light .nav.l{left:10px}#light .nav.r{right:10px}
+  footer{text-align:center;color:#6f6f78;font-size:12px;padding:26px 16px 34px}
+  .one{text-align:center}.one img,.one video{max-width:100%;max-height:70vh;border-radius:10px;background:#000}
+  .one p{color:var(--muted);font-size:14px}
+  /* Slideshow (z. B. für einen zweiten Bildschirm oder Fernseher) */
+  body.show header,body.show footer{display:none}
+  #ss{position:fixed;inset:0;background:#000;cursor:pointer}
+  #ss img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1.2s}
+  #ss img.on{opacity:1}
+  #ss .hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;color:#777;font-size:13px}
+</style>
+</head>
+<body>
+<header><div class="brand">Photobox Memories</div><h1 id="title">Fotogalerie</h1><p id="sub"></p></header>
+<main id="main"><div class="box"><p>Lädt …</p></div></main>
+<div id="light"><div id="lightMedia"></div><div class="row"><button class="btn" id="lDl">Herunterladen</button><button class="btn ghost" id="lClose">Schließen</button></div><div id="lInfo" style="color:#aaa;font-size:13px"></div>
+  <button class="nav l" id="lPrev" aria-label="Vorheriges">‹</button><button class="nav r" id="lNext" aria-label="Nächstes">›</button></div>
+<footer>Diese Seite ist nur über den persönlichen Link erreichbar. Bitte den Link nur an Gäste dieser Veranstaltung weitergeben.</footer>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  'use strict';
+  const CFG = window.FOTOBOX_CONFIG || {}, $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const Q = new URLSearchParams(location.search), token = Q.get('g') || '', single = Q.get('f') || '', show = Q.get('show') === '1';
+  const url = path => CFG.supabaseUrl + '/storage/v1/object/public/photos/' + String(path).split('/').map(encodeURIComponent).join('/');
+  let photos = [], current = 0, info = null;
+
+  const box = html => { $('#main').innerHTML = `<div class="box">${html}</div>`; };
+  async function fetchGallery(password) {
+    const res = await fetch(CFG.supabaseUrl + '/rest/v1/rpc/gallery_public', { method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey },
+      body: JSON.stringify({ p_token: token, p_password: password || null }) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }
+  async function load(password) {
+    if (!/^[0-9a-f]{16,64}$/i.test(token) || !CFG.supabaseUrl) return box('<h2>Galerie nicht gefunden</h2><p>Der Link ist unvollständig. Bitte den Link noch einmal öffnen.</p>');
+    let r;
+    try { r = await fetchGallery(password); }
+    catch (e) { return box('<h2>Galerie nicht erreichbar</h2><p>Bitte die Internetverbindung prüfen und die Seite neu laden.</p>'); }
+    if (r.name) { $('#title').textContent = r.name; document.title = r.name + ' – Fotogalerie'; }
+    if (!r.ok) {
+      if (r.error === 'password') {
+        box(`<h2>Passwort erforderlich</h2><p>Diese Galerie ist geschützt.</p><form id="pwForm"><input type="password" id="pw" placeholder="Passwort" autocomplete="off" autofocus><div class="err" id="pwErr">${password ? 'Das Passwort stimmt nicht.' : ''}</div><button class="btn">Galerie öffnen</button></form>`);
+        $('#pwForm').onsubmit = e => { e.preventDefault(); const v = $('#pw').value; if (v) { try { sessionStorage.setItem('pm-gal-' + token, v); } catch {} load(v); } };
+        return;
+      }
+      return box(r.error === 'off' ? '<h2>Galerie nicht freigegeben</h2><p>Diese Galerie ist zurzeit nicht geöffnet. Bitte beim Veranstalter nachfragen.</p>'
+        : '<h2>Galerie nicht gefunden</h2><p>Diesen Link gibt es nicht (mehr).</p>');
+    }
+    info = r; photos = r.photos || [];
+    if (show) return slideshow(password);
+    $('#sub').textContent = [r.subtitle, r.date ? new Date(r.date).toLocaleDateString('de-DE') : ''].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(' · ');
+    if (!photos.length) return box('<h2>Noch keine Fotos</h2><p>Sobald Fotos gemacht wurden, erscheinen sie hier. Einfach später noch einmal öffnen.</p>');
+    $('#main').innerHTML = `<div class="bar"><span>${photos.length} ${photos.length === 1 ? 'Aufnahme' : 'Aufnahmen'}</span>${r.download_all ? '<button class="btn" id="zip">Alle herunterladen</button>' : ''}</div>
+      <div class="grid">${photos.map((p, i) => `<figure data-i="${i}"><img loading="lazy" src="${esc(url(p.thumb || p.path))}" alt="Foto ${i + 1}">${p.kind !== 'photo' ? `<span class="tag">${p.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}</figure>`).join('')}</div>`;
+    $('.grid').onclick = e => { const f = e.target.closest('figure'); if (f) open(+f.dataset.i); };
+    if ($('#zip')) $('#zip').onclick = zipAll;
+  }
+
+  const fileName = (p, i) => 'Foto-' + String(i + 1).padStart(3, '0') + '.' + (String(p.path).split('.').pop() || 'jpg');
+  const save = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 20000); };
+  function open(i) {
+    current = (i + photos.length) % photos.length; const p = photos[current];
+    $('#lightMedia').innerHTML = p.kind === 'video' ? `<video src="${esc(url(p.path))}" controls autoplay loop playsinline></video>` : `<img src="${esc(url(p.path))}" alt="">`;
+    $('#lInfo').textContent = (current + 1) + ' von ' + photos.length;
+    $('#lPrev').style.display = $('#lNext').style.display = photos.length > 1 ? '' : 'none';
+    $('#light').classList.add('on');
+  }
+  const close = () => { $('#light').classList.remove('on'); $('#lightMedia').innerHTML = ''; };
+  $('#lClose').onclick = close; $('#lPrev').onclick = () => open(current - 1); $('#lNext').onclick = () => open(current + 1);
+  $('#light').onclick = e => { if (e.target.id === 'light') close(); };
+  document.addEventListener('keydown', e => { if (!$('#light').classList.contains('on')) return; if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') open(current - 1); if (e.key === 'ArrowRight') open(current + 1); });
+  $('#lDl').onclick = async () => {
+    const p = photos[current], b = $('#lDl'); b.disabled = true;
+    try { const r = await fetch(url(p.path)); if (!r.ok) throw 0; save(await r.blob(), fileName(p, current)); }
+    catch { window.open(url(p.path), '_blank'); } // Notlösung: Bild im neuen Tab, dort lange drücken und speichern
+    b.disabled = false;
+  };
+  async function zipAll() {
+    const b = $('#zip'); b.disabled = true;
+    try {
+      if (!window.JSZip) await new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+      const zip = new window.JSZip();
+      for (let i = 0; i < photos.length; i++) { b.textContent = `Lade ${i + 1} von ${photos.length} …`; try { const r = await fetch(url(photos[i].path)); if (r.ok) zip.file(fileName(photos[i], i), await r.blob()); } catch {} }
+      b.textContent = 'Packe Datei …';
+      save(await zip.generateAsync({ type: 'blob', compression: 'STORE' }), (info.name || 'Fotos').replace(/[^\wäöüÄÖÜß \-]/g, '_') + '.zip');
+    } catch { alert('Das Herunterladen hat nicht geklappt. Bitte später noch einmal versuchen.'); }
+    b.disabled = false; b.textContent = 'Alle herunterladen';
+  }
+
+  // Einzelnes Foto (QR-Code an der Fotobox): nur dieses eine Bild mit „Herunterladen“
+  function showSingle() {
+    if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpe?g|png|gif|mp4|webm)$/i.test(single) || !CFG.supabaseUrl) return box('<h2>Foto nicht gefunden</h2><p>Der Link ist unvollständig. Bitte den QR-Code noch einmal scannen.</p>');
+    const vid = /\.(mp4|webm)$/i.test(single), u = url(single);
+    $('#title').textContent = vid ? 'Dein Video' : 'Dein Foto'; document.title = $('#title').textContent + ' – Photobox Memories';
+    $('#main').innerHTML = `<div class="one">${vid ? `<video src="${esc(u)}" controls autoplay loop playsinline></video>` : `<img src="${esc(u)}" alt="Dein Foto">`}
+      <div style="margin-top:16px"><button class="btn" id="oneDl">Herunterladen</button></div><p>${vid ? 'Tipp: Herunterladen und in der Fotos-App sichern.' : 'Tipp: Bild gedrückt halten → „In Fotos sichern“.'}</p></div>`;
+    $('#oneDl').onclick = async () => { const b = $('#oneDl'); b.disabled = true;
+      try { const r = await fetch(u); if (!r.ok) throw 0; save(await r.blob(), (vid ? 'Video.' : 'Foto.') + single.split('.').pop()); } catch { window.open(u, '_blank'); }
+      b.disabled = false; };
+    document.querySelector('footer').textContent = 'Photobox Memories';
+  }
+  // Slideshow: zeigt die Fotos des Ereignisses nacheinander im Vollbild, neue Fotos kommen von selbst dazu
+  function slideshow(password) {
+    document.body.classList.add('show');
+    $('#main').innerHTML = '<div id="ss"><img id="ssA" alt=""><img id="ssB" alt=""><div class="hint" id="ssHint"></div></div>';
+    let i = 0, flip = false;
+    const pics = () => photos.filter(p => p.kind !== 'video');
+    const next = () => {
+      const list = pics(); $('#ssHint').textContent = list.length ? '' : 'Noch keine Fotos – sobald Fotos gemacht wurden, erscheinen sie hier.';
+      if (!list.length) return;
+      const p = list[i % list.length], el = $(flip ? '#ssA' : '#ssB'), other = $(flip ? '#ssB' : '#ssA'), im = new Image(); i++;
+      im.onload = () => { el.src = im.src; el.classList.add('on'); other.classList.remove('on'); flip = !flip; };
+      im.src = url(p.path);
+    };
+    next(); setInterval(next, 6000);
+    setInterval(async () => { try { const r = await fetchGallery(password); if (r.ok) { const had = photos.length; photos = r.photos || []; if (photos.length > had) i = 0; } } catch {} }, 30000); // neue Fotos zuerst
+    $('#ss').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.().catch(() => {}); };
+  }
+
+  let saved = ''; try { saved = sessionStorage.getItem('pm-gal-' + token) || ''; } catch {}
+  if (single) showSingle(); else load(saved);
+})();
+</script>
+</body>
+</html>
