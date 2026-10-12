@@ -1,6 +1,8 @@
 // FotoBox – Layout-Editor (Fotofelder, Bilder, Texte, Formen frei anordnen)
 // Benutzt FBR (render.js) für die exakte Vorschau.
 // LayoutEditor.open({ layout, values, onSave(layout), onClose(), uploadImage(file) → Promise<url> })
+// Ist layout.screen gesetzt, arbeitet der Editor als Startbildschirm-Editor (Thema, Text, Bild, Startbildschirm-Video, Hintergrund);
+// dann zusätzlich: video() → {url,type}, uploadVideo() → Promise, removeVideo().
 (function (G) {
   'use strict';
   const CSS = `
@@ -47,13 +49,16 @@
   #le .h.r{background:#fff;border-color:#1976d2;cursor:grab}
   #le .guide{position:absolute;background:#F7C838;pointer-events:none}
   #le .hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:12px;color:#888}
+  #le .themes{display:grid;grid-template-columns:1fr 1fr;gap:10px} #le .themes button{border:2px solid transparent;border-radius:10px;padding:0;background:none;cursor:pointer;font:inherit;font-size:12px;color:#333;text-align:center}
+  #le .themes button i{display:block;aspect-ratio:9/14;border-radius:8px;margin-bottom:4px;border:1px solid #e3e3ea} #le .themes button.on{border-color:#F7C838}
+  #le .cat{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.04em;margin:14px 0 6px}
   #le .sw{width:18px;height:18px;border-radius:4px;border:1px solid #ccc;display:inline-block;vertical-align:middle}
   `;
   const $ = (r, s) => r.querySelector(s);
   const clone = o => JSON.parse(JSON.stringify(o));
   const PH = ['titel', 'untertitel', 'datum', 'uhrzeit', 'event', 'name'];
-  const TYPE_NAME = { photo: 'Fotobox-Foto', image: 'Bild', text: 'Text', shape: 'Form', deco: 'Vorlagen-Deko' };
-  const TYPE_ICON = { photo: 'camera', image: 'image', text: 'type', shape: 'shapes', deco: 'sparkles' };
+  const TYPE_NAME = { photo: 'Fotobox-Foto', image: 'Bild', text: 'Text', shape: 'Form', deco: 'Vorlagen-Deko', button: 'Schaltfläche „Foto“' };
+  const TYPE_ICON = { photo: 'camera', image: 'image', text: 'type', shape: 'shapes', deco: 'sparkles', button: 'camera' };
 
   function open(opts) {
     if (!document.getElementById('le-css')) { const st = document.createElement('style'); st.id = 'le-css'; st.textContent = CSS; document.head.appendChild(st); }
@@ -80,6 +85,7 @@
     document.body.appendChild(root);
     const side = $(root, '.side'), stage = $(root, '.stage'), page = $(root, '.page'), cv = $(root, 'canvas'), ov = $(root, '.ov');
     $(root, '[data-a=name]').value = L.name || '';
+    if (L.screen) $(root, '[data-a=name]').style.display = 'none';
     let scale = 1;
 
     // ---------- Zeichnen ----------
@@ -143,7 +149,7 @@
     }
     function addText() {
       const w = Math.round(L.w * .7), h = Math.round(Math.min(L.w, L.h) * .09);
-      add({ type: 'text', text: 'Dein Text', font: 'modern', size: 'auto', color: '#222222', weight: 700, align: 'center', ...center(w, h), w, h });
+      add({ type: 'text', text: 'Dein Text', font: 'modern', size: 'auto', color: L.screen ? (L.elements.find(x => x.type === 'text')?.color || '#ffffff') : '#222222', weight: 700, align: 'center', ...center(w, h), w, h });
     }
     function addShape() { const w = Math.round(L.w * .4), h = Math.round(L.h * .12); add({ type: 'shape', shape: 'rect', fill: '#F7C838', stroke: '', strokeW: 0, radius: 0, opacity: 1, ...center(w, h), w, h }); }
     function pickFile(accept) {
@@ -165,6 +171,7 @@
     }
     function remove() {
       const e = selEl(); if (!e) return;
+      if (e.type === 'button') { e.hidden = true; sel = null; panel = 'tools'; commit(); renderSide(); draw(); return; } // den Start-Knopf gibt es genau einmal: ausblenden statt löschen
       L.elements = L.elements.filter(x => x.id !== sel); sel = null; panel = 'tools'; commit(); renderSide(); draw();
     }
     function duplicate() {
@@ -261,6 +268,19 @@
     function renderSide() {
       const e = selEl();
       if (panel === 'el' && !e) panel = 'tools';
+      if (panel === 'tools' && L.screen) {
+        side.innerHTML = `<div class="rail">
+          <button class="tool" data-t="theme"><i>${ICON('sparkles')}</i>Thema</button>
+          <button class="tool" data-t="text"><i>${ICON('type')}</i>Text</button>
+          <button class="tool" data-t="image"><i>${ICON('image')}</i>Bild</button>
+          <button class="tool" data-t="startvideo"><i>${ICON('video')}</i>Startbildschirm</button>
+          <button class="tool" data-t="bg"><i>${ICON('monitor')}</i>Hintergrund</button>
+          <button class="tool" data-t="layers"><i>${ICON('layers')}</i>Ebenen</button></div>`;
+        return;
+      }
+      if (panel === 'theme') { side.innerHTML = themePanel(); return; }
+      if (panel === 'startvideo') { side.innerHTML = videoPanel(); return; }
+      if (panel === 'bg') { side.innerHTML = bgPanel(); return; }
       if (panel === 'tools') {
         side.innerHTML = `<div class="rail">
           <button class="tool" data-t="photo"><i>${ICON('camera')}</i>Foto von der Fotobox</button>
@@ -280,7 +300,45 @@
         <div class="pb">${tab === 'style' ? stylePanel(e) : tab === 'pos' ? posPanel(e) : layersList()}</div>`;
     }
     const head = (t, close) => `<div class="ph"><h3>${t}</h3><button class="x" data-a="closeside">×</button></div>`;
+    function themePanel() {
+      const cats = [...new Set(FBR.SCREEN_THEMES.map(t => t.cat))];
+      return head('Thema', true) + `<div class="pb">${cats.map(c => `<div class="cat">${c}</div><div class="themes">${FBR.SCREEN_THEMES.filter(t => t.cat === c).map(t =>
+        `<button data-theme="${t.id}" class="${L.theme === t.id && !L.bgImage ? 'on' : ''}"><i style="background:linear-gradient(${t.grad[2]}deg,${t.grad[0]},${t.grad[1]})"></i>${t.name}</button>`).join('')}</div>`).join('')}
+        <p style="font-size:12px;color:#888;margin-top:14px">Ein Thema setzt Hintergrund, Textfarben und Knopffarbe. Eigene Bilder lädst du unter „Hintergrund“ hoch.</p></div>`;
+    }
+    function videoPanel() {
+      const v = opts.video?.() || {};
+      return head('Startbildschirm', true) + `<div class="pb"><label class="l">Startbildschirm-Video</label>
+        <p style="font-size:13px;color:#555">Das Video wird wiederholt, bis der Nutzer tippt, dann wird der Startbildschirm angezeigt.</p>
+        ${v.url ? `<div class="row" style="margin:10px 0"><span style="flex:1">${ICON(v.type === 'video' ? 'video' : 'image', 16)} ${v.type === 'video' ? 'Video' : 'Bild'} hinterlegt</span><button class="bt" data-a="delvideo">🗑 Entfernen</button></div>` : ''}
+        <button class="bt" data-a="upvideo" style="width:100%;margin-top:6px">${ICON('upload', 15)} Video zum Hochladen auswählen</button>
+        <p style="font-size:12px;color:#888;margin-top:8px">Nur MP4-Dateien · max. 50 MB · empfohlen ${L.orient === 'landscape' ? '1463 × 914' : '914 × 1463'} px</p>
+        <p style="font-size:12px;color:#888;margin-top:14px">Weitere Optionen in den Einstellungen des virtuellen Beraters.</p></div>`;
+    }
+    function bgPanel() {
+      return head('Hintergrund', true) + `<div class="pb">
+        <label class="l">Hintergrundfarbe</label><input type="color" data-L="bg" value="${/^#[0-9a-f]{6}$/i.test(L.bg || '') ? L.bg : '#1d1d1b'}">
+        <p style="font-size:12px;color:#888;margin-top:4px">Deaktiviert, wenn das Bild den Bildschirm ausfüllt. Wähle „In den Bildschirm passen“, um die Hintergrundfarbe anzuzeigen.</p>
+        <label class="l">Hintergrundbild</label>
+        ${L.bgImage ? `<div class="row" style="margin-bottom:8px"><img src="${esc(L.bgImage)}" style="height:54px;border-radius:6px"><button class="bt" data-a="delbg">🗑 Entfernen</button></div>` : ''}
+        <button class="bt" data-a="upbg" style="width:100%">${ICON('upload', 15)} Bild hochladen</button>
+        <label class="l">Füllen/Anpassen</label><select data-L="bgFit"><option value="cover" ${L.bgFit !== 'contain' ? 'selected' : ''}>Füllen mit Zuschnitt</option><option value="contain" ${L.bgFit === 'contain' ? 'selected' : ''}>In den Bildschirm passen</option></select>
+        <label class="l">Live-Kameravorschau</label>
+        <label class="row" style="margin:6px 0"><input type="checkbox" data-L="live" ${L.live ? 'checked' : ''}> Ersetzt den Hintergrund durch das Live-Kamerabild</label>
+        <label class="l">Bildschirm</label><select data-L="orient">${Object.entries(FBR.SCREEN_SIZES).map(([k, f]) => `<option value="${k}" ${L.orient === k ? 'selected' : ''}>${f.label} (${f.w} × ${f.h})</option>`).join('')}</select></div>`;
+    }
     function stylePanel(e) {
+      if (e.type === 'button') {
+        return `<label class="row" style="margin:10px 0;justify-content:space-between"><b>Schaltflächen anzeigen</b><input type="checkbox" data-p="show" ${e.hidden ? '' : 'checked'}></label>
+          <label class="l">Schaltflächentext</label><input type="text" maxlength="40" data-p="text" value="${esc(e.text || '')}" placeholder="leer = ohne Beschriftung">
+          <label class="l">Schriftart</label><select data-p="font">${Object.entries(FBR.FONT_NAMES).map(([k, n]) => `<option value="${k}" ${e.font === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
+          <div class="g2"><div><label class="l">Primärfarbe</label><input type="color" data-p="fill" value="${e.fill || '#ffffff'}"></div><div><label class="l">Textfarbe</label><input type="color" data-p="color" value="${e.color || '#ffffff'}"></div></div>
+          <p style="font-size:12px;color:#888;margin-top:2px">Primärfarbe = Füllfarbe der Schaltfläche</p>
+          <label class="l">Eigenes Bild für die Schaltfläche</label>
+          ${e.src ? `<div class="row" style="margin-bottom:8px"><img src="${esc(e.src)}" style="height:54px"><button class="bt" data-a="delbtnimg">🗑 Entfernen</button></div>` : ''}
+          <button class="bt" data-a="replace" style="width:100%">${ICON('upload', 15)} Bild zum Hochladen auswählen</button>
+          <p style="font-size:12px;color:#888;margin-top:8px">Nur PNG-Dateien · max. 10 MB · empfohlen 150 × 150 px. Auch ohne Schaltfläche startet ein Tipp auf den Bildschirm.</p>`;
+      }
       if (e.type === 'photo') {
         const max = Math.max(8, FBR.photoCount(L));
         return `<label class="l">Foto Nummer</label><select data-p="n">${Array.from({ length: max }, (_, i) => `<option value="${i + 1}" ${e.n == i + 1 ? 'selected' : ''}>Foto ${i + 1}</option>`).join('')}</select>
@@ -302,7 +360,7 @@
       }
       if (e.type === 'image') {
         return `<button class="bt" data-a="replace" style="width:100%;margin-top:6px">🔄 Bild ersetzen</button>
-          <label class="l">Einpassen</label><select data-p="fit"><option value="stretch">Genau in den Rahmen</option><option value="cover" ${e.fit === 'cover' ? 'selected' : ''}>Füllen (zuschneiden)</option></select>
+          <label class="l">Einpassen</label><select data-p="fit"><option value="stretch">Genau in den Rahmen</option><option value="contain" ${e.fit === 'contain' ? 'selected' : ''}>Einpassen (ganzes Bild)</option><option value="cover" ${e.fit === 'cover' ? 'selected' : ''}>Füllen (zuschneiden)</option></select>
           <label class="l">Deckkraft</label><input type="range" min="0" max="1" step=".05" data-p="opacity" value="${e.opacity ?? 1}" style="width:100%">
           <p style="font-size:12px;color:#888;margin-top:14px">Eigene Designs als PNG mit transparenten Stellen über die Fotos legen (Ebene nach oben).</p>`;
       }
@@ -363,6 +421,17 @@
         else { panel = k; renderSide(); }
         return;
       }
+      if (t.dataset.theme) { FBR.applyTheme(L, t.dataset.theme); commit(); renderSide(); draw(); return; }
+      if (t.dataset.a === 'upvideo') { await opts.uploadVideo?.(); renderSide(); return; }
+      if (t.dataset.a === 'delvideo') { await opts.removeVideo?.(); renderSide(); return; }
+      if (t.dataset.a === 'delbg') { L.bgImage = ''; commit(); renderSide(); draw(); return; }
+      if (t.dataset.a === 'upbg') {
+        const f = await pickFile('image/*'); if (!f) return;
+        $(root, '[data-a=status]').textContent = 'Lädt Bild hoch …';
+        try { const src = opts.uploadImage ? await opts.uploadImage(f) : URL.createObjectURL(f); await FBR.loadImg(src); L.bgImage = src; L.live = false; commit(); renderSide(); draw(); }
+        catch (err) { alert('Bild konnte nicht hochgeladen werden: ' + err.message); }
+        return;
+      }
       if (t.dataset.a === 'closeside') { sel = null; panel = 'tools'; renderSide(); draw(); return; }
       if (t.dataset.tab) { tab = t.dataset.tab; renderSide(); return; }
       if (t.dataset.hide) { const x = L.elements.find(z => z.id === t.dataset.hide); x.hidden = !x.hidden; commit(); renderSide(); draw(); ev.stopPropagation(); return; }
@@ -377,6 +446,7 @@
       else if (t.dataset.a === 'dup') return duplicate();
       else if (t.dataset.a === 'remove') return remove();
       else if (t.dataset.a === 'replace') return addImage(true);
+      else if (t.dataset.a === 'delbtnimg') { e.src = ''; }
       else if (t.dataset.a === 'togglehide') { e.hidden = !e.hidden; }
       else return;
       commit(); renderSide(); draw();
@@ -386,7 +456,8 @@
       if (t.dataset.L) return;
       if (!e || !t.dataset.p) return;
       const k = t.dataset.p, num = ['x', 'y', 'w', 'h', 'rot', 'radius', 'strokeW', 'opacity', 'n'];
-      if (k === 'nofill') { e.fill = t.value ? '' : (e._fill || '#ffffff'); }
+      if (k === 'show') { e.hidden = !t.checked; }
+      else if (k === 'nofill') { e.fill = t.value ? '' : (e._fill || '#ffffff'); }
       else if (k === 'fill') { e.fill = t.value; e._fill = t.value; }
       else if (k === 'shadow') e.shadow = !!t.value;
       else if (k === 'size') e.size = /^\d+$/.test(t.value.trim()) ? +t.value : 'auto';
@@ -398,10 +469,19 @@
       const t = ev.target; if (!t.dataset.L) return;
       const k = t.dataset.L;
       if (k === 'format') changeFormat(t.value);
-      else if (k === 'bg') L.bg = t.value;
+      else if (k === 'orient') changeOrient(t.value);
+      else if (k === 'bgFit') L.bgFit = t.value;
+      else if (k === 'bg') { L.bg = t.value; if (L.screen) { L.bgGrad = null; L.theme = ''; } }
       else L[k] = t.checked;
       commit(); renderSide(); draw();
     });
+    function changeOrient(o) {
+      const F = FBR.SCREEN_SIZES[o]; if (!F || o === L.orient) return;
+      const sx = F.w / L.w, sy = F.h / L.h, s = Math.min(sx, sy);
+      for (const e of L.elements) { const cx = (e.x + e.w / 2) * sx, cy = (e.y + e.h / 2) * sy; e.w = Math.round(e.w * s); e.h = Math.round(e.h * s); e.x = Math.round(cx - e.w / 2); e.y = Math.round(cy - e.h / 2); }
+      L.orient = o; L.w = F.w; L.h = F.h; fmtLabel(); fit();
+    }
+    const fmtLabel = () => { $(root, '[data-a=fmt]').textContent = L.screen ? `Startbildschirm · ${FBR.SCREEN_SIZES[L.orient]?.label || ''} · ${L.w}×${L.h}px` : `${FBR.FORMATS[L.format]?.label || ''} · ${L.w}×${L.h}px`; };
     function changeFormat(f) {
       const F = FBR.FORMATS[f], sx = F.w / L.w, sy = F.h / L.h, s = Math.min(sx, sy);
       for (const e of L.elements) {
@@ -429,7 +509,7 @@
     }
     const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-    $(root, '[data-a=fmt]').textContent = `${FBR.FORMATS[L.format]?.label || ''} · ${L.w}×${L.h}px`;
+    fmtLabel();
     FBR.preloadLayout(L).then(draw);
     renderSide(); fit(); draw();
     return { close };
