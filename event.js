@@ -162,6 +162,8 @@
   #ws .lay img{width:100%;height:150px;object-fit:contain;display:block}
   #ws .lay .nm{font-size:12px;margin-top:6px;color:#444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #ws .lay .acts{position:absolute;top:4px;right:4px;display:flex;gap:2px}
+  #ws .lay.on{border-color:#F7C838;background:#FFF8DD} #ws .lay.drop{outline:2px dashed #F7C838}
+  #ws .lay .grip{position:absolute;top:4px;left:6px;cursor:grab;color:#777;font-size:14px;letter-spacing:-2px;background:#fff;border-radius:6px;padding:0 5px;border:1px solid #ddd}
   #ws .lay .acts button{background:#fff;border:1px solid #ddd;border-radius:6px;cursor:pointer;padding:2px 6px;font-size:12px}
   #ws .empty{border:1px dashed #d0d0da;border-radius:10px;padding:26px;text-align:center;color:#888;background:#fafafc}
   #ws .dd{position:relative;display:inline-block}
@@ -412,6 +414,16 @@
       const t = e.target;
       if (t.dataset.e) { E[t.dataset.e] = t.value; renderNav(); save(); }
     });
+    let dragLay = '';
+    main.addEventListener('dragstart', e => { const l = e.target.closest?.('.lay[data-id]'); if (l) { dragLay = l.dataset.id; e.dataTransfer.effectAllowed = 'move'; } });
+    main.addEventListener('dragover', e => { const l = e.target.closest?.('.lay[data-id]'); if (dragLay && l) { e.preventDefault(); main.querySelectorAll('.lay.drop').forEach(n => n.classList.remove('drop')); if (l.dataset.id !== dragLay) l.classList.add('drop'); } });
+    main.addEventListener('drop', e => {
+      const l = e.target.closest?.('.lay[data-id]'); if (!dragLay || !l) return; e.preventDefault();
+      const from = S.layouts.findIndex(x => x.id === dragLay), to = S.layouts.findIndex(x => x.id === l.dataset.id); dragLay = '';
+      if (from < 0 || to < 0 || from === to) return render();
+      S.layouts.splice(to, 0, S.layouts.splice(from, 1)[0]); save(); render();
+    });
+    main.addEventListener('dragend', () => { dragLay = ''; main.querySelectorAll('.lay.drop').forEach(n => n.classList.remove('drop')); });
     main.addEventListener('click', async e => {
       const t = e.target.closest('[data-tab],[data-a],[data-mode],[data-flt],[data-lay]'); if (!t) return;
       if (t.dataset.tab) { const [k, v] = t.dataset.tab.split(':'); sub[k] = v; render(); main.querySelector(`#sec-${k}-${v}`)?.scrollIntoView({ block: 'start' }); return; }
@@ -516,7 +528,13 @@
       if (a === 'fromtpl') pickTemplate(vals(), addLayout);
       if (a === 'fromimg') fromImage();
       if (a === 'editlay') editLayout(t.dataset.id);
-      if (a === 'dellay') { if (await (G.pmConfirm || (async text => confirm(text)))('Layout löschen?')) { S.layouts = S.layouts.filter(l => l.id !== t.dataset.id); save(); render(); } }
+      if (a === 'sellay') { sub.laySel = sub.laySel === t.dataset.id ? '' : t.dataset.id; render(); }
+      if (a === 'sharelay') { // Vorschau als Bild speichern, zum Weitergeben an den Kunden
+        const L = S.layouts.find(l => l.id === t.dataset.id); if (!L) return;
+        await FBR.preloadLayout(L); const c = FBR.renderSheet(L, { placeholders: true, values: vals() });
+        const link = document.createElement('a'); link.download = (L.name || 'Layout').replace(/[^\wäöüÄÖÜß -]/g, '') + '-Vorschau.jpg'; link.href = c.toDataURL('image/jpeg', .9); link.click();
+      }
+      if (a === 'dellay') { if (await (G.pmConfirm || (async text => confirm(text)))('Layout löschen?')) { S.layouts = S.layouts.filter(l => l.id !== t.dataset.id); if (sub.laySel === t.dataset.id) sub.laySel = ''; save(); render(); } }
       if (a === 'duplay') { const l = structuredClone(S.layouts.find(x => x.id === t.dataset.id)); l.id = FBR.uid(); l.name += ' (Kopie)'; S.layouts.push(l); save(); render(); }
       if (a === 'uplogo') { const f = await pick('image/*'); if (f) { status('Lädt Logo hoch …'); E.logo_url = await ctx.uploadFile(f); save(); render(); } }
       if (a === 'dellogo') { E.logo_url = null; save(); render(); }
@@ -552,14 +570,15 @@
     const pick = accept => new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => res(i.files[0] || null); i.click(); });
 
     // ---------- Seiten ----------
-    const addLayout = L => { S.layouts.push(L); save(); render(); editLayout(L.id); };
+    const addLayout = L => { S.layouts.push(L); sub.laySel = L.id; save(); render(); editLayout(L.id); };
     const layoutThumb = (L, px = 300) => thumbOf(L, px, vals());
     const vals = () => ({ titel: S.title || E.name, untertitel: S.subtitle || (E.event_date ? new Date(E.event_date).toLocaleDateString('de-DE') : ''), datum: new Date().toLocaleDateString('de-DE'), uhrzeit: '20:15', event: E.name, name: 'Lisa' });
     function layoutCards() {
       return `<div class="dd"><button class="btn" data-a="newlay">${ICON('plus', 16)} Neues Layout ${ICON('chevronDown', 16)}</button><div class="menu" style="display:none">
           <button data-a="fromtpl">${ICON('gallery', 16)} Vorlage wählen</button><button data-a="fromimg">${ICON('upload', 16)} Bild hochladen</button></div></div>
-        <div class="lays">${S.layouts.length ? S.layouts.map(L => `<div class="lay" data-a="editlay" data-id="${L.id}">
-            <div class="acts"><button data-a="duplay" data-id="${L.id}" title="Duplizieren">${ICON('copy', 13)}</button><button data-a="dellay" data-id="${L.id}" title="Löschen">${ICON('trash', 13)}</button></div>
+        <div class="lays">${S.layouts.length ? S.layouts.map(L => `<div class="lay ${sub.laySel === L.id ? 'on' : ''}" data-a="sellay" data-id="${L.id}" draggable="true" title="Anklicken zum Auswählen · am Griff ziehen zum Umsortieren">
+            <span class="grip" title="Ziehen zum Umsortieren">⋮⋮</span>
+            <div class="acts"><button data-a="dellay" data-id="${L.id}" title="Löschen">${ICON('trash', 13)}</button></div>
             <img src="${layoutThumb(L)}" alt=""><div class="nm">${esc(L.name)} · ${FBR.photoCount(L)} Foto(s)</div></div>`).join('')
           : `<div class="empty" style="flex:1">Noch keine Layouts hinzugefügt</div>`}</div>`;
     }
@@ -576,11 +595,16 @@
           <button class="ghost" data-a="delev" style="color:#d23b3b">${ICON('trash', 15)} Ereignis löschen</button>`;
       },
       layout() {
-        return `<h1>Photo booth experience</h1>${tabs('layout', [['layouts', 'Photo layout'], ['countdown', 'Countdown']])}
-          ${true ? `<section id="sec-layout-layouts"></section><h2>Fotolayout</h2><div class="card">Wird für Foto- oder Drucksitzungen verwendet
+        const sel = S.layouts.find(l => l.id === sub.laySel), F = sel && FBR.FORMATS[sel.format];
+        const inch = F ? F.label.replace(/[^0-9×]/g, '').replace('×', ' in x ') + ' in' : '';
+        return `<h1>Photo booth experience</h1>${tabs('layout', [['layouts', 'Photo layout'], ['countdown', 'Countdown']])}<div class="cols"><div class="left">
+          <section id="sec-layout-layouts"></section><h2>Fotolayout</h2><div class="card"><div style="margin-bottom:12px">Wird für Foto- oder Drucksitzungen verwendet</div>
             ${layoutCards()}${S.layouts.length > 1 ? sw('guestLayouts', 'Gäste wählen das Layout', 'Bei mehreren Layouts wählen die Gäste vor der Aufnahme') : ''}
-            ${sw('gifFromPhotos', 'Auch ein GIF aus den Fotos erstellen')}</div>` : ''}
-          <section id="sec-layout-countdown"></section><h2>Countdown</h2><div class="card">${slider('countdown', 'Countdown vor Foto 1', 1, 10)}${slider('countdownNext', 'Countdown vor weiteren Fotos', 1, 10)}${slider('between', 'Anzeigedauer des Fotos', 0, 10, .5)}</div>`;
+            ${sw('gifFromPhotos', 'Auch ein GIF aus den Fotos erstellen')}</div>
+          <section id="sec-layout-countdown"></section><h2>Countdown</h2><div class="card">${slider('countdown', 'Countdown vor Foto 1', 1, 10)}${slider('countdownNext', 'Countdown vor weiteren Fotos', 1, 10)}${slider('between', 'Anzeigedauer des Fotos', 0, 10, .5)}</div></div>
+          ${sel ? `<div class="pv"><div class="frame"><div style="position:relative;text-align:center;background:#f6f6f9;border:1px solid #eee;border-radius:8px"><img id="wsLayImg" src="${layoutThumb(sel, 760)}" alt="" style="max-width:100%;max-height:58vh;display:inline-block;vertical-align:top">
+            <small style="position:absolute;right:8px;bottom:8px;background:rgba(255,255,255,.92);border-radius:6px;padding:3px 8px;color:#333">${inch} | ${sel.w}px x ${sel.h}px</small></div>
+            <div class="row" style="margin-top:12px"><button class="btn pri" style="flex:1" data-a="editlay" data-id="${sel.id}">${ICON('pen', 15)} Bearbeiten</button><button class="ghost" style="flex:1" data-a="sharelay" data-id="${sel.id}">${ICON('share', 15)} Vorschau teilen</button></div></div></div>` : ''}</div>`;
       },
       capture() {
         sub.mode ||= 'photo';
@@ -828,14 +852,15 @@
     function render() {
       main.innerHTML = PAGES[page]();
       drawPreview(true);
-      if (page === 'layout') S.layouts.forEach(L => FBR.preloadLayout(L).then(() => { const img = main.querySelector(`.lay[data-id="${L.id}"] img`); if (img) img.src = layoutThumb(L); }));
+      if (page === 'layout') S.layouts.forEach(L => FBR.preloadLayout(L).then(() => { const img = main.querySelector(`.lay[data-id="${L.id}"] img`); if (img) img.src = layoutThumb(L);
+        const big = L.id === sub.laySel && main.querySelector('#wsLayImg'); if (big) big.src = layoutThumb(L, 760); }));
     }
 
     // ---------- Layouts ----------
     function editLayout(id) {
       const L = S.layouts.find(x => x.id === id); if (!L) return;
       LayoutEditor.open({
-        layout: L, values: vals(), uploadImage: ctx.uploadFile,
+        layout: L, values: vals(), uploadImage: ctx.uploadFile, questions: (S.x.survey.questions || []).map(q => q.text),
         onSave: async nl => { const i = S.layouts.findIndex(x => x.id === nl.id); if (i >= 0) S.layouts[i] = nl; save(); },
         onClose: () => render()
       });
