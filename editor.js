@@ -57,8 +57,8 @@
   const $ = (r, s) => r.querySelector(s);
   const clone = o => JSON.parse(JSON.stringify(o));
   const PH = ['titel', 'untertitel', 'datum', 'uhrzeit', 'event', 'name'];
-  const TYPE_NAME = { photo: 'Fotobox-Foto', image: 'Bild', text: 'Text', shape: 'Form', deco: 'Vorlagen-Deko', button: 'Schaltfläche „Foto“' };
-  const TYPE_ICON = { photo: 'camera', image: 'image', text: 'type', shape: 'shapes', deco: 'sparkles', button: 'camera' };
+  const TYPE_NAME = { photo: 'Fotobox-Foto', image: 'Bild', text: 'Text', shape: 'Form', deco: 'Vorlagen-Deko', button: 'Schaltfläche „Foto“', signature: 'Unterschrift', answer: 'Umfrage-Antwort' };
+  const TYPE_ICON = { photo: 'camera', image: 'image', text: 'type', shape: 'shapes', deco: 'sparkles', button: 'camera', signature: 'pen', answer: 'clipboard' };
 
   function open(opts) {
     if (!document.getElementById('le-css')) { const st = document.createElement('style'); st.id = 'le-css'; st.textContent = CSS; document.head.appendChild(st); }
@@ -150,6 +150,11 @@
     function addText() {
       const w = Math.round(L.w * .7), h = Math.round(Math.min(L.w, L.h) * .09);
       add({ type: 'text', text: 'Dein Text', font: 'modern', size: 'auto', color: L.screen ? (L.elements.find(x => x.type === 'text')?.color || '#ffffff') : '#222222', weight: 700, align: 'center', ...center(w, h), w, h });
+    }
+    function addSignature() { const w = Math.round(L.w * .5), h = Math.round(w * .32); add({ type: 'signature', color: '#000000', x: Math.round((L.w - w) / 2), y: Math.round(L.h - h * 1.6), w, h }); }
+    function addAnswer() {
+      const q = Math.max(0, ...L.elements.filter(x => x.type === 'answer').map(x => x.q || 1)) + 1, w = Math.round(L.w * .7), h = Math.round(Math.min(L.w, L.h) * .07);
+      add({ type: 'answer', q, font: 'arial', size: 'auto', color: '#000000', weight: 400, align: 'center', ...center(w, h), w, h });
     }
     function addShape() { const w = Math.round(L.w * .4), h = Math.round(L.h * .12); add({ type: 'shape', shape: 'rect', fill: '#F7C838', stroke: '', strokeW: 0, radius: 0, opacity: 1, ...center(w, h), w, h }); }
     function pickFile(accept) {
@@ -286,9 +291,11 @@
           <button class="tool" data-t="photo"><i>${ICON('camera')}</i>Foto von der Fotobox</button>
           <button class="tool" data-t="image"><i>${ICON('image')}</i>Bild</button>
           <button class="tool" data-t="text"><i>${ICON('type')}</i>Text</button>
+          <button class="tool" data-t="signature"><i>${ICON('pen')}</i>Unterschrift</button>
+          <button class="tool" data-t="answer"><i>${ICON('clipboard')}</i>Umfrage-Antwort</button>
+          <button class="tool" data-t="print"><i>${ICON('printer')}</i>Drucken</button>
           <button class="tool" data-t="shape"><i>${ICON('shapes')}</i>Form</button>
-          <button class="tool" data-t="layers"><i>${ICON('layers')}</i>Ebenen</button>
-          <button class="tool" data-t="print"><i>${ICON('printer')}</i>Drucken</button></div>`;
+          <button class="tool" data-t="layers"><i>${ICON('layers')}</i>Ebenen</button></div>`;
         return;
       }
       if (panel === 'print') { side.innerHTML = printPanel(); return; }
@@ -338,6 +345,19 @@
           ${e.src ? `<div class="row" style="margin-bottom:8px"><img src="${esc(e.src)}" style="height:54px"><button class="bt" data-a="delbtnimg">🗑 Entfernen</button></div>` : ''}
           <button class="bt" data-a="replace" style="width:100%">${ICON('upload', 15)} Bild zum Hochladen auswählen</button>
           <p style="font-size:12px;color:#888;margin-top:8px">Nur PNG-Dateien · max. 10 MB · empfohlen 150 × 150 px. Auch ohne Schaltfläche startet ein Tipp auf den Bildschirm.</p>`;
+      }
+      if (e.type === 'signature') {
+        return `<p style="font-size:13px;color:#555;margin-top:8px">Der Gast unterschreibt nach den Fotos mit dem Finger auf dem Bildschirm. Die Unterschrift erscheint an dieser Stelle auf dem Ausdruck.</p>
+          <label class="l">Farbe der Unterschrift</label><input type="color" data-p="color" value="${e.color || '#000000'}">`;
+      }
+      if (e.type === 'answer') {
+        const qs = opts.questions || [], n = Math.max(8, qs.length, e.q || 1);
+        return `<label class="l">Umfrage-Antwort</label><select data-p="q">${Array.from({ length: n }, (_, i) => `<option value="${i + 1}" ${e.q == i + 1 ? 'selected' : ''}>Umfrageantwort ${i + 1}${qs[i] ? ' – ' + esc(String(qs[i]).slice(0, 30)) : ''}</option>`).join('')}</select>
+          <div class="g2"><div><label class="l">Schriftart</label><select data-p="font">${Object.entries(FBR.FONT_NAMES).map(([k, v]) => `<option value="${k}" ${e.font === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+          <div><label class="l">Größe</label><input type="text" data-p="size" value="${e.size || 'auto'}" placeholder="auto"></div></div>
+          <label class="l">Farbe</label><input type="color" data-p="color" value="${e.color || '#000000'}">
+          <label class="l">Ausrichtung</label><div class="row">${[['left', '⟸ Links'], ['center', 'Mitte'], ['right', 'Rechts ⟹']].map(([k, v]) => `<button class="bt ${(e.align || 'center') === k ? 'on' : ''}" data-set="align" data-v="${k}" style="flex:1">${v}</button>`).join('')}</div>
+          <p style="font-size:12px;color:#888;margin-top:12px">Die Fragen legst du unter „Umfrage & Haftungsausschluss“ an.</p>`;
       }
       if (e.type === 'photo') {
         const max = Math.max(8, FBR.photoCount(L));
@@ -395,7 +415,7 @@
     }
     function layersList() {
       return [...L.elements].reverse().map(e => `<div class="lay ${e.id === sel ? 'on' : ''}" data-id="${e.id}">
-        ${ICON(TYPE_ICON[e.type], 16)}<span class="n">${e.type === 'photo' ? 'Fotobox-Foto ' + e.n : e.type === 'text' ? esc(FBR.fillText(e.text, opts.values)).slice(0, 26) : e.type === 'deco' ? 'Deko ' + FBR.templateById(e.tpl).name + (e.layer === 'over' ? ' (oben)' : ' (unten)') : TYPE_NAME[e.type]}</span>
+        ${ICON(TYPE_ICON[e.type], 16)}<span class="n">${e.type === 'photo' ? 'Fotobox-Foto ' + e.n : e.type === 'text' ? esc(FBR.fillText(e.text, opts.values)).slice(0, 26) : e.type === 'answer' ? 'Umfrageantwort ' + (e.q || 1) : e.type === 'deco' ? 'Deko ' + FBR.templateById(e.tpl).name + (e.layer === 'over' ? ' (oben)' : ' (unten)') : TYPE_NAME[e.type]}</span>
         <button data-hide="${e.id}" title="${e.hidden ? 'einblenden' : 'ausblenden'}">${ICON(e.hidden ? 'eyeOff' : 'eye', 15)}</button></div>`).join('') +
         `<p style="font-size:12px;color:#888">Oben in der Liste = vorne im Bild.</p>`;
     }
@@ -417,7 +437,7 @@
       const e = selEl();
       if (t.dataset.t) {
         const k = t.dataset.t;
-        if (k === 'photo') addPhoto(); else if (k === 'text') addText(); else if (k === 'shape') addShape(); else if (k === 'image') addImage();
+        if (k === 'photo') addPhoto(); else if (k === 'signature') addSignature(); else if (k === 'answer') addAnswer(); else if (k === 'text') addText(); else if (k === 'shape') addShape(); else if (k === 'image') addImage();
         else { panel = k; renderSide(); }
         return;
       }
@@ -455,7 +475,7 @@
       const t = ev.target, e = selEl();
       if (t.dataset.L) return;
       if (!e || !t.dataset.p) return;
-      const k = t.dataset.p, num = ['x', 'y', 'w', 'h', 'rot', 'radius', 'strokeW', 'opacity', 'n'];
+      const k = t.dataset.p, num = ['x', 'y', 'w', 'h', 'rot', 'radius', 'strokeW', 'opacity', 'n', 'q'];
       if (k === 'show') { e.hidden = !t.checked; }
       else if (k === 'nofill') { e.fill = t.value ? '' : (e._fill || '#ffffff'); }
       else if (k === 'fill') { e.fill = t.value; e._fill = t.value; }
@@ -523,8 +543,8 @@
     const ar = img.naturalWidth / img.naturalHeight;
     const fmt = Object.entries(FBR.FORMATS).sort((a, b) => Math.abs(a[1].w / a[1].h - ar) - Math.abs(b[1].w / b[1].h - ar))[0][0];
     const F = FBR.FORMATS[fmt];
-    // transparente Bereiche suchen (auf 120 px verkleinert)
-    const S = 120 / Math.max(img.naturalWidth, img.naturalHeight), gw = Math.round(img.naturalWidth * S), gh = Math.round(img.naturalHeight * S);
+    // transparente Bereiche suchen (auf 360 px verkleinert: genau genug für saubere Kanten, schnell genug zum Durchsuchen)
+    const S = 360 / Math.max(img.naturalWidth, img.naturalHeight), gw = Math.round(img.naturalWidth * S), gh = Math.round(img.naturalHeight * S);
     const c = document.createElement('canvas'); c.width = gw; c.height = gh;
     const x = c.getContext('2d'); x.drawImage(img, 0, 0, gw, gh);
     const d = x.getImageData(0, 0, gw, gh).data, seen = new Uint8Array(gw * gh), boxes = [];
@@ -538,12 +558,26 @@
       }
       if (n > gw * gh * .015) boxes.push([x0, y0, x1 - x0 + 1, y1 - y0 + 1]);
     }
-    boxes.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    // Schmale Schlitze (Zierlinien) sind keine Fotofelder; ein Feld über die ganze Seite entfällt, wenn es daneben echte Felder gibt (durchsichtiger Rand).
+    let good = boxes.filter(b => b[2] > gw * .08 && b[3] > gh * .08);
+    if (good.length > 1) good = good.filter(b => !(b[2] > gw * .95 && b[3] > gh * .95));
+    // Zierlinie in der Öffnung = zwei ineinander liegende Bereiche: das äußere Feld gilt, das innere entfällt
+    const inside = (a, b) => a !== b && a[0] >= b[0] && a[1] >= b[1] && a[0] + a[2] <= b[0] + b[2] && a[1] + a[3] <= b[1] + b[3];
+    good = good.filter(a => !good.some(b => inside(a, b)));
+    boxes.length = 0; boxes.push(...good);
+    // Reihenfolge wie beim Lesen: zeilenweise von oben nach unten, in der Zeile von links nach rechts
+    const band = gh * .06; boxes.sort((a, b) => Math.abs(a[1] - b[1]) > band ? a[1] - b[1] : a[0] - b[0]);
+    // Foto etwas größer als die Öffnung, damit an den Kanten nie der Hintergrund durchscheint
+    for (const b of boxes) { const nx = Math.max(0, b[0] - 1), ny = Math.max(0, b[1] - 1); b[2] = Math.min(gw, b[0] + b[2] + 1) - nx; b[3] = Math.min(gh, b[1] + b[3] + 1) - ny; b[0] = nx; b[1] = ny; }
     const kx = F.w / gw, ky = F.h / gh;
     const src = uploadImage ? await uploadImage(file) : local;
     await FBR.loadImg(src);
+    // Doppelstreifen (zwei gleiche Streifen nebeneinander auf einem Blatt): beide Hälften zeigen dieselben Fotos 1, 2, 3 …
+    const near = (a, b, t) => Math.abs(a - b) <= t;
+    const twin = boxes.length >= 4 && boxes.length % 2 === 0 && boxes.every((b, i) => { const o = boxes[i ^ 1];
+      return near(b[1], o[1], gh * .02) && near(b[2], o[2], gw * .03) && near(b[3], o[3], gh * .02) && near(Math.abs(b[0] - o[0]), gw / 2, gw * .04); });
     const els = (boxes.length ? boxes : [[gw * .05, gh * .05, gw * .9, gh * .7]]).slice(0, 8).map((b, i) => ({
-      id: FBR.uid(), type: 'photo', n: i + 1, x: Math.round(b[0] * kx), y: Math.round(b[1] * ky), w: Math.round(b[2] * kx), h: Math.round(b[3] * ky), rot: 0, radius: 0 }));
+      id: FBR.uid(), type: 'photo', n: twin ? (i >> 1) + 1 : i + 1, x: Math.round(b[0] * kx), y: Math.round(b[1] * ky), w: Math.round(b[2] * kx), h: Math.round(b[3] * ky), rot: 0, radius: 0 }));
     els.push({ id: FBR.uid(), type: 'image', src, fit: 'stretch', opacity: 1, x: 0, y: 0, w: F.w, h: F.h, rot: 0 });
     return { id: FBR.uid(), name: 'Eigenes Design', format: fmt, w: F.w, h: F.h, bg: '#ffffff', twoPerPage: fmt === '2x6', secondary: false, elements: els, found: boxes.length };
   }
