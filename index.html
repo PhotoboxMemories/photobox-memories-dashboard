@@ -6,13 +6,13 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=20261012-4"></script>
-<script src="icons.js?v=20261012-4"></script>
-<script src="render.js?v=20261012-4"></script>
-<script src="editor.js?v=20261012-4"></script>
-<script src="ai-event.js?v=20261012-4"></script>
-<script src="ai-test.js?v=20261012-4"></script>
-<script src="event.js?v=20261012-4"></script>
+<script src="config.js?v=20261012-5"></script>
+<script src="icons.js?v=20261012-5"></script>
+<script src="render.js?v=20261012-5"></script>
+<script src="editor.js?v=20261012-5"></script>
+<script src="ai-event.js?v=20261012-5"></script>
+<script src="ai-test.js?v=20261012-5"></script>
+<script src="event.js?v=20261012-5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -144,7 +144,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <div class="pagehead"><h1>Geräte</h1><button class="btn" id="reloadDevices">↻ Aktualisieren</button></div>
       <p class="muted small" style="margin-bottom:14px">Jede FotoBox erscheint hier, sobald sie mit einem Lizenzschlüssel aktiviert wurde. Weise ein Event zu – die Box übernimmt die Einstellungen innerhalb einer Minute.</p>
       <div class="tablewrap"><table>
-        <thead><tr><th>Gerät</th><th>Status</th><th>Event</th><th>Fotos</th><th>Version</th><th class="adminCol hidden">Kunde</th><th></th></tr></thead>
+        <thead><tr><th>Gerät</th><th>Status</th><th>Event</th><th>Ausdrucke</th><th>Fotos</th><th>Version</th><th class="adminCol hidden">Kunde</th><th></th></tr></thead>
         <tbody id="deviceList"></tbody>
       </table></div>
     </div>
@@ -264,7 +264,8 @@ function demoClient() {
         settings: { title: 'Lea wird 30!', subtitle: '14.11.2026', template: 'birthday', frame: '#fff6e5', textColor: '#3b3355', accent: '#ff7b54', font: 'modern' } }
     ],
     devices: [
-      { id: 'd1', name: 'FotoBox Weiß', event_id: 'e1', photos_total: 412, app_version: '1.5.0', last_seen: new Date().toISOString(), licenses: { customer_name: 'Fotoexakt', owner_id: 'demo' } },
+      { id: 'd1', name: 'FotoBox Weiß', event_id: 'e1', photos_total: 412, app_version: '1.15.0', last_seen: new Date().toISOString(), licenses: { customer_name: 'Fotoexakt', owner_id: 'demo' },
+        status: { at: new Date().toISOString(), screen: 'attract', event: 'Hochzeit Anna & Tim', prints: 63, printLimit: 100, camera: { name: 'Canon EOS R100', ready: true, direct: true, props: [{ id: 'camera.isonumber', label: 'ISO', cur: '800', list: ['100', '200', '400', '800', '1600', '3200'] }, { id: 'camera.fnumber', label: 'Blende', cur: '8', list: ['4', '5.6', '8', '11', '14'] }, { id: 'camera.shutterspeed', label: 'Verschlusszeit', cur: '1/100', list: ['1/30', '1/60', '1/100', '1/125', '1/200'] }] }, printer: { name: 'DNP DS620', ok: true }, last: '14:02:11 · Testdruck gesendet' } },
       { id: 'd2', name: 'FotoBox Schwarz', event_id: 'e2', photos_total: 187, app_version: '1.5.0', last_seen: iso(-2), licenses: { customer_name: 'Fotoexakt', owner_id: 'demo' } },
       { id: 'd3', name: 'Mietbox 1', event_id: null, photos_total: 1204, app_version: '1.4.0', last_seen: iso(-6), licenses: { customer_name: 'Studio Lichtblick', owner_id: 'k2' } }
     ],
@@ -467,12 +468,40 @@ async function loadDevices() {
   if (error) return toast('Fehler: ' + error.message);
   devices = data; renderDevices(); renderEvents();
 }
+// Details eines Geräts: was die Fotobox zuletzt gemeldet hat, plus Fernbefehle (Testdruck, Kamerawerte)
+let openDev = null, devTimer = 0;
+function deviceDetails(d, online, mine) {
+  const st = d.status;
+  if (!st) return `<div class="empty">Diese Fotobox meldet noch keinen Status. Dafür braucht sie die Fotobox-Version 1.15 oder neuer.</div>`;
+  const age = Math.round((Date.now() - new Date(st.at || d.last_seen)) / 1000), fresh = online && age < 90;
+  const ok = v => v === true ? '<span class="dot on"></span>bereit' : v === false ? '<span class="dot" style="background:#d23b3b"></span>nicht bereit' : '<span class="dot"></span>unbekannt';
+  const scr = { home: 'Betreiber-Startseite', attract: 'Startbildschirm (wartet auf Gäste)', capture: 'Aufnahme läuft', review: 'Bildschirm zum Teilen', share: 'QR-Code', modes: 'Auswahl', login: 'Anmeldung', evpick: 'Ereignis-Auswahl' }[st.screen] || st.screen || '–';
+  const cmd = d.command ? `<span class="badge">Befehl wartet auf die Fotobox …</span>` : '';
+  const props = (st.camera?.props || []).map(p => `<div><label>${esc(p.label)}</label><select data-prop="${esc(p.id)}">${p.list.map(v => `<option ${v === p.cur ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select></div>`).join('');
+  return `<div class="stats" style="margin:6px 0 14px">
+      <div class="card"><b>${st.prints ?? 0}${st.printLimit ? ` <span style="font-size:16px">/ ${st.printLimit}</span>` : ''}</b><span>Ausdrucke bei diesem Ereignis</span><span class="small muted">${st.printLimit ? 'noch ' + Math.max(0, st.printLimit - (st.prints || 0)) + ' übrig' : 'kein Limit eingestellt'}</span></div>
+      <div class="card"><b style="font-size:17px">${esc(st.camera?.name || '–')}</b><span>Kamera</span><span class="small">${ok(st.camera?.ready)}</span></div>
+      <div class="card"><b style="font-size:17px">${esc(st.printer?.name || '–')}</b><span>Drucker</span><span class="small">${ok(st.printer?.ok)}${st.printer?.code ? ' · Windows-Statuscode ' + st.printer.code : ''}</span></div>
+      <div class="card"><b style="font-size:17px">${esc(scr)}</b><span>Bildschirm</span><span class="small muted">${esc(st.event || 'kein Ereignis')} · gemeldet vor ${age < 120 ? age + ' s' : Math.round(age / 60) + ' min'}</span></div>
+    </div>
+    ${mine ? `<div class="card" style="margin-bottom:10px"><h2>Fernsteuerung</h2>
+      ${fresh ? '' : '<p class="small muted" style="margin-bottom:8px">Die Fotobox ist gerade nicht verbunden. Befehle werden ausgeführt, sobald sie sich wieder meldet (höchstens 10 Minuten lang).</p>'}
+      <div class="row" style="margin-bottom:12px"><button class="btn primary" data-dev="${d.id}" data-act="testprint">🖨 Testdruck auslösen</button>${cmd}</div>
+      ${props ? `<div class="grid3">${props}</div><div class="row" style="margin-top:12px"><button class="btn" data-dev="${d.id}" data-act="camera">Kamerawerte an die Fotobox senden</button><span class="small muted">Wird übernommen, wenn gerade keine Aufnahme läuft.</span></div>`
+        : `<p class="small muted">Kamerawerte (ISO, Blende, Verschlusszeit) lassen sich einstellen, wenn eine Kamera direkt per USB angeschlossen und bereit ist.</p>`}
+      ${st.last ? `<p class="small" style="margin-top:10px">Letzte Rückmeldung der Fotobox: <b>${esc(st.last)}</b></p>` : ''}</div>` : ''}`;
+}
+async function sendDeviceCommand(id, command) {
+  const { error } = await sb.from('devices').update({ command: { id: crypto.randomUUID(), at: new Date().toISOString(), ...command } }).eq('id', id);
+  if (error) return toast(/command|column/i.test(error.message) ? 'Die Fernsteuerung ist auf dem Server noch nicht eingerichtet (Migration fehlt).' : 'Fehler: ' + error.message, 6000);
+  toast('Befehl gesendet – die Fotobox führt ihn in wenigen Sekunden aus', 4000); loadDevices();
+}
 function renderDevices() {
   const el = $('#deviceList');
-  if (!devices.length) { el.innerHTML = `<tr><td colspan="7" class="empty">Noch keine Geräte. Trage deinen Lizenzschlüssel in der FotoBox-App ein.</td></tr>`; return; }
+  if (!devices.length) { el.innerHTML = `<tr><td colspan="8" class="empty">Noch keine Geräte. Trage deinen Lizenzschlüssel in der FotoBox-App ein.</td></tr>`; return; }
   el.innerHTML = devices.map(d => {
     const online = d.last_seen && Date.now() - new Date(d.last_seen) < 3 * 60 * 1000;
-    const mine = d.licenses?.owner_id === me.id;
+    const mine = d.licenses?.owner_id === me.id, st = d.status || {}, open = openDev === d.id;
     const opts = mine
       ? `<select data-dev="${d.id}" data-act="event"><option value="">– kein Event –</option>${events.map(e => `<option value="${e.id}" ${e.id === d.event_id ? 'selected' : ''}>${esc(e.name)}</option>`).join('')}</select>`
       : `<span class="muted small">${d.event_id ? 'zugewiesen' : '–'}</span>`;
@@ -480,15 +509,16 @@ function renderDevices() {
       <td><input value="${esc(d.name || 'FotoBox')}" data-dev="${d.id}" data-act="name" style="max-width:200px"></td>
       <td><span class="dot ${online ? 'on' : ''}"></span>${online ? 'Online' : d.last_seen ? 'zuletzt ' + new Date(d.last_seen).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : 'nie'}</td>
       <td>${opts}</td>
+      <td>${st.prints != null ? `<b>${st.prints}</b>${st.printLimit ? ' / ' + st.printLimit : ''}` : '–'}</td>
       <td>${d.photos_total}</td>
       <td class="small">${esc(d.app_version || '–')}</td>
       <td class="adminCol small ${profile.is_admin ? '' : 'hidden'}">${esc(d.licenses?.customer_name || d.licenses?.customer_email || '')}</td>
-      <td><button class="btn small danger" data-dev="${d.id}" data-act="remove" title="Gerät entfernen, um den Platz für ein neues Gerät freizugeben">Entfernen</button></td>
-    </tr>`;
+      <td><div class="row"><button class="btn small" data-dev="${d.id}" data-act="details">${open ? 'Schließen' : 'Details'}</button><button class="btn small danger" data-dev="${d.id}" data-act="remove" title="Gerät entfernen, um den Platz für ein neues Gerät freizugeben">Entfernen</button></div></td>
+    </tr>${open ? `<tr><td colspan="8" style="background:rgba(255,255,255,.03)">${deviceDetails(d, online, mine)}</td></tr>` : ''}`;
   }).join('');
 }
 $('#deviceList').addEventListener('change', async e => {
-  const id = e.target.dataset.dev, act = e.target.dataset.act; if (!id) return;
+  const id = e.target.dataset.dev, act = e.target.dataset.act; if (!id || !['event', 'name'].includes(act)) return;
   const patch = act === 'event' ? { event_id: e.target.value || null } : { name: e.target.value.trim() || null };
   const { error } = await sb.from('devices').update(patch).eq('id', id);
   if (error) return toast('Fehler: ' + error.message);
@@ -496,6 +526,14 @@ $('#deviceList').addEventListener('change', async e => {
   loadDevices();
 });
 $('#deviceList').addEventListener('click', async e => {
+  const act = e.target.dataset.act, dev = e.target.dataset.dev;
+  if (act === 'details') { // offen: alle 15 s neu laden, damit Status und Rückmeldung aktuell bleiben
+    openDev = openDev === dev ? null : dev; clearInterval(devTimer);
+    if (openDev) devTimer = setInterval(() => { if (openDev && !document.activeElement?.closest?.('#deviceList select, #deviceList input')) loadDevices(); }, 15000);
+    return renderDevices();
+  }
+  if (act === 'testprint') { if (await pmConfirm('Jetzt einen Testdruck an dieser Fotobox auslösen? Das verbraucht ein Blatt.', 'Drucken')) sendDeviceCommand(dev, { type: 'testprint' }); return; }
+  if (act === 'camera') { const props = Object.fromEntries([...e.target.closest('td').querySelectorAll('[data-prop]')].map(x => [x.dataset.prop, x.value])); return sendDeviceCommand(dev, { type: 'camera', props }); }
   if (e.target.dataset.act !== 'remove') return;
   if (!await pmConfirm('Gerät entfernen? Es muss danach mit dem Lizenzschlüssel neu aktiviert werden.', 'Entfernen')) return;
   const { error } = await sb.from('devices').delete().eq('id', e.target.dataset.dev);
