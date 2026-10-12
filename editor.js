@@ -316,7 +316,7 @@
     function videoPanel() {
       const v = opts.video?.() || {};
       return head('Startbildschirm', true) + `<div class="pb"><label class="l">Startbildschirm-Video</label>
-        <p style="font-size:13px;color:#555">Das Video wird wiederholt, bis der Nutzer tippt, dann wird der Startbildschirm angezeigt.</p>
+        <p style="font-size:13px;color:#555">Das Video läuft als Startbildschirm und wird wiederholt. Ein Tipp auf das Video startet direkt die Aufnahme.</p>
         ${v.url ? `<div class="row" style="margin:10px 0"><span style="flex:1">${ICON(v.type === 'video' ? 'video' : 'image', 16)} ${v.type === 'video' ? 'Video' : 'Bild'} hinterlegt</span><button class="bt" data-a="delvideo">🗑 Entfernen</button></div>` : ''}
         <button class="bt" data-a="upvideo" style="width:100%;margin-top:6px">${ICON('upload', 15)} Video zum Hochladen auswählen</button>
         <p style="font-size:12px;color:#888;margin-top:8px">Nur MP4-Dateien · max. 50 MB · empfohlen ${L.orient === 'landscape' ? '1463 × 914' : '914 × 1463'} px</p>
