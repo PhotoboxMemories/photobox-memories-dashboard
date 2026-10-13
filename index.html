@@ -6,13 +6,13 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=20261013-1"></script>
-<script src="icons.js?v=20261013-1"></script>
-<script src="render.js?v=20261013-1"></script>
-<script src="editor.js?v=20261013-1"></script>
-<script src="ai-event.js?v=20261013-1"></script>
-<script src="ai-test.js?v=20261013-1"></script>
-<script src="event.js?v=20261013-1"></script>
+<script src="config.js?v=20261013-2"></script>
+<script src="icons.js?v=20261013-2"></script>
+<script src="render.js?v=20261013-2"></script>
+<script src="editor.js?v=20261013-2"></script>
+<script src="ai-event.js?v=20261013-2"></script>
+<script src="ai-test.js?v=20261013-2"></script>
+<script src="event.js?v=20261013-2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -501,7 +501,7 @@ function deviceDetails(d, online, mine) {
     </div>
     ${mine ? `<div class="card" style="margin-bottom:10px"><h2>Fernsteuerung</h2>
       ${fresh ? '' : '<p class="small muted" style="margin-bottom:8px">Die Fotobox ist gerade nicht verbunden. Befehle werden ausgeführt, sobald sie sich wieder meldet (höchstens 10 Minuten lang).</p>'}
-      <div class="row" style="margin-bottom:12px"><button class="btn primary" data-dev="${d.id}" data-act="testprint">🖨 Testdruck auslösen</button>${cmd}</div>
+      <div class="row" style="margin-bottom:12px"><button class="btn primary" data-dev="${d.id}" data-act="testprint">🖨 Testdruck auslösen</button><button class="btn" data-dev="${d.id}" data-act="pinreset" title="Entfernt den Sicherheitspin an der Fotobox, falls er vergessen wurde">🔓 Sicherheitspin zurücksetzen${st.locked ? ' (gesperrt)' : ''}</button>${cmd}</div>
       ${props ? `<div class="grid3">${props}</div><div class="row" style="margin-top:12px"><button class="btn" data-dev="${d.id}" data-act="camera">Kamerawerte an die Fotobox senden</button><span class="small muted">Wird übernommen, wenn gerade keine Aufnahme läuft.</span></div>`
         : `<p class="small muted">Kamerawerte (ISO, Blende, Verschlusszeit) lassen sich einstellen, wenn eine Kamera direkt per USB angeschlossen und bereit ist.</p>`}
       ${st.last ? `<p class="small" style="margin-top:10px">Letzte Rückmeldung der Fotobox: <b>${esc(st.last)}</b></p>` : ''}</div>` : ''}`;
@@ -547,6 +547,7 @@ $('#deviceList').addEventListener('click', async e => {
     if (openDev) devTimer = setInterval(() => { if (openDev && !document.activeElement?.closest?.('#deviceList select, #deviceList input')) loadDevices(); }, 15000);
     return renderDevices();
   }
+  if (act === 'pinreset') { if (await pmConfirm('Den Sicherheitspin an dieser Fotobox entfernen? Die Fotobox ist danach entsperrt, bis du dort einen neuen PIN einträgst.', 'PIN entfernen')) sendDeviceCommand(dev, { type: 'pinreset' }); return; }
   if (act === 'testprint') { if (await pmConfirm('Jetzt einen Testdruck an dieser Fotobox auslösen? Das verbraucht ein Blatt.', 'Drucken')) sendDeviceCommand(dev, { type: 'testprint' }); return; }
   if (act === 'camera') { const props = Object.fromEntries([...e.target.closest('td').querySelectorAll('[data-prop]')].map(x => [x.dataset.prop, x.value])); return sendDeviceCommand(dev, { type: 'camera', props }); }
   if (e.target.dataset.act !== 'remove') return;
