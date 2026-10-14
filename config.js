@@ -3,8 +3,8 @@
 window.FOTOBOX_CONFIG = {
   supabaseUrl: 'https://axagxuphhpgcanttiiuq.supabase.co',
   supabaseAnonKey: 'sb_publishable_ztqtUOzdJvwkwZ0a1Sy67w_tN5etwwm',
-  // Foto-Speicher bei Hetzner (Bucket-Adresse, z. B. 'https://NAME.fsn1.your-objectstorage.com'); leer = Fotos bei Supabase
-  photoStore: 'https://photobox-memories-fotos.fsn1.your-objectstorage.com',
+  // Foto-Speicher bei Hetzner (Bucket-Adresse + /p, dort liegen die Fotos; software/ ist privat); leer = Fotos bei Supabase
+  photoStore: 'https://photobox-memories-fotos.fsn1.your-objectstorage.com/p',
   // GitHub-Repository mit den Update-Dateien, z.B. 'photobox-memories/fotobox-releases'
   releasesRepo: ''
 };
