@@ -419,16 +419,22 @@
         <button data-hide="${e.id}" title="${e.hidden ? 'einblenden' : 'ausblenden'}">${ICON(e.hidden ? 'eyeOff' : 'eye', 15)}</button></div>`).join('') +
         `<p style="font-size:12px;color:#888">Oben in der Liste = vorne im Bild.</p>`;
     }
+    // Layout-Bereich wie bei LumaBooth: Papierformat (klein → groß), Ausrichtung, 2 pro Seite, Zweitdrucker, Maße
     function printPanel() {
-      const opt = Object.entries(FBR.FORMATS).map(([k, f]) => `<option value="${k}" ${L.format === k ? 'selected' : ''}>${f.label}</option>`).join('');
+      const F = FBR.FORMATS[L.format] || {}, inch = n => String(n).replace('.', ',');
+      const opt = FBR.SIZE_LIST.map(s => `<option value="${s.size}" ${F.size === s.size ? 'selected' : ''}>${s.label}${s.square && !/Quadrat/.test(s.label) ? ' (quadratisch)' : ''}</option>`).join('');
+      const sheet = FBR.sheetOf({ ...L, twoPerPage: true }), sIn = [sheet.w / 300, sheet.h / 300].sort((a, b) => a - b).map(inch).join('×');
       return head('Drucken', true) + `<div class="pb">
-        <label class="l">Papierformat</label><select data-L="format">${opt}</select>
-        <div class="g2"><div><label class="l">Breite</label><input type="number" value="${L.w}" disabled></div><div><label class="l">Höhe</label><input type="number" value="${L.h}" disabled></div></div>
+        <label class="l">Papierformat</label><select data-L="paperSize">${opt}</select>
+        <label class="l">Ausrichtung</label><select data-L="paperOrient" ${F.orient ? '' : 'disabled'}>
+          <option value="p" ${F.orient !== 'l' ? 'selected' : ''}>Hochformat</option><option value="l" ${F.orient === 'l' ? 'selected' : ''}>Querformat</option></select>
+        <div class="g2"><div><label class="l">Breite</label><input type="text" value="${inch(F.in?.[0] ?? L.w / 300)} in · ${L.w} px" disabled></div><div><label class="l">Höhe</label><input type="text" value="${inch(F.in?.[1] ?? L.h / 300)} in · ${L.h} px" disabled></div></div>
+        <label class="l">Auflösung</label><input type="text" value="300 dpi" disabled>
         <label class="l">Hintergrundfarbe</label><input type="color" data-L="bg" value="${L.bg || '#ffffff'}">
         <label class="l">Optionen</label>
-        <label class="row" style="margin:6px 0"><input type="checkbox" data-L="twoPerPage" ${L.twoPerPage ? 'checked' : ''} ${L.format === '2x6' ? '' : 'disabled'}> 2 pro Seite drucken (2×6 auf 4×6)</label>
+        <label class="row" style="margin:6px 0"><input type="checkbox" data-L="twoPerPage" ${L.twoPerPage ? 'checked' : ''} ${F.pair === false ? 'disabled' : ''}> 2 pro Seite drucken${F.pair === false ? ' (bei Panoramen nicht möglich)' : ` (2 × ${(FBR.SIZE_LIST.find(s => s.size === F.size)?.label || '').replace(' Streifen', '')} auf ${sIn})`}</label>
         <label class="row" style="margin:6px 0"><input type="checkbox" data-L="secondary" ${L.secondary ? 'checked' : ''}> Auf dem Zweitdrucker drucken</label>
-        <p style="font-size:12px;color:#888;margin-top:12px">Maße in Pixel bei 300 dpi. Beim Formatwechsel werden alle Elemente mit angepasst.</p></div>`;
+        <p style="font-size:12px;color:#888;margin-top:12px">Wähle dasselbe Papierformat wie im Druckertreiber („Druckeinstellungen“ → „Drucker konfigurieren“), dann wird randlos gedruckt. Beim Formatwechsel werden alle Elemente mit angepasst.</p></div>`;
     }
 
     // ---------- Eingaben in der Seitenleiste ----------
@@ -473,7 +479,7 @@
     });
     side.addEventListener('input', ev => {
       const t = ev.target, e = selEl();
-      if (t.dataset.L) return;
+      if (t.dataset.l) return;
       if (!e || !t.dataset.p) return;
       const k = t.dataset.p, num = ['x', 'y', 'w', 'h', 'rot', 'radius', 'strokeW', 'opacity', 'n', 'q'];
       if (k === 'show') { e.hidden = !t.checked; }
@@ -486,9 +492,13 @@
       draw(); clearTimeout(side.t); side.t = setTimeout(commit, 350);
     });
     side.addEventListener('change', ev => {
-      const t = ev.target; if (!t.dataset.L) return;
-      const k = t.dataset.L;
+      const t = ev.target; if (!t.dataset.l) return;
+      const k = t.dataset.l;
       if (k === 'format') changeFormat(t.value);
+      else if (k === 'paperSize' || k === 'paperOrient') {
+        const F = FBR.FORMATS[L.format] || {}, size = k === 'paperSize' ? t.value : F.size, orient = k === 'paperOrient' ? t.value : (F.orient || 'p');
+        const f = FBR.formatKey(size, orient); if (f && f !== L.format) changeFormat(f, k === 'paperSize');
+      }
       else if (k === 'orient') changeOrient(t.value);
       else if (k === 'bgFit') L.bgFit = t.value;
       else if (k === 'bg') { L.bg = t.value; if (L.screen) { L.bgGrad = null; L.theme = ''; } }
@@ -502,7 +512,7 @@
       L.orient = o; L.w = F.w; L.h = F.h; fmtLabel(); fit();
     }
     const fmtLabel = () => { $(root, '[data-a=fmt]').textContent = L.screen ? `Startbildschirm · ${FBR.SCREEN_SIZES[L.orient]?.label || ''} · ${L.w}×${L.h}px` : `${FBR.FORMATS[L.format]?.label || ''} · ${L.w}×${L.h}px`; };
-    function changeFormat(f) {
+    function changeFormat(f, newSize = true) {
       const F = FBR.FORMATS[f], sx = F.w / L.w, sy = F.h / L.h, s = Math.min(sx, sy);
       for (const e of L.elements) {
         if (e.type === 'deco') { e.w = F.w; e.h = F.h; continue; }
@@ -510,7 +520,9 @@
         e.w = Math.round(e.w * (e.type === 'photo' ? sx : s)); e.h = Math.round(e.h * (e.type === 'photo' ? sy : s));
         e.x = Math.round(cx - e.w / 2); e.y = Math.round(cy - e.h / 2);
       }
-      L.format = f; L.w = F.w; L.h = F.h; if (f !== '2x6') L.twoPerPage = false; else L.twoPerPage = true;
+      L.format = f; L.w = F.w; L.h = F.h;
+      if (newSize) L.twoPerPage = F.size === '2x6'; // Streifen: 2 pro Seite ist üblich; beim Drehen bleibt die Wahl
+      if (!F.pair) L.twoPerPage = false;
       $(root, '[data-a=fmt]').textContent = `${F.label} · ${F.w}×${F.h}px`; fit();
     }
 
