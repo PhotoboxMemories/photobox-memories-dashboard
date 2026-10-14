@@ -75,15 +75,15 @@
   <button class="nav l" id="lPrev" aria-label="Vorheriges">‹</button><button class="nav r" id="lNext" aria-label="Nächstes">›</button></div>
 <footer>Diese Seite ist nur über den persönlichen Link erreichbar. Bitte den Link nur an Gäste dieser Veranstaltung weitergeben.</footer>
 
-<script src="config.js"></script>
-<script src="icons.js"></script>
+<script src="config.js?v=20261014-2"></script>
+<script src="icons.js?v=20261014-2"></script>
 <script>
 (function () {
   'use strict';
   const CFG = window.FOTOBOX_CONFIG || {}, $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const Q = new URLSearchParams(location.search), token = Q.get('g') || '', single = Q.get('f') || '', show = Q.get('show') === '1';
-  const url = path => CFG.supabaseUrl + '/storage/v1/object/public/photos/' + String(path).split('/').map(encodeURIComponent).join('/');
+  const url = path => window.FOTOBOX_PHOTOS ? FOTOBOX_PHOTOS.url(path) : CFG.supabaseUrl + '/storage/v1/object/public/photos/' + String(path).split('/').map(encodeURIComponent).join('/');
   let photos = [], current = 0, info = null;
 
   const box = html => { $('#main').innerHTML = `<div class="box">${html}</div>`; };
@@ -152,7 +152,7 @@
 
   // Einzelnes Foto (QR-Code an der Fotobox): nur dieses eine Bild mit „Herunterladen“
   function showSingle() {
-    if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpe?g|png|gif|mp4|webm)$/i.test(single) || !CFG.supabaseUrl) return box('<h2>Foto nicht gefunden</h2><p>Der Link ist unvollständig. Bitte den QR-Code noch einmal scannen.</p>');
+    if (!/^(hz\/)?[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpe?g|png|gif|mp4|webm)$/i.test(single) || !CFG.supabaseUrl) return box('<h2>Foto nicht gefunden</h2><p>Der Link ist unvollständig. Bitte den QR-Code noch einmal scannen.</p>');
     const vid = /\.(mp4|webm)$/i.test(single), u = url(single), what = vid ? 'Video' : 'Foto';
     const ext = single.split('.').pop().toLowerCase(), type = vid ? 'video/' + ext : ext === 'gif' ? 'image/gif' : ext === 'png' ? 'image/png' : 'image/jpeg';
     document.body.classList.add('solo');
