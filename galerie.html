@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Fotogalerie – Photobox Memories</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{--y:#F9CB38;--k:#1D1D1B;--bg:#111110;--card:#1c1c1f;--line:#2e2e33;--muted:#a3a3ad}
   *{box-sizing:border-box}
@@ -43,7 +45,27 @@
   #ss img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1.2s}
   #ss img.on{opacity:1}
   #ss .hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;color:#777;font-size:13px}
-.spin{width:42px;height:42px;margin:30px auto 18px;border:4px solid rgba(255,255,255,.18);border-top-color:#F9CB38;border-radius:50%;animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+  /* Einzelfoto (QR-Code an der Fotobox) – im Stil von Photobox Memories */
+  body.solo{min-height:100vh;background:radial-gradient(120% 60% at 50% -10%,rgba(249,203,56,.28),rgba(249,203,56,0) 60%),#121211}
+  body.solo header{background:none;border:0;padding:28px 16px 6px}
+  body.solo header h1{font-family:Fredoka,system-ui,sans-serif;font-weight:600;font-size:clamp(26px,7vw,38px);margin:18px 0 2px}
+  body.solo header p{font-size:15px}
+  body.solo main{max-width:560px;padding:14px 18px 8px}
+  .polaroid{background:#fff;border-radius:18px;padding:10px 10px 16px;box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06);animation:pop .5s cubic-bezier(.2,.9,.3,1.2) both}
+  .polaroid img,.polaroid video{display:block;width:100%;height:auto;max-height:68vh;object-fit:contain;border-radius:10px;background:#f2f2f2}
+  .polaroid .cap{margin-top:12px;text-align:center;font:600 15px Fredoka,system-ui,sans-serif;color:#1D1D1B;letter-spacing:.02em}
+  .polaroid .cap b{color:#E2A800}
+  .ph{aspect-ratio:2/3;max-height:60vh;margin:0 auto;border-radius:10px;background:linear-gradient(100deg,#eee 30%,#f8f8f8 50%,#eee 70%) 0 0/300% 100%;animation:shim 1.4s linear infinite;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#555;padding:20px;text-align:center}
+  .ph b{font:600 18px Fredoka,system-ui,sans-serif;color:#1D1D1B}
+  .ph small{font-size:13px;color:#777;max-width:280px}
+  .acts{display:flex;gap:10px;margin:20px 0 8px}
+  .acts .btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:15px 18px;font-size:16px;box-shadow:0 6px 18px rgba(249,203,56,.25)}
+  .acts .btn.ghost{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:none}
+  .tip{color:var(--muted);font-size:13px;text-align:center;margin:6px 0 0}
+  body.solo footer{padding:22px 16px 30px;display:flex;flex-direction:column;align-items:center;gap:8px;color:#8a8a92}
+  .spin{width:40px;height:40px;border:4px solid rgba(0,0,0,.1);border-top-color:#F9CB38;border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}} @keyframes shim{to{background-position:-300% 0}} @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}}
+  @media(prefers-reduced-motion:reduce){.polaroid,.ph,.spin{animation:none}}
 </style>
 </head>
 <body>
@@ -54,6 +76,7 @@
 <footer>Diese Seite ist nur über den persönlichen Link erreichbar. Bitte den Link nur an Gäste dieser Veranstaltung weitergeben.</footer>
 
 <script src="config.js"></script>
+<script src="icons.js"></script>
 <script>
 (function () {
   'use strict';
@@ -130,10 +153,13 @@
   // Einzelnes Foto (QR-Code an der Fotobox): nur dieses eine Bild mit „Herunterladen“
   function showSingle() {
     if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpe?g|png|gif|mp4|webm)$/i.test(single) || !CFG.supabaseUrl) return box('<h2>Foto nicht gefunden</h2><p>Der Link ist unvollständig. Bitte den QR-Code noch einmal scannen.</p>');
-    const vid = /\.(mp4|webm)$/i.test(single), u = url(single);
-    $('#title').textContent = vid ? 'Dein Video' : 'Dein Foto'; document.title = $('#title').textContent + ' – Photobox Memories';
-    document.querySelector('footer').textContent = 'Photobox Memories';
-    // Der QR-Code erscheint an der Fotobox sofort – das Foto kann noch unterwegs sein. Dann warten und immer wieder nachsehen.
+    const vid = /\.(mp4|webm)$/i.test(single), u = url(single), what = vid ? 'Video' : 'Foto';
+    const ext = single.split('.').pop().toLowerCase(), type = vid ? 'video/' + ext : ext === 'gif' ? 'image/gif' : ext === 'png' ? 'image/png' : 'image/jpeg';
+    document.body.classList.add('solo');
+    document.title = 'Dein ' + what + ' – Photobox Memories';
+    document.querySelector('header').innerHTML = `${window.LOGO ? LOGO(44) : '<div class="brand">Photobox Memories</div>'}<h1 id="title">Dein ${what}</h1><p id="sub">Einen Moment bitte …</p>`;
+    document.querySelector('footer').innerHTML = '<span>Danke, dass du dabei warst!</span>';
+    const I = (n, z = 20) => window.ICON ? ICON(n, z) : '';
     // Probe mit eigener Adresse je Versuch (?t=…), damit kein zwischengespeichertes „nicht gefunden“ hängen bleibt
     const ready = () => new Promise(res => {
       const t = u + '?t=' + Date.now(), el = vid ? document.createElement('video') : new Image();
@@ -141,18 +167,30 @@
       if (vid) { el.preload = 'metadata'; el.muted = true; el.onloadedmetadata = () => done(true); } else el.onload = () => done(true);
       el.onerror = () => done(false); setTimeout(() => done(false), 20000); el.src = t;
     });
+    let blob = null; const getBlob = async src => blob || (blob = await fetch(src).then(r => { if (!r.ok) throw 0; return r.blob(); }));
+    const fileName = 'Photobox-Memories-' + what + '.' + ext;
+    const canShare = f => { try { return !!(navigator.canShare && navigator.canShare({ files: [f] })); } catch { return false; } };
     const show = src => {
-      $('#main').innerHTML = `<div class="one">${vid ? `<video src="${esc(src)}" controls autoplay loop playsinline></video>` : `<img src="${esc(src)}" alt="Dein Foto">`}
-        <div style="margin-top:16px"><button class="btn" id="oneDl">Herunterladen</button></div><p>${vid ? 'Tipp: Herunterladen und in der Fotos-App sichern.' : 'Tipp: Bild gedrückt halten → „In Fotos sichern“.'}</p></div>`;
+      const shareOk = canShare(new File([new Blob([''], { type })], fileName, { type }));
+      $('#title').textContent = `Dein ${what} ist da!`; $('#sub').textContent = 'Speichern, teilen, Erinnerung behalten.';
+      $('#main').innerHTML = `<div class="polaroid">${vid ? `<video src="${esc(src)}" controls autoplay loop playsinline muted></video>` : `<img src="${esc(src)}" alt="Dein Foto">`}
+          <div class="cap">Photobox <b>Memories</b></div></div>
+        <div class="acts"><button class="btn" id="oneDl">${I('download')} ${what} speichern</button>${shareOk ? `<button class="btn ghost" id="oneSh">${I('share')} Teilen</button>` : ''}</div>
+        <p class="tip">${vid ? 'Tipp: Nach dem Speichern findest du das Video in deinen Downloads bzw. in der Fotos-App.' : 'Tipp: Auf dem iPhone das Foto gedrückt halten → „Zu Fotos hinzufügen“.'}</p>`;
       $('#oneDl').onclick = async () => { const b = $('#oneDl'); b.disabled = true;
-        try { const r = await fetch(src); if (!r.ok) throw 0; save(await r.blob(), (vid ? 'Video.' : 'Foto.') + single.split('.').pop()); } catch { window.open(src, '_blank'); }
+        try { save(await getBlob(src), fileName); } catch { window.open(src, '_blank'); }
         b.disabled = false; };
+      if (shareOk) $('#oneSh').onclick = async () => {
+        try { const f = new File([await getBlob(src)], fileName, { type }); await navigator.share({ files: [f], title: 'Photobox Memories' }); }
+        catch (e) { if (e?.name !== 'AbortError') window.open(src, '_blank'); }
+      };
     };
     const wait = async n => {
       const src = await ready(); if (src) return show(src);
-      $('#main').innerHTML = `<div class="one"><div class="spin"></div><h2>${vid ? 'Dein Video' : 'Dein Foto'} wird gerade hochgeladen …</h2><p>${n < 60
-        ? 'Einen Moment – die Seite zeigt es von selbst an, sobald es da ist.'
-        : 'Das dauert gerade länger (vielleicht ist das Internet an der Fotobox langsam). Die Seite schaut weiter nach – du kannst diesen Link auch später noch einmal öffnen.'}</p></div>`;
+      $('#main').innerHTML = `<div class="polaroid"><div class="ph"><div class="spin"></div><b>Dein ${what} ist gleich da …</b><small>${n < 60
+        ? 'Es wird gerade von der Fotobox hochgeladen. Die Seite zeigt es von selbst an.'
+        : 'Das dauert gerade etwas länger. Die Seite schaut weiter nach – du kannst diesen Link auch später noch einmal öffnen.'}</small></div>
+        <div class="cap">Photobox <b>Memories</b></div></div>`;
       setTimeout(() => wait(n + 1), n < 60 ? 3000 : 15000);
     };
     wait(0);
