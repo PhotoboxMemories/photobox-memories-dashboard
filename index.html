@@ -6,13 +6,13 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=20261014-3"></script>
-<script src="icons.js?v=20261014-3"></script>
-<script src="render.js?v=20261014-3"></script>
-<script src="editor.js?v=20261014-3"></script>
-<script src="ai-event.js?v=20261014-3"></script>
-<script src="ai-test.js?v=20261014-3"></script>
-<script src="event.js?v=20261014-3"></script>
+<script src="config.js?v=20261014-4"></script>
+<script src="icons.js?v=20261014-4"></script>
+<script src="render.js?v=20261014-4"></script>
+<script src="editor.js?v=20261014-4"></script>
+<script src="ai-event.js?v=20261014-4"></script>
+<script src="ai-test.js?v=20261014-4"></script>
+<script src="event.js?v=20261014-4"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -145,6 +145,10 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
     <div data-page="devices" class="hidden">
       <div class="pagehead"><h1>Geräte</h1><button class="btn" id="reloadDevices">↻ Aktualisieren</button></div>
       <p class="muted small" style="margin-bottom:14px">Jede FotoBox erscheint hier, sobald sie mit einem Lizenzschlüssel aktiviert wurde. Weise ein Event zu – die Box übernimmt die Einstellungen innerhalb einer Minute.</p>
+      <div class="card" style="margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="flex:1;min-width:220px"><b>Fotobox-Software für Windows</b><div class="small muted" id="swInfo">Lädt …</div></div>
+        <button class="btn" id="swDl" disabled>⬇ Neueste Version herunterladen</button>
+      </div>
       <div class="tablewrap"><table>
         <thead><tr><th>Gerät</th><th>Status</th><th>Event</th><th>Ausdrucke</th><th>Fotos</th><th>Version</th><th class="adminCol hidden">Kunde</th><th></th></tr></thead>
         <tbody id="deviceList"></tbody>
@@ -370,6 +374,7 @@ async function boot() {
   $$('.adminCol').forEach(e => e.classList.toggle('hidden', !profile.is_admin));
   await Promise.all([loadEvents(), loadDevices(), loadLicenses()]);
   loadMyCredits();
+  loadSoftware();
   if (profile.is_admin) { loadRelease(); loadCredits(); loadOverview(); }
 }
 
@@ -818,6 +823,22 @@ function renderOverview() {
     : '<tr><td colspan="5" class="empty">Noch keine Buchungen</td></tr>';
 }
 $('#ovSearch').oninput = renderOverview;
+// Neueste Fotobox-Software: liegt privat bei Hetzner, nur angemeldete Kunden bekommen einen Download-Link (gilt 1 Stunde)
+let swInfo = null, swAt = 0;
+async function loadSoftware() {
+  const el = $('#swInfo'); if (!el || !window.FOTOBOX_PHOTOS) return;
+  try {
+    const t = (await sb.auth.getSession()).data.session?.access_token; if (!t) return;
+    swInfo = await FOTOBOX_PHOTOS.call({ action: 'software' }, t); swAt = Date.now();
+    el.textContent = `Version ${swInfo.version} vom ${fmtDate(swInfo.date)}${swInfo.size ? ' · ' + Math.round(swInfo.size / 1048576) + ' MB' : ''}. Installieren: Datei öffnen, „Weiter“ klicken und die Windows-Abfrage mit „Ja“ bestätigen. Fotos und Einstellungen bleiben erhalten.`;
+    $('#swDl').disabled = false;
+    if (profile?.is_admin) $('#releaseInfo').textContent = `Aktuelle App-Version: ${swInfo.version} (${fmtDate(swInfo.date)})`;
+  } catch (e) { el.textContent = /Noch keine/.test(e.message) ? 'Noch keine Version hinterlegt.' : 'Gerade nicht abrufbar: ' + e.message; }
+}
+$('#swDl').onclick = async () => {
+  if (!swInfo || Date.now() - swAt > 45 * 60e3) await loadSoftware(); // Link nach einer Stunde ungültig – dann neu holen
+  if (swInfo?.url) location.href = swInfo.url;
+};
 async function loadRelease() {
   if (!CFG.releasesRepo) return;
   try {
