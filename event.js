@@ -305,6 +305,10 @@
   #wsModal .et b{display:block;font-family:Fredoka,system-ui,sans-serif;letter-spacing:.02em}#wsModal .et small{color:#777}
   #wsModal .et[disabled]{opacity:.5;cursor:default}
   #wsModal .sec{margin:14px 20px 8px;font-size:12px;letter-spacing:.06em;color:#555}
+  #ws #wsMzBoard svg{width:100%;height:auto;max-height:46vh;display:block;border:1px solid #e3e3ea;border-radius:8px;background:#fff}
+  #ws .mzRes{background:#FFF8E1;border-left:4px solid #F7C838;border-radius:8px;padding:10px 14px;margin:10px 0;font-size:13px;line-height:1.55;color:#333}
+  #ws .mzRes .big{font:600 20px/1.25 Fredoka,system-ui,sans-serif;color:#1D1D1B;margin-bottom:2px}
+  #ws #wsMz{display:block;max-width:100%;max-height:52vh;margin:0 auto;border-radius:8px;background:#111}
   #wsModal .btn{border:1px solid #F7C838;background:#F7C838;color:#1D1D1B;border-radius:999px;padding:9px 20px;cursor:pointer;font:inherit;font-weight:600}
   `;
   const $ = (r, s) => r.querySelector(s), $$ = (r, s) => [...r.querySelectorAll(s)];
@@ -340,6 +344,7 @@
       originals: true, deleteBtn: true, deleteText: 'Wiederholen', cloud: true, uploadOriginals: true, origUp: false },
     print: { btnText: 'Drucken', printingText: 'Drucken...', copiesText: 'Wie viele Kopien?' },
     gallery: { link: false, guests: false, downloadAll: false, password: '' },
+    mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 100, boardH: 100, format: 'q2', tw: 5, th: 5, label: true, boardImage: false },
     ai: { skip: false, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Porträt erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
   };
   const deepMerge = (def, val) => { const out = structuredClone(def); if (val && typeof val === 'object' && !Array.isArray(val)) for (const [k, v] of Object.entries(val)) out[k] = out[k] && typeof out[k] === 'object' && !Array.isArray(out[k]) ? deepMerge(out[k], v) : v; return out; };
@@ -351,7 +356,7 @@
     ['h', 'Grundlagen'], ['layout', 'aperture', 'Photo booth experience'], ['capture', 'sliders', 'Aufnahmeeinstellungen'], ['voice', 'mic', 'Virtueller Berater'],
     ['h', 'Erweiterte Einstellungen'], ['start', 'monitor', 'Startbildschirm'], ['fx', 'sparkles', 'Filter & Effekte'], ['bg', 'wand', 'Hintergrundentfernung'],
     ['ai', 'user', 'KI-Porträts'], ['survey', 'clipboard', 'Umfrage & Haftungsausschluss'],
-    ['h', 'Drucken & Teilen'], ['share', 'share', 'Einstellungen für Teilen'], ['print', 'printer', 'Druckeinstellungen'], ['gallery', 'gallery', 'Online-Galerie']
+    ['h', 'Drucken & Teilen'], ['share', 'share', 'Einstellungen für Teilen'], ['print', 'printer', 'Druckeinstellungen'], ['mosaic', 'mosaic', 'Fotomosaik'], ['gallery', 'gallery', 'Online-Galerie']
   ];
 
   function open(ev, ctx) {
@@ -630,6 +635,12 @@
       if (a === 'gal-reload') { gal.list = null; render(); return loadGallery(true); }
       if (a === 'gal-zip') return downloadAll();
       if (a === 'gal-copy') { const link = shareLink(); try { await navigator.clipboard.writeText(link); ctx.toast('Link kopiert'); } catch { ctx.toast(link, 8000); } return; }
+      if (a === 'mz-fit') {
+        const c = Mosaic.normalize(S.x.mosaic); if (!mzv.img) return ctx.toast('Das Hauptbild lädt noch – bitte gleich noch einmal.');
+        const b = Mosaic.board(c), free = (b.head + 2 * b.pad) / 10; // Raster bekommt das Seitenverhältnis des Hauptbilds
+        S.x.mosaic.boardH = Math.round(free + (c.boardW - free) / (mzv.img.naturalWidth / mzv.img.naturalHeight)); save(); render(); return;
+      }
+      if (a === 'mz-pdf') return mzPrintBoard(t.dataset.k);
       if (a === 'edit1') { const l = S.layouts[0]; if (l) editLayout(l.id); else pickTemplate(vals(), addLayout); }
     });
     const pick = accept => new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => res(i.files[0] || null); i.click(); });
@@ -1015,6 +1026,30 @@
               <div style="flex:1"><label class="l">Maximale Anzahl an Kopien pro Gast</label><input type="number" min="1" max="20" data-s="maxCopies" data-num="1" value="${S.maxCopies}"></div></div>
               ${sw('showPrintsLeft', 'Restlimit an der Fotobox anzeigen ' + NEWAPP, 'Unter dem Drucken-Symbol steht, wie viele Ausdrucke noch übrig sind, zum Beispiel „Noch 37 Drucke“. Nur wenn oben ein Limit eingetragen ist.')}</div>`)}`;
       },
+      // Fotomosaik: viele Gästefotos ergeben ein großes Bild (Bildschirm und/oder Klebewand mit nummerierter Tafel)
+      mosaic() {
+        const c = Mosaic.normalize(S.x.mosaic), fmts = Mosaic.FORMAT_LIST.map(([k, n]) => [k, k === 'custom' ? n : `${n} · ${Mosaic.sheetPlan(k).per} pro 10×15-Blatt`]);
+        const cmIn = (p, v, min, max, step) => `<input type="number" data-s="x.mosaic.${p}" data-num="1" min="${min}" max="${max}" step="${step}" value="${v}" style="width:110px">`;
+        return `${titleSw('Fotomosaik', 'x.mosaic.on')}<div class="cols"><div class="left">
+          <div class="card"><p style="margin-top:0">Aus vielen kleinen Gästefotos entsteht ein großes Bild – live auf einem Fernseher oder Beamer und/oder als Klebewand: Jede Kachel wird mit ihrer Feldnummer (z. B. „C7“) gedruckt und auf die vorher gedruckte Tafel geklebt. ${NEWAPP}</p>
+            ${sel('x.mosaic.mode', 'Art', Mosaic.MODES)}${sel('x.mosaic.who', 'Wann kommt ein Foto ins Mosaik?', Mosaic.WHO)}${sel('x.mosaic.shots', 'Fotos pro Sitzung', Mosaic.SHOTS)}
+            <p style="color:#777;font-size:13px">„Gast entscheidet“: Neben QR-Code und Drucken erscheint an der Fotobox das grüne Mosaik-Symbol – nur wer darauf tippt, kommt ins Mosaik.</p></div>
+          <h2>Hauptbild</h2><div class="card">${up('x.mosaic.image', '', 'image/*', 'Foto mit klaren Formen, z. B. das Brautpaar oder ein Logo')}
+            ${slider('x.mosaic.overlay', 'Deckkraft des Hauptbilds über den Fotos', 0, 90, 5, '%')}
+            <p style="color:#777;font-size:13px">0 % = nur die Gästefotos · 30–50 % = das große Bild ist gut zu erkennen und die Gesichter auch.</p></div>
+          <h2>Tafel-Rechner</h2><div class="card"><p style="margin-top:0;color:#555;font-size:13px">Tafelgröße und Kachelgröße eingeben – die Software rechnet aus, wie viele Felder (Fotos) auf die Tafel passen.</p>
+            <label class="l">Tafelgröße</label><div class="row" style="gap:8px;flex-wrap:wrap">${cmIn('boardW', c.boardW, 10, 1000, 1)}<span>cm breit ×</span>${cmIn('boardH', c.boardH, 10, 1000, 1)}<span>cm hoch</span></div>
+            <label class="l">Kachelgröße (Foto)</label><select data-s="x.mosaic.format" data-rerender="1">${fmts.map(([k, n]) => `<option value="${k}" ${k === c.format ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
+            ${c.format === 'custom' ? `<label class="l">Eigene Kachelgröße</label><div class="row" style="gap:8px;flex-wrap:wrap">${cmIn('tw', c.tw, 1, 15.2, .1)}<span>cm breit ×</span>${cmIn('th', c.th, 1, 15.2, .1)}<span>cm hoch</span></div>` : ''}
+            <div class="mzRes" id="wsMzInfo"></div>
+            <button class="ghost" data-a="mz-fit" ${c.image ? '' : 'disabled'} style="margin:4px 0 10px">Tafelhöhe passend zum Hauptbild</button>
+            ${sw('x.mosaic.label', 'Feldnummer auf jede Kachel drucken')}${sw('x.mosaic.boardImage', 'Hauptbild schwach auf der Tafel zeigen')}
+            <div class="row" style="flex-wrap:wrap"><button class="btn pri" data-a="mz-pdf" data-k="full">${ICON('printer', 15)} Tafel drucken – Originalgröße</button><button class="ghost" data-a="mz-pdf" data-k="a4">${ICON('printer', 15)} Tafel auf A4-Blättern</button></div>
+            <p style="color:#777;font-size:13px">Im Druckfenster als Ziel „Als PDF speichern“ wählen – die Größe ist schon eingestellt. Die Originalgröße ist für eine Druckerei (z. B. Forex- oder Kapa-Platte), die A4-Blätter zum Zusammenkleben. Jedes Feld ist genau so groß wie eine Kachel.</p></div>
+          <div class="card" style="background:#FFFAEA">Welcher Drucker die Kacheln druckt und auf welchem Fernseher/Beamer das Mosaik läuft, stellst du direkt an der Fotobox ein: Menü → <b>Fotomosaik</b>. Dort lässt sich die Tafel ebenfalls als PDF speichern.</div>
+          </div><div class="pv"><div class="frame"><b style="display:block;margin-bottom:8px">Vorschau mit Beispielfotos</b><canvas id="wsMz" width="10" height="10"></canvas>
+            <b style="display:block;margin:14px 0 8px">Tafel zum Bekleben</b><div id="wsMzBoard"></div></div></div></div>`;
+      },
       gallery() {
         return `<h1>Online-Galerie</h1><div class="card"><b>Freigabe</b>${shareBox()}</div><div class="card">
           <p style="font-weight:600">Datenschutz</p>
@@ -1063,6 +1098,44 @@
       if (css !== 'none') x.filter = css; x.drawImage(FBR.placeholder(1, 400, 400), 0, 0, 160, 160);
       return fThumbCache[css] = c.toDataURL('image/jpeg', .8);
     }
+    // Fotomosaik: Vorschau mit Beispielfotos, Tafel und Maße (ändert sich sofort beim Schieben der Regler)
+    const mzv = { url: '', img: null, ph: {} };
+    function drawMosaic() {
+      const cv = $(root, '#wsMz'), box = $(root, '#wsMzBoard'), infoEl = $(root, '#wsMzInfo'); if (!cv) return;
+      const c = Mosaic.normalize(S.x.mosaic);
+      if (infoEl) infoEl.innerHTML = Mosaic.summaryHTML(c); // Ergebnis des Tafel-Rechners
+      if (c.image !== mzv.url) {
+        mzv.url = c.image; mzv.img = null;
+        if (c.image.startsWith('https://')) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { if (mzv.url === c.image) { mzv.img = im; drawMosaic(); } }; im.src = c.image; }
+      }
+      box.innerHTML = Mosaic.boardSVG(c, c.boardImage && mzv.img ? c.image : '');
+      const f = Mosaic.tileIn(c), ar = c.cols * f.w / (c.rows * f.h), x = cv.getContext('2d');
+      cv.width = ar >= 1 ? 640 : Math.round(640 * ar); cv.height = Math.round(cv.width / ar);
+      const note = t => { x.fillStyle = '#111'; x.fillRect(0, 0, cv.width, cv.height); x.fillStyle = '#aaa'; x.font = '16px system-ui,sans-serif'; x.textAlign = 'center'; x.fillText(t, cv.width / 2, cv.height / 2); };
+      if (!mzv.img) return note(c.image ? 'Hauptbild lädt …' : 'Bitte ein Hauptbild hochladen');
+      try {
+        const key = f.w.toFixed(3) + 'x' + f.h.toFixed(3), ph = mzv.ph[key] ||= [...Array(8)].map((_, k) => Mosaic.tileCanvas(FBR.placeholder(k, 400, 400), c, 120));
+        const p = Mosaic.prepare(mzv.img, c), tiles = new Map();
+        for (let i = 0; i < p.n; i++) tiles.set(i, ph[(i * 7 + (i >> 3)) % 8]);
+        Mosaic.renderMosaic(x, p, tiles, cv.width, cv.height, { overlay: c.overlay, bg: '#111' });
+      } catch { note('Vorschau nicht möglich'); }
+    }
+    async function mzPrintBoard(kind) {
+      const c = Mosaic.normalize(S.x.mosaic), b = Mosaic.board(c);
+      if (kind !== 'a4' && Math.max(b.W, b.H) > 5000) return ctx.toast('Die Tafel ist größer als 5 m – das passt auf keine PDF-Seite. Bitte die A4-Variante nehmen oder das Raster verkleinern.', 6000);
+      let img = '';
+      if (c.boardImage && mzv.img) try {
+        const k = Math.min(1, 2400 / Math.max(mzv.img.naturalWidth, mzv.img.naturalHeight)), cv = document.createElement('canvas');
+        cv.width = Math.round(mzv.img.naturalWidth * k); cv.height = Math.round(mzv.img.naturalHeight * k); cv.getContext('2d').drawImage(mzv.img, 0, 0, cv.width, cv.height); img = cv.toDataURL('image/jpeg', .85);
+      } catch {}
+      const fr = document.createElement('iframe'); fr.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0';
+      document.body.appendChild(fr);
+      const d = fr.contentDocument; d.open(); d.write(Mosaic.printHTML(c, img, kind, E.name || 'Fotomosaik')); d.close();
+      await new Promise(r => setTimeout(r, 500));
+      fr.contentWindow.focus(); fr.contentWindow.print();
+      setTimeout(() => fr.remove(), 120000);
+      ctx.toast('Im Druckfenster als Ziel „Als PDF speichern“ wählen – die Größe ist schon eingestellt.', 7000);
+    }
     function drawPreview(fromRender) {
       const c = $(root, '#wsPv');
       if (c) {
@@ -1072,6 +1145,7 @@
         c.width = img.width / 3; c.height = img.height / 3; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
       }
       if (page === 'start') { clearTimeout(drawPreview.t); drawPreview.t = setTimeout(drawStart, fromRender ? 0 : 400); }
+      if (page === 'mosaic') { clearTimeout(drawPreview.m); drawPreview.m = setTimeout(drawMosaic, fromRender ? 0 : 120); }
     }
     function render() {
       main.innerHTML = PAGES[page]();
