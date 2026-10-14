@@ -811,7 +811,7 @@
       },
       layout() {
         const sel = S.layouts.find(l => l.id === sub.laySel), F = sel && FBR.FORMATS[sel.format];
-        const inch = F ? F.label.replace(/[^0-9×]/g, '').replace('×', ' in x ') + ' in' : '';
+        const inch = F ? (F.in || [sel.w / 300, sel.h / 300]).map(n => String(n).replace('.', ',') + ' in').join(' x ') : '';
         return `<h1>Photo booth experience</h1>${tabs('layout', [['layouts', 'Photo layout'], ['countdown', 'Countdown']])}<div class="cols"><div class="left">
           <section id="sec-layout-layouts"></section><h2>Fotolayout</h2><div class="card"><div style="margin-bottom:12px">Wird für Foto- oder Drucksitzungen verwendet</div>
             ${layoutCards()}${S.layouts.length > 1 ? sw('guestLayouts', 'Gäste wählen das Layout', 'Bei mehreren Layouts wählen die Gäste vor der Aufnahme') : ''}
