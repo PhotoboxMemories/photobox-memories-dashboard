@@ -356,7 +356,8 @@ $('#rGo').onclick = async () => {
   if (error) { m.className = 'msg err'; m.textContent = error.message; return; }
   location.hash = ''; location.reload();
 };
-$('#logout').onclick = () => sb.auth.signOut();
+// nur diesen Browser abmelden – sonst wären auch alle Fotoboxen mit diesem Konto abgemeldet
+$('#logout').onclick = () => sb.auth.signOut({ scope: 'local' });
 
 sb.auth.onAuthStateChange((ev, session) => {
   if (ev === 'PASSWORD_RECOVERY') { show('reset'); return; }
