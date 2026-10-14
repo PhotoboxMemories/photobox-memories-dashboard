@@ -287,27 +287,38 @@
   // layout = { id, name, format, w, h, bg, twoPerPage, secondary, elements: [ … ] }
   // Element-Typen: photo (n = Fotonummer), image (src), text, shape (rect/ellipse), deco (Vorlagen-Deko)
   // =====================================================================
-  const FORMATS = {
-    '2x6': { w: 600, h: 1800, label: '2×6 Streifen' },
-    '4x6p': { w: 1200, h: 1800, label: '4×6 Hochformat' },
-    '4x6l': { w: 1800, h: 1200, label: '4×6 Querformat' },
-    '5x7p': { w: 1500, h: 2100, label: '5×7 Hochformat' },
-    '5x7l': { w: 2100, h: 1500, label: '5×7 Querformat' },
-    'sq': { w: 1200, h: 1200, label: 'Quadratisch' }
-  };
+  // Papierformate wie bei LumaBooth (Zoll, kurze Seite zuerst), sortiert von klein nach groß. Je Format gibt es Hoch- und
+  // Querformat (quadratische nur einmal). Schlüssel: Größe + p/l; ältere Schlüssel (2x6, 4x6p, 5x7l, sq …) bleiben gültig.
+  // pair = „2 pro Seite“ möglich; Panoramen (sehr lange Streifen) werden in einem Stück gedruckt.
+  const SIZES = [['2x6', 2, 6, '2×6 Streifen'], ['3x4', 3, 4], ['3.5x5', 3.5, 5], ['4x4', 4, 4], ['4x4.5', 4, 4.5], ['4x6', 4, 6], ['4x8', 4, 8],
+    ['4.5x6', 4.5, 6], ['5x5', 5, 5], ['5x7', 5, 7], ['5x8', 5, 8], ['6x6', 6, 6], ['6x8', 6, 8], ['6x9', 6, 9], ['7x8', 7, 8, '8×7'],
+    ['8x8', 8, 8], ['8x9', 8, 9], ['8x10', 8, 10], ['8x12', 8, 12], ['6x14', 6, 14, '6×14 Panorama'], ['6x20', 6, 20, '6×20 Panorama'],
+    ['8x18', 8, 18, '8×18 Panorama'], ['8x22', 8, 22, '8×22 Panorama'], ['8x26', 8, 26, '8×26 Panorama'], ['8x32', 8, 32, '8×32 Panorama']];
+  const OLD_KEY = { '2x6p': '2x6', '4x4': 'sq' };
+  const FORMATS = {};
+  for (const [size, a, b, name] of SIZES) {
+    const nm = name || `${String(a).replace('.', ',')}×${String(b).replace('.', ',')}`, pair = b <= 12;
+    if (a === b) { FORMATS[OLD_KEY[size] || size] = { w: a * 300, h: b * 300, in: [a, b], size, orient: '', pair, label: nm + ' Quadrat' }; continue; }
+    FORMATS[OLD_KEY[size + 'p'] || size + 'p'] = { w: a * 300, h: b * 300, in: [a, b], size, orient: 'p', pair, label: nm + (size === '2x6' ? '' : ' Hochformat') };
+    FORMATS[size + 'l'] = { w: b * 300, h: a * 300, in: [b, a], size, orient: 'l', pair, label: nm + (size === '2x6' ? ' quer' : ' Querformat') };
+  }
+  const SIZE_LIST = SIZES.map(([size, a, b, name]) => ({ size, square: a === b, label: name || `${String(a).replace('.', ',')}×${String(b).replace('.', ',')}` }));
+  const formatKey = (size, orient) => Object.keys(FORMATS).find(k => FORMATS[k].size === size && (FORMATS[k].orient === orient || !FORMATS[k].orient)) || null;
   const uid = () => Math.random().toString(36).slice(2, 10);
   // Grundaufteilungen je Format: [Format, Anzahl Fotos, Fotofelder]
   function presetSlots(format, n) {
     const F = FORMATS[format], W = F.w, H = F.h;
     const m = Math.round(Math.min(W, H) * .05), g = Math.round(m * .6);
-    const bandH = format === '2x6' ? 280 : Math.round(H * (W > H ? .17 : .15));
+    const tall = H / W >= 2, wide = W / H >= 2; // Streifen und Panoramen
+    const bandH = tall ? Math.round(W * .47) : Math.round(H * (W > H ? .17 : .15));
     const top = m, availH = H - bandH - m - m / 2, availW = W - 2 * m;
     const rows = (k, cols = 1) => {
       const out = [], r = Math.ceil(k / cols), cw = (availW - g * (cols - 1)) / cols, ch = (availH - g * (r - 1)) / r;
       for (let i = 0; i < k; i++) out.push([m + (i % cols) * (cw + g), top + Math.floor(i / cols) * (ch + g), cw, ch]);
       return out;
     };
-    if (format === '2x6') return rows(n);
+    if (tall) return rows(n);
+    if (wide) return rows(n, n);
     if (n === 1) return rows(1);
     if (n === 2) return W > H ? rows(2, 2) : rows(2);
     if (n === 3 && W > H) { // großes Foto links, zwei kleine rechts
@@ -317,8 +328,9 @@
     if (n === 3) return rows(3);
     return rows(n, 2);
   }
-  const PRESETS = [['2x6', 2], ['2x6', 3], ['2x6', 4], ['4x6p', 1], ['4x6p', 2], ['4x6p', 3], ['4x6p', 4],
-    ['4x6l', 1], ['4x6l', 2], ['4x6l', 3], ['4x6l', 4], ['5x7p', 1], ['sq', 1], ['sq', 4]];
+  const PRESETS = [['2x6', 2], ['2x6', 3], ['2x6', 4], ['2x6l', 3], ['4x6p', 1], ['4x6p', 2], ['4x6p', 3], ['4x6p', 4],
+    ['4x6l', 1], ['4x6l', 2], ['4x6l', 3], ['4x6l', 4], ['5x7p', 1], ['5x7l', 1], ['5x7l', 3], ['sq', 1], ['sq', 4], ['6x6', 1], ['6x6', 4],
+    ['6x8p', 1], ['6x8p', 4], ['6x8l', 1], ['6x8l', 3], ['6x9p', 3], ['8x10p', 1], ['8x10p', 4], ['8x10l', 4], ['6x20p', 3], ['6x14l', 3]];
   // Neues Layout aus Format + Vorlage (Design) erzeugen
   function createLayout(format, n, tplId = 'classic', name) {
     const F = FORMATS[format], t = byId(tplId), W = F.w, H = F.h;
@@ -336,7 +348,7 @@
       x: Math.round(m), y: Math.round(bandY + bandH * .62), w: Math.round(W - 2 * m), h: Math.round(bandH * .28), rot: 0 });
     if (t.over) els.push({ id: uid(), type: 'deco', tpl: t.id, layer: 'over', x: 0, y: 0, w: W, h: H, rot: 0, locked: true });
     return { id: uid(), name: name || `${F.label} · ${n} Foto${n > 1 ? 's' : ''}`, format, w: W, h: H, bg: t.frame, tpl: t.id,
-      twoPerPage: format === '2x6', secondary: false, elements: els };
+      twoPerPage: F.size === '2x6', secondary: false, elements: els };
   }
   const photoCount = L => L.elements.filter(e => e.type === 'photo').reduce((a, e) => Math.max(a, e.n || 1), 0);
 
@@ -521,16 +533,18 @@
     }
     return c;
   }
-  // Druckbogen: 2×6-Streifen werden zweimal nebeneinander auf 4×6 gedruckt
+  // Druckbogen „2 pro Seite“ (wie LumaBooth): zwei Ausdrucke auf einem Blatt, entlang der kurzen Seite nebeneinander –
+  // z. B. 2×6-Streifen auf 4×6, 4×6 auf 6×8, 5×7 auf 8×10. Der Drucker schneidet sie auseinander.
+  const sheetOf = L => !L.twoPerPage ? { w: L.w, h: L.h } : L.w <= L.h ? { w: L.w * 2, h: L.h, dx: L.w, dy: 0 } : { w: L.w, h: L.h * 2, dx: 0, dy: L.h };
   function renderSheet(L, o = {}) {
     const one = renderLayout(L, o);
     if (!L.twoPerPage) return one;
-    const c = document.createElement('canvas'); c.width = L.w * 2; c.height = L.h;
-    const x = c.getContext('2d'); x.drawImage(one, 0, 0); x.drawImage(one, L.w, 0);
+    const S = sheetOf(L), c = document.createElement('canvas'); c.width = S.w; c.height = S.h;
+    const x = c.getContext('2d'); x.drawImage(one, 0, 0); x.drawImage(one, S.dx, S.dy);
     return c;
   }
 
   G.FBR = { FONTS, FONT_NAMES, LAYOUTS, TEMPLATES, templateById: byId, render, drawBand, drawCover, placeholder,
-    FORMATS, PRESETS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid,
+    FORMATS, SIZE_LIST, formatKey, sheetOf, PRESETS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid,
     SCREEN_SIZES, SCREEN_THEMES, createScreen, applyTheme };
 })(window);
