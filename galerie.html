@@ -43,6 +43,7 @@
   #ss img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1.2s}
   #ss img.on{opacity:1}
   #ss .hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;color:#777;font-size:13px}
+.spin{width:42px;height:42px;margin:30px auto 18px;border:4px solid rgba(255,255,255,.18);border-top-color:#F9CB38;border-radius:50%;animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -131,12 +132,30 @@
     if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpe?g|png|gif|mp4|webm)$/i.test(single) || !CFG.supabaseUrl) return box('<h2>Foto nicht gefunden</h2><p>Der Link ist unvollständig. Bitte den QR-Code noch einmal scannen.</p>');
     const vid = /\.(mp4|webm)$/i.test(single), u = url(single);
     $('#title').textContent = vid ? 'Dein Video' : 'Dein Foto'; document.title = $('#title').textContent + ' – Photobox Memories';
-    $('#main').innerHTML = `<div class="one">${vid ? `<video src="${esc(u)}" controls autoplay loop playsinline></video>` : `<img src="${esc(u)}" alt="Dein Foto">`}
-      <div style="margin-top:16px"><button class="btn" id="oneDl">Herunterladen</button></div><p>${vid ? 'Tipp: Herunterladen und in der Fotos-App sichern.' : 'Tipp: Bild gedrückt halten → „In Fotos sichern“.'}</p></div>`;
-    $('#oneDl').onclick = async () => { const b = $('#oneDl'); b.disabled = true;
-      try { const r = await fetch(u); if (!r.ok) throw 0; save(await r.blob(), (vid ? 'Video.' : 'Foto.') + single.split('.').pop()); } catch { window.open(u, '_blank'); }
-      b.disabled = false; };
     document.querySelector('footer').textContent = 'Photobox Memories';
+    // Der QR-Code erscheint an der Fotobox sofort – das Foto kann noch unterwegs sein. Dann warten und immer wieder nachsehen.
+    // Probe mit eigener Adresse je Versuch (?t=…), damit kein zwischengespeichertes „nicht gefunden“ hängen bleibt
+    const ready = () => new Promise(res => {
+      const t = u + '?t=' + Date.now(), el = vid ? document.createElement('video') : new Image();
+      let fin = false; const done = ok => { if (fin) return; fin = true; el.onload = el.onerror = el.onloadedmetadata = null; if (vid) el.removeAttribute('src'); res(ok ? t : null); };
+      if (vid) { el.preload = 'metadata'; el.muted = true; el.onloadedmetadata = () => done(true); } else el.onload = () => done(true);
+      el.onerror = () => done(false); setTimeout(() => done(false), 20000); el.src = t;
+    });
+    const show = src => {
+      $('#main').innerHTML = `<div class="one">${vid ? `<video src="${esc(src)}" controls autoplay loop playsinline></video>` : `<img src="${esc(src)}" alt="Dein Foto">`}
+        <div style="margin-top:16px"><button class="btn" id="oneDl">Herunterladen</button></div><p>${vid ? 'Tipp: Herunterladen und in der Fotos-App sichern.' : 'Tipp: Bild gedrückt halten → „In Fotos sichern“.'}</p></div>`;
+      $('#oneDl').onclick = async () => { const b = $('#oneDl'); b.disabled = true;
+        try { const r = await fetch(src); if (!r.ok) throw 0; save(await r.blob(), (vid ? 'Video.' : 'Foto.') + single.split('.').pop()); } catch { window.open(src, '_blank'); }
+        b.disabled = false; };
+    };
+    const wait = async n => {
+      const src = await ready(); if (src) return show(src);
+      $('#main').innerHTML = `<div class="one"><div class="spin"></div><h2>${vid ? 'Dein Video' : 'Dein Foto'} wird gerade hochgeladen …</h2><p>${n < 60
+        ? 'Einen Moment – die Seite zeigt es von selbst an, sobald es da ist.'
+        : 'Das dauert gerade länger (vielleicht ist das Internet an der Fotobox langsam). Die Seite schaut weiter nach – du kannst diesen Link auch später noch einmal öffnen.'}</p></div>`;
+      setTimeout(() => wait(n + 1), n < 60 ? 3000 : 15000);
+    };
+    wait(0);
   }
   // Slideshow: zeigt die Fotos des Ereignisses nacheinander im Vollbild, neue Fotos kommen von selbst dazu
   function slideshow(password) {
