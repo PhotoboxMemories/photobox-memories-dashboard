@@ -337,7 +337,7 @@
     share: { email: { on: false, from: '', subject: 'Hier ist Ihr Foto', body: '<h2>Hier ist Ihr Foto</h2>{image}<br>', inputText: 'E-Mail eingeben', sendText: 'E-Mail senden' },
       sms: { on: false, message: 'Hier ist Ihr Foto', cc: '49', inputText: 'Telefonnummer eingeben', sendText: 'SMS senden' },
       wa: { on: false, message: 'Hier ist Ihr Foto', cc: '49', inputText: 'Telefonnummer eingeben', scanText: 'Mit dem Handy scannen' },
-      originals: true, deleteBtn: true, deleteText: 'Wiederholen', cloud: false, uploadOriginals: true, origUp: false },
+      originals: true, deleteBtn: true, deleteText: 'Wiederholen', cloud: true, uploadOriginals: true, origUp: false },
     print: { btnText: 'Drucken', printingText: 'Drucken...', copiesText: 'Wie viele Kopien?' },
     gallery: { link: false, guests: false, downloadAll: false, password: '' },
     ai: { skip: false, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Porträt erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
