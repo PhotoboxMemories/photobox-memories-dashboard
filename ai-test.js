@@ -50,7 +50,7 @@
       update();
     }).catch(() => { status('KI-Zugang konnte nicht geprüft werden. Bitte die aktuelle Desktop-App verwenden.'); });
     if (provider !== 'gemini') { q('keybox').hidden = true; q('keyinfo').textContent = 'KI-Tests starten in der Fotobox-App. Dort im KI-Kreativstudio den Anbieter auswählen und den Schlüssel speichern.'; }
-    if (central) { q('keybox').hidden = true; q('keyinfo').textContent = 'Zentraler Grok-Zugang · Ein erfolgreicher Test kostet ' + (item.resolution === '2k' ? 2 : 1) + ' Photobox Credits. Kein API-Schlüssel im Browser erforderlich.'; }
+    if (central) { q('keybox').hidden = true; q('keyinfo').textContent = 'Zentraler Grok-Zugang · Ein erfolgreicher Test kostet 1 Photobox Credit. Kein API-Schlüssel im Browser erforderlich.'; }
     q('generate').onclick = async () => {
       if (q('generate').disabled) return;
       busy = true; update(); q('result').hidden = true; q('download').hidden = true; q('empty').hidden = false;
