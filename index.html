@@ -6,13 +6,13 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=20261014-1"></script>
-<script src="icons.js?v=20261014-1"></script>
-<script src="render.js?v=20261014-1"></script>
-<script src="editor.js?v=20261014-1"></script>
-<script src="ai-event.js?v=20261014-1"></script>
-<script src="ai-test.js?v=20261014-1"></script>
-<script src="event.js?v=20261014-1"></script>
+<script src="config.js?v=20261014-2"></script>
+<script src="icons.js?v=20261014-2"></script>
+<script src="render.js?v=20261014-2"></script>
+<script src="editor.js?v=20261014-2"></script>
+<script src="ai-event.js?v=20261014-2"></script>
+<script src="ai-test.js?v=20261014-2"></script>
+<script src="event.js?v=20261014-2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -186,6 +186,12 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <thead><tr><th>Kunde</th><th>Registriert</th><th>Lizenz</th><th>Fotoboxen</th><th>Guthaben</th><th>Erhalten</th><th>KI-Bilder</th></tr></thead>
           <tbody id="ovCustomers"><tr><td colspan="7" class="empty">Lädt …</td></tr></tbody>
         </table></div>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <h2>Foto-Speicher (Hetzner)</h2>
+        <p class="small muted" style="margin:0 0 10px">Die Fotos der Fotoboxen liegen bei Hetzner in Deutschland. Die Zugangsdaten stehen nur in Supabase (Edge Functions → Secrets: HZ_ACCESS_KEY, HZ_SECRET_KEY, HZ_BUCKET, HZ_LOCATION). Dieser Knopf richtet den Speicher ein und prüft ihn: Fotos über den Link lesbar, Liste aller Fotos für Fremde gesperrt.</p>
+        <div class="row"><button class="btn" id="hzSetup">Einrichten &amp; prüfen</button><span class="small" id="hzState"></span></div>
+        <div class="small" id="hzResult" style="margin-top:10px"></div>
       </div>
       <div class="card" style="margin-bottom:20px">
         <h2>Guthaben-Buchungen</h2>
@@ -396,7 +402,7 @@ async function loadPhotoCovers() {
     const { data, error } = await sb.from('photos').select('event_id,thumb,path,kind').order('created_at', { ascending: false }).limit(800);
     if (error || !data) return;
     const next = {};
-    for (const x of data) if (!next[x.event_id] && x.kind !== 'video') next[x.event_id] = sb.storage.from('photos').getPublicUrl(x.thumb || x.path).data.publicUrl;
+    for (const x of data) if (!next[x.event_id] && x.kind !== 'video') next[x.event_id] = window.FOTOBOX_PHOTOS ? FOTOBOX_PHOTOS.url(x.thumb || x.path) : sb.storage.from('photos').getPublicUrl(x.thumb || x.path).data.publicUrl;
     photoCovers = next; if (Object.keys(next).length) renderEvents();
   } catch {}
 }
@@ -627,6 +633,24 @@ document.addEventListener('click', e => {
 });
 
 /* ---------- Verwaltung (Admin) ---------- */
+// Foto-Speicher bei Hetzner einrichten und prüfen (Supabase-Funktion „photo-store“, nur Betreiber)
+$('#hzState').textContent = window.FOTOBOX_PHOTOS?.external ? 'Aktiv: neue Fotos gehen zu Hetzner.' : 'Noch nicht aktiv: neue Fotos gehen zu Supabase.';
+$('#hzSetup').onclick = async () => {
+  const b = $('#hzSetup'), out = $('#hzResult'); b.disabled = true; out.textContent = 'Prüfe …';
+  try {
+    const t = (await sb.auth.getSession()).data.session?.access_token;
+    const r = await FOTOBOX_PHOTOS.call({ action: 'setup' }, t);
+    const line = (ok, text) => `<div>${ok ? '✅' : '❌'} ${text}</div>`;
+    out.innerHTML = line(r.cors === 200, 'Zugriff für Fotobox und Galerie (CORS)' + (r.corsText ? ': ' + esc(r.corsText) : ''))
+      + line(r.policy < 300, 'Fotos über den Link lesbar (Regel gesetzt)' + (r.policyText ? ': ' + esc(r.policyText) : ''))
+      + line(r.write === 200, 'Probe-Datei schreiben' + (r.writeText ? ': ' + esc(r.writeText) : ''))
+      + line(r.publicRead === 200, 'Probe-Datei ohne Anmeldung lesen')
+      + line(r.publicList !== 200, 'Liste aller Fotos für Fremde gesperrt')
+      + line(r.delete < 300, 'Probe-Datei löschen')
+      + `<div style="margin-top:8px">${r.ok ? '<b>Alles in Ordnung.</b> ' : '<b>Noch nicht fertig.</b> '}Bucket „${esc(r.bucket)}“ in ${esc(r.location)} · Adresse: <code>${esc(r.publicUrl)}</code></div>`;
+  } catch (e) { out.textContent = '❌ ' + e.message; }
+  b.disabled = false;
+};
 $('#lKind').onchange = () => {
   const life = $('#lKind').value === 'lifetime';
   $('#lValidWrap').classList.toggle('hidden', life); $('#lUpdWrap').classList.toggle('hidden', !life);
