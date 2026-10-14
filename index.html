@@ -6,13 +6,13 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=20261014-4"></script>
-<script src="icons.js?v=20261014-4"></script>
-<script src="render.js?v=20261014-4"></script>
-<script src="editor.js?v=20261014-4"></script>
-<script src="ai-event.js?v=20261014-4"></script>
-<script src="ai-test.js?v=20261014-4"></script>
-<script src="event.js?v=20261014-4"></script>
+<script src="config.js?v=20261014-5"></script>
+<script src="icons.js?v=20261014-5"></script>
+<script src="render.js?v=20261014-5"></script>
+<script src="editor.js?v=20261014-5"></script>
+<script src="ai-event.js?v=20261014-5"></script>
+<script src="ai-test.js?v=20261014-5"></script>
+<script src="event.js?v=20261014-5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -174,7 +174,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <div class="cards" id="myLicenses"></div>
       <div class="card hidden" id="creditCard" style="margin-top:20px">
         <h2>KI-Guthaben</h2>
-        <p style="margin:6px 0 14px">Dein Guthaben: <b id="myCredits">–</b> Credits <span class="small muted">· 1 Credit = 1 KI-Bild in 1K, 2 Credits = 1 KI-Bild in 2K</span></p>
+        <p style="margin:6px 0 14px">Dein Guthaben: <b id="myCredits">–</b> Credits <span class="small muted">· 1 Credit = 1 KI-Bild (1K oder 2K)</span></p>
         <div class="cards" id="creditPacks"></div>
         <p class="small muted" id="creditHint" style="margin-top:10px"></p>
       </div>
@@ -224,7 +224,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <div><label>Credits (Minus zieht ab)</label><input id="cAmount" type="number" step="1" value="100"></div>
           <div><label>Notiz (z.B. Rechnungsnummer)</label><input id="cNote" maxlength="200"></div>
         </div>
-        <div class="row" style="margin-top:14px"><button class="btn primary" id="cGrant">Guthaben buchen</button><span class="small muted">1 Credit = 1 Bild in 1K, 2 Credits = 1 Bild in 2K. Der Kunde muss im Dashboard registriert sein.</span></div>
+        <div class="row" style="margin-top:14px"><button class="btn primary" id="cGrant">Guthaben buchen</button><span class="small muted">1 Credit = 1 KI-Bild (1K oder 2K). Der Kunde muss im Dashboard registriert sein.</span></div>
         <div class="tablewrap" style="margin-top:16px"><table>
           <thead><tr><th>Kunde</th><th>Guthaben</th><th>Letzte Buchung</th></tr></thead>
           <tbody id="creditList"><tr><td colspan="3" class="empty">Lädt …</td></tr></tbody>
