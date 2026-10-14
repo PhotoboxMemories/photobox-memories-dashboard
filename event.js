@@ -649,7 +649,8 @@
     }
     // ---------- Online-Galerie: Fotos dieses Ereignisses aus dem Speicher ----------
     const gal = { list: null, error: '', loading: false, at: 0 };
-    const galUrl = path => ctx.sb.storage.from('photos').getPublicUrl(path).data?.publicUrl || '';
+    const galUrl = path => G.FOTOBOX_PHOTOS ? G.FOTOBOX_PHOTOS.url(path) : ctx.sb.storage.from('photos').getPublicUrl(path).data?.publicUrl || '';
+    const sbToken = async () => (await ctx.sb.auth.getSession()).data.session?.access_token || '';
     const shareLink = () => E.share_token ? location.origin + location.pathname.replace(/[^/]*$/, '') + 'galerie.html?g=' + E.share_token : '';
     function shareBox() {
       const link = shareLink();
@@ -692,8 +693,11 @@
         if (k === 'dl') { try { saveBlob(await fetchBlob(x.path), galName(x)); } catch (err) { ctx.toast('Herunterladen fehlgeschlagen: ' + err.message, 4000); } return; }
         if (k === 'del') {
           if (!await (G.pmConfirm || (async t => confirm(t)))('Dieses Foto endgültig aus der Online-Galerie löschen? Auf der Fotobox bleibt es gespeichert.')) return;
-          const r1 = await ctx.sb.storage.from('photos').remove([x.path, x.thumb].filter(Boolean));
-          const r2 = await ctx.sb.from('photos').delete().eq('id', x.id);
+          const files = [x.path, x.thumb].filter(Boolean), ext = files.filter(f => f.startsWith(G.FOTOBOX_PHOTOS?.prefix || '\u0000')), sbf = files.filter(f => !ext.includes(f));
+          let r1 = null;
+          try { if (ext.length) { const t = await sbToken(); for (const f of ext) await G.FOTOBOX_PHOTOS.del(f, t); } } catch (err) { r1 = { error: err }; }
+          if (!r1 && sbf.length) r1 = await ctx.sb.storage.from('photos').remove(sbf);
+          const r2 = r1?.error ? null : await ctx.sb.from('photos').delete().eq('id', x.id);
           if (r1?.error || r2?.error) return ctx.toast('Löschen fehlgeschlagen: ' + (r1?.error || r2?.error).message, 5000);
           L.splice(n, 1); if (!L.length) close(); else { n = Math.min(n, L.length - 1); draw(); } render();
         }
@@ -727,9 +731,13 @@
             if (!video) try { const bmp = await createImageBitmap(f), k = Math.min(1, 480 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas');
               c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
               thumb = await new Promise(r => c.toBlob(r, 'image/jpeg', .8)); } catch {}
-            const r1 = await ctx.sb.storage.from('photos').upload(`${base}.${ext}`, f, { contentType: f.type, cacheControl: '31536000' }); if (r1.error) throw r1.error;
-            if (thumb) await ctx.sb.storage.from('photos').upload(`${base}_t.jpg`, thumb, { contentType: 'image/jpeg', cacheControl: '31536000' });
-            const r2 = await ctx.sb.from('photos').insert({ event_id: ev.id, path: `${base}.${ext}`, thumb: thumb ? `${base}_t.jpg` : null, kind: ext === 'gif' ? 'gif' : video ? 'video' : 'photo', bytes: f.size, name: f.name.slice(0, 120) });
+            const hz = !!G.FOTOBOX_PHOTOS?.external, pre = hz ? G.FOTOBOX_PHOTOS.prefix : '';
+            if (hz) { const t = await sbToken(); await G.FOTOBOX_PHOTOS.put(`${base}.${ext}`, f, t); if (thumb) await G.FOTOBOX_PHOTOS.put(`${base}_t.jpg`, thumb, t); }
+            else {
+              const r1 = await ctx.sb.storage.from('photos').upload(`${base}.${ext}`, f, { contentType: f.type, cacheControl: '31536000' }); if (r1.error) throw r1.error;
+              if (thumb) await ctx.sb.storage.from('photos').upload(`${base}_t.jpg`, thumb, { contentType: 'image/jpeg', cacheControl: '31536000' });
+            }
+            const r2 = await ctx.sb.from('photos').insert({ event_id: ev.id, path: `${pre}${base}.${ext}`, thumb: thumb ? `${pre}${base}_t.jpg` : null, kind: ext === 'gif' ? 'gif' : video ? 'video' : 'photo', bytes: f.size, name: f.name.slice(0, 120) });
             if (r2.error) throw r2.error; ok++;
           } catch (e) { ctx.toast('Hochladen fehlgeschlagen: ' + (e.message || e), 5000); break; }
         }
