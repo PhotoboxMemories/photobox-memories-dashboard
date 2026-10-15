@@ -435,7 +435,7 @@
     if (L.live) { // Editor: Hinweis statt Kamerabild
       x.fillStyle = 'rgba(0,0,0,.45)'; x.fillRect(0, 0, L.w, L.h);
       x.fillStyle = 'rgba(255,255,255,.75)'; x.font = `600 ${Math.min(L.w, L.h) * .035}px system-ui,sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
-      x.fillText('Hier läuft an der Fotobox das Live-Kamerabild', L.w / 2, L.h / 2);
+      x.fillText(G.I18N_UI ? G.I18N_UI('Hier läuft an der Fotobox das Live-Kamerabild') : 'Hier läuft an der Fotobox das Live-Kamerabild', L.w / 2, L.h / 2);
     }
   }
   // Start-Knopf: runder Knopf mit Kamera (oder eigenem Bild), Beschriftung darunter
