@@ -220,6 +220,18 @@
   #ws .dcard .foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:13px;color:#555}
   #ws .dcard .more{background:none;border:0;padding:0;font:600 13px system-ui,sans-serif;color:#1D1D1B;cursor:pointer;border-bottom:2px solid #F9CB38}
   #ws .dcard .between{padding:2px 0 6px}
+  #ws .dcards.split{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto 1fr;align-items:start} /* links Zahlen und Fotoboxen untereinander, rechts die Galerie */
+  #ws .between>.row{flex-wrap:nowrap;flex:none}
+  #ws .dcard.share{grid-column:2;grid-row:1 / span 3}
+  #ws .dcard.boxes .between{padding:9px 0;border-top:1px solid #f0f0f4}#ws .dcard.boxes .dt+.between{border-top:0}
+  #ws .dcard.boxes p{font-size:13px;margin:4px 0 0}
+  #ws .dcard .dt{display:block;font:600 17px Fredoka,system-ui,sans-serif;margin-bottom:4px}
+  #ws .dcard.share .between{padding:11px 0;border-top:1px solid #f0f0f4}
+  #ws .dcard.share .dt+.between{border-top:0;padding-top:6px}
+  #ws .dcard.share .linkbox{margin:0 0 10px}
+  #ws .dcard.share .pw{border-top:1px solid #f0f0f4;padding-top:2px}
+  #ws .dcard.share .pw label.l{margin-top:12px}
+  #ws .dcard.share .pw small{display:block;color:var(--muted);font-size:12.5px;margin-top:6px}
   #ws .dcard .linkbox{margin-top:4px;flex-wrap:nowrap}#ws .dcard .linkbox input{min-width:0;background:#f4f4f6;border:0;font-size:12px}
   #ws .dacts{display:flex;gap:8px 30px;flex-wrap:wrap;margin:18px 0 6px;max-width:1120px;justify-content:center;border-bottom:1px solid #cfcfd6;padding-bottom:14px}
   #ws .dacts button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:6px;font:500 13px system-ui,sans-serif;cursor:pointer;color:#1D1D1B;padding:6px 4px;border-radius:10px;min-width:74px}
@@ -347,6 +359,8 @@
     #ws .tabs button{white-space:nowrap;padding:10px}
     #ws .between{flex-wrap:wrap}
     #ws .dcards,#ws .charts{grid-template-columns:1fr}
+    #ws .dcards.split{grid-template-columns:1fr;grid-template-rows:none}
+    #ws .dcard.share{grid-column:auto;grid-row:auto}
     #ws .dacts{gap:4px 12px}
     #ws table.shares{display:block;overflow-x:auto}
     #ws .gal{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
@@ -400,7 +414,7 @@
     ['h', 'Grundlagen'], ['layout', 'aperture', 'Photo booth experience'], ['capture', 'sliders', 'Aufnahmeeinstellungen'], ['voice', 'mic', 'Virtueller Berater'], ['lang', 'globe', 'Sprache'],
     ['h', 'Erweiterte Einstellungen'], ['start', 'monitor', 'Startbildschirm'], ['fx', 'sparkles', 'Filter & Effekte'], ['bg', 'wand', 'Hintergrundentfernung'],
     ['ai', 'user', 'KI-Porträts'], ['survey', 'clipboard', 'Umfrage & Haftungsausschluss'],
-    ['h', 'Drucken & Teilen'], ['share', 'share', 'Einstellungen für Teilen'], ['print', 'printer', 'Druckeinstellungen'], ['mosaic', 'mosaic', 'Fotomosaik'], ['gallery', 'gallery', 'Online-Galerie']
+    ['h', 'Drucken & Teilen'], ['share', 'share', 'Einstellungen für Teilen'], ['print', 'printer', 'Druckeinstellungen'], ['mosaic', 'mosaic', 'Fotomosaik']
   ];
 
   function open(ev, ctx) {
@@ -707,14 +721,6 @@
     const galUrl = path => G.FOTOBOX_PHOTOS ? G.FOTOBOX_PHOTOS.url(path) : ctx.sb.storage.from('photos').getPublicUrl(path).data?.publicUrl || '';
     const sbToken = async () => (await ctx.sb.auth.getSession()).data.session?.access_token || '';
     const shareLink = () => E.share_token ? location.origin + location.pathname.replace(/[^/]*$/, '') + 'galerie.html?g=' + E.share_token : '';
-    function shareBox() {
-      const link = shareLink();
-      return `${sw('x.share.cloud', 'Fotos in die Online-Galerie hochladen ' + NEWAPP, 'Die Fotobox lädt jedes fertige Foto hoch. Sie muss mit deinem Konto angemeldet sein und Internet haben.')}
-        ${sw('x.gallery.link', 'Freigabe von Links', 'Jeder mit dem Link zum Ereignis darf dieses Ereignis sehen')}
-        ${!link ? '<p style="color:#b26a00;font-size:13px;margin-top:8px">Der Freigabe-Link ist auf dem Server noch nicht eingerichtet.</p>'
-          : `<div class="linkbox"><input type="text" readonly value="${esc(link)}" onclick="this.select()"><button class="btn pri" data-a="gal-copy">${ICON('copy', 15)} Link kopieren</button><a class="ghost" href="${esc(link)}" target="_blank" rel="noopener" style="text-decoration:none">Öffnen</a></div>
-            <p style="color:#777;font-size:13px;margin-top:6px">${S.x.gallery.link ? 'Diesen Link kannst du dem Kunden schicken.' : 'Der Link funktioniert erst, wenn „Freigabe von Links“ eingeschaltet ist.'}${S.x.gallery.password ? ' Passwort: <b>' + esc(S.x.gallery.password) + '</b>' : ''}</p>`}`;
-    }
     async function loadGallery(force) {
       if (gal.loading || (!force && gal.list && Date.now() - gal.at < 30000)) return;
       gal.loading = true;
@@ -847,16 +853,21 @@
         const act = (a, ic, label, extra = '') => `<button data-a="${a}" ${extra}>${ICON(ic, 26)}<span>${label}</span></button>`;
         return `<h1>Dashboard</h1>
           <div class="evhead"><input type="text" data-e="name" value="${esc(E.name)}" size="${Math.max(8, Math.min(40, (E.name || '').length + 1))}" title="Name des Ereignisses ändern"><span class="sep"></span><input type="date" data-e="event_date" value="${E.event_date || ''}" title="Datum ändern"></div>
-          <div class="dcards">
+          <div class="dcards split">
             <div class="dcard"><div class="nums"><span>Sitzungen<b>${n(sessions)}</b></span><span>Bilder<b>${n(P.filter(x => x.kind !== 'video').length)}</b></span><span>Videos<b>${n(P.filter(x => x.kind === 'video').length)}</b></span></div>
               <div class="foot"><span></span><button class="more" data-a="go" data-pg="analytics">Analysen →</button></div></div>
             <div class="dcard"><div class="nums"><span>Uploads<b>${n(P.length)}</b></span><span>Ausdrucke<b>${prints}</b></span><span>Gäste-Daten<b>${ctx.leadsCount?.(ev.id) ?? '–'}</b></span><span>Fotoboxen<b>${devs.length}</b></span></div>
               <div class="foot"><span>${n(P.length)} Shares insgesamt</span><button class="more" data-a="go" data-pg="shares">Shares →</button></div></div>
-            <div class="dcard">${sw('x.gallery.link', '<b>Freigabe von Links</b>')}
+            <div class="dcard boxes"><b class="dt">Zugewiesene Fotoboxen</b>${devs.length ? devs.map(d => `<div class="between"><span>📸 ${esc(d.name || 'FotoBox')}${d.status?.uploads ? ` <small style="display:inline">· ${d.status.uploads} Foto(s) warten auf den Upload</small>` : ''}</span><small>${d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? '🟢 online' : 'offline'}</small></div>`).join('')
+            : '<p style="color:#777">Noch keine. In der FotoBox anmelden und dieses Event auswählen – oder oben unter „Geräte“ zuweisen.</p>'}</div>
+            <div class="dcard share"><b class="dt">Online-Galerie</b>
+              ${sw('x.gallery.link', 'Freigabe von Links', 'Jeder mit dem Link zum Ereignis darf dieses Ereignis sehen')}
               ${!link ? '<p style="color:#b26a00;font-size:13px;margin:4px 0 0">Der Freigabe-Link ist auf dem Server noch nicht eingerichtet.</p>'
                 : `<div class="linkbox"><input type="text" readonly value="${S.x.gallery.link ? esc(link) : 'Der Ereignis-Link ist deaktiviert.'}" onclick="this.select()"><button class="ghost" data-a="gal-copy" title="Link kopieren">${ICON('copy', 15)}</button>${S.x.gallery.link ? `<a class="ghost" href="${esc(link)}" target="_blank" rel="noopener" title="Galerie öffnen" style="text-decoration:none">${ICON('share', 15)}</a>` : ''}</div>`}
-              ${S.x.gallery.password ? `<p style="font-size:12px;color:#555;margin:6px 0 0">Passwort: <b>${esc(S.x.gallery.password)}</b></p>` : ''}
-              <div style="margin-top:8px;border-top:1px solid #eee;padding-top:6px">${sw('x.share.cloud', 'Fotos hochladen', 'Die Fotobox lädt jedes fertige Foto in diese Galerie')}</div></div>
+              ${sw('x.share.cloud', 'Fotos hochladen', 'Die Fotobox lädt jedes fertige Foto in diese Galerie')}
+              ${sw('x.gallery.downloadAll', 'Alle herunterladen', 'Ermöglichen Sie Besuchern, alle Inhalte des Ereignisses herunterzuladen')}
+              ${sw('x.gallery.guests', 'Gastzugriff ' + NEEDSRV_S, 'Erlauben Sie Gästen, Bilder und Videos anderer Gäste zu sehen')}
+              <div class="pw">${text('x.gallery.password', 'Passwort', 'leer = kein Passwort')}<small>Gäste müssen dieses Passwort eingeben, um das Ereignis anzusehen. Lassen Sie das Feld leer, um das Passwort zu deaktivieren.</small></div></div>
           </div>
           <div class="dacts">
             ${act('gal-zip', 'download', 'Alle herunterladen', P.length ? '' : 'disabled')}${act('gal-upload', 'upload', 'Hochladen')}${act('gal-embed', 'copy', 'Einbetten', link ? '' : 'disabled')}
@@ -868,9 +879,7 @@
           ${gal.error ? `<div class="dempty">${esc(gal.error)}</div>`
             : !gal.list ? '<div class="dempty">Lädt …</div>'
             : P.length ? `<div class="gal wide">${P.map((x, i) => `<figure data-a="gal-open" data-i="${i}" title="${esc(new Date(x.created_at).toLocaleString('de-DE'))}"><img loading="lazy" src="${esc(galUrl(x.thumb || x.path))}" alt="">${x.kind !== 'photo' ? `<span class="tag">${x.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}</figure>`).join('')}</div>`
-            : `<div class="dempty">Noch keine Fotos oder Videos.<br><small style="font-size:15px">${S.x.share.cloud ? 'Die Galerie füllt sich, sobald an der Fotobox Sitzungen durchgeführt werden.' : 'Schalte rechts oben „Fotos hochladen“ ein – dann füllt sich die Galerie, sobald an der Fotobox Sitzungen durchgeführt werden.'}</small></div>`}
-          <div class="card" style="margin-top:18px"><b>Zugewiesene Fotoboxen</b>${devs.length ? devs.map(d => `<div class="between"><span>📸 ${esc(d.name || 'FotoBox')}${d.status?.uploads ? ` <small style="display:inline">· ${d.status.uploads} Foto(s) warten auf den Upload</small>` : ''}</span><small>${d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? '🟢 online' : 'offline'}</small></div>`).join('')
-            : '<p style="color:#777">Noch keine. In der FotoBox anmelden und dieses Event auswählen – oder oben unter „Geräte“ zuweisen.</p>'}</div>`;
+            : `<div class="dempty">Noch keine Fotos oder Videos.<br><small style="font-size:15px">${S.x.share.cloud ? 'Die Galerie füllt sich, sobald an der Fotobox Sitzungen durchgeführt werden.' : 'Schalte rechts oben „Fotos hochladen“ ein – dann füllt sich die Galerie, sobald an der Fotobox Sitzungen durchgeführt werden.'}</small></div>`}`;
       },
       layout() {
         const sel = S.layouts.find(l => l.id === sub.laySel), F = sel && FBR.FORMATS[sel.format];
@@ -1120,15 +1129,6 @@
             <label class="l" style="margin-top:14px">Angebotene Sprachen</label>
             <div style="display:flex;flex-wrap:wrap;gap:10px 22px">${I18N.LANGS.map(l => `<label translate="no" style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" data-langl="${l.code}" ${list.includes(l.code) ? 'checked' : ''}>${I18N.flag(l.code, 16)} ${l.name}</label>`).join('')}</div></div>`;
       },
-      gallery() {
-        return `<h1>Online-Galerie</h1><div class="card"><b>Freigabe</b>${shareBox()}</div><div class="card">
-          <p style="font-weight:600">Datenschutz</p>
-          ${sw('x.gallery.downloadAll', 'Alle herunterladen', 'Ermöglichen Sie Besuchern, alle Inhalte des Ereignisses herunterzuladen')}
-          ${text('x.gallery.password', 'Passwort', 'leer = kein Passwort')}
-          <p style="color:#777;font-size:13px">Gäste müssen dieses Passwort eingeben, um das Ereignis anzusehen. Lassen Sie das Feld leer, um das Passwort zu deaktivieren.</p>
-          ${sw('x.gallery.guests', 'Gastzugriff ' + NEEDSRV_S, 'Erlauben Sie Gästen, Bilder und Videos anderer Gäste zu sehen')}</div>
-          <p style="color:#777;font-size:13px">Die Fotos selbst siehst du unter „Dashboard“ dieses Ereignisses.</p>`;
-      }
     };
     function previewBox() {
       return `<div class="pv"><div class="frame"><canvas id="wsPv"></canvas><div class="row" style="justify-content:space-between;margin-top:12px">
