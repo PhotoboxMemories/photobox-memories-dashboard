@@ -319,7 +319,7 @@
     ['warm', 'Warm', 'sepia(.18) saturate(1.3) brightness(1.04)'], ['cool', 'Kühl', 'saturate(.9) hue-rotate(12deg) brightness(1.05)'], ['glam', 'Glamour', 'brightness(1.12) contrast(1.08) saturate(1.1)']];
   const DEF = {
     ai: { enabled: false, prompt: '' },
-    title: '', subtitle: '', startText: 'Tippen zum Starten', startScreen: null, accent: '#F7C838', attractUrl: '', attractType: '', attractFit: 'cover', startDisplay: 'live', font: 'modern', frame: '#ffffff', textColor: '#222222', template: 'classic',
+    title: '', subtitle: '', startText: 'Tippen zum Starten', startScreen: null, startScreen2: null, attractP: null, attractL: null, accent: '#F7C838', attractUrl: '', attractType: '', attractFit: 'cover', startDisplay: 'live', font: 'modern', frame: '#ffffff', textColor: '#222222', template: 'classic',
     layouts: [], guestLayouts: false, gifFromPhotos: false,
     countdown: 3, countdownNext: 3, between: 2, autoReturn: 30, sound: true, mirror: true, mirrorPhoto: false, cropLive: true,
     modes: { single: true, strip: true, grid: true, gif: true, boomerang: true, video: true }, gifFrames: 4, boomerangLen: 'mittel', videoSecs: 10, videoAudio: true,
@@ -598,16 +598,10 @@
       if (a === 'duplay') { const l = structuredClone(S.layouts.find(x => x.id === t.dataset.id)); l.id = FBR.uid(); l.name += ' (Kopie)'; S.layouts.push(l); save(); render(); }
       if (a === 'uplogo') { const f = await pick('image/*'); if (f) { status('Lädt Logo hoch …'); E.logo_url = await ctx.uploadFile(f); save(); render(); } }
       if (a === 'dellogo') { E.logo_url = null; save(); render(); }
-      if (a === 'editscreen') { editScreen(); return; }
-      if (a === 'resetscreen') { if (await (G.pmConfirm || (async t => confirm(t)))('Gestaltung des Startbildschirms verwerfen?', 'Zurücksetzen')) { S.startScreen = null; save(); render(); } return; }
-      if (a === 'upattract') {
-        const f = await pick('video/mp4,video/*,image/*'); if (!f) return;
-        if (f.size > 50 * 1024 * 1024) { ctx.toast('Datei ist zu groß (max. 50 MB). Bitte das Video kürzer oder kleiner exportieren.', 5000); return; }
-        status('Lädt ' + (f.type.startsWith('video') ? 'Video' : 'Bild') + ' hoch …');
-        try { S.attractUrl = await ctx.uploadFile(f); S.attractType = f.type.startsWith('video') ? 'video' : 'image'; save(); render(); }
-        catch (e) { ctx.toast('Hochladen fehlgeschlagen: ' + e.message, 5000); status(''); }
-      }
-      if (a === 'delattract') { S.attractUrl = ''; S.attractType = ''; save(); render(); }
+      if (a === 'editscreen') { editScreen(t.dataset.o === 'landscape' ? 'landscape' : 'portrait'); return; }
+      if (a === 'resetscreen') { if (await (G.pmConfirm || (async t => confirm(t)))('Gestaltung des Startbildschirms (Hoch- und Querformat) verwerfen?', 'Zurücksetzen')) { S.startScreen = null; S.startScreen2 = null; save(); render(); } return; }
+      if (a === 'upattract') { await uploadAttract(t.dataset.o === 'landscape' ? 'landscape' : 'portrait'); render(); return; }
+      if (a === 'delattract') { removeAttract(t.dataset.o === 'landscape' ? 'landscape' : 'portrait'); render(); return; }
       if (a === 'x-up') {
         const f = await pick(t.dataset.accept || '*/*'); if (!f) return;
         if (f.size > 50 * 1024 * 1024) return ctx.toast('Die Datei ist größer als 50 MB.');
@@ -640,16 +634,6 @@
         S.x.mosaic.boardH = Math.round(c.boardW / (mzv.img.naturalWidth / mzv.img.naturalHeight)); save(); render(); return; // Seitenverhältnis des Hauptbilds
       }
       if (a === 'mz-pdf') return mzPrintBoard(t.dataset.k);
-      if (a === 'aivideo') { // KI-Video für den Startbildschirm (Funktion „ai-video“, Credits wie bei den KI-Porträts)
-        if (!G.AIVideo) return ctx.toast('Bitte die Seite neu laden.');
-        return G.AIVideo.open({ eventId: ev.id, logo: E.logo_url || '', orient: S.startScreen?.orient === 'landscape' ? 'landscape' : 'portrait',
-          call: async body => {
-            const C = G.FOTOBOX_CONFIG, t = (await ctx.sb.auth.getSession()).data.session?.access_token;
-            const r = await fetch(C.supabaseUrl + '/functions/v1/ai-video', { method: 'POST', body: JSON.stringify(body), headers: { apikey: C.supabaseAnonKey, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' } });
-            const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'KI-Video: Server ' + r.status); return j;
-          },
-          onUse: async url => { S.attractUrl = url; S.attractType = 'video'; S.startDisplay = 'media'; save(); render(); ctx.toast('Das KI-Video ist jetzt das Startbildschirm-Video.', 5000); } });
-      }
       if (a === 'edit1') { const l = S.layouts[0]; if (l) editLayout(l.id); else pickTemplate(vals(), addLayout); }
     });
     const pick = accept => new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => res(i.files[0] || null); i.click(); });
@@ -896,14 +880,26 @@
           ${step('processing', 'Während der Verarbeitung', 'video/mp4,audio/mpeg', 'MP4 oder MP3')}${step('done', 'Nach der Verarbeitung', 'video/mp4,audio/mpeg', 'MP4 oder MP3')}`;
       },
       start() {
-        return `<h1>Startbildschirm</h1><div class="cols"><div class="left"><div class="card"><b>Startbildschirm gestalten</b>
-          <p style="color:#6b6b78;margin:6px 0 12px">Thema, Texte, Bilder, Start-Schaltfläche, Hintergrund und Startbildschirm-Video – frei anordnen wie beim Fotolayout.</p>
-          <div class="row"><button class="btn pri" data-a="editscreen">${ICON('pen', 16)} Bearbeiten</button>${S.startScreen ? `<button class="ghost" data-a="resetscreen">Zurücksetzen</button>` : ''}</div>
+        // Je Ausrichtung ein eigenes Video oder Bild; ein älterer einzelner Upload (attractUrl) gilt für beide
+        const slot = o => {
+          const m = o === 'landscape' ? S.attractL : S.attractP, legacy = !m?.url && !!S.attractUrl, cur = m?.url ? m : legacy ? { url: S.attractUrl, type: S.attractType } : null, F = FBR.SCREEN_SIZES[o];
+          return `<div class="between" style="padding:9px 0;border-bottom:1px solid #eee;gap:10px"><div><b>${F.label}</b> <small style="display:inline;color:#888">${F.w} × ${F.h}</small><br>
+            <small style="color:#555">${cur ? (cur.type === 'image' ? '🖼 Bild' : '🎬 Video') + ' · ' + esc(fileName(cur.url)) + (legacy ? ' – gilt für beide Ausrichtungen' : '') : 'noch nichts hochgeladen'}</small></div>
+            <div class="row">${cur ? `<a class="ghost" href="${esc(cur.url)}" target="_blank" rel="noopener" style="text-decoration:none">Ansehen</a><button class="ghost" data-a="delattract" data-o="${o}" title="Entfernen">${ICON('trash', 14)}</button>` : ''}
+            <button class="${cur ? 'ghost' : 'btn pri'}" data-a="upattract" data-o="${o}">${ICON('upload', 15)} ${cur ? 'Ersetzen' : 'Hochladen'}</button></div></div>`;
+        };
+        const has = !!(S.attractP?.url || S.attractL?.url || S.attractUrl);
+        return `<h1>Startbildschirm</h1><div class="cols"><div class="left">
+          <h2>1 · Eigenes Video oder Bild</h2><div class="card">
+          <p style="color:#6b6b78;margin:0 0 6px">Läuft auf dem Startbildschirm in Endlosschleife – ein Tipp darauf startet die Fotobox. Die Fotobox erkennt selbst, ob ihr Bildschirm hoch oder quer steht, und nimmt das passende. Ist nur eins hochgeladen, gilt es für beide.</p>
+          ${slot('portrait')}${slot('landscape')}
+          <p style="color:#777;font-size:12.5px;margin:8px 0 0">MP4-Video oder JPG/PNG-Bild · höchstens 50 MB · Tipp: In Canva oder CapCut gibt es fertige Vorlagen für Hochzeit, Geburtstag und Firmenfeier.</p>
+          ${has ? `<label class="l">Auf dem Startbildschirm zeigen</label><select data-s="startDisplay"><option value="media" ${S.startDisplay === 'media' ? 'selected' : ''}>Mein Video bzw. Bild</option><option value="live" ${S.startDisplay !== 'media' ? 'selected' : ''}>Live-Bild der Kamera</option></select>` : ''}</div>
+          <h2>2 · Texte und Logo darüberlegen <span style="font-weight:400;color:#888;font-size:14px">(freiwillig)</span></h2><div class="card">
+          <p style="color:#6b6b78;margin:0 0 12px">Name, Datum, Logo und Start-Knopf frei anordnen – wie beim Fotolayout. Gestaltest du nur eine Ausrichtung, passt die Fotobox sie für die andere automatisch an; du kannst beide aber auch einzeln gestalten.</p>
+          <div class="row" style="flex-wrap:wrap"><button class="btn pri" data-a="editscreen" data-o="portrait">${ICON('pen', 16)} Hochformat gestalten</button><button class="btn pri" data-a="editscreen" data-o="landscape">${ICON('pen', 16)} Querformat gestalten</button>${S.startScreen ? `<button class="ghost" data-a="resetscreen">Zurücksetzen</button>` : ''}</div>
           ${S.startScreen ? '' : '<p style="color:#6b6b78;font-size:13px;margin-top:10px">Noch nicht gestaltet – die Fotobox zeigt bis dahin den einfachen Standard-Startbildschirm.</p>'}
           <p style="font-size:13px;margin-top:10px">${NEWAPP}</p></div>
-          <div class="card"><b>✨ KI-Video für den Startbildschirm</b>
-          <p style="color:#6b6b78;margin:6px 0 12px">Die KI erstellt ein bewegtes Hintergrundvideo nach deiner Beschreibung oder animiert das Logo. Namen und Logo legst du im Editor gestochen scharf darüber. ${G.AIVideo ? G.AIVideo.COST : 5} Credits pro Video.</p>
-          <div class="row"><button class="btn pri" data-a="aivideo">✨ KI-Video erstellen</button>${S.attractUrl && S.attractType === 'video' ? `<a class="ghost" href="${esc(S.attractUrl)}" target="_blank" rel="noopener" style="text-decoration:none">Aktuelles Video ansehen</a>` : ''}</div></div>
           <h2>Angaben zum Ereignis</h2><div class="card"><p style="color:#6b6b78;font-size:13px;margin-bottom:6px">Diese Angaben erscheinen überall, wo {titel} und {untertitel} stehen – auf dem Startbildschirm und auf den Ausdrucken.</p>
           ${text('title', 'Titel', E.name)}${text('subtitle', 'Untertitel / Datum')}
           <label class="l">Logo</label><div class="row">${E.logo_url ? `<img src="${esc(E.logo_url)}" style="height:50px;border-radius:6px"><button class="ghost" data-a="dellogo">Entfernen</button>` : ''}<button class="ghost" data-a="uplogo">${ICON('upload', 15)} Logo hochladen</button></div></div>
@@ -1078,29 +1074,51 @@
         <button class="btn pri" data-a="edit1">${ICON('pen', 15)} Bearbeiten</button><small style="color:#777">${S.layouts[0] ? esc(S.layouts[0].name) : 'Standard-Vorlage'}</small></div></div></div>`;
     }
     // Startbildschirm als frei gestaltbares „Layout“ in Bildschirmgröße (wie LumaBooth). Ohne Gestaltung: Vorschlag aus den bisherigen Angaben.
-    const screenDraft = () => { const L = FBR.createScreen('portrait', { logo: E.logo_url, startText: S.startText, theme: 'night' }); return L; };
+    // Startbildschirm je Ausrichtung: gestaltet (startScreen bzw. startScreen2), sonst aus der anderen umgerechnet, sonst Standard-Vorschlag
+    const screenOf = o => [S.startScreen, S.startScreen2].find(L => L && L.screen && L.orient === o) || null;
+    const screenFor = o => screenOf(o) || (S.startScreen ? FBR.adaptScreen(S.startScreen, o) : FBR.createScreen(o, { logo: E.logo_url, startText: S.startText, theme: 'night' }));
+    const mediaFor = o => { const m = o === 'landscape' ? S.attractL : S.attractP; return m?.url ? m : S.attractUrl ? { url: S.attractUrl, type: S.attractType || 'video' } : null; };
     function startPreview() {
-      return `<div class="pv"><div class="frame"><canvas id="wsStart" data-a="editscreen" title="Anklicken zum Bearbeiten" style="width:100%;border-radius:10px;display:block;cursor:pointer"></canvas></div></div>`;
+      const cv = (o, flex) => `<div style="flex:${flex};min-width:0"><small style="color:#555">${FBR.SCREEN_SIZES[o].label}</small><canvas id="wsStart${o === 'landscape' ? 'L' : 'P'}" data-a="editscreen" data-o="${o}" title="Anklicken zum Gestalten" style="width:100%;border-radius:8px;display:block;cursor:pointer;margin-top:4px"></canvas><small id="wsStartNote${o === 'landscape' ? 'L' : 'P'}" style="color:#888"></small></div>`;
+      return `<div class="pv"><div class="frame"><div class="row" style="align-items:flex-start;gap:12px">${cv('portrait', 9)}${cv('landscape', 16)}</div></div></div>`;
     }
     function drawStart() {
-      const c = $(root, '#wsStart'); if (!c) return;
-      const L = S.startScreen || screenDraft();
-      FBR.preloadLayout(L).then(() => { const big = FBR.renderLayout(L, { values: vals(), placeholders: true }); c.width = Math.round(big.width / 3); c.height = Math.round(big.height / 3); c.getContext('2d').drawImage(big, 0, 0, c.width, c.height); });
+      for (const o of ['portrait', 'landscape']) {
+        const c = $(root, o === 'landscape' ? '#wsStartL' : '#wsStartP'), note = $(root, o === 'landscape' ? '#wsStartNoteL' : '#wsStartNoteP'); if (!c) continue;
+        const L = screenFor(o);
+        if (note) note.textContent = screenOf(o) ? 'gestaltet' : S.startScreen ? 'automatisch angepasst' : 'Standard-Vorschlag';
+        FBR.preloadLayout(L).then(() => { const big = FBR.renderLayout(L, { values: vals(), placeholders: true }); c.width = Math.round(big.width / 4); c.height = Math.round(big.height / 4); c.getContext('2d').drawImage(big, 0, 0, c.width, c.height); });
+      }
     }
-    async function uploadAttract() {
+    async function uploadAttract(o) {
       const f = await pick('video/mp4,video/*,image/*'); if (!f) return;
       if (f.size > 50 * 1024 * 1024) { ctx.toast('Datei ist zu groß (max. 50 MB). Bitte das Video kürzer oder kleiner exportieren.', 5000); return; }
       status('Lädt ' + (f.type.startsWith('video') ? 'Video' : 'Bild') + ' hoch …');
-      try { S.attractUrl = await ctx.uploadFile(f); S.attractType = f.type.startsWith('video') ? 'video' : 'image'; S.startDisplay = 'media'; save(); }
-      catch (e) { ctx.toast('Hochladen fehlgeschlagen: ' + e.message, 5000); status(''); }
+      try {
+        const url = await ctx.uploadFile(f), type = f.type.startsWith('video') ? 'video' : 'image';
+        S[o === 'landscape' ? 'attractL' : 'attractP'] = { url, type };
+        S.attractUrl = url; S.attractType = type; // ältere Fotobox-Versionen kennen nur ein Video
+        S.startDisplay = 'media'; save();
+      } catch (e) { ctx.toast('Hochladen fehlgeschlagen: ' + e.message, 5000); status(''); }
     }
-    function editScreen() {
-      const L = S.startScreen || screenDraft();
+    function removeAttract(o) {
+      const k = o === 'landscape' ? 'attractL' : 'attractP', other = S[o === 'landscape' ? 'attractP' : 'attractL'];
+      if (!S[k]?.url || S[k].url === S.attractUrl) { S.attractUrl = other?.url || ''; S.attractType = other?.type || ''; }
+      S[k] = null; if (!S.attractUrl && !S.attractP?.url && !S.attractL?.url) S.startDisplay = 'live';
+      save();
+    }
+    // Gestaltung speichern: in den Platz der passenden Ausrichtung (die zuerst gestaltete bleibt startScreen)
+    function storeScreen(nl) {
+      if (!S.startScreen || S.startScreen.orient === nl.orient) S.startScreen = nl; else S.startScreen2 = nl;
+      const b = nl.elements.find(e => e.type === 'button'); S.startText = b && !b.hidden ? String(b.text || '') : ''; save();
+    }
+    function editScreen(o) {
+      const L = structuredClone(screenFor(o)); delete L.adapted;
       LayoutEditor.open({
         layout: L, values: vals(), uploadImage: ctx.uploadFile,
-        video: () => ({ url: S.attractUrl, type: S.attractType }), uploadVideo: uploadAttract,
-        removeVideo: () => { S.attractUrl = ''; S.attractType = ''; save(); },
-        onSave: async nl => { S.startScreen = nl; const b = nl.elements.find(e => e.type === 'button'); S.startText = b && !b.hidden ? String(b.text || '') : ''; save(); },
+        video: () => mediaFor(L.orient) || { url: '', type: '' }, uploadVideo: () => uploadAttract(L.orient),
+        removeVideo: () => removeAttract(L.orient),
+        onSave: async nl => storeScreen(nl),
         onClose: () => render()
       });
     }
