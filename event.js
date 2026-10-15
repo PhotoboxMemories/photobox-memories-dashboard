@@ -640,6 +640,16 @@
         S.x.mosaic.boardH = Math.round(c.boardW / (mzv.img.naturalWidth / mzv.img.naturalHeight)); save(); render(); return; // Seitenverhältnis des Hauptbilds
       }
       if (a === 'mz-pdf') return mzPrintBoard(t.dataset.k);
+      if (a === 'aivideo') { // KI-Video für den Startbildschirm (Funktion „ai-video“, Credits wie bei den KI-Porträts)
+        if (!G.AIVideo) return ctx.toast('Bitte die Seite neu laden.');
+        return G.AIVideo.open({ eventId: ev.id, logo: E.logo_url || '', orient: S.startScreen?.orient === 'landscape' ? 'landscape' : 'portrait',
+          call: async body => {
+            const C = G.FOTOBOX_CONFIG, t = (await ctx.sb.auth.getSession()).data.session?.access_token;
+            const r = await fetch(C.supabaseUrl + '/functions/v1/ai-video', { method: 'POST', body: JSON.stringify(body), headers: { apikey: C.supabaseAnonKey, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' } });
+            const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'KI-Video: Server ' + r.status); return j;
+          },
+          onUse: async url => { S.attractUrl = url; S.attractType = 'video'; S.startDisplay = 'media'; save(); render(); ctx.toast('Das KI-Video ist jetzt das Startbildschirm-Video.', 5000); } });
+      }
       if (a === 'edit1') { const l = S.layouts[0]; if (l) editLayout(l.id); else pickTemplate(vals(), addLayout); }
     });
     const pick = accept => new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => res(i.files[0] || null); i.click(); });
@@ -891,6 +901,9 @@
           <div class="row"><button class="btn pri" data-a="editscreen">${ICON('pen', 16)} Bearbeiten</button>${S.startScreen ? `<button class="ghost" data-a="resetscreen">Zurücksetzen</button>` : ''}</div>
           ${S.startScreen ? '' : '<p style="color:#6b6b78;font-size:13px;margin-top:10px">Noch nicht gestaltet – die Fotobox zeigt bis dahin den einfachen Standard-Startbildschirm.</p>'}
           <p style="font-size:13px;margin-top:10px">${NEWAPP}</p></div>
+          <div class="card"><b>✨ KI-Video für den Startbildschirm</b>
+          <p style="color:#6b6b78;margin:6px 0 12px">Die KI erstellt ein bewegtes Hintergrundvideo nach deiner Beschreibung oder animiert das Logo. Namen und Logo legst du im Editor gestochen scharf darüber. ${G.AIVideo ? G.AIVideo.COST : 5} Credits pro Video.</p>
+          <div class="row"><button class="btn pri" data-a="aivideo">✨ KI-Video erstellen</button>${S.attractUrl && S.attractType === 'video' ? `<a class="ghost" href="${esc(S.attractUrl)}" target="_blank" rel="noopener" style="text-decoration:none">Aktuelles Video ansehen</a>` : ''}</div></div>
           <h2>Angaben zum Ereignis</h2><div class="card"><p style="color:#6b6b78;font-size:13px;margin-bottom:6px">Diese Angaben erscheinen überall, wo {titel} und {untertitel} stehen – auf dem Startbildschirm und auf den Ausdrucken.</p>
           ${text('title', 'Titel', E.name)}${text('subtitle', 'Untertitel / Datum')}
           <label class="l">Logo</label><div class="row">${E.logo_url ? `<img src="${esc(E.logo_url)}" style="height:50px;border-radius:6px"><button class="ghost" data-a="dellogo">Entfernen</button>` : ''}<button class="ghost" data-a="uplogo">${ICON('upload', 15)} Logo hochladen</button></div></div>
