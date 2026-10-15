@@ -396,6 +396,24 @@
     els.push({ id: uid(), type: 'button', text: o.startText ?? 'Tippen zum Starten', font: 'modern', fill: t.btn, color: t.text, icon: t.ico, hidden: o.startText === '', ...mid(420 * u, F.h * .78, 260 * u) });
     return { id: uid(), screen: true, orient: SCREEN_SIZES[orient] ? orient : 'portrait', w: F.w, h: F.h, theme: t.id, bg: t.grad[0], bgGrad: [...t.grad], bgImage: '', bgFit: 'cover', live: false, elements: els };
   }
+  // Gestalteten Startbildschirm für die andere Ausrichtung umrechnen (Hoch ↔ Quer). Mittelpunkte wandern mit,
+  // Größen schrumpfen gleichmäßig (nie verzerrt) – so überlappt nichts. Elemente über (fast) die ganze Breite bzw. Höhe
+  // bleiben so breit bzw. hoch wie der Bildschirm. Das Ergebnis ist ein Vorschlag, den man im Editor weiter anpassen kann.
+  function adaptScreen(L, orient) {
+    const F = SCREEN_SIZES[orient]; if (!L || !F) return L;
+    if (L.orient === orient) return L;
+    const out = JSON.parse(JSON.stringify(L)), sx = F.w / L.w, sy = F.h / L.h, k = Math.min(sx, sy), toPortrait = sy > sx;
+    for (const e of out.elements || []) {
+      const fullW = e.w >= L.w * .9, fullH = e.h >= L.h * .9, cx = (e.x + e.w / 2) * sx, cy = (e.y + e.h / 2) * sy;
+      // quer → hoch: oben und unten ist viel Platz – Texte und Knöpfe dürfen größer bleiben, solange sie in die Breite passen
+      const ke = toPortrait ? Math.max(k, Math.min(1, F.w * .92 / e.w)) : k;
+      // Texte (Schrift passt sich dem Kästchen an) behalten beim Hochformat ihre Höhe – Bilder und Knöpfe bleiben unverzerrt
+      e.w = Math.round(fullW ? e.w * sx : e.w * ke); e.h = Math.round(fullH ? e.h * sy : e.h * (toPortrait && e.type === 'text' ? 1 : ke));
+      e.x = Math.round(Math.min(Math.max(cx - e.w / 2, 0), F.w - e.w)); e.y = Math.round(Math.min(Math.max(cy - e.h / 2, 0), F.h - e.h));
+    }
+    out.orient = orient; out.w = F.w; out.h = F.h; out.adapted = true;
+    return out;
+  }
   function applyTheme(L, id) {
     const t = SCREEN_THEMES.find(x => x.id === id); if (!t) return;
     L.theme = t.id; L.bg = t.grad[0]; L.bgGrad = [...t.grad]; L.bgImage = ''; L.live = false;
@@ -546,5 +564,5 @@
 
   G.FBR = { FONTS, FONT_NAMES, LAYOUTS, TEMPLATES, templateById: byId, render, drawBand, drawCover, placeholder,
     FORMATS, SIZE_LIST, formatKey, sheetOf, PRESETS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid,
-    SCREEN_SIZES, SCREEN_THEMES, createScreen, applyTheme };
+    SCREEN_SIZES, SCREEN_THEMES, createScreen, adaptScreen, applyTheme };
 })(window);
