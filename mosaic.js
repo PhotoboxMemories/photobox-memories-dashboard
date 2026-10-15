@@ -11,8 +11,9 @@
   const WHO = [['all', 'Jedes Foto automatisch'], ['guest', 'Gast entscheidet (Mosaik-Symbol)']];
   const SHOTS = [['one', 'Ein Foto pro Sitzung'], ['all', 'Alle Fotos einer Sitzung']];
   const NUMBERING = [['grid', 'Reihe + Spalte (A1, A2 … C7)'], ['seq', 'Fortlaufend (1, 2, 3 …)']];
+  const PAPERS = [['photo', 'Fotopapier 10×15 (mehrere Kacheln pro Blatt)'], ['label', 'Etiketten/Aufkleber (eine Kachel pro Etikett)']];
   // Tafel in cm (Höchstmaß), Kachel in mm
-  const DEF = { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'grid', label: true, boardImage: false };
+  const DEF = { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'grid', paper: 'photo', label: true, boardImage: false };
   const MAXN = 100; // höchstens 100 Spalten und 100 Reihen
   const choose = (list, v) => list.some(o => o[0] === v) ? v : list[0][0];
   const int = (v, a, b, d) => { v = Math.round(Number(v)); return Number.isFinite(v) ? Math.min(b, Math.max(a, v)) : d; };
@@ -29,16 +30,18 @@
 
   function normalize(x) {
     const o = x && typeof x === 'object' ? x : {}, old = OLD_FORMATS[o.format], cmMm = v => Number(String(v ?? '').replace(',', '.')) * 10;
-    // Kachel in mm; ältere Einstellungen hatten feste Größen (Zoll) oder „Eigene Größe“ in cm
-    let tileW = num(o.tileW ?? (old ? old[0] * MM : o.format === 'custom' ? cmMm(o.tw) : undefined), 10, SHEET[0], DEF.tileW);
-    let tileH = num(o.tileH ?? (old ? old[1] * MM : o.format === 'custom' ? cmMm(o.th) : undefined), 10, SHEET[0], DEF.tileH);
-    if (Math.min(tileW, tileH) > SHEET[1]) { if (tileW >= tileH) tileH = SHEET[1]; else tileW = SHEET[1]; } // muss auf ein 10×15-Blatt passen
+    // Kachel in mm; ältere Einstellungen hatten feste Größen (Zoll) oder „Eigene Größe“ in cm.
+    // Auf Fotopapier muss die Kachel aufs 10×15-Blatt passen; Etiketten dürfen größer sein (Größe kommt vom Etikettendrucker).
+    const paper = choose(PAPERS, o.paper), maxMm = paper === 'label' ? 300 : SHEET[0];
+    let tileW = num(o.tileW ?? (old ? old[0] * MM : o.format === 'custom' ? cmMm(o.tw) : undefined), 10, maxMm, DEF.tileW);
+    let tileH = num(o.tileH ?? (old ? old[1] * MM : o.format === 'custom' ? cmMm(o.th) : undefined), 10, maxMm, DEF.tileH);
+    if (paper === 'photo' && Math.min(tileW, tileH) > SHEET[1]) { if (tileW >= tileH) tileH = SHEET[1]; else tileW = SHEET[1]; }
     const c = {
       on: o.on === true, mode: choose(MODES, o.mode), who: choose(WHO, o.who), shots: choose(SHOTS, o.shots),
       // https = im Dashboard/an der Fotobox hochgeladen · local: = nur auf dieser Fotobox gespeichert (ohne Anmeldung)
       image: typeof o.image === 'string' && /^(https:\/\/|local:)/.test(o.image) ? o.image : '',
       overlay: int(o.overlay, 0, 90, DEF.overlay), boardW: num(o.boardW, 10, 1000, DEF.boardW), boardH: num(o.boardH, 10, 1000, DEF.boardH),
-      tileW, tileH, numbering: choose(NUMBERING, o.numbering), label: o.label !== false, boardImage: o.boardImage === true
+      tileW, tileH, numbering: choose(NUMBERING, o.numbering), paper, label: o.label !== false, boardImage: o.boardImage === true
     };
     return Object.assign(c, fitGrid(c.boardW, c.boardH, tileW, tileH)); // Spalten und Reihen rechnet die Software aus
   }
@@ -51,8 +54,11 @@
   const code = (c, i) => c.numbering === 'seq' ? String(i + 1) : cellName(i, c.cols);
 
   // Wie passen die Kacheln auf ein 6x4-Blatt? Quer oder hoch – je nachdem, wo mehr Kacheln Platz haben.
+  // Etikettendrucker: eine Kachel pro Etikett in genau Kachelgröße (Etikettengröße stellt man im Druckertreiber ein), kein Schnitt.
   function sheetPlan(c) {
-    const f = tileIn(c), fit = (W, H) => ({ W, H, nx: Math.floor(W / f.w + 1e-3), ny: Math.floor(H / f.h + 1e-3) });
+    const f = tileIn(c);
+    if (c && c.paper === 'label') return { W: f.w, H: f.h, nx: 1, ny: 1, per: 1, tw: f.w, th: f.h, cut: '', panel: null, marks: false, ox: 0, oy: 0, label: true };
+    const fit = (W, H) => ({ W, H, nx: Math.floor(W / f.w + 1e-3), ny: Math.floor(H / f.h + 1e-3) });
     const a = fit(6, 4), b = fit(4, 6), p = b.nx * b.ny > a.nx * a.ny ? b : a, per = Math.max(1, p.nx * p.ny);
     p.nx = Math.max(1, p.nx); p.ny = Math.max(1, p.ny);
     const restW = Math.max(0, p.W - p.nx * f.w), restH = Math.max(0, p.H - p.ny * f.h);
@@ -65,6 +71,7 @@
   }
   // Papier-Tipp: Passen mit einer etwas kleineren Kachel (höchstens 10 % kleiner) mehr Kacheln auf ein Fotoblatt?
   function paperTip(c) {
+    if (c.paper === 'label') return null;
     const now = sheetPlan(c).per, floor1 = v => Math.floor(v * 10) / 10;
     let best = null;
     for (const [SW, SH] of [SHEET, [SHEET[1], SHEET[0]]]) {
@@ -95,7 +102,8 @@
     const i = info(c), pl = sheetPlan(c), tip = paperTip(c);
     return `<div class="big">${i.cols} × ${i.rows} Felder = ${i.cells} Fotos</div>`
       + `<div>Tafel <b>${cm(i.boardCm[0])} × ${cm(i.boardCm[1])} cm</b>${i.grown ? '' : ` (passt in ${cm(i.wantCm[0])} × ${cm(i.wantCm[1])} cm)`} · Kachel ${cm(c.tileW)} × ${cm(c.tileH)} mm</div>`
-      + `<div>${i.per} Kachel${i.per > 1 ? 'n' : ''} pro 10×15-Fotoblatt → höchstens ${i.sheets} Blätter${pl.cut === '2inch' ? ' · der Drucker schneidet die Streifen automatisch' : pl.marks ? ' · mit Schnittmarken zum Zuschneiden' : ''}</div>`
+      + (pl.label ? `<div>1 Kachel pro Etikett → höchstens ${i.sheets} Etiketten · im Druckertreiber die Etikettengröße ${cm(c.tileW)} × ${cm(c.tileH)} mm einstellen</div>`
+        : `<div>${i.per} Kachel${i.per > 1 ? 'n' : ''} pro 10×15-Fotoblatt → höchstens ${i.sheets} Blätter${pl.cut === '2inch' ? ' · der Drucker schneidet die Streifen automatisch' : pl.marks ? ' · mit Schnittmarken zum Zuschneiden' : ''}</div>`)
       + (tip ? `<div>💡 Tipp: Mit ${cm(tip.w)} × ${cm(tip.h)} mm passen ${tip.per} statt ${tip.now} Kacheln auf ein Fotoblatt.</div>` : '')
       + (i.grown ? `<div>⚠️ Die Tafel ist kleiner als zwei Kacheln – sie wird mindestens ${cm(i.boardCm[0])} × ${cm(i.boardCm[1])} cm groß.</div>` : '');
   }
@@ -158,14 +166,26 @@
   }
   const cellSrc = (p, i) => { const w = p.sw / p.cols, h = p.sh / p.rows; return [p.sx + (i % p.cols) * w, p.sy + Math.floor(i / p.cols) * h, w, h]; };
   // Foto auf Kachelform zuschneiden (Gesichter sitzen meist etwas über der Mitte)
-  function drawCover(ctx, src, x, y, w, h) {
-    const [sw0, sh0] = dims(src), k = Math.max(w / sw0, h / sh0), cw = w / k, ch = h / k;
-    ctx.drawImage(src, (sw0 - cw) / 2, Math.max(0, Math.min(sh0 - ch, sh0 * .42 - ch / 2)), cw, ch, x, y, w, h);
+  // Ausschnitt aus dem Foto (Quelle sw0 × sh0) im Seitenverhältnis ar der Kachel.
+  // Ohne Gesichter: größter Ausschnitt, etwas über der Mitte. Mit Gesichtern (focus = Rahmen um alle Gesichter, Werte 0…1):
+  // mittig auf die Gesichter und näher heran (Gesichter etwa 40 % der Höhe), alle Gesichter bleiben im Bild, soweit es geht.
+  function cropRect(sw0, sh0, ar, focus) {
+    let cw = sw0, ch = sw0 / ar; if (ch > sh0) { ch = sh0; cw = sh0 * ar; }
+    if (!focus || !(focus.w > 0) || !(focus.h > 0)) return [(sw0 - cw) / 2, Math.max(0, Math.min(sh0 - ch, sh0 * .42 - ch / 2)), cw, ch];
+    const fx = focus.x * sw0, fy = focus.y * sh0, fw = focus.w * sw0, fh = focus.h * sh0;
+    const h2 = Math.min(ch, Math.max(fh * 2.5, ch * .5, fw * 1.2 / ar)), w2 = h2 * ar;
+    const x0 = Math.max(0, Math.min(sw0 - w2, fx + fw / 2 - w2 / 2)), y0 = Math.max(0, Math.min(sh0 - h2, fy + fh / 2 - h2 * .45));
+    return [x0, y0, w2, h2];
   }
-  function tileCanvas(src, c, longSide = 240, filterCss = '') { // c = Einstellungen oder Schlüssel einer festen Größe
+  function drawCover(ctx, src, x, y, w, h, focus) {
+    const [sw0, sh0] = dims(src), r = cropRect(sw0, sh0, w / h, focus);
+    ctx.drawImage(src, r[0], r[1], r[2], r[3], x, y, w, h);
+  }
+  // Kachel aus einem Foto: c = Einstellungen (Kachelgröße), focus = Gesichter (oder null)
+  function tileCanvas(src, c, longSide = 240, filterCss = '', focus = null) {
     const f = tileIn(c), k = longSide / Math.max(f.w, f.h), cv = mk(Math.round(f.w * k), Math.round(f.h * k)), x = cv.getContext('2d');
     if (filterCss && filterCss !== 'none') x.filter = filterCss;
-    drawCover(x, src, 0, 0, cv.width, cv.height);
+    drawCover(x, src, 0, 0, cv.width, cv.height, focus);
     return cv;
   }
   function avgColor(src) {
@@ -204,13 +224,11 @@
       ctx.stroke(); ctx.restore();
     }
   }
-  function roundRect(x, l, t, w, h, r) { x.beginPath(); x.moveTo(l + r, t); x.arcTo(l + w, t, l + w, t + h, r); x.arcTo(l + w, t + h, l, t + h, r); x.arcTo(l, t + h, l, t, r); x.arcTo(l, t, l + w, t, r); x.closePath(); }
+  // Feldnummer klein unten rechts: nur schwarze Schrift, ohne Kästchen (soll auf der Wand nicht auffallen)
   function drawCode(x, code, tx, ty, tw, th) {
-    const fs = Math.round(Math.max(30, Math.min(70, Math.min(tw, th) * .07)));
-    x.save(); x.font = `700 ${fs}px Arial, Helvetica, sans-serif`;
-    const w = x.measureText(code).width + fs * .9, h = fs * 1.35, m = fs * .35, bx = tx + tw - w - m, by = ty + th - h - m;
-    x.globalAlpha = .9; x.fillStyle = '#fff'; roundRect(x, bx, by, w, h, h / 2); x.fill(); x.globalAlpha = 1;
-    x.fillStyle = '#1D1D1B'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(code, bx + w / 2, by + h / 2 + fs * .05); x.restore();
+    const fs = Math.round(Math.max(22, Math.min(46, Math.min(tw, th) * .045))), m = fs * .5;
+    x.save(); x.font = `600 ${fs}px Arial, Helvetica, sans-serif`; x.fillStyle = '#000';
+    x.textAlign = 'right'; x.textBaseline = 'alphabetic'; x.fillText(code, tx + tw - m, ty + th - m); x.restore();
   }
   // Freie Fläche neben einer großen Kachel: Feldnummer groß und eine kleine Karte, wo das Feld auf der Tafel liegt
   function drawPanel(x, pn, i, c, title) {
@@ -255,8 +273,8 @@
     return { canvas: cv, cut: pl.cut, per: pl.per };
   }
 
-  const M = { DPI, MODES, WHO, SHOTS, NUMBERING, DEF, MAXN, normalize, tileIn, fitGrid, screenOn, wallOn, rowName, cellName, code, sheetPlan, paperTip, board, info, cm, summaryHTML,
-    boardMarkup, boardSVG, printHTML, prepare, cellSrc, cellBox, drawCover, tileCanvas, avgColor, pickCell, drawCell, renderMosaic, renderSheet };
+  const M = { DPI, MODES, WHO, SHOTS, NUMBERING, PAPERS, DEF, MAXN, normalize, tileIn, fitGrid, screenOn, wallOn, rowName, cellName, code, sheetPlan, paperTip, board, info, cm, summaryHTML,
+    boardMarkup, boardSVG, printHTML, prepare, cellSrc, cellBox, cropRect, drawCover, tileCanvas, avgColor, pickCell, drawCell, renderMosaic, renderSheet };
   G.Mosaic = M;
   if (typeof module !== 'undefined' && module.exports) module.exports = M;
 })(typeof window !== 'undefined' ? window : globalThis);
