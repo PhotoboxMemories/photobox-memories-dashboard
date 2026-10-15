@@ -6,14 +6,14 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=20261015-6"></script>
-<script src="icons.js?v=20261015-6"></script>
-<script src="render.js?v=20261015-6"></script>
-<script src="mosaic.js?v=20261015-6"></script>
-<script src="editor.js?v=20261015-6"></script>
-<script src="ai-event.js?v=20261015-6"></script>
-<script src="ai-test.js?v=20261015-6"></script>
-<script src="event.js?v=20261015-6"></script>
+<script src="config.js?v=20261015-9"></script>
+<script src="icons.js?v=20261015-9"></script>
+<script src="render.js?v=20261015-9"></script>
+<script src="mosaic.js?v=20261015-9"></script>
+<script src="editor.js?v=20261015-9"></script>
+<script src="ai-event.js?v=20261015-9"></script>
+<script src="ai-test.js?v=20261015-9"></script>
+<script src="event.js?v=20261015-9"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -68,6 +68,33 @@ table{width:100%;border-collapse:collapse;background:var(--card);border:1px soli
 th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
 th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--soft)}
 tr:last-child td{border-bottom:0}
+/* Handy: Logo und Abmelden in einer Zeile, Menüpunkte als wischbare Leiste darunter */
+@media(max-width:820px){
+  header{padding:8px 12px 0;gap:6px 10px}
+  header .row.small{margin-left:auto}
+  header #who{display:none}
+  #nav{order:3;flex:0 0 calc(100% + 24px);flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:2px;margin:0 -12px;padding:2px 12px 8px;scrollbar-width:none}
+  #nav::-webkit-scrollbar{display:none}
+  #nav button{white-space:nowrap;padding:8px 11px;flex:none}
+  #app>main{padding:16px 12px 80px}
+  .pagehead input{max-width:none!important;width:100%}
+  .evgrid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .card{padding:16px}
+  .pagehead{flex-wrap:wrap}
+  /* Tabellen werden zu Karten: jede Zeile ein Kästchen, die Spaltenüberschrift steht links vor dem Wert */
+  .tablewrap{overflow:visible}
+  .tablewrap table{border:0;background:none;border-radius:0}
+  .tablewrap thead{display:none}
+  .tablewrap table,.tablewrap tbody,.tablewrap tr,.tablewrap td{display:block;width:100%}
+  .tablewrap tr{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;padding:4px 14px}
+  .tablewrap td{display:flow-root;padding:8px 0;border-bottom:1px solid var(--line);text-align:right}
+  .tablewrap tr td:last-child{border-bottom:0}
+  .tablewrap td::before{content:attr(data-l);float:left;max-width:45%;margin-right:12px;text-align:left;font-size:12px;line-height:22px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .tablewrap td:not([data-l])::before,.tablewrap td[data-l=""]::before{display:none}
+  .tablewrap td:not([data-l]),.tablewrap td[data-l=""]{text-align:left}
+  .tablewrap td input,.tablewrap td select{max-width:62%!important}
+  .tablewrap td[data-l]>.row{justify-content:flex-end}
+}
 .tablewrap{overflow-x:auto}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--muted)}
 .dot.on{background:var(--ok)}
@@ -263,6 +290,10 @@ const pmConfirm = (text, ok = 'Löschen') => new Promise(res => {
   document.addEventListener('keydown', key); document.body.appendChild(o);
 });
 window.pmConfirm = pmConfirm;
+// Handy: Tabellen erscheinen als Karten – jede Zelle bekommt dafür ihre Spaltenüberschrift als Beschriftung
+const labelCells = tb => { const hs = [...tb.closest('table').querySelectorAll('thead th')].map(th => th.textContent.trim());
+  for (const tr of tb.rows) if (tr.cells.length === hs.length) [...tr.cells].forEach((td, i) => { if (td.dataset.l !== hs[i]) td.dataset.l = hs[i]; }); };
+document.addEventListener('DOMContentLoaded', () => $$('.tablewrap tbody').forEach(tb => { labelCells(tb); new MutationObserver(() => labelCells(tb)).observe(tb, { childList: true }); }));
 const toast = (t, ms = 2200) => { const e = $('#toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => e.style.display = 'none', ms); };
 
 const CFG = window.FOTOBOX_CONFIG || {};
