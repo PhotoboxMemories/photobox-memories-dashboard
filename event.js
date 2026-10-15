@@ -373,6 +373,7 @@
       originals: true, deleteBtn: true, deleteText: 'Wiederholen', cloud: true, uploadOriginals: true, origUp: false },
     print: { btnText: 'Drucken', printingText: 'Drucken...', copiesText: 'Wie viele Kopien?' },
     gallery: { link: false, guests: false, downloadAll: false, password: '' },
+    lang: { guest: '', pick: false, list: [] }, // Gästesprache: '' = wie das Menü der Fotobox
     mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'grid', paper: 'photo', label: true, boardImage: false },
     ai: { skip: false, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Porträt erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
   };
@@ -382,7 +383,7 @@
   const NEEDSRV = '<p style="background:#FFF3C4;color:#8a6400;border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:8px">Die Einstellungen werden gespeichert. Damit es an der Fotobox funktioniert, muss noch ein Online-Dienst angebunden und die Fotobox aktualisiert werden.</p>';
   const NAV = [
     ['dash', 'dashboard', 'Dashboard'],
-    ['h', 'Grundlagen'], ['layout', 'aperture', 'Photo booth experience'], ['capture', 'sliders', 'Aufnahmeeinstellungen'], ['voice', 'mic', 'Virtueller Berater'],
+    ['h', 'Grundlagen'], ['layout', 'aperture', 'Photo booth experience'], ['capture', 'sliders', 'Aufnahmeeinstellungen'], ['voice', 'mic', 'Virtueller Berater'], ['lang', 'globe', 'Sprache'],
     ['h', 'Erweiterte Einstellungen'], ['start', 'monitor', 'Startbildschirm'], ['fx', 'sparkles', 'Filter & Effekte'], ['bg', 'wand', 'Hintergrundentfernung'],
     ['ai', 'user', 'KI-Porträts'], ['survey', 'clipboard', 'Umfrage & Haftungsausschluss'],
     ['h', 'Drucken & Teilen'], ['share', 'share', 'Einstellungen für Teilen'], ['print', 'printer', 'Druckeinstellungen'], ['mosaic', 'mosaic', 'Fotomosaik'], ['gallery', 'gallery', 'Online-Galerie']
@@ -482,6 +483,11 @@
 
     main.addEventListener('input', e => {
       const t = e.target, p = t.dataset.s;
+      if (t.dataset.langl) { // angebotene Gästesprachen (mindestens die Standardsprache)
+        const list = $$(main, '[data-langl]').filter(x => x.checked).map(x => x.dataset.langl), g = S.x.lang.guest;
+        if (g && !list.includes(g)) list.unshift(g);
+        S.x.lang.list = list.length === I18N.CODES.length ? [] : list; save(); return;
+      }
       if (t.dataset.aiConsent !== undefined) { ai.consentOk = t.checked; return; }
       if (t.dataset.aiCname !== undefined) { ai.cname = t.value; return; }
       if (t.dataset.aiCtext !== undefined) { ai.ctext = t.value; return; }
@@ -991,7 +997,7 @@
             : `<div class="aislots">${slot('p', pp, 'Porträtstil')}${slot('a', aa, 'Kunststil')}<button class="aislot" data-a="ai-custom"><span style="font-size:22px">+</span><div><b>Benutzerdefinierter Prompt</b><small>selbst beschreiben</small></div></button></div>
             <small>Wähle einen Porträtstil, einen Kunststil oder beides zusammen. ${pp || aa ? '<a href="#" data-a="ai-custom">Text selbst anpassen</a>' : ''}</small>`}
           ${central ? '<p class="small" style="margin-top:8px;color:#6b6b78">Erst rechts „Generieren“, dann „Vorgabe speichern“: Das erzeugte Bild wird das Bild auf der Kachel. Dieses Bild sieht jeder, der die Stile sieht – nimm ein Testfoto, das gezeigt werden darf.</p>' : ''}
-          ${ai.result && !ai.busy && ai.resultId && ai.resultId === curId ? '<p style="margin-top:10px;font-weight:600">✓ Bild erstellt. Mit „' + (editing ? 'Änderung speichern' : 'Vorgabe speichern') + '“ wird es das Bild auf der Kachel.</p>' : ''}
+          ${ai.result && !ai.busy && ai.resultId && ai.resultId === curId ? '<p style="margin-top:10px;font-weight:600">' + (editing ? '✓ Bild erstellt. Mit „Änderung speichern“ wird es das Bild auf der Kachel.' : '✓ Bild erstellt. Mit „Vorgabe speichern“ wird es das Bild auf der Kachel.') + '</p>' : ''}
           <div class="row" style="margin-top:12px"><button class="btn pri" style="flex:1" data-a="ai-save" ${canSave ? '' : 'disabled'} ${canSave ? '' : 'title="Erst ein Bild generieren, dann speichern"'}>${editing ? 'Änderung speichern' : 'Vorgabe speichern'}</button>${editing ? '<button class="ghost" data-a="ai-new">Abbrechen</button>' : ''}</div></div>
           <div class="card"><b>Vorgefertigte Stile (${S.ai.prompts.length}/15)</b>
           <div class="aitiles"><button data-a="ai-new"><span class="pic" style="background:#fafafc;border:2px dashed #cfcfd8;color:#6b6b78">+</span><b>Neue Vorgabe</b></button>
@@ -1090,6 +1096,16 @@
           </div><div class="pv"><div class="frame"><b style="display:block;margin-bottom:8px">Vorschau mit Beispielfotos</b><canvas id="wsMz" width="10" height="10"></canvas>
             <b style="display:block;margin:14px 0 8px">Tafel zum Bekleben</b><div id="wsMzBoard"></div></div></div></div>`;
       },
+      lang() {
+        const L = S.x.lang, list = L.list?.length ? L.list : I18N.CODES;
+        const opt = (v, n, nt) => `<option value="${v}" ${(L.guest || '') === v ? 'selected' : ''}${nt ? ' translate="no"' : ''}>${n}</option>`;
+        return `<h1>Sprache ${NEWAPP}</h1><p style="margin:-6px 0 14px;color:#6b6b78">In welcher Sprache Ihre Gäste die Fotobox und die Seite zum Herunterladen sehen</p>
+          <div class="card"><label class="l">Standardsprache für die Gäste</label><select data-s="x.lang.guest" data-rerender="1">${opt('', 'Wie das Menü der Fotobox')}${I18N.LANGS.map(l => opt(l.code, l.name, 1)).join('')}</select>
+            <small style="color:#777;display:block;margin-top:8px">Gilt für alles, was Gäste sehen: Startbildschirm, Auswahl, Countdown, Teilen, Drucken, Formular und die Seite zum Herunterladen hinter dem QR-Code. Texte, die Sie selbst geändert haben, bleiben so, wie Sie sie geschrieben haben.</small></div>
+          <div class="card">${sw('x.lang.pick', 'Flaggen auf dem Startbildschirm', 'Gäste tippen auf eine Flagge und sehen alles in ihrer Sprache. Nach jeder Sitzung springt die Fotobox zurück zur Standardsprache.')}
+            <label class="l" style="margin-top:14px">Angebotene Sprachen</label>
+            <div style="display:flex;flex-wrap:wrap;gap:10px 22px">${I18N.LANGS.map(l => `<label translate="no" style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" data-langl="${l.code}" ${list.includes(l.code) ? 'checked' : ''}>${I18N.flag(l.code, 16)} ${l.name}</label>`).join('')}</div></div>`;
+      },
       gallery() {
         return `<h1>Online-Galerie</h1><div class="card"><b>Freigabe</b>${shareBox()}</div><div class="card">
           <p style="font-weight:600">Datenschutz</p>
@@ -1116,7 +1132,8 @@
     function drawStart() {
       for (const o of ['portrait', 'landscape']) {
         const c = $(root, o === 'landscape' ? '#wsStartL' : '#wsStartP'), note = $(root, o === 'landscape' ? '#wsStartNoteL' : '#wsStartNoteP'); if (!c) continue;
-        const L = screenFor(o);
+        const gl = S.x.lang?.guest || window.PM_LANG || 'de', L = I18N.layout(screenFor(o), gl); // Vorschau in der Sprache der Gäste
+        if (!I18N.has(gl)) { I18N.load(gl).then(() => I18N.has(gl) && drawStart()); }
         if (note) note.textContent = screenOf(o) ? 'gestaltet' : S.startScreen ? 'automatisch angepasst' : 'Standard-Vorschlag';
         FBR.preloadLayout(L).then(() => { const big = FBR.renderLayout(L, { values: vals(), placeholders: true }); c.width = Math.round(big.width / 4); c.height = Math.round(big.height / 4); c.getContext('2d').drawImage(big, 0, 0, c.width, c.height); });
       }
