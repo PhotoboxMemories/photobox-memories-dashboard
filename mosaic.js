@@ -4,62 +4,51 @@
 //   Klebewand:  Jede Kachel wird mit ihrer Feldnummer (z. B. „C7“) gedruckt; die Gäste kleben sie auf die vorher gedruckte Tafel.
 (function (G) {
   'use strict';
-  const DPI = 300, MM = 25.4, SHEET_CM = [15.24, 10.16]; // Fotopapier 6x4 Zoll = 10×15 cm
-  // Feste Kachelgrößen in Zoll (passen genau aufs 6x4-Fotopapier); dazu „Eigene Größe“ in cm (tw × th)
-  const FORMATS = {
-    q2: { name: 'Quadrat 5 × 5 cm', w: 2, h: 2 },
-    r32: { name: 'Quer 7,6 × 5 cm', w: 3, h: 2 },
-    r23: { name: 'Hoch 5 × 7,6 cm', w: 2, h: 3 },
-    q4: { name: 'Quadrat 10 × 10 cm', w: 4, h: 4 },
-    l64: { name: 'Quer 15 × 10 cm (ganzes Foto)', w: 6, h: 4 },
-    p46: { name: 'Hoch 10 × 15 cm (ganzes Foto)', w: 4, h: 6 }
-  };
-  const FORMAT_LIST = [...Object.entries(FORMATS).map(([k, f]) => [k, f.name]), ['custom', 'Eigene Größe (cm)']];
+  const DPI = 300, MM = 25.4, SHEET = [152.4, 101.6]; // Fotopapier 6x4 Zoll = 152,4 × 101,6 mm (10×15)
+  // Frühere feste Kachelgrößen (Zoll) – werden beim Laden alter Einstellungen in mm umgerechnet
+  const OLD_FORMATS = { q2: [2, 2], r32: [3, 2], r23: [2, 3], q4: [4, 4], l64: [6, 4], p46: [4, 6] };
   const MODES = [['both', 'Bildschirm und Klebewand'], ['screen', 'Nur Bildschirm (Fernseher/Beamer)'], ['wall', 'Nur Klebewand (Druck)']];
   const WHO = [['all', 'Jedes Foto automatisch'], ['guest', 'Gast entscheidet (Mosaik-Symbol)']];
   const SHOTS = [['one', 'Ein Foto pro Sitzung'], ['all', 'Alle Fotos einer Sitzung']];
-  const DEF = { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 100, boardH: 100, format: 'q2', tw: 5, th: 5, label: true, boardImage: false };
+  const NUMBERING = [['grid', 'Reihe + Spalte (A1, A2 … C7)'], ['seq', 'Fortlaufend (1, 2, 3 …)']];
+  // Tafel in cm (Höchstmaß), Kachel in mm
+  const DEF = { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'grid', label: true, boardImage: false };
   const MAXN = 100; // höchstens 100 Spalten und 100 Reihen
   const choose = (list, v) => list.some(o => o[0] === v) ? v : list[0][0];
   const int = (v, a, b, d) => { v = Math.round(Number(v)); return Number.isFinite(v) ? Math.min(b, Math.max(a, v)) : d; };
-  const num = (v, a, b, d) => { v = Number(String(v ?? '').replace(',', '.')); return Number.isFinite(v) && v > 0 ? Math.min(b, Math.max(a, Math.round(v * 100) / 100)) : d; };
+  const num = (v, a, b, d) => { v = Number(String(v ?? '').replace(',', '.')); return Number.isFinite(v) && v > 0 ? Math.min(b, Math.max(a, Math.round(v * 10) / 10)) : d; };
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const n2 = v => +Number(v).toFixed(2);
 
-  // Kachelmaß in Zoll – fest oder „Eigene Größe“ (cm). Akzeptiert den Schlüssel einer festen Größe oder die Einstellungen.
-  function tileIn(c) {
-    if (typeof c === 'string') return FORMATS[c] || FORMATS.q2;
-    return c && c.format === 'custom' ? { w: c.tw / 2.54, h: c.th / 2.54 } : FORMATS[c && c.format] || FORMATS.q2;
-  }
-  // Breite des Nummern-Rands (oben Spaltennummern, links Reihenbuchstaben) und Mindestabstand zum Tafelrand, in mm
-  const headMm = t => Math.round(Math.max(12, Math.min(26, Math.min(t.w, t.h) * MM * .4))), PAD = 8;
-  // Rechner: Wie viele Felder passen auf die Tafel? (Tafel abzüglich Nummern-Rand und Abstand, geteilt durch die Kachelgröße)
-  function fitGrid(boardW, boardH, t) {
-    const free = 2 * PAD + headMm(t);
-    return { cols: int(Math.floor((boardW * 10 - free) / (t.w * MM) + 1e-6), 2, MAXN, 2), rows: int(Math.floor((boardH * 10 - free) / (t.h * MM) + 1e-6), 2, MAXN, 2) };
+  // Kachelmaß in Zoll (für Druck und Bild), aus den mm-Angaben
+  const tileIn = c => ({ w: (c && c.tileW || DEF.tileW) / MM, h: (c && c.tileH || DEF.tileH) / MM });
+  // Rechner: so viele Kacheln, wie in die Tafel passen – die Tafel wird dann genau so groß (höchstens das eingegebene Maß)
+  function fitGrid(boardW, boardH, tileW, tileH) {
+    return { cols: int(Math.floor(boardW * 10 / tileW + 1e-6), 2, MAXN, 2), rows: int(Math.floor(boardH * 10 / tileH + 1e-6), 2, MAXN, 2) };
   }
 
   function normalize(x) {
-    const o = x && typeof x === 'object' ? x : {};
-    const format = FORMATS[o.format] || o.format === 'custom' ? o.format : DEF.format;
-    let tw = num(o.tw, 1, SHEET_CM[0], DEF.tw), th = num(o.th, 1, SHEET_CM[0], DEF.th);
-    // eigene Kachel muss auf ein 10×15-Blatt passen (quer oder hoch)
-    if (Math.min(tw, th) > SHEET_CM[1]) { if (tw >= th) th = SHEET_CM[1]; else tw = SHEET_CM[1]; }
+    const o = x && typeof x === 'object' ? x : {}, old = OLD_FORMATS[o.format], cmMm = v => Number(String(v ?? '').replace(',', '.')) * 10;
+    // Kachel in mm; ältere Einstellungen hatten feste Größen (Zoll) oder „Eigene Größe“ in cm
+    let tileW = num(o.tileW ?? (old ? old[0] * MM : o.format === 'custom' ? cmMm(o.tw) : undefined), 10, SHEET[0], DEF.tileW);
+    let tileH = num(o.tileH ?? (old ? old[1] * MM : o.format === 'custom' ? cmMm(o.th) : undefined), 10, SHEET[0], DEF.tileH);
+    if (Math.min(tileW, tileH) > SHEET[1]) { if (tileW >= tileH) tileH = SHEET[1]; else tileW = SHEET[1]; } // muss auf ein 10×15-Blatt passen
     const c = {
       on: o.on === true, mode: choose(MODES, o.mode), who: choose(WHO, o.who), shots: choose(SHOTS, o.shots),
       // https = im Dashboard/an der Fotobox hochgeladen · local: = nur auf dieser Fotobox gespeichert (ohne Anmeldung)
       image: typeof o.image === 'string' && /^(https:\/\/|local:)/.test(o.image) ? o.image : '',
       overlay: int(o.overlay, 0, 90, DEF.overlay), boardW: num(o.boardW, 10, 1000, DEF.boardW), boardH: num(o.boardH, 10, 1000, DEF.boardH),
-      format, tw, th, label: o.label !== false, boardImage: o.boardImage === true
+      tileW, tileH, numbering: choose(NUMBERING, o.numbering), label: o.label !== false, boardImage: o.boardImage === true
     };
-    return Object.assign(c, fitGrid(c.boardW, c.boardH, tileIn(c))); // Spalten und Reihen rechnet die Software aus
+    return Object.assign(c, fitGrid(c.boardW, c.boardH, tileW, tileH)); // Spalten und Reihen rechnet die Software aus
   }
   const screenOn = c => !!(c && c.on && c.mode !== 'wall');
   const wallOn = c => !!(c && c.on && c.mode !== 'screen');
 
-  // Feldnummern wie beim Schiffe-Versenken: Reihe als Buchstabe (A … Z, AA …), Spalte als Zahl → „C7“
+  // Feldnummern: wie beim Schiffe-Versenken (Reihe als Buchstabe A … Z, AA …, Spalte als Zahl → „C7“) oder fortlaufend (1, 2, 3 …)
   function rowName(r) { let s = ''; for (r += 1; r > 0; r = Math.floor((r - 1) / 26)) s = String.fromCharCode(65 + (r - 1) % 26) + s; return s; }
   const cellName = (i, cols) => rowName(Math.floor(i / cols)) + (i % cols + 1);
+  const code = (c, i) => c.numbering === 'seq' ? String(i + 1) : cellName(i, c.cols);
 
   // Wie passen die Kacheln auf ein 6x4-Blatt? Quer oder hoch – je nachdem, wo mehr Kacheln Platz haben.
   function sheetPlan(c) {
@@ -74,48 +63,57 @@
     return { W: p.W, H: p.H, nx: p.nx, ny: p.ny, per, tw: f.w, th: f.h, cut, panel, marks: !panel && (restW > .02 || restH > .02),
       ox: panel ? 0 : restW / 2, oy: panel ? 0 : restH / 2 };
   }
+  // Papier-Tipp: Passen mit einer etwas kleineren Kachel (höchstens 10 % kleiner) mehr Kacheln auf ein Fotoblatt?
+  function paperTip(c) {
+    const now = sheetPlan(c).per, floor1 = v => Math.floor(v * 10) / 10;
+    let best = null;
+    for (const [SW, SH] of [SHEET, [SHEET[1], SHEET[0]]]) {
+      const nx = Math.floor(SW / c.tileW + 1e-6), ny = Math.floor(SH / c.tileH + 1e-6);
+      for (const [w, h] of [[floor1(SW / (nx + 1)), c.tileH], [c.tileW, floor1(SH / (ny + 1))], [floor1(SW / (nx + 1)), floor1(SH / (ny + 1))]]) {
+        if (w < c.tileW * .9 || h < c.tileH * .9) continue;
+        const per = sheetPlan({ tileW: w, tileH: h }).per;
+        if (per > now && (!best || per > best.per || (per === best.per && w * h > best.w * best.h))) best = { w, h, per };
+      }
+    }
+    return best ? { ...best, now } : null;
+  }
 
-  // Maße der Tafel in mm: so groß wie eingegeben, das Raster mittig darauf; oben die Spaltennummern, links die Reihenbuchstaben
+  // Maße der Tafel in mm: genau das Raster aus den Kacheln (höchstens so groß wie eingegeben)
   function board(c) {
-    const t = tileIn(c), cw = t.w * MM, ch = t.h * MM, head = headMm(t), gw = c.cols * cw, gh = c.rows * ch;
-    const W = Math.max(c.boardW * 10, gw + head + 2 * PAD), H = Math.max(c.boardH * 10, gh + head + 2 * PAD);
-    const left = (W - gw - head) / 2, top = (H - gh - head) / 2;
-    return { cw, ch, head, pad: PAD, left, top, x0: left + head, y0: top + head, gw, gh, W, H };
+    const t = tileIn(c), cw = t.w * MM, ch = t.h * MM, gw = c.cols * cw, gh = c.rows * ch;
+    return { cw, ch, head: 0, pad: 0, left: 0, top: 0, x0: 0, y0: 0, gw, gh, W: gw, H: gh };
   }
   function info(c) {
-    const b = board(c), t = tileIn(c), pl = sheetPlan(c), cells = c.cols * c.rows;
-    return { cells, cols: c.cols, rows: c.rows, per: pl.per, sheets: Math.ceil(cells / pl.per), tileCm: [t.w * 2.54, t.h * 2.54],
-      gridCm: [b.gw / 10, b.gh / 10], boardCm: [b.W / 10, b.H / 10], freeCm: [(b.W - b.gw - b.head) / 10, (b.H - b.gh - b.head) / 10],
+    const b = board(c), pl = sheetPlan(c), cells = c.cols * c.rows;
+    return { cells, cols: c.cols, rows: c.rows, per: pl.per, sheets: Math.ceil(cells / pl.per), tileMm: [c.tileW, c.tileH],
+      gridCm: [b.gw / 10, b.gh / 10], boardCm: [b.W / 10, b.H / 10], wantCm: [c.boardW, c.boardH],
       grown: b.W > c.boardW * 10 + .5 || b.H > c.boardH * 10 + .5 };
   }
   const cm = v => (Math.round(v * 10) / 10).toLocaleString('de-DE');
   // Ergebnis des Rechners in Worten (für Fotobox-Menü und Dashboard)
   function summaryHTML(c) {
-    const i = info(c), pl = sheetPlan(c);
+    const i = info(c), pl = sheetPlan(c), tip = paperTip(c);
     return `<div class="big">${i.cols} × ${i.rows} Felder = ${i.cells} Fotos</div>`
-      + `<div>Kachel ${cm(i.tileCm[0])} × ${cm(i.tileCm[1])} cm · Raster ${cm(i.gridCm[0])} × ${cm(i.gridCm[1])} cm auf der Tafel ${cm(i.boardCm[0])} × ${cm(i.boardCm[1])} cm (inkl. Nummern-Rand)</div>`
+      + `<div>Tafel <b>${cm(i.boardCm[0])} × ${cm(i.boardCm[1])} cm</b>${i.grown ? '' : ` (passt in ${cm(i.wantCm[0])} × ${cm(i.wantCm[1])} cm)`} · Kachel ${cm(c.tileW)} × ${cm(c.tileH)} mm</div>`
       + `<div>${i.per} Kachel${i.per > 1 ? 'n' : ''} pro 10×15-Fotoblatt → höchstens ${i.sheets} Blätter${pl.cut === '2inch' ? ' · der Drucker schneidet die Streifen automatisch' : pl.marks ? ' · mit Schnittmarken zum Zuschneiden' : ''}</div>`
-      + (i.grown ? `<div>⚠️ Für diese Kachelgröße ist die Tafel zu klein – sie wird mindestens ${cm(i.boardCm[0])} × ${cm(i.boardCm[1])} cm groß.</div>` : '');
+      + (tip ? `<div>💡 Tipp: Mit ${cm(tip.w)} × ${cm(tip.h)} mm passen ${tip.per} statt ${tip.now} Kacheln auf ein Fotoblatt.</div>` : '')
+      + (i.grown ? `<div>⚠️ Die Tafel ist kleiner als zwei Kacheln – sie wird mindestens ${cm(i.boardCm[0])} × ${cm(i.boardCm[1])} cm groß.</div>` : '');
   }
 
-  // Tafel als SVG-Inhalt (Einheit mm). img = Hauptbild (Adresse oder data-URL), wird nur mit „boardImage“ schwach gezeigt.
+  // Tafel als SVG-Inhalt (Einheit mm): nur das Raster mit der Nummer in jedem Feld.
+  // img = Hauptbild (Adresse oder data-URL), wird nur mit „boardImage“ schwach gezeigt.
   function boardMarkup(c, img) {
-    const b = board(c), o = [], fs = n2(Math.min(b.cw, b.ch) * .22), hs = n2(b.head * .5), L = n2(b.left), T0 = n2(b.top);
+    const b = board(c), o = [], fs = n2(Math.min(b.cw, b.ch) * (c.numbering === 'seq' ? .26 : .22));
     o.push(`<rect width="${n2(b.W)}" height="${n2(b.H)}" fill="#fff"/>`);
-    if (img && c.boardImage) o.push(`<image href="${esc(img)}" x="${n2(b.x0)}" y="${n2(b.y0)}" width="${n2(b.gw)}" height="${n2(b.gh)}" preserveAspectRatio="xMidYMid slice" opacity=".25"/>`);
-    o.push(`<rect x="${n2(b.x0)}" y="${T0}" width="${n2(b.gw)}" height="${b.head}" fill="#F7C838"/><rect x="${L}" y="${n2(b.y0)}" width="${b.head}" height="${n2(b.gh)}" fill="#F7C838"/>`);
-    o.push(`<rect x="${L}" y="${T0}" width="${b.head}" height="${b.head}" fill="#1D1D1B"/>`);
+    if (img && c.boardImage) o.push(`<image href="${esc(img)}" x="0" y="0" width="${n2(b.gw)}" height="${n2(b.gh)}" preserveAspectRatio="xMidYMid slice" opacity=".25"/>`);
     const lines = [];
-    for (let q = 0; q <= c.cols; q++) { const x = n2(b.x0 + q * b.cw); lines.push(`M${x} ${T0}V${n2(b.y0 + b.gh)}`); }
-    for (let r = 0; r <= c.rows; r++) { const y = n2(b.y0 + r * b.ch); lines.push(`M${L} ${y}H${n2(b.x0 + b.gw)}`); }
+    for (let q = 1; q < c.cols; q++) { const x = n2(q * b.cw); lines.push(`M${x} 0V${n2(b.gh)}`); }
+    for (let r = 1; r < c.rows; r++) { const y = n2(r * b.ch); lines.push(`M0 ${y}H${n2(b.gw)}`); }
     o.push(`<path d="${lines.join('')}" stroke="#9a9a9a" stroke-width=".35" fill="none"/>`);
-    o.push(`<rect x="${n2(b.x0)}" y="${n2(b.y0)}" width="${n2(b.gw)}" height="${n2(b.gh)}" fill="none" stroke="#1D1D1B" stroke-width=".8"/>`);
-    const T = (x, y, s, fill, w, t) => `<text x="${n2(x)}" y="${n2(y)}" font-size="${s}" fill="${fill}" font-weight="${w}" text-anchor="middle" dominant-baseline="central" font-family="Arial,Helvetica,sans-serif">${t}</text>`;
-    for (let q = 0; q < c.cols; q++) o.push(T(b.x0 + (q + .5) * b.cw, b.top + b.head / 2, hs, '#1D1D1B', 700, q + 1));
-    for (let r = 0; r < c.rows; r++) o.push(T(b.left + b.head / 2, b.y0 + (r + .5) * b.ch, hs, '#1D1D1B', 700, rowName(r)));
+    o.push(`<rect x=".4" y=".4" width="${n2(b.gw - .8)}" height="${n2(b.gh - .8)}" fill="none" stroke="#1D1D1B" stroke-width=".8"/>`);
     for (let i = 0; i < c.cols * c.rows; i++) {
       const q = i % c.cols, r = Math.floor(i / c.cols);
-      o.push(T(b.x0 + (q + .5) * b.cw, b.y0 + (r + .5) * b.ch, fs, '#8c8c8c', 400, cellName(i, c.cols)));
+      o.push(`<text x="${n2((q + .5) * b.cw)}" y="${n2((r + .5) * b.ch)}" font-size="${fs}" fill="#8c8c8c" text-anchor="middle" dominant-baseline="central" font-family="Arial,Helvetica,sans-serif">${code(c, i)}</text>`);
     }
     return o.join('');
   }
@@ -216,12 +214,12 @@
   }
   // Freie Fläche neben einer großen Kachel: Feldnummer groß und eine kleine Karte, wo das Feld auf der Tafel liegt
   function drawPanel(x, pn, i, c, title) {
-    const L = pn.x * DPI, T = pn.y * DPI, W = pn.w * DPI, H = pn.h * DPI, pad = W * .08, code = cellName(i, c.cols);
+    const L = pn.x * DPI, T = pn.y * DPI, W = pn.w * DPI, H = pn.h * DPI, pad = W * .08, nr = code(c, i);
     x.save(); x.fillStyle = '#F7C838'; x.fillRect(L, T, W, H); x.fillStyle = '#1D1D1B'; x.textAlign = 'center'; x.textBaseline = 'middle';
     x.font = `600 ${Math.round(W * .085)}px Arial, Helvetica, sans-serif`; x.fillText('Klebe mich auf Feld', L + W / 2, T + H * .1);
     let fs = Math.round(W * .42); x.font = `800 ${fs}px Arial, Helvetica, sans-serif`;
-    while (x.measureText(code).width > W - 2 * pad && fs > 40) { fs -= 8; x.font = `800 ${fs}px Arial, Helvetica, sans-serif`; }
-    x.fillText(code, L + W / 2, T + H * .27);
+    while (x.measureText(nr).width > W - 2 * pad && fs > 40) { fs -= 8; x.font = `800 ${fs}px Arial, Helvetica, sans-serif`; }
+    x.fillText(nr, L + W / 2, T + H * .27);
     const f = tileIn(c), ar = c.cols * f.w / (c.rows * f.h), mw = Math.min(W - 2 * pad, (H * .5) * ar), mh = mw / ar, mx = L + (W - mw) / 2, my = T + H * .42;
     x.fillStyle = '#fff'; x.fillRect(mx, my, mw, mh); x.strokeStyle = 'rgba(0,0,0,.18)'; x.lineWidth = 1; x.beginPath();
     for (let q = 1; q < c.cols; q++) { const xx = mx + q * mw / c.cols; x.moveTo(xx, my); x.lineTo(xx, my + mh); }
@@ -244,7 +242,7 @@
       drawCover(x, it.photo, tx, ty, tw, th);
       if (p && alpha > 0) { const s = cellSrc(p, it.i); x.globalAlpha = alpha; x.drawImage(p.img, s[0], s[1], s[2], s[3], tx, ty, tw, th); }
       x.restore();
-      if (c.label) drawCode(x, cellName(it.i, c.cols), tx, ty, tw, th);
+      if (c.label) drawCode(x, code(c, it.i), tx, ty, tw, th);
     });
     if (pl.panel && items[0]) drawPanel(x, pl.panel, items[0].i, c, title);
     if (pl.marks) { // eigene Kachelgröße mit Rand: kurze Schnittmarken an jeder Kachelkante
@@ -257,7 +255,7 @@
     return { canvas: cv, cut: pl.cut, per: pl.per };
   }
 
-  const M = { DPI, FORMATS, FORMAT_LIST, MODES, WHO, SHOTS, DEF, MAXN, normalize, tileIn, fitGrid, screenOn, wallOn, rowName, cellName, sheetPlan, board, info, cm, summaryHTML,
+  const M = { DPI, MODES, WHO, SHOTS, NUMBERING, DEF, MAXN, normalize, tileIn, fitGrid, screenOn, wallOn, rowName, cellName, code, sheetPlan, paperTip, board, info, cm, summaryHTML,
     boardMarkup, boardSVG, printHTML, prepare, cellSrc, cellBox, drawCover, tileCanvas, avgColor, pickCell, drawCell, renderMosaic, renderSheet };
   G.Mosaic = M;
   if (typeof module !== 'undefined' && module.exports) module.exports = M;
