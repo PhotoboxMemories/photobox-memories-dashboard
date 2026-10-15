@@ -396,7 +396,7 @@
     S.ai = AIEvent.normalize(ev.settings?.ai);
     S.x = deepMerge(X_DEF, ev.settings?.x);
     S.layouts = S.layouts || [];
-    let E = { name: ev.name, event_date: ev.event_date, logo_url: ev.logo_url };
+    let E = { name: ev.name, event_date: ev.event_date, logo_url: ev.logo_url, share_token: ev.share_token }; // share_token = Kennung im Freigabe-Link der Galerie
     let page = 'dash', sub = {};
     const root = document.createElement('div'); root.id = 'ws';
     root.innerHTML = `<div class="wtop"><button class="tb mnav" data-a="mnav" title="Menü" aria-label="Menü">☰</button><div class="logo">${LOGO(28)}</div><span class="en"></span><span class="sp"></span>
