@@ -6,14 +6,19 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=20261015-9"></script>
-<script src="icons.js?v=20261015-9"></script>
-<script src="render.js?v=20261015-9"></script>
-<script src="mosaic.js?v=20261015-9"></script>
-<script src="editor.js?v=20261015-9"></script>
-<script src="ai-event.js?v=20261015-9"></script>
-<script src="ai-test.js?v=20261015-9"></script>
-<script src="event.js?v=20261015-9"></script>
+<script>window.I18N_V = '20261015-10';</script>
+<script src="i18n.js?v=20261015-10"></script>
+<script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
+(function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
+  window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
+<script src="config.js?v=20261015-10"></script>
+<script src="icons.js?v=20261015-10"></script>
+<script src="render.js?v=20261015-10"></script>
+<script src="mosaic.js?v=20261015-10"></script>
+<script src="editor.js?v=20261015-10"></script>
+<script src="ai-event.js?v=20261015-10"></script>
+<script src="ai-test.js?v=20261015-10"></script>
+<script src="event.js?v=20261015-10"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -96,6 +101,8 @@ tr:last-child td{border-bottom:0}
   .tablewrap td[data-l]>.row{justify-content:flex-end}
 }
 .tablewrap{overflow-x:auto}
+.langSel{width:auto;padding:5px 8px;font-size:13px;background:transparent;color:inherit;border-color:rgba(255,255,255,.25);cursor:pointer}
+.langSel option{color:#17171c}.langSel.light{border-color:var(--line)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--muted)}
 .dot.on{background:var(--ok)}
 .badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--soft);border:1px solid var(--line)}
@@ -123,7 +130,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
 <!-- ============ Login ============ -->
 <section id="auth" class="hidden">
   <div class="card">
-    <div class="logo" data-logo></div>
+    <div class="row" style="justify-content:space-between"><div class="logo" data-logo></div><select class="langSel light" translate="no" aria-label="Sprache"></select></div>
     <div class="muted small" id="authHint">Melde dich an, um deine Events und Fotoboxen zu verwalten.</div>
     <div><label>E-Mail</label><input type="email" id="aEmail" autocomplete="email"></div>
     <div id="aPwWrap"><label>Passwort</label><input type="password" id="aPw" autocomplete="current-password"></div>
@@ -157,7 +164,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <button data-tab="licenses" data-ic="key">Meine Lizenzen</button>
       <button data-tab="admin" class="hidden" id="navAdmin" data-ic="settings">Verwaltung</button>
     </nav>
-    <div class="row small"><span class="muted" id="who"></span><button class="btn small" id="logout">Abmelden</button></div>
+    <div class="row small"><span class="muted" id="who"></span><select class="langSel" translate="no" aria-label="Sprache"></select><button class="btn small" id="logout">Abmelden</button></div>
   </header>
 
   <main>
@@ -294,6 +301,15 @@ window.pmConfirm = pmConfirm;
 const labelCells = tb => { const hs = [...tb.closest('table').querySelectorAll('thead th')].map(th => th.textContent.trim());
   for (const tr of tb.rows) if (tr.cells.length === hs.length) [...tr.cells].forEach((td, i) => { if (td.dataset.l !== hs[i]) td.dataset.l = hs[i]; }); };
 document.addEventListener('DOMContentLoaded', () => $$('.tablewrap tbody').forEach(tb => { labelCells(tb); new MutationObserver(() => labelCells(tb)).observe(tb, { childList: true }); }));
+// Sprache: alles Sichtbare wird übersetzt (i18n.js). Ein Wechsel lädt die Seite in der neuen Sprache neu.
+I18N.watch(document.body, () => PM_LANG);
+window.I18N_UI = s => I18N.t(s, PM_LANG);
+document.title = I18N_UI(document.title);
+for (const k of ['alert', 'confirm', 'prompt']) { const f = window[k].bind(window); window[k] = (m, ...a) => f(I18N_UI(String(m ?? '')), ...a); }
+$$('.langSel').forEach(sel => {
+  sel.innerHTML = I18N.LANGS.map(l => `<option value="${l.code}" ${l.code === PM_LANG ? 'selected' : ''}>${l.name}</option>`).join('');
+  sel.onchange = () => { try { localStorage.setItem('pm-lang', sel.value); } catch {} location.reload(); };
+});
 const toast = (t, ms = 2200) => { const e = $('#toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => e.style.display = 'none', ms); };
 
 const CFG = window.FOTOBOX_CONFIG || {};
