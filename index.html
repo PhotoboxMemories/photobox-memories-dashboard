@@ -6,19 +6,19 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261015-13';</script>
-<script src="i18n.js?v=20261015-13"></script>
+<script>window.I18N_V = '20261015-14';</script>
+<script src="i18n.js?v=20261015-14"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
   window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-<script src="config.js?v=20261015-13"></script>
-<script src="icons.js?v=20261015-13"></script>
-<script src="render.js?v=20261015-13"></script>
-<script src="mosaic.js?v=20261015-13"></script>
-<script src="editor.js?v=20261015-13"></script>
-<script src="ai-event.js?v=20261015-13"></script>
-<script src="ai-test.js?v=20261015-13"></script>
-<script src="event.js?v=20261015-13"></script>
+<script src="config.js?v=20261015-14"></script>
+<script src="icons.js?v=20261015-14"></script>
+<script src="render.js?v=20261015-14"></script>
+<script src="mosaic.js?v=20261015-14"></script>
+<script src="editor.js?v=20261015-14"></script>
+<script src="ai-event.js?v=20261015-14"></script>
+<script src="ai-test.js?v=20261015-14"></script>
+<script src="event.js?v=20261015-14"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -104,6 +104,13 @@ tr:last-child td{border-bottom:0}
   .tablewrap td[data-l]>.row{justify-content:flex-end}
 }
 .tablewrap{overflow-x:auto}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.plan{display:flex;flex-direction:column;gap:8px}
+.plan .price{font:600 26px/1.15 Fredoka,system-ui,sans-serif}.plan .price small{display:block;font:400 13px system-ui,sans-serif;color:var(--muted);margin-top:2px}
+.plan ul{margin:4px 0 6px 18px;font-size:14px;line-height:1.6;flex:1}
+.plan input{max-width:110px}
+.planrow{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.planrow textarea{min-height:70px}
 .langSel{width:auto;padding:5px 8px;font-size:13px;background:transparent;color:inherit;border-color:rgba(255,255,255,.25);cursor:pointer}
 .langSel option{color:#17171c}.langSel.light{border-color:var(--line)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--muted)}
@@ -210,6 +217,12 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <div class="pagehead"><h1>Meine Lizenzen</h1></div>
       <p class="muted small" style="margin-bottom:14px">In der FotoBox <b>Esc → System</b> öffnen und mit diesem Konto (gleiche E-Mail & Passwort) anmelden – oder den Schlüssel eintragen.</p>
       <div class="cards" id="myLicenses"></div>
+      <div class="card hidden" id="shopCard" style="margin-top:20px">
+        <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Lizenz kaufen</h2><button class="btn hidden" id="shopPortal">Abo &amp; Rechnungen verwalten</button></div>
+        <p class="small muted" id="shopHint" style="margin-bottom:14px"></p>
+        <div class="plans" id="shopPlans"></div>
+        <div class="row hidden" id="trialRow" style="margin-top:16px"><button class="btn primary" id="trialGo">14 Tage kostenlos testen</button><span class="small muted">Ohne Zahlungsdaten · 1 Fotobox · endet von selbst</span></div>
+      </div>
       <div class="card hidden" id="creditCard" style="margin-top:20px">
         <h2>KI-Guthaben</h2>
         <p style="margin:6px 0 14px">Dein Guthaben: <b id="myCredits">–</b> Credits <span class="small muted">· 1 Credit = 1 KI-Bild (1K oder 2K)</span></p>
@@ -228,6 +241,11 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <thead><tr><th>Kunde</th><th>Registriert</th><th>Lizenz</th><th>Fotoboxen</th><th>Guthaben</th><th>Erhalten</th><th>KI-Bilder</th></tr></thead>
           <tbody id="ovCustomers"><tr><td colspan="7" class="empty">Lädt …</td></tr></tbody>
         </table></div>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Tarife (Lizenz-Shop)</h2><button class="btn" id="planAdd">+ Tarif</button></div>
+        <p class="small muted" style="margin:0 0 12px">Preise pro Fotobox, brutto. Kunden sehen nur eingeschaltete Tarife unter „Meine Lizenzen“ und kaufen über Stripe – die Lizenz entsteht nach der Zahlung von selbst. Abos verlängern sich automatisch; gekündigte laufen bis zum Ende der bezahlten Zeit.</p>
+        <div id="planList"><p class="small muted">Lädt …</p></div>
       </div>
       <div class="card" style="margin-bottom:20px">
         <h2>Fotobox-Software veröffentlichen</h2>
@@ -342,6 +360,11 @@ function demoClient() {
       { id: 'l2', key: 'FBX-N4VB-8CEL-TT2Z-QW7S', customer_name: 'Studio Lichtblick', customer_email: 'info@lichtblick.de', owner_id: 'k2', kind: 'subscription', valid_until: iso(9), max_devices: 1, active: true, notes: 'RE-2026-041', devices: [{ id: 'd3' }] },
       { id: 'l3', key: 'FBX-ZP3R-6YHA-M2KD-UE8F', customer_name: 'Event Kids GmbH', customer_email: 'hallo@eventkids.de', owner_id: null, kind: 'subscription', valid_until: iso(-20), max_devices: 2, active: true, devices: [] }
     ],
+    plans: [
+      { id: 'monat', name: 'Monatlich', billing: 'month', cents: 3900, features: 'Alle Funktionen inklusive\nDashboard, Online-Galerie, Fotomosaik, KI-Porträts\nMonatlich kündbar', sort: 1, active: true },
+      { id: 'jahr', name: 'Jährlich', billing: 'year', cents: 39000, features: 'Alle Funktionen inklusive\n2 Monate geschenkt\nUpdates inklusive', sort: 2, active: true },
+      { id: 'kauf', name: 'Einmalkauf', billing: 'once', cents: 69000, features: 'Dauerhaft nutzbar\n1 Jahr Updates inklusive\nDanach Updates optional', sort: 3, active: true }
+    ],
     leads: [
       { id: 'g1', captured_at: iso(-0.1), event_name: 'Hochzeit Anna & Tim', events: { name: 'Hochzeit Anna & Tim' }, name: 'Lisa Berger', email: 'lisa@example.de', phone: '', newsletter: true, photo_name: 'fotobox_20261010_2011.jpg' },
       { id: 'g2', captured_at: iso(-0.12), event_name: 'Hochzeit Anna & Tim', events: { name: 'Hochzeit Anna & Tim' }, name: 'Jonas Weber', email: 'jonas@example.de', phone: '0170 1234567', newsletter: false, photo_name: 'fotobox_20261010_2004.jpg' }
@@ -361,7 +384,8 @@ function demoClient() {
     from: q,
     rpc: async () => { toast('Demo-Modus – Änderungen werden nicht gespeichert', 2600); return { data: 0, error: null }; },
     // Demo: „KI“ gibt einfach das Testfoto zurück, damit sich der Ablauf ohne Kosten zeigen lässt
-    functions: { invoke: async (name, o) => name === 'ai-generate' ? { data: { image: o.body.image, model: 'demo' }, error: null } : { data: { message: 'Demo-Modus – keine echte Verbindung' }, error: null } },
+    functions: { invoke: async (name, o) => name === 'ai-generate' ? { data: { image: o.body.image, model: 'demo' }, error: null }
+      : name === 'license-shop' && o?.body?.action === 'status' ? { data: { ready: true }, error: null } : { data: { message: 'Demo-Modus – keine echte Verbindung' }, error: null } },
     auth: {
       onAuthStateChange: cb => setTimeout(() => cb('SIGNED_IN', { user: { id: 'demo', email: 'demo@fotobox.de' } }), 0),
       signOut: () => { toast('Demo-Modus'); }, signInWithPassword: async () => ({}), signUp: async () => ({}),
@@ -430,7 +454,7 @@ async function boot() {
   $('#navAdmin').classList.toggle('hidden', !profile.is_admin);
   $$('.adminCol').forEach(e => e.classList.toggle('hidden', !profile.is_admin));
   await Promise.all([loadEvents(), loadDevices(), loadLicenses()]);
-  loadMyCredits();
+  loadMyCredits(); loadShop(); loadPlans();
   loadSoftware();
   if (profile.is_admin) { loadRelease(); loadCredits(); loadOverview(); }
 }
@@ -682,11 +706,12 @@ async function loadLicenses() {
   licenses = data;
   const mine = licenses.filter(l => l.owner_id === me.id);
   $('#myLicenses').innerHTML = mine.length ? mine.map(l => `<div class="card" style="display:flex;flex-direction:column;gap:8px">
-      <b>${kindName(l.kind)}</b>
+      <b>${l.trial ? 'Testphase' : kindName(l.kind)}${l.plan && !l.trial ? ` <span class="small muted">· ${esc(l.plan)}</span>` : ''}</b>
       <div><code class="key" data-copy="${esc(l.key)}" title="Klicken zum Kopieren">${esc(l.key)}</code></div>
       <div>${licStatus(l)}</div>
       <div class="small muted">Geräte: ${l.devices.length} von ${l.max_devices}</div>
-    </div>`).join('') : '<div class="card empty" style="grid-column:1/-1">Keine Lizenz mit deiner E-Mail gefunden. Bitte melde dich beim Verkäufer.</div>';
+    </div>`).join('') : `<div class="card empty" style="grid-column:1/-1">${shop.plans.length ? 'Noch keine Lizenz. Teste 14 Tage kostenlos oder kaufe unten eine Lizenz.' : 'Keine Lizenz mit deiner E-Mail gefunden. Bitte melde dich beim Verkäufer.'}</div>`;
+  renderShop();
   if (profile.is_admin) { renderAdmin(); renderOverview(); }
 }
 document.addEventListener('click', e => {
@@ -853,6 +878,102 @@ $('#creditPacks').addEventListener('click', async e => {
   const k = new URLSearchParams(location.search).get('kauf');
   if (k) { history.replaceState(null, '', location.pathname); setTimeout(() => toast(k === 'ok' ? 'Danke! Die Zahlung ist eingegangen – das Guthaben wird in wenigen Sekunden gutgeschrieben.' : 'Kauf abgebrochen – es wurde nichts berechnet.', 7000), 800); }
 }
+/* ---------- Lizenz kaufen (Stripe): Tarife, 14 Tage testen, Abo verwalten ---------- */
+let shop = { plans: [], ready: false };
+const PER = { month: 'pro Monat', year: 'pro Jahr', once: 'einmalig' };
+const devN = v => Math.max(1, Math.min(50, Math.round(+v || 1)));
+async function loadShop() {
+  if (!me || !$('#shopCard')) return;
+  const [p, st] = await Promise.all([sb.from('plans').select('*').eq('active', true).order('sort'), sb.functions.invoke('license-shop', { body: { action: 'status' } })]);
+  shop = { plans: p.error ? [] : [].concat(p.data || []).filter(x => x.active !== false && x.cents > 0), ready: !st.error && !!st.data?.ready };
+  renderShop();
+}
+function renderShop() {
+  if (!me || !$('#shopCard')) return;
+  const mine = licenses.filter(l => l.owner_id === me.id), bought = mine.some(l => l.stripe_customer);
+  $('#shopCard').classList.toggle('hidden', !shop.plans.length && !bought);
+  $('#shopPortal').classList.toggle('hidden', !bought || !shop.ready);
+  $('#trialRow').classList.toggle('hidden', !!mine.length || !shop.plans.length);
+  $('#shopHint').textContent = shop.ready ? 'Preise pro Fotobox inkl. MwSt. Bezahlung sicher über Stripe. Die Lizenz wird direkt nach der Zahlung freigeschaltet – eine Testlizenz läuft dabei einfach weiter.'
+    : 'Der Kauf wird gerade eingerichtet und ist bald verfügbar.';
+  $('#shopPlans').innerHTML = shop.plans.map(p => `<div class="card plan" data-plan="${esc(p.id)}">
+      <b>${esc(p.name)}</b><div class="price">${euro(p.cents)}<small>${PER[p.billing] || ''} · pro Fotobox</small></div>
+      <ul>${String(p.features || '').split('\n').map(f => f.trim()).filter(Boolean).map(f => `<li>${esc(f)}</li>`).join('')}</ul>
+      <label>Anzahl Fotoboxen</label><input type="number" min="1" max="50" value="1" data-dev>
+      <div class="small muted" data-sum><span>Zusammen</span> <b>${euro(p.cents)}</b> <span>${PER[p.billing] || ''}</span></div>
+      <button class="btn primary" data-buy ${shop.ready ? '' : 'disabled'}>Jetzt kaufen</button></div>`).join('');
+}
+$('#shopPlans').addEventListener('input', e => {
+  const c = e.target.closest('.plan'), p = c && shop.plans.find(x => x.id === c.dataset.plan); if (!p || !e.target.matches('[data-dev]')) return;
+  c.querySelector('[data-sum] b').textContent = euro(p.cents * devN(e.target.value));
+});
+$('#shopPlans').addEventListener('click', async e => {
+  const b = e.target.closest('[data-buy]'); if (!b) return;
+  const c = b.closest('.plan'); b.disabled = true;
+  const { data, error } = await sb.functions.invoke('license-shop', { body: { action: 'checkout', plan: c.dataset.plan, devices: devN(c.querySelector('[data-dev]').value) } });
+  if (error || !/^https:\/\/checkout\.stripe\.com\//.test(data?.url || '')) { b.disabled = false; return toast(data?.error || 'Die Bezahlseite konnte nicht geöffnet werden.', 5000); }
+  location.href = data.url;
+});
+$('#shopPortal').onclick = async () => {
+  $('#shopPortal').disabled = true;
+  const { data, error } = await sb.functions.invoke('license-shop', { body: { action: 'portal' } });
+  $('#shopPortal').disabled = false;
+  if (error || !/^https:\/\/billing\.stripe\.com\//.test(data?.url || '')) return toast(data?.error || 'Die Verwaltung bei Stripe konnte nicht geöffnet werden.', 5000);
+  location.href = data.url;
+};
+$('#trialGo').onclick = async () => {
+  $('#trialGo').disabled = true;
+  const { error } = await sb.rpc('start_trial');
+  $('#trialGo').disabled = false;
+  if (error) return toast(error.message, 5000);
+  toast('Deine Testlizenz läuft 14 Tage. Melde dich in der Fotobox mit diesem Konto an – oder trage dort den Schlüssel ein.', 8000);
+  loadLicenses();
+};
+{ // Rückkehr von der Bezahlseite (Lizenz)
+  const k = new URLSearchParams(location.search).get('lizenz');
+  if (k) { history.replaceState(null, '', location.pathname); setTimeout(() => toast(k === 'ok' ? 'Danke! Die Zahlung ist eingegangen – deine Lizenz wird in wenigen Sekunden freigeschaltet.' : 'Kauf abgebrochen – es wurde nichts berechnet.', 7000), 800);
+    if (k === 'ok') setTimeout(() => me && loadLicenses(), 6000); }
+}
+// Verwaltung: Tarife pflegen
+const BILLING = [['month', 'Abo monatlich'], ['year', 'Abo jährlich'], ['once', 'Einmalkauf']];
+async function loadPlans() {
+  if (!profile?.is_admin || !$('#planList')) return;
+  const { data, error } = await sb.from('plans').select('*').order('sort');
+  if (error) { $('#planList').innerHTML = `<p class="small" style="color:var(--warn)">${/relation|does not exist|schema cache/i.test(error.message) ? 'Der Lizenz-Shop ist auf dem Server noch nicht eingerichtet (supabase/migrations/202610150001_lizenz_shop.sql im SQL Editor ausführen).' : esc(error.message)}</p>`; return; }
+  const list = [].concat(data || []);
+  $('#planList').innerHTML = list.length ? list.map(p => `<div class="planrow" data-id="${esc(p.id)}" data-sort="${p.sort || 0}">
+      <div class="grid3"><div><label>Name</label><input data-f="name" value="${esc(p.name)}"></div>
+        <div><label>Abrechnung</label><select data-f="billing">${BILLING.map(([k, n]) => `<option value="${k}" ${p.billing === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+        <div><label>Preis pro Fotobox (€, brutto)</label><input data-f="price" type="number" min="0" step="0.01" value="${(p.cents / 100).toFixed(2)}"></div>
+        <div style="grid-column:1/-1"><label>Vorteile (eine Zeile pro Vorteil)</label><textarea data-f="features" rows="3">${esc(p.features)}</textarea></div></div>
+      <div class="row" style="margin-top:10px"><label class="row" style="margin:0;color:var(--fg);font-weight:400;font-size:14px"><input type="checkbox" data-f="active" ${p.active ? 'checked' : ''}> Für Kunden sichtbar</label>
+        <span style="flex:1"></span><span class="small muted">Kennung ${esc(p.id)}</span><button class="btn small danger" data-plan-del>Löschen</button><button class="btn small primary" data-plan-save>Speichern</button></div></div>`).join('')
+    : '<p class="small muted">Noch keine Tarife – mit „+ Tarif“ anlegen.</p>';
+}
+$('#planList').addEventListener('click', async e => {
+  const row = e.target.closest('.planrow'); if (!row) return;
+  const id = row.dataset.id, f = k => row.querySelector(`[data-f="${k}"]`);
+  if (e.target.closest('[data-plan-del]')) {
+    if (!await pmConfirm(`Tarif „${f('name').value}“ löschen? Gekaufte Lizenzen bleiben bestehen.`)) return;
+    const { error } = await sb.from('plans').delete().eq('id', id);
+    if (error) return toast(error.message, 5000);
+    toast('Tarif gelöscht'); loadPlans(); loadShop(); return;
+  }
+  if (!e.target.closest('[data-plan-save]')) return;
+  const cents = Math.round(parseFloat(String(f('price').value).replace(',', '.')) * 100);
+  if (!f('name').value.trim() || !(cents >= 0)) return toast('Bitte Name und Preis eintragen.');
+  if (f('active').checked && !(cents > 0)) return toast('Ein sichtbarer Tarif braucht einen Preis über 0 €.', 5000);
+  const { error } = await sb.from('plans').update({ name: f('name').value.trim(), billing: f('billing').value, cents, features: f('features').value.trim(), active: f('active').checked }).eq('id', id);
+  if (error) return toast(error.message, 5000);
+  toast('Tarif gespeichert'); loadPlans(); loadShop();
+});
+$('#planAdd').onclick = async () => {
+  const sort = Math.max(0, ...[...document.querySelectorAll('#planList .planrow')].map(r => +r.dataset.sort || 0)) + 1;
+  const id = 'tarif-' + Date.now().toString(36);
+  const { error } = await sb.from('plans').insert({ id, name: 'Neuer Tarif', billing: 'month', cents: 0, features: '', sort, active: false });
+  if (error) return toast(error.message, 5000);
+  loadPlans();
+};
 /* ---------- Übersicht (Verwaltung): wer ist registriert, wer hat wie viel Guthaben bekommen und verbraucht ---------- */
 let ov = null;
 async function loadOverview() {
