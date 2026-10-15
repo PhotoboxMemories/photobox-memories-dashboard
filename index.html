@@ -6,14 +6,14 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="config.js?v=20261015-2"></script>
-<script src="icons.js?v=20261015-2"></script>
-<script src="render.js?v=20261015-2"></script>
-<script src="mosaic.js?v=20261015-2"></script>
-<script src="editor.js?v=20261015-2"></script>
-<script src="ai-event.js?v=20261015-2"></script>
-<script src="ai-test.js?v=20261015-2"></script>
-<script src="event.js?v=20261015-2"></script>
+<script src="config.js?v=20261015-3"></script>
+<script src="icons.js?v=20261015-3"></script>
+<script src="render.js?v=20261015-3"></script>
+<script src="mosaic.js?v=20261015-3"></script>
+<script src="editor.js?v=20261015-3"></script>
+<script src="ai-event.js?v=20261015-3"></script>
+<script src="ai-test.js?v=20261015-3"></script>
+<script src="event.js?v=20261015-3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e4e4ea;--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -191,6 +191,11 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <thead><tr><th>Kunde</th><th>Registriert</th><th>Lizenz</th><th>Fotoboxen</th><th>Guthaben</th><th>Erhalten</th><th>KI-Bilder</th></tr></thead>
           <tbody id="ovCustomers"><tr><td colspan="7" class="empty">Lädt …</td></tr></tbody>
         </table></div>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <h2>Fotobox-Software veröffentlichen</h2>
+        <p class="small muted" style="margin:0 0 10px">Neue Installationsdatei <b>FotoBox-Setup-…exe</b> auswählen (liegt nach jedem Bau auf dem Schreibtisch und in Dropbox unter „Photobox Memories Installer“). Sie wird in den privaten Software-Bereich hochgeladen; danach bietet „Neueste Version herunterladen“ unter „Geräte“ genau diese Version an – für alle Kunden.</p>
+        <div class="row"><input type="file" id="relFile" accept=".exe" class="hidden"><button class="btn" id="relPick">⬆ Installationsdatei wählen …</button><span class="small" id="relState"></span></div>
       </div>
       <div class="card" style="margin-bottom:20px">
         <h2>Foto-Speicher (Hetzner)</h2>
@@ -640,6 +645,32 @@ document.addEventListener('click', e => {
 });
 
 /* ---------- Verwaltung (Admin) ---------- */
+// Neue Fotobox-Software veröffentlichen: Datei direkt in den privaten Software-Bereich hochladen und als neueste Version eintragen
+$('#relPick').onclick = () => $('#relFile').click();
+$('#relFile').onchange = async e => {
+  const f = e.target.files[0], st = $('#relState'); e.target.value = ''; if (!f) return;
+  const ver = (f.name.match(/(\d+\.\d+\.\d+)/) || [])[1];
+  if (!/\.exe$/i.test(f.name) || !ver) { st.textContent = '❌ Bitte die Datei „FotoBox-Setup-…exe“ mit Versionsnummer im Namen wählen.'; return; }
+  if (f.size < 20e6 || f.size > 400e6) { st.textContent = '❌ Das sieht nicht nach der Fotobox-Installationsdatei aus.'; return; }
+  $('#relPick').disabled = true;
+  try {
+    const t = (await sb.auth.getSession()).data.session?.access_token;
+    st.textContent = 'Bereite vor …';
+    const { url } = await FOTOBOX_PHOTOS.call({ action: 'release', version: ver }, t);
+    await new Promise((ok, no) => {
+      const x = new XMLHttpRequest(); x.open('PUT', url);
+      x.upload.onprogress = ev => { if (ev.lengthComputable) st.textContent = `Lädt Version ${ver} hoch … ${Math.round(ev.loaded / ev.total * 100)} %`; };
+      x.onload = () => x.status < 300 ? ok() : no(new Error('Hochladen fehlgeschlagen (' + x.status + ')'));
+      x.onerror = () => no(new Error('Hochladen fehlgeschlagen – bitte Internet prüfen'));
+      x.send(f);
+    });
+    st.textContent = 'Trage als neueste Version ein …';
+    const info = await FOTOBOX_PHOTOS.call({ action: 'release', version: ver, publish: true, size: f.size }, t);
+    st.textContent = `✅ Version ${info.version} ist jetzt die neueste – unter „Geräte“ zum Herunterladen.`;
+    loadSoftware();
+  } catch (err) { st.textContent = '❌ ' + err.message; }
+  $('#relPick').disabled = false;
+};
 // Foto-Speicher bei Hetzner einrichten und prüfen (Supabase-Funktion „photo-store“, nur Betreiber)
 $('#hzState').textContent = window.FOTOBOX_PHOTOS?.external ? 'Aktiv: neue Fotos gehen zu Hetzner.' : 'Noch nicht aktiv: neue Fotos gehen zu Supabase.';
 $('#hzSetup').onclick = async () => {
