@@ -118,7 +118,7 @@
   #ws .tb{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit}
   #ws .sp{flex:1}
   #ws .wbody{flex:1;display:flex;min-height:0}
-  #ws nav.side{width:250px;background:#fff;border-right:1px solid #e6e6ec;overflow:auto;padding:12px 0;flex:none}
+  #ws nav.side{display:block;width:250px;background:#fff;border-right:1px solid #e6e6ec;overflow:auto;padding:12px 0;flex:none}
   #ws nav.side .back{display:block;padding:8px 18px 14px;color:#444;cursor:pointer;font-size:13px}
   #ws nav.side h6{margin:16px 18px 6px;font-size:12px;letter-spacing:.06em;color:#222;text-transform:uppercase}
   #ws nav.side a{display:flex;gap:10px;align-items:center;padding:9px 18px;color:#333;cursor:pointer;border-left:3px solid transparent;text-decoration:none}
@@ -310,6 +310,35 @@
   #ws .mzRes .big{font:600 20px/1.25 Fredoka,system-ui,sans-serif;color:#1D1D1B;margin-bottom:2px}
   #ws #wsMz{display:block;max-width:100%;max-height:52vh;margin:0 auto;border-radius:8px;background:#111}
   #wsModal .btn{border:1px solid #F7C838;background:#F7C838;color:#1D1D1B;border-radius:999px;padding:9px 20px;cursor:pointer;font:inherit;font-weight:600}
+  #ws .mnav,#ws .navshade{display:none}
+  /* Handy und kleine Tablets: Menü als ausklappbare Leiste, Inhalt über die volle Breite, Vorschau unter den Einstellungen */
+  @media(max-width:820px){
+    #ws .wtop{gap:8px;padding:0 10px;height:52px}
+    #ws .mnav{display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;padding:5px 11px}
+    #ws .wtop .logo .pm-logo>span{display:none!important}
+    #ws .wtop .en{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+    #ws .wtop .sp,#ws .wtop .st,#ws .tb .tl{display:none}
+    #ws .tb{padding:7px 9px}
+    #ws nav.side{position:fixed;left:0;top:52px;bottom:0;z-index:60;width:min(300px,84vw);transform:translateX(-102%);transition:transform .25s ease;box-shadow:4px 0 24px rgba(0,0,0,.18)}
+    #ws.navopen nav.side{transform:none}
+    #ws .navshade{position:fixed;inset:52px 0 0 0;background:rgba(0,0,0,.35);z-index:55}
+    #ws.navopen .navshade{display:block}
+    #ws main.wm{padding:14px 12px 90px}
+    #ws h1{font-size:20px;flex-wrap:wrap}
+    #ws .cols{flex-direction:column;gap:14px}
+    #ws .cols>.left{min-width:0;max-width:none;width:100%}
+    #ws .pv{width:100%;position:static}
+    #ws .card{padding:14px;max-width:none}
+    #ws .tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;max-width:none}
+    #ws .tabs button{white-space:nowrap;padding:10px}
+    #ws .between{flex-wrap:wrap}
+    #ws .dcards,#ws .charts{grid-template-columns:1fr}
+    #ws .dacts{gap:4px 12px}
+    #ws table.shares{display:block;overflow-x:auto}
+    #ws .gal{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+    #ws .evhead input{font-size:16px}
+    #wsModal .box{width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0}
+  }
   `;
   const $ = (r, s) => r.querySelector(s), $$ = (r, s) => [...r.querySelectorAll(s)];
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -369,9 +398,9 @@
     let E = { name: ev.name, event_date: ev.event_date, logo_url: ev.logo_url };
     let page = 'dash', sub = {};
     const root = document.createElement('div'); root.id = 'ws';
-    root.innerHTML = `<div class="wtop"><div class="logo">${LOGO(28)}</div><span class="en"></span><span class="sp"></span>
-      <span class="st"></span><button class="tb" data-a="sharelink">${ICON('share', 16)} Teilen</button><button class="tb" data-a="preview">${ICON('eye', 16)} Vorschau</button></div>
-      <div class="wbody"><nav class="side"></nav><main class="wm"></main></div>`;
+    root.innerHTML = `<div class="wtop"><button class="tb mnav" data-a="mnav" title="Menü" aria-label="Menü">☰</button><div class="logo">${LOGO(28)}</div><span class="en"></span><span class="sp"></span>
+      <span class="st"></span><button class="tb" data-a="sharelink" title="Teilen">${ICON('share', 16)}<span class="tl"> Teilen</span></button><button class="tb" data-a="preview" title="Vorschau">${ICON('eye', 16)}<span class="tl"> Vorschau</span></button></div>
+      <div class="wbody"><nav class="side"></nav><div class="navshade"></div><main class="wm"></main></div>`;
     document.body.appendChild(root);
     const side = $(root, 'nav.side'), main = $(root, 'main.wm');
 
@@ -420,10 +449,12 @@
       $(root, '.en').textContent = E.name;
     }
     side.addEventListener('click', e => {
-      const a = e.target.closest('a[data-p]'); if (a) { page = a.dataset.p; renderNav(); render(); }
+      const a = e.target.closest('a[data-p]'); if (a) { page = a.dataset.p; root.classList.remove('navopen'); renderNav(); render(); main.scrollTop = 0; }
       if (e.target.closest('[data-a="back"]')) close();
     });
+    $(root, '.navshade').addEventListener('click', () => root.classList.remove('navopen'));
     $(root, '.wtop').addEventListener('click', async e => {
+      if (e.target.closest('[data-a="mnav"]')) return root.classList.toggle('navopen'); // Handy: Menü ein-/ausklappen
       if (e.target.closest('[data-a="preview"]')) previewAll();
       if (e.target.closest('[data-a="sharelink"]')) { // Link zur Online-Galerie kopieren
         const link = shareLink();
