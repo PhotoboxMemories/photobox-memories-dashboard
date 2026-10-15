@@ -53,6 +53,19 @@
   #le .themes button i{display:block;aspect-ratio:9/14;border-radius:8px;margin-bottom:4px;border:1px solid #e3e3ea} #le .themes button.on{border-color:#F7C838}
   #le .cat{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.04em;margin:14px 0 6px}
   #le .sw{width:18px;height:18px;border-radius:4px;border:1px solid #ccc;display:inline-block;vertical-align:middle}
+  /* Handy: Leinwand oben, Werkzeuge und Einstellungen unten als Leiste zum Wischen */
+  @media(max-width:820px){
+    #le .top{height:52px;padding:0 8px;gap:6px}
+    #le .top .st{display:none}
+    #le .top .tb{padding:7px 9px}
+    #le .top input{width:auto;flex:1;min-width:60px}
+    #le .body{flex-direction:column-reverse}
+    #le .side{width:100%;max-height:46%;flex:none;border-right:0;border-top:1px solid #e3e3ea;box-shadow:0 -6px 20px rgba(0,0,0,.06)}
+    #le .rail{flex-direction:row;gap:14px;padding:12px 14px;overflow-x:auto}
+    #le .tool{flex:none;min-width:64px}
+    #le .hint{display:none}
+    #le .h{width:22px;height:22px;margin:-11px 0 0 -11px}
+  }
   `;
   const $ = (r, s) => r.querySelector(s);
   const clone = o => JSON.parse(JSON.stringify(o));
@@ -93,7 +106,8 @@
     function draw() { if (!raf) raf = requestAnimationFrame(() => { raf = 0; FBR.renderLayout(L, { values: opts.values, placeholders: true }, cv); drawSel(); }); }
     function fit() {
       const r = stage.getBoundingClientRect();
-      scale = Math.min((r.width - 60) / L.w, (r.height - 70) / L.h);
+      const m = r.width < 600 ? 24 : 60; // auf dem Handy weniger Rand, damit die Leinwand möglichst groß ist
+      scale = Math.min((r.width - m) / L.w, (r.height - m - 10) / L.h);
       page.style.width = L.w * scale + 'px'; page.style.height = L.h * scale + 'px';
       drawSel();
     }
