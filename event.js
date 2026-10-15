@@ -344,7 +344,7 @@
       originals: true, deleteBtn: true, deleteText: 'Wiederholen', cloud: true, uploadOriginals: true, origUp: false },
     print: { btnText: 'Drucken', printingText: 'Drucken...', copiesText: 'Wie viele Kopien?' },
     gallery: { link: false, guests: false, downloadAll: false, password: '' },
-    mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 100, boardH: 100, format: 'q2', tw: 5, th: 5, label: true, boardImage: false },
+    mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'grid', label: true, boardImage: false },
     ai: { skip: false, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Porträt erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
   };
   const deepMerge = (def, val) => { const out = structuredClone(def); if (val && typeof val === 'object' && !Array.isArray(val)) for (const [k, v] of Object.entries(val)) out[k] = out[k] && typeof out[k] === 'object' && !Array.isArray(out[k]) ? deepMerge(out[k], v) : v; return out; };
@@ -637,8 +637,7 @@
       if (a === 'gal-copy') { const link = shareLink(); try { await navigator.clipboard.writeText(link); ctx.toast('Link kopiert'); } catch { ctx.toast(link, 8000); } return; }
       if (a === 'mz-fit') {
         const c = Mosaic.normalize(S.x.mosaic); if (!mzv.img) return ctx.toast('Das Hauptbild lädt noch – bitte gleich noch einmal.');
-        const b = Mosaic.board(c), free = (b.head + 2 * b.pad) / 10; // Raster bekommt das Seitenverhältnis des Hauptbilds
-        S.x.mosaic.boardH = Math.round(free + (c.boardW - free) / (mzv.img.naturalWidth / mzv.img.naturalHeight)); save(); render(); return;
+        S.x.mosaic.boardH = Math.round(c.boardW / (mzv.img.naturalWidth / mzv.img.naturalHeight)); save(); render(); return; // Seitenverhältnis des Hauptbilds
       }
       if (a === 'mz-pdf') return mzPrintBoard(t.dataset.k);
       if (a === 'edit1') { const l = S.layouts[0]; if (l) editLayout(l.id); else pickTemplate(vals(), addLayout); }
@@ -1028,7 +1027,7 @@
       },
       // Fotomosaik: viele Gästefotos ergeben ein großes Bild (Bildschirm und/oder Klebewand mit nummerierter Tafel)
       mosaic() {
-        const c = Mosaic.normalize(S.x.mosaic), fmts = Mosaic.FORMAT_LIST.map(([k, n]) => [k, k === 'custom' ? n : `${n} · ${Mosaic.sheetPlan(k).per} pro 10×15-Blatt`]);
+        const c = Mosaic.normalize(S.x.mosaic);
         const cmIn = (p, v, min, max, step) => `<input type="number" data-s="x.mosaic.${p}" data-num="1" min="${min}" max="${max}" step="${step}" value="${v}" style="width:110px">`;
         return `${titleSw('Fotomosaik', 'x.mosaic.on')}<div class="cols"><div class="left">
           <div class="card"><p style="margin-top:0">Aus vielen kleinen Gästefotos entsteht ein großes Bild – live auf einem Fernseher oder Beamer und/oder als Klebewand: Jede Kachel wird mit ihrer Feldnummer (z. B. „C7“) gedruckt und auf die vorher gedruckte Tafel geklebt. ${NEWAPP}</p>
@@ -1037,10 +1036,10 @@
           <h2>Hauptbild</h2><div class="card">${up('x.mosaic.image', '', 'image/*', 'Foto mit klaren Formen, z. B. das Brautpaar oder ein Logo')}
             ${slider('x.mosaic.overlay', 'Deckkraft des Hauptbilds über den Fotos', 0, 90, 5, '%')}
             <p style="color:#777;font-size:13px">0 % = nur die Gästefotos · 30–50 % = das große Bild ist gut zu erkennen und die Gesichter auch.</p></div>
-          <h2>Tafel-Rechner</h2><div class="card"><p style="margin-top:0;color:#555;font-size:13px">Tafelgröße und Kachelgröße eingeben – die Software rechnet aus, wie viele Felder (Fotos) auf die Tafel passen.</p>
-            <label class="l">Tafelgröße</label><div class="row" style="gap:8px;flex-wrap:wrap">${cmIn('boardW', c.boardW, 10, 1000, 1)}<span>cm breit ×</span>${cmIn('boardH', c.boardH, 10, 1000, 1)}<span>cm hoch</span></div>
-            <label class="l">Kachelgröße (Foto)</label><select data-s="x.mosaic.format" data-rerender="1">${fmts.map(([k, n]) => `<option value="${k}" ${k === c.format ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
-            ${c.format === 'custom' ? `<label class="l">Eigene Kachelgröße</label><div class="row" style="gap:8px;flex-wrap:wrap">${cmIn('tw', c.tw, 1, 15.2, .1)}<span>cm breit ×</span>${cmIn('th', c.th, 1, 15.2, .1)}<span>cm hoch</span></div>` : ''}
+          <h2>Tafel-Rechner</h2><div class="card"><p style="margin-top:0;color:#555;font-size:13px">Tafel (Höchstmaß) und Kachelgröße eingeben – die Software rechnet aus, wie viele Felder (Fotos) passen. Die Tafel wird genau so groß, dass die Kacheln aufgehen, also höchstens so groß wie eingegeben.</p>
+            <label class="l">Tafelgröße (höchstens)</label><div class="row" style="gap:8px;flex-wrap:wrap">${cmIn('boardW', c.boardW, 10, 1000, 1)}<span>cm breit ×</span>${cmIn('boardH', c.boardH, 10, 1000, 1)}<span>cm hoch</span></div>
+            <label class="l">Kachelgröße (Foto)</label><div class="row" style="gap:8px;flex-wrap:wrap">${cmIn('tileW', c.tileW, 10, 152.4, .1)}<span>mm breit ×</span>${cmIn('tileH', c.tileH, 10, 152.4, .1)}<span>mm hoch</span></div>
+            ${sel('x.mosaic.numbering', 'Feldnummern', Mosaic.NUMBERING)}
             <div class="mzRes" id="wsMzInfo"></div>
             <button class="ghost" data-a="mz-fit" ${c.image ? '' : 'disabled'} style="margin:4px 0 10px">Tafelhöhe passend zum Hauptbild</button>
             ${sw('x.mosaic.label', 'Feldnummer auf jede Kachel drucken')}${sw('x.mosaic.boardImage', 'Hauptbild schwach auf der Tafel zeigen')}
