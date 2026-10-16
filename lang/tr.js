@@ -1642,6 +1642,7 @@ I18N.add('tr', {
 "Sonnenuntergang": "Gün batımı",
 "Soundtrack hinzufügen (MP3, max. 3 MB)": "Müzik ekle (MP3, en fazla 3 MB)",
 "Soundtracks": "Müzikler",
+"Spalte x Reihe (0x0, 1x0, 2x0 …)": "Sütun x satır (0x0, 1x0, 2x0 …)",
 "Speichere …": "Kaydediliyor …",
 "Speichern": "Kaydet",
 "Speichern & prüfen": "Kaydet ve kontrol et",
