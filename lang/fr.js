@@ -1642,6 +1642,7 @@ I18N.add('fr', {
 "Sonnenuntergang": "Coucher de soleil",
 "Soundtrack hinzufügen (MP3, max. 3 MB)": "Ajouter une bande son (MP3, 3 Mo max.)",
 "Soundtracks": "Bandes son",
+"Spalte x Reihe (0x0, 1x0, 2x0 …)": "Colonne x ligne (0x0, 1x0, 2x0 …)",
 "Speichere …": "Enregistrement …",
 "Speichern": "Enregistrer",
 "Speichern & prüfen": "Enregistrer & vérifier",
