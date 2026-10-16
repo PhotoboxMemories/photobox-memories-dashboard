@@ -1642,6 +1642,7 @@ I18N.add('it', {
 "Sonnenuntergang": "Tramonto",
 "Soundtrack hinzufügen (MP3, max. 3 MB)": "Aggiungi colonna sonora (MP3, max 3 MB)",
 "Soundtracks": "Colonne sonore",
+"Spalte x Reihe (0x0, 1x0, 2x0 …)": "Colonna x riga (0x0, 1x0, 2x0 …)",
 "Speichere …": "Salvataggio …",
 "Speichern": "Salva",
 "Speichern & prüfen": "Salva e verifica",
