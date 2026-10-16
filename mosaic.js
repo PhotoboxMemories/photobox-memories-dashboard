@@ -10,10 +10,10 @@
   const MODES = [['both', 'Bildschirm und Klebewand'], ['screen', 'Nur Bildschirm (Fernseher/Beamer)'], ['wall', 'Nur Klebewand (Druck)']];
   const WHO = [['all', 'Jedes Foto automatisch'], ['guest', 'Gast entscheidet (Mosaik-Symbol)']];
   const SHOTS = [['one', 'Ein Foto pro Sitzung'], ['all', 'Alle Fotos einer Sitzung']];
-  const NUMBERING = [['grid', 'Reihe + Spalte (A1, A2 … C7)'], ['seq', 'Fortlaufend (1, 2, 3 …)']];
+  const NUMBERING = [['xy', 'Spalte x Reihe (0x0, 1x0, 2x0 …)'], ['grid', 'Reihe + Spalte (A1, A2 … C7)'], ['seq', 'Fortlaufend (1, 2, 3 …)']];
   const PAPERS = [['photo', 'Fotopapier 10×15 (mehrere Kacheln pro Blatt)'], ['label', 'Etiketten/Aufkleber (eine Kachel pro Etikett)']];
   // Tafel in cm (Höchstmaß), Kachel in mm
-  const DEF = { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'grid', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false };
+  const DEF = { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false };
   const MAXN = 100; // höchstens 100 Spalten und 100 Reihen
   const choose = (list, v) => list.some(o => o[0] === v) ? v : list[0][0];
   const int = (v, a, b, d) => { v = Math.round(Number(v)); return Number.isFinite(v) ? Math.min(b, Math.max(a, v)) : d; };
@@ -52,7 +52,8 @@
   // Feldnummern: wie beim Schiffe-Versenken (Reihe als Buchstabe A … Z, AA …, Spalte als Zahl → „C7“) oder fortlaufend (1, 2, 3 …)
   function rowName(r) { let s = ''; for (r += 1; r > 0; r = Math.floor((r - 1) / 26)) s = String.fromCharCode(65 + (r - 1) % 26) + s; return s; }
   const cellName = (i, cols) => rowName(Math.floor(i / cols)) + (i % cols + 1);
-  const code = (c, i) => c.numbering === 'seq' ? String(i + 1) : cellName(i, c.cols);
+  // xy: Spalte x Reihe ab 0, oben links „0x0“, nach rechts „1x0“, darunter „0x1“
+  const code = (c, i) => c.numbering === 'seq' ? String(i + 1) : c.numbering === 'xy' ? `${i % c.cols}x${Math.floor(i / c.cols)}` : cellName(i, c.cols);
 
   // Wie passen die Kacheln auf ein 6x4-Blatt? Quer oder hoch – je nachdem, wo mehr Kacheln Platz haben.
   // Etikettendrucker: eine Kachel pro Etikett in genau Kachelgröße (Etikettengröße stellt man im Druckertreiber ein), kein Schnitt.
@@ -109,20 +110,20 @@
       + (i.grown ? `<div>⚠️ Die Tafel ist kleiner als zwei Kacheln – sie wird mindestens ${cm(i.boardCm[0])} × ${cm(i.boardCm[1])} cm groß.</div>` : '');
   }
 
-  // Tafel als SVG-Inhalt (Einheit mm): nur das Raster mit der Nummer in jedem Feld.
+  // Tafel als SVG-Inhalt (Einheit mm): weiß, dünne graue Linien, die Nummer klein und grau in der Mitte jedes Feldes.
   // img = Hauptbild (Adresse oder data-URL), wird nur mit „boardImage“ schwach gezeigt.
   function boardMarkup(c, img) {
-    const b = board(c), o = [], fs = n2(Math.min(b.cw, b.ch) * (c.numbering === 'seq' ? .26 : .22));
+    const b = board(c), o = [], fs = n2(Math.min(b.cw, b.ch) * (c.numbering === 'xy' ? .1 : c.numbering === 'seq' ? .16 : .14));
     o.push(`<rect width="${n2(b.W)}" height="${n2(b.H)}" fill="#fff"/>`);
     if (img && c.boardImage) o.push(`<image href="${esc(img)}" x="0" y="0" width="${n2(b.gw)}" height="${n2(b.gh)}" preserveAspectRatio="xMidYMid slice" opacity=".25"/>`);
     const lines = [];
     for (let q = 1; q < c.cols; q++) { const x = n2(q * b.cw); lines.push(`M${x} 0V${n2(b.gh)}`); }
     for (let r = 1; r < c.rows; r++) { const y = n2(r * b.ch); lines.push(`M0 ${y}H${n2(b.gw)}`); }
-    o.push(`<path d="${lines.join('')}" stroke="#9a9a9a" stroke-width=".35" fill="none"/>`);
-    o.push(`<rect x=".4" y=".4" width="${n2(b.gw - .8)}" height="${n2(b.gh - .8)}" fill="none" stroke="#1D1D1B" stroke-width=".8"/>`);
+    o.push(`<path d="${lines.join('')}" stroke="#8c8c8c" stroke-width=".35" fill="none"/>`);
+    o.push(`<rect x=".25" y=".25" width="${n2(b.gw - .5)}" height="${n2(b.gh - .5)}" fill="none" stroke="#8c8c8c" stroke-width=".5"/>`);
     for (let i = 0; i < c.cols * c.rows; i++) {
       const q = i % c.cols, r = Math.floor(i / c.cols);
-      o.push(`<text x="${n2((q + .5) * b.cw)}" y="${n2((r + .5) * b.ch)}" font-size="${fs}" fill="#8c8c8c" text-anchor="middle" dominant-baseline="central" font-family="Arial,Helvetica,sans-serif">${code(c, i)}</text>`);
+      o.push(`<text x="${n2((q + .5) * b.cw)}" y="${n2((r + .5) * b.ch)}" font-size="${fs}" font-weight="700" fill="#888" text-anchor="middle" dominant-baseline="central" font-family="Arial,Helvetica,sans-serif">${code(c, i)}</text>`);
     }
     return o.join('');
   }
