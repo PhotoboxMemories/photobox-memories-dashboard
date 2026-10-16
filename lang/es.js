@@ -1642,6 +1642,7 @@ I18N.add('es', {
 "Sonnenuntergang": "Atardecer",
 "Soundtrack hinzufügen (MP3, max. 3 MB)": "Añadir banda sonora (MP3, máx. 3 MB)",
 "Soundtracks": "Bandas sonoras",
+"Spalte x Reihe (0x0, 1x0, 2x0 …)": "Columna x fila (0x0, 1x0, 2x0 …)",
 "Speichere …": "Guardando …",
 "Speichern": "Guardar",
 "Speichern & prüfen": "Guardar y comprobar",
