@@ -13,7 +13,7 @@
   const NUMBERING = [['xy', 'Spalte x Reihe (0x0, 1x0, 2x0 …)'], ['grid', 'Reihe + Spalte (A1, A2 … C7)'], ['seq', 'Fortlaufend (1, 2, 3 …)']];
   const PAPERS = [['photo', 'Fotopapier 10×15 (mehrere Kacheln pro Blatt)'], ['label', 'Etiketten/Aufkleber (eine Kachel pro Etikett)']];
   // Tafel in cm (Höchstmaß), Kachel in mm
-  const DEF = { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false };
+  const DEF = { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false, round: 0 };
   const MAXN = 100; // höchstens 100 Spalten und 100 Reihen
   const choose = (list, v) => list.some(o => o[0] === v) ? v : list[0][0];
   const int = (v, a, b, d) => { v = Math.round(Number(v)); return Number.isFinite(v) ? Math.min(b, Math.max(a, v)) : d; };
@@ -42,7 +42,8 @@
       image: typeof o.image === 'string' && /^(https:\/\/|local:)/.test(o.image) ? o.image : '',
       overlay: int(o.overlay, 0, 90, DEF.overlay), boardW: num(o.boardW, 10, 1000, DEF.boardW), boardH: num(o.boardH, 10, 1000, DEF.boardH),
       tileW, tileH, numbering: choose(NUMBERING, o.numbering), paper, label: o.label !== false,
-      codeSize: int(o.codeSize, 50, 300, DEF.codeSize), codeAlpha: int(o.codeAlpha, 10, 100, DEF.codeAlpha), boardImage: o.boardImage === true
+      codeSize: int(o.codeSize, 50, 300, DEF.codeSize), codeAlpha: int(o.codeAlpha, 10, 100, DEF.codeAlpha), boardImage: o.boardImage === true,
+      round: int(o.round, 0, 1e14, 0) // „Mosaik neu starten“: Zeitpunkt des Neustarts, ergibt ein neues, leeres Mosaik
     };
     return Object.assign(c, fitGrid(c.boardW, c.boardH, tileW, tileH)); // Spalten und Reihen rechnet die Software aus
   }
