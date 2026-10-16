@@ -13,7 +13,7 @@
   const NUMBERING = [['grid', 'Reihe + Spalte (A1, A2 … C7)'], ['seq', 'Fortlaufend (1, 2, 3 …)']];
   const PAPERS = [['photo', 'Fotopapier 10×15 (mehrere Kacheln pro Blatt)'], ['label', 'Etiketten/Aufkleber (eine Kachel pro Etikett)']];
   // Tafel in cm (Höchstmaß), Kachel in mm
-  const DEF = { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'grid', paper: 'photo', label: true, boardImage: false };
+  const DEF = { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'grid', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false };
   const MAXN = 100; // höchstens 100 Spalten und 100 Reihen
   const choose = (list, v) => list.some(o => o[0] === v) ? v : list[0][0];
   const int = (v, a, b, d) => { v = Math.round(Number(v)); return Number.isFinite(v) ? Math.min(b, Math.max(a, v)) : d; };
@@ -41,7 +41,8 @@
       // https = im Dashboard/an der Fotobox hochgeladen · local: = nur auf dieser Fotobox gespeichert (ohne Anmeldung)
       image: typeof o.image === 'string' && /^(https:\/\/|local:)/.test(o.image) ? o.image : '',
       overlay: int(o.overlay, 0, 90, DEF.overlay), boardW: num(o.boardW, 10, 1000, DEF.boardW), boardH: num(o.boardH, 10, 1000, DEF.boardH),
-      tileW, tileH, numbering: choose(NUMBERING, o.numbering), paper, label: o.label !== false, boardImage: o.boardImage === true
+      tileW, tileH, numbering: choose(NUMBERING, o.numbering), paper, label: o.label !== false,
+      codeSize: int(o.codeSize, 50, 300, DEF.codeSize), codeAlpha: int(o.codeAlpha, 10, 100, DEF.codeAlpha), boardImage: o.boardImage === true
     };
     return Object.assign(c, fitGrid(c.boardW, c.boardH, tileW, tileH)); // Spalten und Reihen rechnet die Software aus
   }
@@ -224,10 +225,12 @@
       ctx.stroke(); ctx.restore();
     }
   }
-  // Feldnummer klein unten rechts: nur schwarze Schrift, ohne Kästchen (soll auf der Wand nicht auffallen)
-  function drawCode(x, code, tx, ty, tw, th) {
-    const fs = Math.round(Math.max(22, Math.min(46, Math.min(tw, th) * .045))), m = fs * .5;
-    x.save(); x.font = `600 ${fs}px Arial, Helvetica, sans-serif`; x.fillStyle = '#000';
+  // Feldnummer klein unten rechts: nur schwarze Schrift, ohne Kästchen (soll auf der Wand nicht auffallen).
+  // Größe (codeSize %) und Stärke (codeAlpha %: 100 = tiefschwarz, kleiner = blasser) sind einstellbar.
+  function drawCode(x, code, tx, ty, tw, th, c) {
+    const k = (c && c.codeSize || DEF.codeSize) / 100, a = (c && c.codeAlpha || DEF.codeAlpha) / 100;
+    const fs = Math.round(Math.min(Math.min(tw, th) * .4, Math.max(22, Math.min(46, Math.min(tw, th) * .045)) * k)), m = fs * .5;
+    x.save(); x.font = `600 ${fs}px Arial, Helvetica, sans-serif`; x.fillStyle = `rgba(0,0,0,${a})`;
     x.textAlign = 'right'; x.textBaseline = 'alphabetic'; x.fillText(code, tx + tw - m, ty + th - m); x.restore();
   }
   // Freie Fläche neben einer großen Kachel: Feldnummer groß und eine kleine Karte, wo das Feld auf der Tafel liegt
@@ -264,7 +267,7 @@
       drawCover(x, it.photo, tx, ty, tw, th);
       if (p && alpha > 0) { const s = cellSrc(p, it.i); x.globalAlpha = alpha; x.drawImage(p.img, s[0], s[1], s[2], s[3], tx, ty, tw, th); }
       x.restore();
-      if (c.label) drawCode(x, code(c, it.i), tx, ty, tw, th);
+      if (c.label) drawCode(x, code(c, it.i), tx, ty, tw, th, c);
     });
     if (pl.panel && items[0]) drawPanel(x, pl.panel, items[0].i, c, title);
     if (pl.marks) { // eigene Kachelgröße mit Rand: kurze Schnittmarken an jeder Kachelkante
@@ -277,8 +280,15 @@
     return { canvas: cv, cut: pl.cut, per: pl.per };
   }
 
+  // Vorschau einer einzelnen gedruckten Kachel (Foto + Hauptbild mit Deckkraft + Feldnummer) in cv, längere Seite höchstens max px.
+  // Gezeichnet wird in Druckauflösung und dann verkleinert, damit die Feldnummer genau so groß wirkt wie auf dem Druck.
+  function drawTilePreview(cv, photo, p, i, c, max = 260) {
+    const s = renderSheet([{ i, photo }], p, { ...c, paper: 'label' }).canvas, k = max / Math.max(s.width, s.height);
+    cv.width = Math.round(s.width * k); cv.height = Math.round(s.height * k);
+    const x = cv.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(s, 0, 0, cv.width, cv.height);
+  }
   const M = { DPI, MODES, WHO, SHOTS, NUMBERING, PAPERS, DEF, MAXN, normalize, tileIn, fitGrid, screenOn, wallOn, rowName, cellName, code, sheetPlan, paperTip, board, info, cm, summaryHTML,
-    boardMarkup, boardSVG, printHTML, prepare, cellSrc, cellBox, cropRect, drawCover, tileCanvas, avgColor, pickCell, drawCell, renderMosaic, renderSheet };
+    boardMarkup, boardSVG, printHTML, prepare, cellSrc, cellBox, cropRect, drawCover, tileCanvas, avgColor, pickCell, drawCell, renderMosaic, renderSheet, drawTilePreview };
   G.Mosaic = M;
   if (typeof module !== 'undefined' && module.exports) module.exports = M;
 })(typeof window !== 'undefined' ? window : globalThis);
