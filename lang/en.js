@@ -1642,6 +1642,7 @@ I18N.add('en', {
 "Sonnenuntergang": "Sunset",
 "Soundtrack hinzufügen (MP3, max. 3 MB)": "Add soundtrack (MP3, max. 3 MB)",
 "Soundtracks": "Soundtracks",
+"Spalte x Reihe (0x0, 1x0, 2x0 …)": "Column x row (0x0, 1x0, 2x0 …)",
 "Speichere …": "Saving …",
 "Speichern": "Save",
 "Speichern & prüfen": "Save & check",
