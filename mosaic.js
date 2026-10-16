@@ -233,7 +233,11 @@
   // Freie Fläche neben einer großen Kachel: Feldnummer groß und eine kleine Karte, wo das Feld auf der Tafel liegt
   function drawPanel(x, pn, i, c, title) {
     const L = pn.x * DPI, T = pn.y * DPI, W = pn.w * DPI, H = pn.h * DPI, pad = W * .08, nr = code(c, i);
-    x.save(); x.fillStyle = '#F7C838'; x.fillRect(L, T, W, H); x.fillStyle = '#1D1D1B'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    // weiß statt gelb (spart Farbe, fällt nicht auf); gestrichelte Linie zeigt, wo die Kachel abgeschnitten wird
+    x.save(); x.fillStyle = '#fff'; x.fillRect(L, T, W, H);
+    x.strokeStyle = 'rgba(0,0,0,.35)'; x.lineWidth = 2; x.setLineDash([14, 10]); x.beginPath();
+    if (pn.x > 0) { x.moveTo(L + 1, T); x.lineTo(L + 1, T + H); } else { x.moveTo(L, T + 1); x.lineTo(L + W, T + 1); }
+    x.stroke(); x.setLineDash([]); x.fillStyle = '#1D1D1B'; x.textAlign = 'center'; x.textBaseline = 'middle';
     x.font = `600 ${Math.round(W * .085)}px Arial, Helvetica, sans-serif`; x.fillText('Klebe mich auf Feld', L + W / 2, T + H * .1);
     let fs = Math.round(W * .42); x.font = `800 ${fs}px Arial, Helvetica, sans-serif`;
     while (x.measureText(nr).width > W - 2 * pad && fs > 40) { fs -= 8; x.font = `800 ${fs}px Arial, Helvetica, sans-serif`; }
