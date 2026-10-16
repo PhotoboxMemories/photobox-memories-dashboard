@@ -402,7 +402,7 @@
     print: { btnText: 'Drucken', printingText: 'Drucken...', copiesText: 'Wie viele Kopien?' },
     gallery: { link: false, guests: false, downloadAll: false, password: '' },
     lang: { guest: '', pick: false, list: [] }, // Gästesprache: '' = wie das Menü der Fotobox
-    mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'grid', paper: 'photo', label: true, boardImage: false },
+    mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'grid', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false },
     ai: { skip: false, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Porträt erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
   };
   const deepMerge = (def, val) => { const out = structuredClone(def); if (val && typeof val === 'object' && !Array.isArray(val)) for (const [k, v] of Object.entries(val)) out[k] = out[k] && typeof out[k] === 'object' && !Array.isArray(out[k]) ? deepMerge(out[k], v) : v; return out; };
@@ -1104,7 +1104,10 @@
             <p style="color:#777;font-size:13px">„Gast entscheidet“: Neben QR-Code und Drucken erscheint an der Fotobox das grüne Mosaik-Symbol – nur wer darauf tippt, kommt ins Mosaik.</p></div>
           <h2>Hauptbild</h2><div class="card">${up('x.mosaic.image', '', 'image/*', 'Foto mit klaren Formen, z. B. das Brautpaar oder ein Logo')}
             ${slider('x.mosaic.overlay', 'Deckkraft des Hauptbilds über den Fotos', 0, 90, 5, '%')}
-            <p style="color:#777;font-size:13px">0 % = nur die Gästefotos · 30–50 % = das große Bild ist gut zu erkennen und die Gesichter auch.</p></div>
+            <p style="color:#777;font-size:13px">0 % = nur die Gästefotos · 30–50 % = das große Bild ist gut zu erkennen und die Gesichter auch.</p>
+            ${sw('x.mosaic.label', 'Feldnummer auf jede Kachel drucken')}
+            ${slider('x.mosaic.codeSize', 'Größe der Feldnummer', 50, 300, 10, '%')}${slider('x.mosaic.codeAlpha', 'Stärke der Feldnummer', 10, 100, 5, '%')}
+            <p style="color:#777;font-size:13px">100 % = normale Größe und tiefschwarz. Mit weniger Stärke wird die Nummer blasser und fällt auf der Wand weniger auf. Rechts siehst du sofort, wie eine gedruckte Kachel aussieht.</p></div>
           <h2>Tafel-Rechner</h2><div class="card"><p style="margin-top:0;color:#555;font-size:13px">Tafel (Höchstmaß) und Kachelgröße eingeben – die Software rechnet aus, wie viele Felder (Fotos) passen. Die Tafel wird genau so groß, dass die Kacheln aufgehen, also höchstens so groß wie eingegeben.</p>
             <label class="l">Tafelgröße (höchstens)</label><div class="row" style="gap:8px;flex-wrap:wrap">${cmIn('boardW', c.boardW, 10, 1000, 1)}<span>cm breit ×</span>${cmIn('boardH', c.boardH, 10, 1000, 1)}<span>cm hoch</span></div>
             <label class="l">Kachelgröße (Foto)</label><div class="row" style="gap:8px;flex-wrap:wrap">${cmIn('tileW', c.tileW, 10, 152.4, .1)}<span>mm breit ×</span>${cmIn('tileH', c.tileH, 10, 152.4, .1)}<span>mm hoch</span></div>
@@ -1112,11 +1115,14 @@
             ${sel('x.mosaic.numbering', 'Feldnummern', Mosaic.NUMBERING)}
             <div class="mzRes" id="wsMzInfo"></div>
             <button class="ghost" data-a="mz-fit" ${c.image ? '' : 'disabled'} style="margin:4px 0 10px">Tafelhöhe passend zum Hauptbild</button>
-            ${sw('x.mosaic.label', 'Feldnummer auf jede Kachel drucken')}${sw('x.mosaic.boardImage', 'Hauptbild schwach auf der Tafel zeigen')}
+            ${sw('x.mosaic.boardImage', 'Hauptbild schwach auf der Tafel zeigen')}
             <div class="row" style="flex-wrap:wrap"><button class="btn pri" data-a="mz-pdf" data-k="full">${ICON('printer', 15)} Tafel drucken – Originalgröße</button><button class="ghost" data-a="mz-pdf" data-k="a4">${ICON('printer', 15)} Tafel auf A4-Blättern</button></div>
             <p style="color:#777;font-size:13px">Im Druckfenster als Ziel „Als PDF speichern“ wählen – die Größe ist schon eingestellt. Die Originalgröße ist für eine Druckerei (z. B. Forex- oder Kapa-Platte), die A4-Blätter zum Zusammenkleben. Jedes Feld ist genau so groß wie eine Kachel.</p></div>
           <div class="card" style="background:#FFFAEA">Welcher Drucker die Kacheln druckt und auf welchem Fernseher/Beamer das Mosaik läuft, stellst du direkt an der Fotobox ein: Menü → <b>Fotomosaik</b>. Dort lässt sich die Tafel ebenfalls als PDF speichern.</div>
-          </div><div class="pv"><div class="frame"><b style="display:block;margin-bottom:8px">Vorschau mit Beispielfotos</b><canvas id="wsMz" width="10" height="10"></canvas>
+          </div><div class="pv"><div class="frame"><b style="display:block;margin-bottom:8px">So wird eine Kachel gedruckt</b>
+            <canvas id="wsMzTile" width="10" height="10" style="display:block;margin:0 auto 4px;max-width:100%;background:#fff;box-shadow:0 0 0 1px #ddd,0 4px 12px rgba(0,0,0,.15)"></canvas>
+            <small id="wsMzTileNote" style="display:block;text-align:center;color:#777;margin-bottom:14px"></small>
+            <b style="display:block;margin-bottom:8px">Vorschau mit Beispielfotos</b><canvas id="wsMz" width="10" height="10"></canvas>
             <b style="display:block;margin:14px 0 8px">Tafel zum Bekleben</b><div id="wsMzBoard"></div></div></div></div>`;
       },
       lang() {
@@ -1192,7 +1198,22 @@
       return fThumbCache[css] = c.toDataURL('image/jpeg', .8);
     }
     // Fotomosaik: Vorschau mit Beispielfotos, Tafel und Maße (ändert sich sofort beim Schieben der Regler)
-    const mzv = { url: '', img: null, ph: {} };
+    const mzv = { url: '', img: null, ph: {}, smp: null, smpKind: '' };
+    // Beispiel für die Kachel-Vorschau: das neueste Foto dieses Ereignisses, sonst ein Platzhalter
+    function mzSample() {
+      if (mzv.smp) return;
+      if (!gal.list) { if (!gal.loading) loadGallery().then(() => { if (gal.list) drawMosaic(); }).catch(() => {}); return; }
+      mzv.smp = FBR.placeholder(1, 900, 900); mzv.smpKind = 'demo';
+      const it = gal.list.find(x => /_original\d*\.(jpe?g|png)$/i.test(x.name || x.path || '')) || gal.list.find(x => /\.(jpe?g|png)$/i.test(x.name || x.path || '') && !/\.gif$/i.test(x.path || ''));
+      if (it) { const im = new Image(); im.onload = () => { mzv.smp = im; mzv.smpKind = 'event'; drawMosaic(); }; im.src = galUrl(it.thumb || it.path); }
+    }
+    function drawMosaicTile(c, p) {
+      const cv = $(root, '#wsMzTile'), note = $(root, '#wsMzTileNote'); if (!cv) return;
+      mzSample(); const photo = mzv.smp || FBR.placeholder(1, 900, 900);
+      const i = Math.floor(c.rows / 2) * c.cols + Math.floor(c.cols / 2);
+      try { Mosaic.drawTilePreview(cv, photo, p, i, c, 260); } catch { return; }
+      if (note) note.textContent = (mzv.smpKind === 'event' ? 'Mit dem neuesten Foto dieses Ereignisses' : 'Mit einem Beispielfoto') + (p ? '' : ' · ohne Hauptbild');
+    }
     function drawMosaic() {
       const cv = $(root, '#wsMz'), box = $(root, '#wsMzBoard'), infoEl = $(root, '#wsMzInfo'); if (!cv) return;
       const c = Mosaic.normalize(S.x.mosaic);
@@ -1205,10 +1226,11 @@
       const f = Mosaic.tileIn(c), ar = c.cols * f.w / (c.rows * f.h), x = cv.getContext('2d');
       cv.width = ar >= 1 ? 640 : Math.round(640 * ar); cv.height = Math.round(cv.width / ar);
       const note = t => { x.fillStyle = '#111'; x.fillRect(0, 0, cv.width, cv.height); x.fillStyle = '#aaa'; x.font = '16px system-ui,sans-serif'; x.textAlign = 'center'; x.fillText(t, cv.width / 2, cv.height / 2); };
-      if (!mzv.img) return note(c.image ? 'Hauptbild lädt …' : 'Bitte ein Hauptbild hochladen');
+      if (!mzv.img) { drawMosaicTile(c, null); return note(c.image ? 'Hauptbild lädt …' : 'Bitte ein Hauptbild hochladen'); }
       try {
         const key = f.w.toFixed(3) + 'x' + f.h.toFixed(3), ph = mzv.ph[key] ||= [...Array(8)].map((_, k) => Mosaic.tileCanvas(FBR.placeholder(k, 400, 400), c, 120));
         const p = Mosaic.prepare(mzv.img, c), tiles = new Map();
+        drawMosaicTile(c, p);
         for (let i = 0; i < p.n; i++) tiles.set(i, ph[(i * 7 + (i >> 3)) % 8]);
         Mosaic.renderMosaic(x, p, tiles, cv.width, cv.height, { overlay: c.overlay, bg: '#111' });
       } catch { note('Vorschau nicht möglich'); }
