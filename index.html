@@ -6,19 +6,19 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261016-7';</script>
-<script src="i18n.js?v=20261016-7"></script>
+<script>window.I18N_V = '20261016-8';</script>
+<script src="i18n.js?v=20261016-8"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
   window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-<script src="config.js?v=20261016-7"></script>
-<script src="icons.js?v=20261016-7"></script>
-<script src="render.js?v=20261016-7"></script>
-<script src="mosaic.js?v=20261016-7"></script>
-<script src="editor.js?v=20261016-7"></script>
-<script src="ai-event.js?v=20261016-7"></script>
-<script src="ai-test.js?v=20261016-7"></script>
-<script src="event.js?v=20261016-7"></script>
+<script src="config.js?v=20261016-8"></script>
+<script src="icons.js?v=20261016-8"></script>
+<script src="render.js?v=20261016-8"></script>
+<script src="mosaic.js?v=20261016-8"></script>
+<script src="editor.js?v=20261016-8"></script>
+<script src="ai-event.js?v=20261016-8"></script>
+<script src="ai-test.js?v=20261016-8"></script>
+<script src="event.js?v=20261016-8"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -272,10 +272,11 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <div class="grid3">
           <div><label>Kunde / Firma</label><input id="lName" placeholder="Musterfoto GmbH"></div>
           <div><label>E-Mail des Kunden</label><input id="lEmail" type="email" placeholder="kunde@beispiel.de"></div>
-          <div><label>Art</label><select id="lKind"><option value="subscription">Abo</option><option value="lifetime">Einmalkauf</option></select></div>
+          <div><label>Art</label><select id="lKind"><option value="subscription">Abo</option><option value="lifetime">Einmalkauf</option><option value="test">Testversion (läuft, bis du sie beendest)</option></select></div>
           <div id="lValidWrap"><label>Abo bezahlt bis</label><input id="lValid" type="date"></div>
           <div id="lUpdWrap" class="hidden"><label>Updates inklusive bis (leer = immer)</label><input id="lUpd" type="date"></div>
           <div><label>Anzahl Geräte</label><input id="lMax" type="number" min="1" value="1"></div>
+          <div id="lCreditsWrap" class="hidden"><label>KI-Credits dazu (für KI-Porträts)</label><input id="lCredits" type="number" min="0" max="1000" value="20"></div>
           <div style="grid-column:1/-1"><label>Notiz (z.B. Rechnungsnummer)</label><input id="lNotes"></div>
         </div>
         <div class="row" style="margin-top:14px"><button class="btn primary" id="lCreate">Lizenz erstellen</button><span class="small muted">Der Kunde registriert sich im Dashboard mit derselben E-Mail – die Lizenz wird automatisch zugeordnet.</span></div>
@@ -707,7 +708,11 @@ $('#leadDelete').onclick = async () => {
 };
 
 /* ---------- Lizenzen ---------- */
+// Testversion: technisch ein Abo bis Ende 2099 (die Datenbank kennt nur Abo/Einmalkauf) – beendet wird sie per „Test beenden“ (= sperren)
+const TEST_UNTIL = '2099-12-31T23:59:59.000Z';
+const isTestLic = l => l.kind === 'subscription' && !!l.valid_until && new Date(l.valid_until).getUTCFullYear() >= 2099;
 function licStatus(l) {
+  if (isTestLic(l)) return l.active ? '<span class="badge ok">läuft, bis du den Test beendest</span>' : '<span class="badge bad">Test beendet</span>';
   if (!l.active) return '<span class="badge bad">deaktiviert</span>';
   if (l.kind === 'lifetime') {
     const upd = !l.updates_until || new Date(l.updates_until) > new Date();
@@ -719,19 +724,20 @@ function licStatus(l) {
     : `<span class="badge ${days < 14 ? 'warn' : 'ok'}">bis ${fmtDate(l.valid_until)}</span>`;
 }
 const kindName = k => k === 'lifetime' ? 'Einmalkauf' : 'Abo';
+const licKind = l => l.trial ? 'Testphase' : isTestLic(l) ? 'Testversion' : kindName(l.kind);
 async function loadLicenses() {
   const { data, error } = await sb.from('licenses').select('*, devices(id)').order('created_at', { ascending: false });
   if (error) return toast('Fehler: ' + error.message);
   licenses = data;
   const mine = licenses.filter(l => l.owner_id === me.id);
   $('#myLicenses').innerHTML = mine.length ? mine.map(l => `<div class="card" style="display:flex;flex-direction:column;gap:8px">
-      <b>${l.trial ? 'Testphase' : kindName(l.kind)}${l.plan && !l.trial ? ` <span class="small muted">· ${esc(l.plan)}</span>` : ''}</b>
+      <b>${licKind(l)}${l.plan && !l.trial ? ` <span class="small muted">· ${esc(l.plan)}</span>` : ''}</b>
       <div><code class="key" data-copy="${esc(l.key)}" title="Klicken zum Kopieren">${esc(l.key)}</code></div>
       <div>${licStatus(l)}</div>
       <div class="small muted">Geräte: ${l.devices.length} von ${l.max_devices}</div>
     </div>`).join('') : `<div class="card empty" style="grid-column:1/-1">${shop.plans.length ? 'Noch keine Lizenz. Teste 14 Tage kostenlos oder kaufe unten eine Lizenz.' : 'Keine Lizenz mit deiner E-Mail gefunden. Bitte melde dich beim Verkäufer.'}</div>`;
   renderShop();
-  if (profile.is_admin) { renderAdmin(); renderOverview(); }
+  if (profile.is_admin) { renderAdmin(); renderOverview(); grantPendingCredits(); }
 }
 document.addEventListener('click', e => {
   const k = e.target.dataset?.copy; if (!k) return;
@@ -784,25 +790,51 @@ $('#hzSetup').onclick = async () => {
   b.disabled = false;
 };
 $('#lKind').onchange = () => {
-  const life = $('#lKind').value === 'lifetime';
-  $('#lValidWrap').classList.toggle('hidden', life); $('#lUpdWrap').classList.toggle('hidden', !life);
+  const k = $('#lKind').value, life = k === 'lifetime';
+  $('#lValidWrap').classList.toggle('hidden', k !== 'subscription'); $('#lUpdWrap').classList.toggle('hidden', !life);
+  $('#lCreditsWrap').classList.toggle('hidden', k !== 'test');
 };
+// KI-Credits einer Testversion: sofort buchen, wenn der Tester schon ein Konto hat – sonst in der Notiz vormerken
+// („20 KI-Credits offen“) und beim nächsten Öffnen der Verwaltung buchen, sobald er sich registriert hat.
+const CREDIT_MARK = /(\d+) KI-Credits offen/;
+async function grantTestCredits(l, n) {
+  const { error } = await sb.rpc('ai_grant', { p_email: l.customer_email, p_amount: n, p_note: 'Testversion' });
+  return !error;
+}
+async function grantPendingCredits() {
+  if (!profile?.is_admin || DEMO || grantPendingCredits.busy) return; // nie zweimal gleichzeitig (sonst doppelt gebucht)
+  grantPendingCredits.busy = true;
+  try { for (const l of licenses.filter(x => x.owner_id && x.active && CREDIT_MARK.test(x.notes || ''))) {
+    const n = +CREDIT_MARK.exec(l.notes)[1];
+    if (n > 0 && await grantTestCredits(l, n)) {
+      await sb.from('licenses').update({ notes: l.notes.replace(CREDIT_MARK, `${n} KI-Credits gebucht`) }).eq('id', l.id);
+      l.notes = l.notes.replace(CREDIT_MARK, `${n} KI-Credits gebucht`);
+      toast(`${l.customer_name || l.customer_email}: ${n} KI-Credits gebucht`, 4000);
+    }
+  } } finally { grantPendingCredits.busy = false; }
+}
 const inDays = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
 $('#lValid').value = inDays(30); $('#lUpd').value = inDays(365);
 $('#lCreate').onclick = async () => {
   const email = $('#lEmail').value.trim();
   if (!email.includes('@')) return toast('Bitte E-Mail des Kunden eingeben');
-  const life = $('#lKind').value === 'lifetime';
+  const life = $('#lKind').value === 'lifetime', test = $('#lKind').value === 'test';
   const row = {
-    customer_name: $('#lName').value.trim() || null, customer_email: email, kind: $('#lKind').value,
-    valid_until: life ? null : ($('#lValid').value ? new Date($('#lValid').value + 'T23:59:59').toISOString() : null),
+    customer_name: $('#lName').value.trim() || null, customer_email: email, kind: test ? 'subscription' : $('#lKind').value,
+    valid_until: test ? TEST_UNTIL : life ? null : ($('#lValid').value ? new Date($('#lValid').value + 'T23:59:59').toISOString() : null),
     updates_until: life && $('#lUpd').value ? new Date($('#lUpd').value + 'T23:59:59').toISOString() : null,
-    max_devices: Math.max(1, +$('#lMax').value || 1), notes: $('#lNotes').value.trim() || null
+    max_devices: Math.max(1, +$('#lMax').value || 1), notes: $('#lNotes').value.trim() || (test ? 'Testversion' : null)
   };
+  const credits = test ? Math.max(0, Math.min(1000, Math.round(+$('#lCredits').value || 0))) : 0;
   const { data, error } = await sb.from('licenses').insert(row).select().single();
   if (error) return toast('Fehler: ' + error.message, 4000);
   navigator.clipboard?.writeText(data.key).catch(() => {});
-  toast('Lizenz erstellt – Schlüssel kopiert: ' + data.key, 5000);
+  let extra = '';
+  if (credits) {
+    if (!DEMO && await grantTestCredits(data, credits)) { extra = ` · ${credits} KI-Credits gebucht`; await sb.from('licenses').update({ notes: `${row.notes} · ${credits} KI-Credits gebucht` }).eq('id', data.id); }
+    else { extra = ` · ${credits} KI-Credits werden gebucht, sobald sich der Tester registriert hat`; await sb.from('licenses').update({ notes: `${row.notes} · ${credits} KI-Credits offen` }).eq('id', data.id); }
+  }
+  toast('Lizenz erstellt – Schlüssel kopiert: ' + data.key + extra, 7000);
   ['#lName', '#lEmail', '#lNotes'].forEach(s => $(s).value = '');
   loadLicenses();
 };
@@ -813,14 +845,15 @@ function renderAdmin() {
   $('#licList').innerHTML = list.length ? list.map(l => `<tr>
       <td><b>${esc(l.customer_name || '–')}</b><br><span class="small muted">${esc(l.customer_email)}${l.owner_id ? '' : ' · noch nicht registriert'}</span>${l.notes ? `<br><span class="small muted">📝 ${esc(l.notes)}</span>` : ''}</td>
       <td><code class="key" data-copy="${esc(l.key)}" title="Klicken zum Kopieren">${esc(l.key)}</code></td>
-      <td>${kindName(l.kind)}</td>
+      <td>${licKind(l)}</td>
       <td>${licStatus(l)}</td>
       <td>${l.devices.length} / <input type="number" min="1" value="${l.max_devices}" data-lic="${l.id}" data-act="max" style="width:60px;padding:4px 6px"></td>
       <td><div class="row">
-        ${l.kind === 'subscription'
+        ${isTestLic(l) ? ''
+          : l.kind === 'subscription'
           ? `<button class="btn small" data-lic="${l.id}" data-act="m1">+1 Monat</button><button class="btn small" data-lic="${l.id}" data-act="y1">+1 Jahr</button>`
           : `<button class="btn small" data-lic="${l.id}" data-act="u1">+1 Jahr Updates</button>`}
-        <button class="btn small ${l.active ? 'danger' : ''}" data-lic="${l.id}" data-act="toggle">${l.active ? 'Sperren' : 'Entsperren'}</button>
+        <button class="btn small ${l.active ? 'danger' : ''}" data-lic="${l.id}" data-act="toggle">${isTestLic(l) ? (l.active ? 'Test beenden' : 'Test wieder starten') : l.active ? 'Sperren' : 'Entsperren'}</button>
       </div></td>
     </tr>`).join('') : '<tr><td colspan="6" class="empty">Keine Lizenzen</td></tr>';
 }
@@ -835,7 +868,7 @@ $('#licList').addEventListener('click', async e => {
     : act === 'y1' ? { valid_until: extend(l.valid_until, 12) }
     : act === 'u1' ? { updates_until: extend(l.updates_until, 12) }
     : { active: !l.active };
-  if (act === 'toggle' && l.active && !await pmConfirm(`Lizenz von ${l.customer_name || l.customer_email} sperren? Die FotoBox läuft dann nur noch im Demo-Modus.`, 'Sperren')) return;
+  if (act === 'toggle' && l.active && !await pmConfirm(isTestLic(l) ? `Test von ${l.customer_name || l.customer_email} beenden? Die Fotobox läuft dann nur noch im Demo-Modus (mit Wasserzeichen). Du kannst den Test jederzeit wieder starten.` : `Lizenz von ${l.customer_name || l.customer_email} sperren? Die FotoBox läuft dann nur noch im Demo-Modus.`, isTestLic(l) ? 'Test beenden' : 'Sperren')) return;
   const { error } = await sb.from('licenses').update(patch).eq('id', id);
   if (error) return toast('Fehler: ' + error.message);
   toast('Lizenz aktualisiert'); loadLicenses();
