@@ -402,7 +402,7 @@
     print: { btnText: 'Drucken', printingText: 'Drucken...', copiesText: 'Wie viele Kopien?' },
     gallery: { link: false, guests: false, downloadAll: false, password: '' },
     lang: { guest: '', pick: false, list: [] }, // Gästesprache: '' = wie das Menü der Fotobox
-    mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false, preview: true },
+    mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false, preview: true, source: 'original' },
     ai: { skip: false, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Porträt erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
   };
   const deepMerge = (def, val) => { const out = structuredClone(def); if (val && typeof val === 'object' && !Array.isArray(val)) for (const [k, v] of Object.entries(val)) out[k] = out[k] && typeof out[k] === 'object' && !Array.isArray(out[k]) ? deepMerge(out[k], v) : v; return out; };
@@ -1107,7 +1107,7 @@
         const cmIn = (p, v, min, max, step) => `<input type="number" data-s="x.mosaic.${p}" data-num="1" min="${min}" max="${max}" step="${step}" value="${v}" style="width:110px">`;
         return `${titleSw('Fotomosaik', 'x.mosaic.on')}<div class="cols"><div class="left">
           <div class="card"><p style="margin-top:0">Aus vielen kleinen Gästefotos entsteht ein großes Bild – live auf einem Fernseher oder Beamer und/oder als Klebewand: Jede Kachel wird mit ihrer Feldnummer (z. B. „C7“) gedruckt und auf die vorher gedruckte Tafel geklebt. ${NEWAPP}</p>
-            ${sel('x.mosaic.mode', 'Art', Mosaic.MODES)}${sel('x.mosaic.who', 'Wann kommt ein Foto ins Mosaik?', Mosaic.WHO)}${sel('x.mosaic.shots', 'Fotos pro Sitzung', Mosaic.SHOTS)}
+            ${sel('x.mosaic.mode', 'Art', Mosaic.MODES)}${sel('x.mosaic.who', 'Wann kommt ein Foto ins Mosaik?', Mosaic.WHO)}${sel('x.mosaic.shots', 'Fotos pro Sitzung', Mosaic.SHOTS)}${sel('x.mosaic.source', 'Foto fürs Mosaik', Mosaic.SOURCES)}
             <p style="color:#777;font-size:13px">„Gast entscheidet“: Neben QR-Code und Drucken erscheint an der Fotobox das grüne Mosaik-Symbol – nur wer darauf tippt, kommt ins Mosaik.</p>
             ${sw('x.mosaic.preview', 'Mosaik-Vorschau auf dem Startbildschirm', 'Kleines Mosaik mit Fortschritt unten links. Gäste können darauf tippen und das ganze Mosaik ansehen.')}</div>
           <h2>Hauptbild</h2><div class="card">${up('x.mosaic.image', '', 'image/*', 'Foto mit klaren Formen, z. B. das Brautpaar oder ein Logo')}
