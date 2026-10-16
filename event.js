@@ -699,6 +699,13 @@
         S.x.mosaic.boardH = Math.round(c.boardW / (mzv.img.naturalWidth / mzv.img.naturalHeight)); save(); render(); return; // Seitenverhältnis des Hauptbilds
       }
       if (a === 'mz-pdf') return mzPrintBoard(t.dataset.k);
+      if (a === 'mz-reset') { // Fotobox leert beim nächsten Abgleich alle Felder (neuer Zeitpunkt = neues Mosaik)
+        if (!await (G.pmConfirm || (async x => confirm(x)))('Mosaik neu starten? Alle belegten Felder werden geleert, neue Kacheln bekommen die aktuellen Einstellungen. Die Fotos bleiben in der Galerie.', 'Neu starten')) return;
+        S.x.mosaic.round = Date.now(); save();
+        // zugewiesene Fotoboxen gleich abgleichen lassen (nach dem Speichern)
+        setTimeout(() => ctx.sb.from('devices').update({ command: { id: crypto.randomUUID(), at: new Date().toISOString(), type: 'sync' } }).eq('event_id', ev.id).then(() => {}, () => {}), 2500);
+        return ctx.toast('Mosaik wird neu gestartet – die Fotobox übernimmt es in etwa 15 Sekunden, sobald keine Aufnahme läuft. Danach die Tafel neu drucken.', 7000);
+      }
       if (a === 'edit1') { const l = S.layouts[0]; if (l) editLayout(l.id); else pickTemplate(vals(), addLayout); }
     });
     const pick = accept => new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => res(i.files[0] || null); i.click(); });
@@ -1116,6 +1123,8 @@
             <div class="mzRes" id="wsMzInfo"></div>
             <button class="ghost" data-a="mz-fit" ${c.image ? '' : 'disabled'} style="margin:4px 0 10px">Tafelhöhe passend zum Hauptbild</button>
             ${sw('x.mosaic.boardImage', 'Hauptbild schwach auf der Tafel zeigen')}
+            <div class="row" style="flex-wrap:wrap;align-items:center;margin-bottom:6px"><button class="ghost" data-a="mz-reset" ${c.on && c.image ? '' : 'disabled'}>${ICON('repeat', 15)} Mosaik neu starten</button></div>
+            <p style="color:#777;font-size:13px;margin-top:0">Nach Änderungen (z. B. Feldnummern oder Größe der Nummer) neu starten: Alle Felder werden leer und jede neue Kachel bekommt die aktuellen Einstellungen. Die Fotos bleiben in der Galerie. Danach die Tafel neu drucken.</p>
             <div class="row" style="flex-wrap:wrap"><button class="btn pri" data-a="mz-pdf" data-k="full">${ICON('printer', 15)} Tafel drucken – Originalgröße</button><button class="ghost" data-a="mz-pdf" data-k="a4">${ICON('printer', 15)} Tafel auf A4-Blättern</button></div>
             <p style="color:#777;font-size:13px">Im Druckfenster als Ziel „Als PDF speichern“ wählen – die Größe ist schon eingestellt. Die Originalgröße ist für eine Druckerei (z. B. Forex- oder Kapa-Platte), die A4-Blätter zum Zusammenkleben. Jedes Feld ist genau so groß wie eine Kachel.</p></div>
           <div class="card" style="background:#FFFAEA">Welcher Drucker die Kacheln druckt und auf welchem Fernseher/Beamer das Mosaik läuft, stellst du direkt an der Fotobox ein: Menü → <b>Fotomosaik</b>. Dort lässt sich die Tafel ebenfalls als PDF speichern.</div>
