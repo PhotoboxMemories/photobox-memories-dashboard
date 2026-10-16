@@ -6,19 +6,19 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261016-3';</script>
-<script src="i18n.js?v=20261016-3"></script>
+<script>window.I18N_V = '20261016-4';</script>
+<script src="i18n.js?v=20261016-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
   window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-<script src="config.js?v=20261016-3"></script>
-<script src="icons.js?v=20261016-3"></script>
-<script src="render.js?v=20261016-3"></script>
-<script src="mosaic.js?v=20261016-3"></script>
-<script src="editor.js?v=20261016-3"></script>
-<script src="ai-event.js?v=20261016-3"></script>
-<script src="ai-test.js?v=20261016-3"></script>
-<script src="event.js?v=20261016-3"></script>
+<script src="config.js?v=20261016-4"></script>
+<script src="icons.js?v=20261016-4"></script>
+<script src="render.js?v=20261016-4"></script>
+<script src="mosaic.js?v=20261016-4"></script>
+<script src="editor.js?v=20261016-4"></script>
+<script src="ai-event.js?v=20261016-4"></script>
+<script src="ai-test.js?v=20261016-4"></script>
+<script src="event.js?v=20261016-4"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -132,6 +132,8 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
 .evc b{display:block;margin-top:8px;font-size:14px}.evc small{color:var(--muted);font-size:12px}
 .evnew .cv{border:2px dashed var(--line);flex-direction:column;gap:6px;font-weight:600;text-align:center;padding:10px}
 .evnew .cv span{font-size:34px;line-height:1}
+#newVer{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 32px);background:var(--accent);color:var(--accent-fg);padding:10px 14px 10px 18px;border-radius:12px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+#newVer button{background:var(--accent-fg);color:#fff;border:0;border-radius:8px;padding:7px 14px;font:inherit;cursor:pointer}
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:10px;font-weight:600;z-index:30;display:none}
 </style>
 </head>
@@ -331,6 +333,20 @@ $$('.langSel').forEach(sel => {
   sel.innerHTML = I18N.LANGS.map(l => `<option value="${l.code}" ${l.code === PM_LANG ? 'selected' : ''}>${l.name}</option>`).join('');
   sel.onchange = () => { try { localStorage.setItem('pm-lang', sel.value); } catch {} location.reload(); };
 });
+// Neue Dashboard-Version veröffentlicht? Hinweis zum Neuladen – sonst laufen im offenen Fenster alte Programmteile weiter
+async function checkNewVersion() {
+  if (DEMO || $('#newVer')) return;
+  try {
+    const t = await (await fetch(location.pathname + '?nv=' + Date.now(), { cache: 'no-store' })).text(), m = t.match(/I18N_V = '([^']+)'/);
+    if (!m || m[1] === window.I18N_V) return;
+    const d = document.createElement('div'); d.id = 'newVer';
+    d.innerHTML = '<span>Es gibt eine neue Version des Dashboards.</span><button type="button">Jetzt neu laden</button>';
+    d.querySelector('button').onclick = () => location.reload();
+    document.body.appendChild(d);
+  } catch {}
+}
+setInterval(checkNewVersion, 5 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkNewVersion(); });
 const toast = (t, ms = 2200) => { const e = $('#toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => e.style.display = 'none', ms); };
 
 const CFG = window.FOTOBOX_CONFIG || {};
@@ -584,7 +600,8 @@ function deviceDetails(d, online, mine) {
   const ok = v => v === true ? '<span class="dot on"></span>bereit' : v === false ? '<span class="dot" style="background:#d23b3b"></span>nicht bereit' : '<span class="dot"></span>unbekannt';
   const scr = { home: 'Betreiber-Startseite', attract: 'Startbildschirm (wartet auf Gäste)', capture: 'Aufnahme läuft', review: 'Bildschirm zum Teilen', share: 'QR-Code', modes: 'Auswahl', login: 'Anmeldung', evpick: 'Ereignis-Auswahl' }[st.screen] || st.screen || '–';
   const cmd = d.command ? `<span class="badge">Befehl wartet auf die Fotobox …</span>` : '';
-  const props = (st.camera?.props || []).map(p => `<div><label>${esc(p.label)}</label><select data-prop="${esc(p.id)}">${p.list.map(v => `<option ${v === p.cur ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select></div>`).join('');
+  const props = (st.camera?.props || []).map(p => `<div><label>${esc(p.label)}</label><select data-prop="${esc(p.id)}">${p.list.map(v => `<option ${v === p.cur ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>`
+    + (p.canLive ? `<label class="small muted" style="margin-top:6px">Live-Ansicht</label><select data-live="${esc(p.id)}"><option value="">wie Foto</option>${p.list.map(v => `<option ${v === p.live ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>` : '') + '</div>').join('');
   return `<div class="stats" style="margin:6px 0 14px">
       <div class="card"><b>${st.prints ?? 0}${st.printLimit ? ` <span style="font-size:16px">/ ${st.printLimit}</span>` : ''}</b><span>Ausdrucke bei diesem Ereignis</span><span class="small muted">${st.printLimit ? 'noch ' + Math.max(0, st.printLimit - (st.prints || 0)) + ' übrig' : 'kein Limit eingestellt'}</span></div>
       <div class="card"><b style="font-size:17px">${esc(st.camera?.name || '–')}</b><span>Kamera</span><span class="small">${ok(st.camera?.ready)}</span></div>
@@ -629,7 +646,9 @@ $('#deviceList').addEventListener('change', async e => {
   const patch = act === 'event' ? { event_id: e.target.value || null } : { name: e.target.value.trim() || null };
   const { error } = await sb.from('devices').update(patch).eq('id', id);
   if (error) return toast('Fehler: ' + error.message);
-  toast(act === 'event' ? 'Event zugewiesen – die Box übernimmt es in Kürze' : 'Name gespeichert');
+  // Fotobox gleich abgleichen lassen (Fernbefehl, etwa alle 15 s abgefragt) statt bis zum nächsten Abgleich zu warten
+  if (act === 'event') await sb.from('devices').update({ command: { id: crypto.randomUUID(), at: new Date().toISOString(), type: 'sync' } }).eq('id', id).then(() => {}, () => {});
+  toast(act === 'event' ? 'Event zugewiesen – die Fotobox übernimmt es in etwa 15 Sekunden, sobald keine Aufnahme läuft und ihr Menü geschlossen ist' : 'Name gespeichert', act === 'event' ? 6000 : 2200);
   loadDevices();
 });
 $('#deviceList').addEventListener('click', async e => {
@@ -641,7 +660,7 @@ $('#deviceList').addEventListener('click', async e => {
   }
   if (act === 'pinreset') { if (await pmConfirm('Den Sicherheitspin an dieser Fotobox entfernen? Die Fotobox ist danach entsperrt, bis du dort einen neuen PIN einträgst.', 'PIN entfernen')) sendDeviceCommand(dev, { type: 'pinreset' }); return; }
   if (act === 'testprint') { if (await pmConfirm('Jetzt einen Testdruck an dieser Fotobox auslösen? Das verbraucht ein Blatt.', 'Drucken')) sendDeviceCommand(dev, { type: 'testprint' }); return; }
-  if (act === 'camera') { const props = Object.fromEntries([...e.target.closest('td').querySelectorAll('[data-prop]')].map(x => [x.dataset.prop, x.value])); return sendDeviceCommand(dev, { type: 'camera', props }); }
+  if (act === 'camera') { const td = e.target.closest('td'), props = Object.fromEntries([...td.querySelectorAll('[data-prop]')].map(x => [x.dataset.prop, x.value])), live = Object.fromEntries([...td.querySelectorAll('[data-live]')].map(x => [x.dataset.live, x.value])); return sendDeviceCommand(dev, { type: 'camera', props, live }); }
   if (e.target.dataset.act !== 'remove') return;
   if (!await pmConfirm('Gerät entfernen? Es muss danach mit dem Lizenzschlüssel neu aktiviert werden.', 'Entfernen')) return;
   const { error } = await sb.from('devices').delete().eq('id', e.target.dataset.dev);
