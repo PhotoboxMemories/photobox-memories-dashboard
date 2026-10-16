@@ -10,10 +10,12 @@
   const MODES = [['both', 'Bildschirm und Klebewand'], ['screen', 'Nur Bildschirm (Fernseher/Beamer)'], ['wall', 'Nur Klebewand (Druck)']];
   const WHO = [['all', 'Jedes Foto automatisch'], ['guest', 'Gast entscheidet (Mosaik-Symbol)']];
   const SHOTS = [['one', 'Ein Foto pro Sitzung'], ['all', 'Alle Fotos einer Sitzung']];
+  // Welches Bild wird zur Kachel: das unbearbeitete Foto der Kamera oder das bearbeitete (Filter, Hintergrund, Wasserzeichen/Rahmen)
+  const SOURCES = [['original', 'Originalfoto (ohne Rahmen und Effekte)'], ['edited', 'Bearbeitetes Foto (mit Filter, Hintergrund und Wasserzeichen)']];
   const NUMBERING = [['xy', 'Spalte x Reihe (0x0, 1x0, 2x0 …)'], ['grid', 'Reihe + Spalte (A1, A2 … C7)'], ['seq', 'Fortlaufend (1, 2, 3 …)']];
   const PAPERS = [['photo', 'Fotopapier 10×15 (mehrere Kacheln pro Blatt)'], ['label', 'Etiketten/Aufkleber (eine Kachel pro Etikett)']];
   // Tafel in cm (Höchstmaß), Kachel in mm
-  const DEF = { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false, round: 0, preview: true };
+  const DEF = { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false, round: 0, preview: true, source: 'original' };
   const MAXN = 100; // höchstens 100 Spalten und 100 Reihen
   const choose = (list, v) => list.some(o => o[0] === v) ? v : list[0][0];
   const int = (v, a, b, d) => { v = Math.round(Number(v)); return Number.isFinite(v) ? Math.min(b, Math.max(a, v)) : d; };
@@ -44,7 +46,8 @@
       tileW, tileH, numbering: choose(NUMBERING, o.numbering), paper, label: o.label !== false,
       codeSize: int(o.codeSize, 50, 300, DEF.codeSize), codeAlpha: int(o.codeAlpha, 10, 100, DEF.codeAlpha), boardImage: o.boardImage === true,
       round: int(o.round, 0, 1e14, 0), // „Mosaik neu starten“: Zeitpunkt des Neustarts, ergibt ein neues, leeres Mosaik
-      preview: o.preview !== false // kleine Mosaik-Vorschau unten links auf dem Startbildschirm
+      preview: o.preview !== false, // kleine Mosaik-Vorschau unten links auf dem Startbildschirm
+      source: choose(SOURCES, o.source)
     };
     return Object.assign(c, fitGrid(c.boardW, c.boardH, tileW, tileH)); // Spalten und Reihen rechnet die Software aus
   }
@@ -290,7 +293,7 @@
     cv.width = Math.round(s.width * k); cv.height = Math.round(s.height * k);
     const x = cv.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(s, 0, 0, cv.width, cv.height);
   }
-  const M = { DPI, MODES, WHO, SHOTS, NUMBERING, PAPERS, DEF, MAXN, normalize, tileIn, fitGrid, screenOn, wallOn, rowName, cellName, code, sheetPlan, paperTip, board, info, cm, summaryHTML,
+  const M = { DPI, MODES, WHO, SHOTS, SOURCES, NUMBERING, PAPERS, DEF, MAXN, normalize, tileIn, fitGrid, screenOn, wallOn, rowName, cellName, code, sheetPlan, paperTip, board, info, cm, summaryHTML,
     boardMarkup, boardSVG, printHTML, prepare, cellSrc, cellBox, cropRect, drawCover, tileCanvas, avgColor, pickCell, drawCell, renderMosaic, renderSheet, drawTilePreview };
   G.Mosaic = M;
   if (typeof module !== 'undefined' && module.exports) module.exports = M;
