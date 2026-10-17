@@ -12,14 +12,17 @@
   const MODES = [['off', 'Aus'], ['test', 'Test (nur über den Test-Link sichtbar)'], ['live', 'Live (alle Gäste sehen den Shop)']];
   // Umsatzsteuer auf Bezahlseite und Rechnung: 19 % in den Preisen enthalten, oder Kleinunternehmer ohne Ausweis
   const VATS = [[19, '19 % MwSt. (in den Preisen enthalten)'], [0, 'Kleinunternehmer (§ 19 UStG, ohne MwSt.)']];
-  // Vorschläge (Kataloge geprüft am 17.10.2026). Gelato hat keine Magnete und Mauspads, deshalb kommen die von Printful.
-  // Kosten ohne MwSt.: Tasse (Gelato) 4,43 € + 4,49 € Versand; Mauspad 22×18 cm (Printful, gedruckt in Lettland) 9,75 $;
-  // Magnet 10×10 cm (Printful, nur aus den USA – längere Lieferung, deshalb ausgeschaltet) 3,91 $.
+  // Vorschläge (Kataloge geprüft am 17.10.2026). Alle über Printful, weil der Server dort genau angeben kann, wo das
+  // Original-Foto auf der Druckfläche sitzt. Kosten ohne MwSt.: Tasse 11 oz 6,75 $ (gedruckt in Spanien/Lettland),
+  // Mauspad 22×18 cm 9,75 $ (Lettland), Magnet 10×10 cm 3,91 $ (nur USA – längere Lieferung, deshalb ausgeschaltet).
+  // Gelato geht weiterhin (Druckdienst umstellen), dort platziert Gelato das Foto aber selbst.
   const DEFAULTS = [
-    { id: 'mug', type: 'mug', provider: 'gelato', name: 'Fototasse', cents: 1990, uid: 'mug_product_msz_11-oz_mmat_ceramic-white_cl_4-0' },
+    { id: 'mug', type: 'mug', provider: 'printful', name: 'Fototasse', cents: 1990, uid: '1320', side: 'left' },
     { id: 'mousepad', type: 'mousepad', provider: 'printful', name: 'Mauspad', cents: 2490, uid: '13097' },
     { id: 'magnet', type: 'magnet', provider: 'printful', name: 'Fotomagnet 10 × 10 cm', cents: 1290, uid: '16367', on: false }
   ];
+  // Tasse: auf welcher Hälfte der Druckfläche das Foto sitzt
+  const SIDES = [['left', 'linke Hälfte (Rechtshänder)'], ['right', 'rechte Hälfte (Linkshänder)']];
   const UID = { gelato: /^[a-z0-9][a-z0-9_.-]{4,199}$/i, printful: /^\d{1,9}$/ };
   const httpUrl = u => {
     u = cut(u, 300); if (!u) return '';
@@ -36,7 +39,7 @@
       while (seen.has(id)) id += 'x'; seen.add(id);
       const type = TYPES.some(t => t[0] === p?.type) ? p.type : 'mug';
       const provider = p?.provider === 'printful' ? 'printful' : 'gelato', uid = cut(p?.uid, 200);
-      return { id, type, provider, name: cut(p?.name, 60) || TYPES.find(t => t[0] === type)[1], cents: money(p?.cents, 100, 100000) ?? 0, uid: UID[provider].test(uid) ? uid : '', on: p?.on !== false };
+      return { id, type, provider, name: cut(p?.name, 60) || TYPES.find(t => t[0] === type)[1], cents: money(p?.cents, 100, 100000) ?? 0, uid: UID[provider].test(uid) ? uid : '', on: p?.on !== false, side: p?.side === 'right' ? 'right' : 'left' };
     });
     const countries = [...new Set(String(o.countries ?? 'DE, AT').toUpperCase().split(/[^A-Z]+/).filter(x => /^[A-Z]{2}$/.test(x)))].slice(0, 40);
     const l = o.legal || {};
@@ -87,5 +90,5 @@
   let cssDone = false;
   function addCss(doc = document) { if (cssDone && doc === document) return; const s = doc.createElement('style'); s.textContent = CSS; doc.head.appendChild(s); if (doc === document) cssDone = true; }
 
-  G.PM_SHOP = { TYPES, MODES, VATS, PROVIDERS, DEFAULTS, normalize, legalOk, active, price, path, mockup, addCss, esc };
+  G.PM_SHOP = { TYPES, MODES, VATS, PROVIDERS, SIDES, DEFAULTS, normalize, legalOk, active, price, path, mockup, addCss, esc };
 })(typeof window !== 'undefined' ? window : globalThis);
