@@ -186,6 +186,7 @@
   }
   function drawCover(ctx, src, x, y, w, h, focus) {
     const [sw0, sh0] = dims(src), r = cropRect(sw0, sh0, w / h, focus);
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; // hochwertig verkleinern (Kachel aus ~3000 px)
     ctx.drawImage(src, r[0], r[1], r[2], r[3], x, y, w, h);
   }
   // Kachel aus einem Foto: c = Einstellungen (Kachelgröße), focus = Gesichter (oder null)
