@@ -1628,6 +1628,8 @@ I18N.add('tr', {
 "Poster": "Poster",
 "Poster 20 × 30 cm": "Poster 20 × 30 cm",
 "Poster 30 × 45 cm": "Poster 30 × 45 cm",
+"Poster 40 × 60 cm": "Poster 40 × 60 cm",
+"Poster A4": "A4 poster",
 "postimpressionistisches Gemälde mit wirbelnden, kräftigen Pinselstrichen.": "girdap gibi güçlü fırça darbeleriyle post-empresyonist tablo.",
 "Preis": "Fiyat",
 "Preis (€, brutto)": "Fiyat (€, brüt)",
