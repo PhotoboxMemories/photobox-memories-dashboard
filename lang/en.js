@@ -1628,6 +1628,8 @@ I18N.add('en', {
 "Poster": "Poster",
 "Poster 20 × 30 cm": "Poster 20 × 30 cm",
 "Poster 30 × 45 cm": "Poster 30 × 45 cm",
+"Poster 40 × 60 cm": "Poster 40 × 60 cm",
+"Poster A4": "A4 poster",
 "postimpressionistisches Gemälde mit wirbelnden, kräftigen Pinselstrichen.": "post-impressionist painting with swirling, bold brushstrokes.",
 "Preis": "Price",
 "Preis (€, brutto)": "Price (€, gross)",
