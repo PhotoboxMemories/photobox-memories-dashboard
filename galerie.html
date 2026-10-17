@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Fotogalerie – Photobox Memories</title>
-<script>window.I18N_V = '20261017-5';</script>
+<script>window.I18N_V = '20261017-6';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache: vom QR-Code der Fotobox (?l=…), sonst die des Handys
 (function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
@@ -115,7 +115,7 @@
 <script src="config.js?v=20261017-2"></script>
 <script src="icons.js?v=20261017-2"></script>
 <script src="ad.js?v=20261017-2"></script>
-<script src="shop.js?v=20261017-5"></script>
+<script src="shop.js?v=20261017-6"></script>
 <script>
 (function () {
   'use strict';
@@ -228,11 +228,12 @@
     let names = s.countries.join(', ');
     try { const dn = new Intl.DisplayNames([LOC], { type: 'region' }); names = s.countries.map(c => dn.of(c)).join(', '); } catch {}
     const L = s.legal, link = (u, t) => u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${t}</a>` : '';
+    const vatTxt = s.vat === 0 ? '<span>Kein Ausweis der Umsatzsteuer (§ 19 UStG).</span>' : '<span>Alle Preise inkl. MwSt.</span>';
     const sec = document.createElement('section'); sec.className = 'shop'; sec.id = 'shop';
     sec.innerHTML = `${s.test ? '<div class="stest">Testmodus – nur über den Test-Link sichtbar</div>' : ''}
       <h2>Dein Foto als Andenken</h2><p class="lead">Gedruckt und direkt zu dir nach Hause geschickt.</p>
       <div class="sgrid">${s.products.map(p => `<button class="sp" type="button" data-p="${esc(p.id)}">${PM_SHOP.mockup(p.type, src, land)}<b>${esc(p.name)}</b><span translate="no">${eur(p.cents)}</span></button>`).join('')}</div>
-      <p class="slegal"><span>Alle Preise inkl. MwSt.</span> · ${s.ship ? `<span>Versand:</span> <b translate="no">${eur(s.ship)}</b>` : '<span>Kostenloser Versand</span>'} · <span>Lieferung nach:</span> <span translate="no">${esc(names)}</span></p>
+      <p class="slegal">${vatTxt} · ${s.ship ? `<span>Versand:</span> <b translate="no">${eur(s.ship)}</b>` : '<span>Kostenloser Versand</span>'} · <span>Lieferung nach:</span> <span translate="no">${esc(names)}</span></p>
       <p class="slegal">${s.seller ? `<span>Verkäufer:</span> <span translate="no">${esc(s.seller)}</span> · ` : ''}${[link(L.agb, 'AGB'), link(L.privacy, 'Datenschutz'), link(L.imprint, 'Impressum'), link(L.withdrawal, 'Widerrufsbelehrung')].filter(Boolean).join(' · ')}</p>`;
     $('#main').appendChild(sec);
     let dlg = $('#sdlg');
@@ -243,7 +244,7 @@
         <div class="sdrow"><span>Preis</span><b id="sdPrice" translate="no"></b></div>
         <div class="sdrow"><span>Versand</span><b id="sdShip" translate="no"></b></div>
         <div class="sdrow tot"><span>Gesamt</span><b id="sdTot" translate="no"></b></div>
-        <p class="fine"><span>Alle Preise inkl. MwSt.</span> <span>Lieferadresse und Bezahlung auf der nächsten Seite.</span></p>
+        <p class="fine">${vatTxt} <span>Lieferadresse und Bezahlung auf der nächsten Seite.</span> <span>Die Rechnung kommt per E-Mail.</span></p>
         <p class="fine">Wird mit deinem Foto angefertigt – deshalb gibt es kein Widerrufsrecht.</p>
         <div class="err" id="sdErr"></div><button class="btn" type="button" id="sdGo">Weiter zur Bezahlung</button></div>`;
       document.body.appendChild(dlg);
