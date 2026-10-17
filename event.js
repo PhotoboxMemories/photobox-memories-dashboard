@@ -1,5 +1,5 @@
 // Photobox Memories – Event-Arbeitsbereich (Aufbau wie bei LumaBooth: Seitenleiste mit allen Bereichen)
-// EventWS.open(eventRow, { sb, me, toast, uploadFile(file) → url, devices, leadsCount, onClose, onDelete })
+// EventWS.open(eventRow, { sb, me, admin, toast, uploadFile(file) → url, devices, leadsCount, onClose, onDelete })
 (function (G) {
   'use strict';
   // KI-Stil-Bibliothek (Aufbau wie bei LumaBooth): ein Stil = Motiv („Porträtstil“) und/oder Kunststil.
@@ -440,12 +440,14 @@
     // Baukasten-Zustand der KI-Seite. Das Testfoto bleibt nur in diesem Browser (localStorage), nie im Event.
     const ai = { p: '', a: '', pick: '', cat: '', custom: false, edit: -1, photo: '', result: '', busy: false, recent: [], lib: null };
     // „Meine KI-Stile“: getestete Stile (Name, Prompt, Vorschaubild) gehören zum Konto und lassen sich in jedes Event
-    // übernehmen, ohne neu zu generieren (Tabelle ai_styles, nur für den Besitzer sichtbar)
+    // übernehmen, ohne neu zu generieren (Tabelle ai_styles). Der Betreiber kann einzelne Stile für alle Kunden freigeben
+    // („Stile von Photobox Memories“); die sehen und übernehmen sie, ändern können sie sie nicht.
     const aiLibLoad = async () => {
       ai.lib = 'loading';
       try {
-        const { data, error } = await ctx.sb.from('ai_styles').select('id,name,prompt,thumb').order('created_at', { ascending: false }).limit(200);
-        ai.lib = error ? { error: /relation|does not exist|schema cache/i.test(error.message) ? 'setup' : error.message } : data || [];
+        const { data, error } = await ctx.sb.from('ai_styles').select('id,name,prompt,thumb,shared,owner').order('created_at', { ascending: false }).limit(300);
+        if (error) ai.lib = { error: /relation|does not exist|schema cache|column/i.test(error.message) ? 'setup' : error.message };
+        else { ai.lib = (data || []).filter(x => x.owner === ctx.me.id); ai.common = (data || []).filter(x => x.owner !== ctx.me.id && x.shared); }
       } catch (error) { ai.lib = { error: error.message }; }
       if (page === 'ai') render();
     };
@@ -619,8 +621,14 @@
         status(''); t.disabled = false; return;
       }
       if (a === 'ai-lib-add') { const p = S.ai.prompts[+t.dataset.i]; if (p) await aiLibSave(p); return; }
+      if (a === 'ai-lib-share') { // nur Betreiber: Stil für alle Kunden freigeben oder zurücknehmen
+        const x = Array.isArray(ai.lib) && ai.lib[+t.dataset.i]; if (!x || !ctx.admin) return;
+        const { error } = await ctx.sb.from('ai_styles').update({ shared: !x.shared }).eq('id', x.id);
+        if (error) return ctx.toast(error.message, 5000);
+        x.shared = !x.shared; render(); ctx.toast(x.shared ? 'Für alle Kunden freigegeben' : 'Freigabe zurückgenommen'); return;
+      }
       if (a === 'ai-lib-use') {
-        const x = Array.isArray(ai.lib) && ai.lib[+t.dataset.i]; if (!x) return;
+        const x = (t.dataset.common ? ai.common : Array.isArray(ai.lib) ? ai.lib : [])[+t.dataset.i]; if (!x) return;
         if (S.ai.prompts.some(p => p.prompt === x.prompt)) return ctx.toast('Dieser Stil ist schon in diesem Event.');
         if (S.ai.prompts.length >= 15) return ctx.toast('Maximal 15 Stile pro Event.');
         S.ai.prompts.push({ id: crypto.randomUUID(), name: x.name, prompt: x.prompt, ...(x.thumb ? { thumb: x.thumb } : {}) });
@@ -1066,8 +1074,11 @@
         const lib = ai.lib;
         const libCard = `<div class="card"><b>Meine KI-Stile${Array.isArray(lib) ? ` (${lib.length})` : ''}</b><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Deine gesammelten Stile mit Bild – für jedes Event. Antippen übernimmt den Stil in dieses Event, ohne Credits.</p>
           ${!lib || lib === 'loading' ? '<p style="color:#6b6b78;font-size:13px">Lädt …</p>' : lib.error ? `<p style="color:#c98a00;font-size:13px">${lib.error === 'setup' ? 'Noch nicht eingerichtet (supabase/migrations/202610170004_ki_stile.sql im SQL Editor ausführen).' : esc(lib.error)}</p>`
-            : lib.length ? `<div class="aitiles">${lib.map((x, n) => `<button data-a="ai-lib-use" data-i="${n}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}<span class="del" data-a="ai-lib-del" data-i="${n}" title="Aus der Sammlung löschen">🗑</span><b>${esc(x.name)}</b></button>`).join('')}</div>`
-            : '<p style="color:#6b6b78;font-size:13px">Noch leer. Speichere ein Testbild mit „In Meine KI-Stile speichern“ oder tippe oben bei einem Stil auf ★.</p>'}</div>`;
+            : lib.length ? `<div class="aitiles">${lib.map((x, n) => `<button data-a="ai-lib-use" data-i="${n}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}${ctx.admin ? `<span class="fav ${x.shared ? 'on' : ''}" data-a="ai-lib-share" data-i="${n}" title="${x.shared ? 'Für alle Kunden freigegeben – antippen zum Zurücknehmen' : 'Für alle Kunden freigeben'}">👥</span>` : ''}<span class="del" data-a="ai-lib-del" data-i="${n}" title="Aus der Sammlung löschen">🗑</span><b>${esc(x.name)}</b></button>`).join('')}</div>`
+            : '<p style="color:#6b6b78;font-size:13px">Noch leer. Speichere ein Testbild mit „In Meine KI-Stile speichern“ oder tippe oben bei einem Stil auf ★.</p>'}
+          ${ctx.admin && Array.isArray(lib) && lib.length ? '<p style="color:#6b6b78;font-size:13px;margin-top:8px">👥 = für alle Software-Kunden freigeben. Freigegebene Stile sehen deine Kunden unter „Stile von Photobox Memories“.</p>' : ''}</div>
+          ${(ai.common || []).length ? `<div class="card"><b>Stile von Photobox Memories (${ai.common.length})</b><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Fertige Stile mit Beispielbild. Antippen übernimmt den Stil in dieses Event, ohne Credits.</p>
+            <div class="aitiles">${ai.common.map((x, n) => `<button data-a="ai-lib-use" data-common="1" data-i="${n}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}<b>${esc(x.name)}</b></button>`).join('')}</div></div>` : ''}`;
         return `${titleSw('KI-Porträts', 'ai.enabled')}<p class="sub" style="margin:-6px 0 14px;color:#6b6b78">Verwandle deine Gäste mit generativer KI</p><div class="aigrid"><div class="left">
           <div class="card" data-ai-builder>${ai.custom ? '<p style="margin:0 0 6px"><a href="#" data-a="ai-new">← Zurück zu den Vorgaben</a></p>' : ''}<b>${editing ? 'Vorgabe bearbeiten: ' + esc(editing.name) : ai.custom ? 'Benutzerdefinierter Prompt' : 'Vorgabe erstellen'}</b>
           ${ai.custom ? `<label class="l">Name (sehen die Gäste)</label><input type="text" maxlength="60" data-ai-cname value="${esc(ai.cname ?? (ai.seed || editing)?.name ?? '')}" placeholder="z. B. Unser Firmenlook">
