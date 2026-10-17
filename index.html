@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261017-6';</script>
+<script>window.I18N_V = '20261017-7';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -14,7 +14,7 @@
 <script src="config.js?v=20261017-2"></script>
 <script src="icons.js?v=20261017-2"></script>
 <script src="ad.js?v=20261017-2"></script>
-<script src="shop.js?v=20261017-6"></script>
+<script src="shop.js?v=20261017-7"></script>
 <script src="render.js?v=20261017-2"></script>
 <script src="mosaic.js?v=20261017-2"></script>
 <script src="editor.js?v=20261017-2"></script>
@@ -848,6 +848,7 @@ function shRender() {
         <div><label>Druckdienst</label><select data-f="provider">${PM_SHOP.PROVIDERS.map(([k, n]) => `<option value="${k}" ${p.provider === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
         <div><label>Name für Gäste</label><input data-f="name" maxlength="60" value="${esc(p.name)}"></div>
         <div><label>Preis (€, brutto)</label><input data-f="price" type="number" min="1" step="0.01" value="${p.cents ? (p.cents / 100).toFixed(2) : ''}"></div>
+        ${p.type === 'mug' ? `<div><label>Tasse: Foto auf der Druckfläche</label><select data-f="side">${PM_SHOP.SIDES.map(([k, n]) => `<option value="${k}" ${p.side === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>` : ''}
         <div style="grid-column:1/-1"><label>Produktnummer (Gelato: Product UID · Printful: Varianten-ID)</label><input data-f="uid" value="${esc(p.uid)}" placeholder="${p.provider === 'printful' ? 'z. B. 13097' : 'z. B. mug_product_msz_11-oz_…'}" spellcheck="false"></div></div>
       <div class="row" style="margin-top:10px"><label class="row" style="margin:0;color:var(--fg);font-weight:400;font-size:14px"><input type="checkbox" data-f="on" ${p.on ? 'checked' : ''}> Im Shop zeigen</label>
         <span style="flex:1"></span><span class="small muted">${p.on && p.uid && p.cents ? '' : 'erscheint noch nicht'}</span><button class="btn small danger" type="button" data-sh-del>Entfernen</button></div></div>`).join('')
@@ -857,12 +858,12 @@ function shRender() {
 function shCollect() {
   const products = [...document.querySelectorAll('#shProducts .planrow')].map(r => {
     const f = k => r.querySelector(`[data-f="${k}"]`);
-    return { id: r.dataset.id, type: f('type').value, provider: f('provider').value, name: f('name').value, cents: shCents(f('price').value) || 0, uid: f('uid').value.trim(), on: f('on').checked };
+    return { id: r.dataset.id, type: f('type').value, provider: f('provider').value, side: f('side')?.value || 'left', name: f('name').value, cents: shCents(f('price').value) || 0, uid: f('uid').value.trim(), on: f('on').checked };
   });
   return { mode: $('#sh_mode').value, seller: $('#sh_seller').value, ship: shCents($('#sh_ship').value || 0), vat: Number($('#sh_vat').value), countries: $('#sh_countries').value,
     legal: { agb: $('#sh_agb').value, privacy: $('#sh_privacy').value, imprint: $('#sh_imprint').value, withdrawal: $('#sh_withdrawal').value }, products };
 }
-$('#shAdd').onclick = () => { shCfg = PM_SHOP.normalize(shCollect()); shCfg.products.push({ id: 'p' + Date.now().toString(36), type: 'mug', provider: 'gelato', name: 'Tasse', cents: 0, uid: '', on: true }); shRender(); };
+$('#shAdd').onclick = () => { shCfg = PM_SHOP.normalize(shCollect()); shCfg.products.push({ id: 'p' + Date.now().toString(36), type: 'mug', provider: 'printful', name: 'Tasse', cents: 0, uid: '', on: true, side: 'left' }); shRender(); };
 $('#shProducts').addEventListener('click', e => {
   const row = e.target.closest('[data-sh-del]')?.closest('.planrow'); if (!row) return;
   shCfg = PM_SHOP.normalize(shCollect()); shCfg.products = shCfg.products.filter(p => p.id !== row.dataset.id); shRender();
@@ -955,6 +956,7 @@ $('#hzSetup').onclick = async () => {
     const line = (ok, text) => `<div>${ok ? '✅' : '❌'} ${text}</div>`;
     out.innerHTML = line(r.cors === 200, 'Zugriff für Fotobox und Galerie (CORS)' + (r.corsText ? ': ' + esc(r.corsText) : ''))
       + line(r.policy < 300, 'Fotos über den Link lesbar (Regel gesetzt)' + (r.policyText ? ': ' + esc(r.policyText) : ''))
+      + line(r.lifecycleDays === 365, 'Fotos nach 1 Jahr automatisch löschen' + (r.lifecycleText ? ': ' + esc(r.lifecycleText) : ''))
       + line(r.write === 200, 'Probe-Datei schreiben' + (r.writeText ? ': ' + esc(r.writeText) : ''))
       + line(r.publicRead === 200, 'Probe-Datei ohne Anmeldung lesen')
       + line(r.publicList !== 200, 'Liste aller Fotos für Fremde gesperrt')
