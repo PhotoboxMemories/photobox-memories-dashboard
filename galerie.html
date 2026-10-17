@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Fotogalerie – Photobox Memories</title>
-<script>window.I18N_V = '20261017-6';</script>
+<script>window.I18N_V = '20261017-7';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache: vom QR-Code der Fotobox (?l=…), sonst die des Handys
 (function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
@@ -99,6 +99,14 @@
   .fine{font-size:12px;color:#6b6b78;margin:6px 0 0;text-align:center}
   .sbox .btn{width:100%;margin-top:12px;padding:15px;font-size:16px}
   .sbox .err{text-align:center;color:#d23b3b;margin-top:8px}
+  .spick{margin:12px 0 2px;text-align:center}
+  .spick>span{font-size:14px;color:#6b6b78}
+  .spt{display:flex;gap:8px;justify-content:center;overflow-x:auto;padding:6px 2px}
+  .spt button{flex:0 0 auto;width:64px;height:64px;border-radius:10px;border:3px solid transparent;padding:0;overflow:hidden;background:#eee;cursor:pointer}
+  .spt button.on{border-color:var(--y)}
+  .spt img{width:100%;height:100%;object-fit:cover;display:block}
+  .snote{color:var(--muted);font-size:13px;text-align:center;margin:10px 0 0}
+  .keep{color:var(--muted);font-size:13px;text-align:center;margin:10px 0 0}
   .sdone{display:flex;flex-direction:column;gap:4px;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:14px;margin-bottom:16px}
   .sdone.ok{background:rgba(249,203,56,.14);border-color:rgba(249,203,56,.5)}
   .sdone span{color:var(--muted);font-size:14px}
@@ -115,7 +123,7 @@
 <script src="config.js?v=20261017-2"></script>
 <script src="icons.js?v=20261017-2"></script>
 <script src="ad.js?v=20261017-2"></script>
-<script src="shop.js?v=20261017-6"></script>
+<script src="shop.js?v=20261017-7"></script>
 <script>
 (function () {
   'use strict';
@@ -169,6 +177,7 @@
     $('#sub').textContent = [r.subtitle, r.date ? new Date(r.date).toLocaleDateString(LOC) : ''].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(' · ');
     if (!photos.length) return box('<h2>Noch keine Fotos</h2><p>Sobald Fotos gemacht wurden, erscheinen sie hier. Einfach später noch einmal öffnen.</p>');
     $('#main').innerHTML = `<div class="bar"><span>${photos.length} ${photos.length === 1 ? 'Aufnahme' : 'Aufnahmen'}</span>${r.download_all ? '<button class="btn" id="zip">Alle herunterladen</button>' : ''}</div>
+      <p class="keep" style="margin:-4px 0 12px"><span>Die Fotos bleiben 1 Jahr online und werden danach automatisch gelöscht.</span> <span>Speichere dir deine Lieblingsfotos rechtzeitig.</span></p>
       <div class="grid">${photos.map((p, i) => `<figure data-i="${i}"><img loading="lazy" src="${esc(url(p.thumb || p.path))}" alt="Foto ${i + 1}">${p.kind !== 'photo' ? `<span class="tag">${p.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}</figure>`).join('')}</div>`;
     $('.grid').onclick = e => { const f = e.target.closest('figure'); if (f) open(+f.dataset.i); };
     if ($('#zip')) $('#zip').onclick = zipAll;
@@ -224,7 +233,13 @@
     const im = $('.polaroid img');
     if (!s?.products?.length || !im || $('#shop')) return;
     PM_SHOP.addCss();
-    const land = im.naturalWidth > im.naturalHeight, eur = c => PM_SHOP.price(c, LOC);
+    const eur = c => PM_SHOP.price(c, LOC);
+    // Gedruckt wird das Original-Foto ohne Rahmen (bei mehreren Fotos wählt der Gast). Ältere Fotos ohne Original: das fertige Foto.
+    const n = Math.min(8, Math.max(0, s.originals | 0)), oBase = single.replace(/\.(jpe?g|png)$/i, '');
+    const thumbOf = k => k ? url(`${oBase}_o${k}t.jpg`) : src;
+    const isLand = u => new Promise(r => { const i = new Image(); i.onload = () => r(i.naturalWidth > i.naturalHeight); i.onerror = () => r(true); i.src = u; });
+    let pick = n ? 1 : 0, land = pick ? await isLand(thumbOf(1)) : im.naturalWidth > im.naturalHeight;
+    const mk = p => PM_SHOP.mockup(p.type, thumbOf(pick), land);
     let names = s.countries.join(', ');
     try { const dn = new Intl.DisplayNames([LOC], { type: 'region' }); names = s.countries.map(c => dn.of(c)).join(', '); } catch {}
     const L = s.legal, link = (u, t) => u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${t}</a>` : '';
@@ -232,14 +247,15 @@
     const sec = document.createElement('section'); sec.className = 'shop'; sec.id = 'shop';
     sec.innerHTML = `${s.test ? '<div class="stest">Testmodus – nur über den Test-Link sichtbar</div>' : ''}
       <h2>Dein Foto als Andenken</h2><p class="lead">Gedruckt und direkt zu dir nach Hause geschickt.</p>
-      <div class="sgrid">${s.products.map(p => `<button class="sp" type="button" data-p="${esc(p.id)}">${PM_SHOP.mockup(p.type, src, land)}<b>${esc(p.name)}</b><span translate="no">${eur(p.cents)}</span></button>`).join('')}</div>
+      <div class="sgrid">${s.products.map(p => `<button class="sp" type="button" data-p="${esc(p.id)}">${mk(p)}<b>${esc(p.name)}</b><span translate="no">${eur(p.cents)}</span></button>`).join('')}</div>
+      ${n ? '<p class="snote">Gedruckt wird dein Foto ohne Rahmen in voller Qualität.</p>' : ''}
       <p class="slegal">${vatTxt} · ${s.ship ? `<span>Versand:</span> <b translate="no">${eur(s.ship)}</b>` : '<span>Kostenloser Versand</span>'} · <span>Lieferung nach:</span> <span translate="no">${esc(names)}</span></p>
       <p class="slegal">${s.seller ? `<span>Verkäufer:</span> <span translate="no">${esc(s.seller)}</span> · ` : ''}${[link(L.agb, 'AGB'), link(L.privacy, 'Datenschutz'), link(L.imprint, 'Impressum'), link(L.withdrawal, 'Widerrufsbelehrung')].filter(Boolean).join(' · ')}</p>`;
     $('#main').appendChild(sec);
     let dlg = $('#sdlg');
     if (!dlg) {
       dlg = document.createElement('div'); dlg.id = 'sdlg'; dlg.className = 'sdlg'; dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-modal', 'true');
-      dlg.innerHTML = `<div class="sbox"><button class="sx" type="button" aria-label="Schließen">×</button><div id="sdMk"></div><h3 id="sdName" translate="no"></h3>
+      dlg.innerHTML = `<div class="sbox"><button class="sx" type="button" aria-label="Schließen">×</button><div id="sdMk"></div><h3 id="sdName" translate="no"></h3><div id="sdPick"></div>
         <div class="sdrow"><span>Menge</span><div class="qty"><button type="button" data-q="-1" aria-label="Weniger">−</button><b id="sdQty">1</b><button type="button" data-q="1" aria-label="Mehr">+</button></div></div>
         <div class="sdrow"><span>Preis</span><b id="sdPrice" translate="no"></b></div>
         <div class="sdrow"><span>Versand</span><b id="sdShip" translate="no"></b></div>
@@ -251,20 +267,29 @@
       document.addEventListener('keydown', e => { if (e.key === 'Escape') dlg.classList.remove('on'); });
     }
     let cur = null, qty = 1;
+    const picker = () => n > 1 ? `<div class="spick"><span>Welches Foto?</span><div class="spt">${Array.from({ length: n }, (_, i) =>
+      `<button type="button" data-pick="${i + 1}" class="${i + 1 === pick ? 'on' : ''}" aria-label="Foto ${i + 1}"><img src="${esc(thumbOf(i + 1))}" alt=""></button>`).join('')}</div></div>` : '';
     const sum = () => { $('#sdQty').textContent = qty; $('#sdPrice').textContent = eur(cur.cents * qty); $('#sdShip').textContent = eur(s.ship); $('#sdTot').textContent = eur(cur.cents * qty + s.ship); };
     sec.querySelector('.sgrid').onclick = e => {
       const b = e.target.closest('[data-p]'); cur = b && s.products.find(p => p.id === b.dataset.p); if (!cur) return;
-      qty = 1; $('#sdMk').innerHTML = PM_SHOP.mockup(cur.type, src, land); $('#sdErr').textContent = '';
+      qty = 1; $('#sdMk').innerHTML = mk(cur); $('#sdPick').innerHTML = picker(); $('#sdErr').textContent = '';
       $('#sdName').textContent = T(cur.name); // Standardnamen übersetzt, eigene Namen wie eingetragen
       sum(); $('#sdGo').disabled = false; dlg.classList.add('on');
     };
-    dlg.onclick = e => {
+    dlg.onclick = async e => {
       if (e.target === dlg || e.target.closest('.sx')) return dlg.classList.remove('on');
+      const pk = e.target.closest('[data-pick]');
+      if (pk) { // anderes Foto gewählt: Vorschau im Fenster und auf allen Produkten anpassen
+        pick = +pk.dataset.pick; land = await isLand(thumbOf(pick));
+        $('#sdMk').innerHTML = mk(cur); $('#sdPick').innerHTML = picker();
+        sec.querySelectorAll('.sp').forEach(c => { const p = s.products.find(x => x.id === c.dataset.p); if (p) c.querySelector('.mk').outerHTML = mk(p); });
+        return;
+      }
       const q = e.target.closest('[data-q]'); if (q) { qty = Math.min(10, Math.max(1, qty + +q.dataset.q)); sum(); }
     };
     $('#sdGo').onclick = async () => {
       const b = $('#sdGo'); b.disabled = true; $('#sdErr').textContent = '';
-      try { const j = await shopCall({ action: 'checkout', path: single, product: cur.id, qty, lang: PM_LANG, test: testing }); location.href = j.url; }
+      try { const j = await shopCall({ action: 'checkout', path: single, product: cur.id, qty, pick, lang: PM_LANG, test: testing }); location.href = j.url; }
       catch (err) { $('#sdErr').textContent = T(err.message || 'Das hat nicht geklappt. Bitte noch einmal versuchen.'); b.disabled = false; }
     };
   }
@@ -295,7 +320,9 @@
       $('#main').innerHTML = `${orderNote()}<div class="polaroid">${vid ? `<video src="${esc(src)}" controls autoplay loop playsinline muted></video>` : `<img src="${esc(src)}" alt="Dein Foto">`}
           <div class="cap">Photobox <b>Memories</b></div></div>
         <div class="acts"><button class="btn" id="oneDl">${I('download')} ${vid ? 'Video speichern' : 'Foto speichern'}</button>${shareOk ? `<button class="btn ghost" id="oneSh">${I('share')} Teilen</button>` : ''}</div>
-        <p class="tip">${vid ? 'Tipp: Nach dem Speichern findest du das Video in deinen Downloads bzw. in der Fotos-App.' : 'Tipp: Auf dem iPhone das Foto gedrückt halten → „Zu Fotos hinzufügen“.'}</p>`;
+        <p class="tip">${vid ? 'Tipp: Nach dem Speichern findest du das Video in deinen Downloads bzw. in der Fotos-App.' : 'Tipp: Auf dem iPhone das Foto gedrückt halten → „Zu Fotos hinzufügen“.'}</p>
+        <p class="keep">${vid ? '<span>Dein Video bleibt 1 Jahr online und wird danach automatisch gelöscht.</span> <span>Speichere es dir am besten gleich.</span>'
+          : '<span>Dein Foto bleibt 1 Jahr online und wird danach automatisch gelöscht.</span> <span>Speichere es dir am besten gleich.</span>'}</p>`;
       $('#oneDl').onclick = async () => { const b = $('#oneDl'); b.disabled = true;
         try { save(await getBlob(src), fileName); } catch { window.open(src, '_blank'); }
         b.disabled = false; };
