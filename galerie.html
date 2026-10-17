@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Fotogalerie – Photobox Memories</title>
-<script>window.I18N_V = '20261017-2';</script>
+<script>window.I18N_V = '20261017-3';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache: vom QR-Code der Fotobox (?l=…), sonst die des Handys
 (function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
@@ -73,6 +73,35 @@
   .spin{width:40px;height:40px;border:4px solid rgba(0,0,0,.1);border-top-color:#F9CB38;border-radius:50%;animation:sp 1s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}} @keyframes shim{to{background-position:-300% 0}} @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}}
   @media(prefers-reduced-motion:reduce){.polaroid,.ph,.spin{animation:none}}
+  /* Foto-Shop unter dem Einzelfoto (Druck über Gelato, Bezahlung über Stripe) */
+  .shop{margin:30px 0 6px;padding:20px 14px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:18px}
+  .shop h2{margin:0;font:600 22px Fredoka,system-ui,sans-serif;text-align:center}
+  .shop .lead{margin:4px 0 16px;text-align:center;color:var(--muted);font-size:14px}
+  .sgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .sp{display:flex;flex-direction:column;gap:2px;text-align:left;background:#fff;color:#1D1D1B;border:0;border-radius:14px;padding:8px 8px 11px;font:inherit;cursor:pointer;transition:transform .15s}
+  .sp:hover{transform:translateY(-2px)}
+  .sp b{font-size:14px;line-height:1.25;margin-top:7px;padding:0 2px}
+  .sp span{font-size:14px;color:#9a7400;font-weight:700;padding:0 2px}
+  .slegal{color:#8a8a92;font-size:12px;text-align:center;margin:12px 0 0;line-height:1.7}
+  .slegal a{color:#c9c9cf}
+  .stest{background:var(--y);color:var(--k);font-weight:700;font-size:13px;text-align:center;border-radius:10px;padding:6px 10px;margin-bottom:12px}
+  .sdlg{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.72);display:none;align-items:flex-end;justify-content:center}
+  .sdlg.on{display:flex}
+  .sbox{position:relative;width:100%;max-width:460px;max-height:94vh;overflow:auto;background:#fff;color:#1D1D1B;border-radius:20px 20px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom))}
+  @media(min-width:600px){.sdlg{align-items:center}.sbox{border-radius:20px}}
+  .sbox .mk{max-width:280px;margin:0 auto}
+  .sbox h3{margin:12px 0 6px;font:600 20px Fredoka,system-ui,sans-serif;text-align:center}
+  .sx{position:absolute;right:10px;top:10px;z-index:1;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.08);font-size:22px;line-height:1;cursor:pointer;color:#1D1D1B}
+  .sdrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid #eee;font-size:15px}
+  .sdrow.tot{font-size:17px;border-bottom:0}
+  .qty{display:flex;align-items:center;gap:14px}
+  .qty button{width:36px;height:36px;border-radius:50%;border:1px solid #ddd;background:#f6f6f6;font-size:19px;line-height:1;cursor:pointer;color:#1D1D1B}
+  .fine{font-size:12px;color:#6b6b78;margin:6px 0 0;text-align:center}
+  .sbox .btn{width:100%;margin-top:12px;padding:15px;font-size:16px}
+  .sbox .err{text-align:center;color:#d23b3b;margin-top:8px}
+  .sdone{display:flex;flex-direction:column;gap:4px;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:14px;margin-bottom:16px}
+  .sdone.ok{background:rgba(249,203,56,.14);border-color:rgba(249,203,56,.5)}
+  .sdone span{color:var(--muted);font-size:14px}
 </style>
 </head>
 <body>
@@ -86,6 +115,7 @@
 <script src="config.js?v=20261017-2"></script>
 <script src="icons.js?v=20261017-2"></script>
 <script src="ad.js?v=20261017-2"></script>
+<script src="shop.js?v=20261017-3"></script>
 <script>
 (function () {
   'use strict';
@@ -175,6 +205,68 @@
     b.disabled = false; b.textContent = 'Alle herunterladen';
   }
 
+  // Foto-Shop unter dem Einzelfoto: Poster, Leinwand, Tasse … mit dem eigenen Foto (Druck und Versand: Gelato, Bezahlung: Stripe).
+  // Produkte, Preise und Rechtstexte kommen vom Server (Funktion photo-shop); ohne Freigabe dort erscheint hier nichts.
+  const shopCall = body => fetch(CFG.supabaseUrl + '/functions/v1/photo-shop', { method: 'POST', body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey } })
+    .then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'HTTP ' + r.status); return j; });
+  function orderNote() {
+    const k = Q.get('bestellt'); if (k !== 'ok' && k !== 'abbruch') return '';
+    try { const u = new URL(location.href); u.searchParams.delete('bestellt'); history.replaceState(null, '', u.href); } catch {}
+    return k === 'ok'
+      ? '<div class="sdone ok"><b>Danke für deine Bestellung!</b><span>Du bekommst gleich eine Bestätigung per E-Mail. Dein Foto wird jetzt gedruckt und zu dir geschickt.</span></div>'
+      : '<div class="sdone"><b>Bestellung abgebrochen</b><span>Es wurde nichts berechnet. Du kannst jederzeit neu bestellen.</span></div>';
+  }
+  async function showShop(src) {
+    if (!window.PM_SHOP || !/\.(jpe?g|png)$/i.test(single)) return;
+    const testing = Q.get('shop') === 'test';
+    let s; try { s = await shopCall({ action: 'info', path: single, test: testing }); } catch { return; }
+    const im = $('.polaroid img');
+    if (!s?.products?.length || !im || $('#shop')) return;
+    PM_SHOP.addCss();
+    const land = im.naturalWidth > im.naturalHeight, eur = c => PM_SHOP.price(c, LOC);
+    let names = s.countries.join(', ');
+    try { const dn = new Intl.DisplayNames([LOC], { type: 'region' }); names = s.countries.map(c => dn.of(c)).join(', '); } catch {}
+    const L = s.legal, link = (u, t) => u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${t}</a>` : '';
+    const sec = document.createElement('section'); sec.className = 'shop'; sec.id = 'shop';
+    sec.innerHTML = `${s.test ? '<div class="stest">Testmodus – nur über den Test-Link sichtbar</div>' : ''}
+      <h2>Dein Foto als Andenken</h2><p class="lead">Gedruckt und direkt zu dir nach Hause geschickt.</p>
+      <div class="sgrid">${s.products.map(p => `<button class="sp" type="button" data-p="${esc(p.id)}">${PM_SHOP.mockup(p.type, src, land)}<b>${esc(p.name)}</b><span translate="no">${eur(p.cents)}</span></button>`).join('')}</div>
+      <p class="slegal"><span>Alle Preise inkl. MwSt.</span> · ${s.ship ? `<span>Versand:</span> <b translate="no">${eur(s.ship)}</b>` : '<span>Kostenloser Versand</span>'} · <span>Lieferung nach:</span> <span translate="no">${esc(names)}</span></p>
+      <p class="slegal">${s.seller ? `<span>Verkäufer:</span> <span translate="no">${esc(s.seller)}</span> · ` : ''}${[link(L.agb, 'AGB'), link(L.privacy, 'Datenschutz'), link(L.imprint, 'Impressum'), link(L.withdrawal, 'Widerrufsbelehrung')].filter(Boolean).join(' · ')}</p>`;
+    $('#main').appendChild(sec);
+    let dlg = $('#sdlg');
+    if (!dlg) {
+      dlg = document.createElement('div'); dlg.id = 'sdlg'; dlg.className = 'sdlg'; dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-modal', 'true');
+      dlg.innerHTML = `<div class="sbox"><button class="sx" type="button" aria-label="Schließen">×</button><div id="sdMk"></div><h3 id="sdName" translate="no"></h3>
+        <div class="sdrow"><span>Menge</span><div class="qty"><button type="button" data-q="-1" aria-label="Weniger">−</button><b id="sdQty">1</b><button type="button" data-q="1" aria-label="Mehr">+</button></div></div>
+        <div class="sdrow"><span>Preis</span><b id="sdPrice" translate="no"></b></div>
+        <div class="sdrow"><span>Versand</span><b id="sdShip" translate="no"></b></div>
+        <div class="sdrow tot"><span>Gesamt</span><b id="sdTot" translate="no"></b></div>
+        <p class="fine"><span>Alle Preise inkl. MwSt.</span> <span>Lieferadresse und Bezahlung auf der nächsten Seite.</span></p>
+        <p class="fine">Wird mit deinem Foto angefertigt – deshalb gibt es kein Widerrufsrecht.</p>
+        <div class="err" id="sdErr"></div><button class="btn" type="button" id="sdGo">Weiter zur Bezahlung</button></div>`;
+      document.body.appendChild(dlg);
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') dlg.classList.remove('on'); });
+    }
+    let cur = null, qty = 1;
+    const sum = () => { $('#sdQty').textContent = qty; $('#sdPrice').textContent = eur(cur.cents * qty); $('#sdShip').textContent = eur(s.ship); $('#sdTot').textContent = eur(cur.cents * qty + s.ship); };
+    sec.querySelector('.sgrid').onclick = e => {
+      const b = e.target.closest('[data-p]'); cur = b && s.products.find(p => p.id === b.dataset.p); if (!cur) return;
+      qty = 1; $('#sdMk').innerHTML = PM_SHOP.mockup(cur.type, src, land); $('#sdErr').textContent = '';
+      $('#sdName').textContent = T(cur.name); // Standardnamen übersetzt, eigene Namen wie eingetragen
+      sum(); $('#sdGo').disabled = false; dlg.classList.add('on');
+    };
+    dlg.onclick = e => {
+      if (e.target === dlg || e.target.closest('.sx')) return dlg.classList.remove('on');
+      const q = e.target.closest('[data-q]'); if (q) { qty = Math.min(10, Math.max(1, qty + +q.dataset.q)); sum(); }
+    };
+    $('#sdGo').onclick = async () => {
+      const b = $('#sdGo'); b.disabled = true; $('#sdErr').textContent = '';
+      try { const j = await shopCall({ action: 'checkout', path: single, product: cur.id, qty, lang: PM_LANG, test: testing }); location.href = j.url; }
+      catch (err) { $('#sdErr').textContent = T(err.message || 'Das hat nicht geklappt. Bitte noch einmal versuchen.'); b.disabled = false; }
+    };
+  }
   // Einzelnes Foto (QR-Code an der Fotobox): nur dieses eine Bild mit „Herunterladen“
   function showSingle() {
     if (!/^(hz\/)?[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpe?g|png|gif|mp4|webm)$/i.test(single) || !CFG.supabaseUrl) return box('<h2>Foto nicht gefunden</h2><p>Der Link ist unvollständig. Bitte den QR-Code noch einmal scannen.</p>');
@@ -199,7 +291,7 @@
     const show = src => {
       const shareOk = canShare(new File([new Blob([''], { type })], fileName, { type }));
       $('#title').textContent = vid ? 'Dein Video ist da!' : 'Dein Foto ist da!'; $('#sub').textContent = 'Speichern, teilen, Erinnerung behalten.';
-      $('#main').innerHTML = `<div class="polaroid">${vid ? `<video src="${esc(src)}" controls autoplay loop playsinline muted></video>` : `<img src="${esc(src)}" alt="Dein Foto">`}
+      $('#main').innerHTML = `${orderNote()}<div class="polaroid">${vid ? `<video src="${esc(src)}" controls autoplay loop playsinline muted></video>` : `<img src="${esc(src)}" alt="Dein Foto">`}
           <div class="cap">Photobox <b>Memories</b></div></div>
         <div class="acts"><button class="btn" id="oneDl">${I('download')} ${vid ? 'Video speichern' : 'Foto speichern'}</button>${shareOk ? `<button class="btn ghost" id="oneSh">${I('share')} Teilen</button>` : ''}</div>
         <p class="tip">${vid ? 'Tipp: Nach dem Speichern findest du das Video in deinen Downloads bzw. in der Fotos-App.' : 'Tipp: Auf dem iPhone das Foto gedrückt halten → „Zu Fotos hinzufügen“.'}</p>`;
@@ -210,6 +302,7 @@
         try { const f = new File([await getBlob(src)], fileName, { type }); await navigator.share({ files: [f], title: 'Photobox Memories' }); }
         catch (e) { if (e?.name !== 'AbortError') window.open(src, '_blank'); }
       };
+      if (!vid) showShop(src);
     };
     const wait = async n => {
       const src = await ready(); if (src) return show(src);
