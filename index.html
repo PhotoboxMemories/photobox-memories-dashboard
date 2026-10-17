@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261017-5';</script>
+<script>window.I18N_V = '20261017-6';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -14,7 +14,7 @@
 <script src="config.js?v=20261017-2"></script>
 <script src="icons.js?v=20261017-2"></script>
 <script src="ad.js?v=20261017-2"></script>
-<script src="shop.js?v=20261017-5"></script>
+<script src="shop.js?v=20261017-6"></script>
 <script src="render.js?v=20261017-2"></script>
 <script src="mosaic.js?v=20261017-2"></script>
 <script src="editor.js?v=20261017-2"></script>
@@ -277,6 +277,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <div><label>Shop</label><select id="sh_mode"></select></div>
           <div><label>Verkäufer (Name oder Firma)</label><input id="sh_seller" maxlength="80" placeholder="z. B. Photobox Memories"></div>
           <div><label>Versand pro Bestellung (€, brutto)</label><input id="sh_ship" type="number" min="0" step="0.01"></div>
+          <div><label>Umsatzsteuer</label><select id="sh_vat"></select></div>
           <div><label>Lieferländer (Ländercodes)</label><input id="sh_countries" placeholder="DE, AT"></div>
           <div><label>AGB (Link)</label><input id="sh_agb" placeholder="https://…"></div>
           <div><label>Datenschutz (Link)</label><input id="sh_privacy" placeholder="https://…"></div>
@@ -836,6 +837,7 @@ async function loadShopCfg() {
   shCfg = PM_SHOP.normalize(b);
   $('#sh_mode').innerHTML = PM_SHOP.MODES.map(([k, n]) => `<option value="${k}">${n}</option>`).join('');
   $('#sh_mode').value = shCfg.mode; $('#sh_seller').value = shCfg.seller; $('#sh_ship').value = (shCfg.ship / 100).toFixed(2);
+  $('#sh_vat').innerHTML = PM_SHOP.VATS.map(([k, n]) => `<option value="${k}">${n}</option>`).join(''); $('#sh_vat').value = String(shCfg.vat);
   $('#sh_countries').value = shCfg.countries.join(', ');
   for (const k of ['agb', 'privacy', 'imprint', 'withdrawal']) $('#sh_' + k).value = shCfg.legal[k];
   shRender(); shServer(); shOrders(); shSampleLink();
@@ -857,7 +859,7 @@ function shCollect() {
     const f = k => r.querySelector(`[data-f="${k}"]`);
     return { id: r.dataset.id, type: f('type').value, provider: f('provider').value, name: f('name').value, cents: shCents(f('price').value) || 0, uid: f('uid').value.trim(), on: f('on').checked };
   });
-  return { mode: $('#sh_mode').value, seller: $('#sh_seller').value, ship: shCents($('#sh_ship').value || 0), countries: $('#sh_countries').value,
+  return { mode: $('#sh_mode').value, seller: $('#sh_seller').value, ship: shCents($('#sh_ship').value || 0), vat: Number($('#sh_vat').value), countries: $('#sh_countries').value,
     legal: { agb: $('#sh_agb').value, privacy: $('#sh_privacy').value, imprint: $('#sh_imprint').value, withdrawal: $('#sh_withdrawal').value }, products };
 }
 $('#shAdd').onclick = () => { shCfg = PM_SHOP.normalize(shCollect()); shCfg.products.push({ id: 'p' + Date.now().toString(36), type: 'mug', provider: 'gelato', name: 'Tasse', cents: 0, uid: '', on: true }); shRender(); };
