@@ -37,10 +37,13 @@
     return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   }
   function rr(x, X, Y, W, H, r) { x.beginPath(); x.roundRect ? x.roundRect(X, Y, W, H, r) : x.rect(X, Y, W, H); }
+  // Fotos werden stark verkleinert (Kamera ~3000 px → Layout 300 dpi, Streifen nur ~540 px breit): mit der
+  // hochwertigen Glättung, sonst wirken Kanten und Haare unruhig und unscharf (Standard des Browsers ist „low“)
+  const hq = x => { x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; return x; };
   function drawCover(x, img, dx, dy, dw, dh) {
     const iw = img.naturalWidth || img.videoWidth || img.width, ih = img.naturalHeight || img.videoHeight || img.height;
     const s = Math.max(dw / iw, dh / ih), sw = dw / s, sh = dh / s;
-    x.drawImage(img, (iw - sw) / 2, (ih - sh) / 2, sw, sh, dx, dy, dw, dh);
+    hq(x).drawImage(img, (iw - sw) / 2, (ih - sh) / 2, sw, sh, dx, dy, dw, dh);
   }
   function confetti(x, R, n, colors, seed, sizeF = 1) {
     const r = rng(seed), s = Math.min(R.w, R.h) / 1200;
@@ -226,7 +229,7 @@
   function render(L, photos, o) {
     const t = typeof o.template === 'object' ? o.template : byId(o.template);
     const c = document.createElement('canvas'); c.width = L.w; c.height = L.h;
-    const x = c.getContext('2d');
+    const x = hq(c.getContext('2d'));
     x.fillStyle = o.frame || t.frame; x.fillRect(0, 0, L.w, L.h);
     const copies = L.copies || [0], regW = L.copies ? L.w / L.copies.length : L.w;
     for (const ox of copies) {
@@ -488,7 +491,7 @@
   function renderLayout(L, o = {}, into) {
     const c = into || document.createElement('canvas');
     if (c.width !== L.w || c.height !== L.h) { c.width = L.w; c.height = L.h; }
-    const x = c.getContext('2d');
+    const x = hq(c.getContext('2d'));
     x.setTransform(1, 0, 0, 1, 0, 0);
     if (L.screen) drawScreenBg(x, L, o); else { x.fillStyle = L.bg || '#ffffff'; x.fillRect(0, 0, L.w, L.h); }
     const photos = o.photos || [];
