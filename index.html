@@ -6,19 +6,20 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261017-1';</script>
-<script src="i18n.js?v=20261017-1"></script>
+<script>window.I18N_V = '20261017-2';</script>
+<script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
   window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-<script src="config.js?v=20261017-1"></script>
-<script src="icons.js?v=20261017-1"></script>
-<script src="render.js?v=20261017-1"></script>
-<script src="mosaic.js?v=20261017-1"></script>
-<script src="editor.js?v=20261017-1"></script>
-<script src="ai-event.js?v=20261017-1"></script>
-<script src="ai-test.js?v=20261017-1"></script>
-<script src="event.js?v=20261017-1"></script>
+<script src="config.js?v=20261017-2"></script>
+<script src="icons.js?v=20261017-2"></script>
+<script src="ad.js?v=20261017-2"></script>
+<script src="render.js?v=20261017-2"></script>
+<script src="mosaic.js?v=20261017-2"></script>
+<script src="editor.js?v=20261017-2"></script>
+<script src="ai-event.js?v=20261017-2"></script>
+<script src="ai-test.js?v=20261017-2"></script>
+<script src="event.js?v=20261017-2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -224,6 +225,24 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <p class="small muted" id="shopHint" style="margin-bottom:14px"></p>
         <div class="plans" id="shopPlans"></div>
         <div class="row hidden" id="trialRow" style="margin-top:16px"><button class="btn primary" id="trialGo">14 Tage kostenlos testen</button><span class="small muted">Ohne Zahlungsdaten · 1 Fotobox · endet von selbst</span></div>
+      </div>
+      <div class="card hidden" id="adCard" style="margin-top:20px">
+        <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Deine Werbung in der Galerie</h2><label class="row" style="gap:8px;margin:0;font-size:14px"><input type="checkbox" id="adOn" checked> anzeigen</label></div>
+        <p class="small muted" style="margin-bottom:14px">Erscheint oben auf jeder Foto- und Galerieseite deiner Gäste (QR-Code an der Fotobox und Freigabe-Link der Galerie). Leere Felder werden nicht gezeigt.</p>
+        <div class="grid2">
+          <div><label>Firmenname</label><input id="ad_name" maxlength="60" placeholder="z. B. Photobox Memories"></div>
+          <div><label>Logo</label><div class="row"><img id="adLogoImg" alt="" class="hidden" style="height:40px;max-width:120px;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:#fff;padding:3px"><button class="btn" id="adLogoPick" type="button">Logo wählen</button><button class="btn hidden" id="adLogoDel" type="button">Entfernen</button><input type="file" id="adLogoFile" accept="image/*" class="hidden"></div></div>
+          <div style="grid-column:1/-1"><label>Kurzer Text</label><input id="ad_text" maxlength="160" placeholder="z. B. Fotobox mieten für Hochzeit, Geburtstag und Firmenfeier"></div>
+          <div><label>Webseite</label><input id="ad_web" placeholder="www.deine-seite.de"></div>
+          <div><label>E-Mail</label><input id="ad_mail" type="email" placeholder="info@deine-seite.de"></div>
+          <div><label>Telefon</label><input id="ad_tel" placeholder="+49 …"></div>
+          <div><label>WhatsApp-Nummer</label><input id="ad_wa" placeholder="+49 …"></div>
+          <div><label>Instagram</label><input id="ad_insta" placeholder="@deinname"></div>
+          <div><label>Text auf dem gelben Knopf</label><input id="ad_cta" maxlength="40" placeholder="z. B. Jetzt Fotobox anfragen"></div>
+        </div>
+        <label style="margin-top:16px">Vorschau</label>
+        <div id="adPreview" style="border-radius:12px;overflow:hidden;border:1px solid var(--line)"></div>
+        <div class="row" style="margin-top:14px"><button class="btn primary" id="adSave" type="button">Speichern</button></div>
       </div>
       <div class="card hidden" id="creditCard" style="margin-top:20px">
         <h2>KI-Guthaben</h2>
@@ -737,8 +756,47 @@ async function loadLicenses() {
       <div class="small muted">Geräte: ${l.devices.length} von ${l.max_devices}</div>
     </div>`).join('') : `<div class="card empty" style="grid-column:1/-1">${shop.plans.length ? 'Noch keine Lizenz. Teste 14 Tage kostenlos oder kaufe unten eine Lizenz.' : 'Keine Lizenz mit deiner E-Mail gefunden. Bitte melde dich beim Verkäufer.'}</div>`;
   renderShop();
+  $('#adCard').classList.toggle('hidden', !(mine.length || profile.is_admin)); if (!adData && (mine.length || profile.is_admin)) loadAd();
   if (profile.is_admin) { renderAdmin(); renderOverview(); grantPendingCredits(); }
 }
+/* ---------- Werbung in der Galerie (Logo, Text, Kontakt) – je Konto, gespeichert als photos/<Konto>/werbung.json ---------- */
+let adData = null;
+const AD_FIELDS = ['name', 'text', 'web', 'mail', 'tel', 'wa', 'insta', 'cta'];
+async function loadAd() {
+  const b = DEMO ? null : await fetch(PM_AD.publicUrl(me.id, CFG) + '?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+  adData = { on: true, ...(b || {}) };
+  $('#adOn').checked = adData.on !== false;
+  for (const f of AD_FIELDS) $('#ad_' + f).value = adData[f] || '';
+  adLogo(adData.logo || '');
+}
+function adLogo(url) {
+  adData.logo = url; $('#adLogoImg').classList.toggle('hidden', !url); if (url) $('#adLogoImg').src = url;
+  $('#adLogoDel').classList.toggle('hidden', !url); adPreview();
+}
+const adCollect = () => { const o = { on: $('#adOn').checked, logo: adData?.logo || '' }; for (const f of AD_FIELDS) o[f] = $('#ad_' + f).value.trim(); return o; };
+function adPreview() {
+  PM_AD.addCss();
+  const b = PM_AD.normalize(adCollect(), me.id, CFG);
+  $('#adPreview').innerHTML = PM_AD.has(b) ? PM_AD.html(b) : `<div class="small muted" style="padding:14px">${$('#adOn').checked ? 'Noch nichts eingetragen – die Galerie zeigt dann keine Werbung.' : 'Ausgeschaltet – die Galerie zeigt keine Werbung.'}</div>`;
+}
+$('#adCard').addEventListener('input', adPreview);
+$('#adCard').addEventListener('change', adPreview);
+$('#adLogoPick').onclick = () => $('#adLogoFile').click();
+$('#adLogoFile').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try { adLogo(await uploadFile(f)); toast('Logo hochgeladen – bitte noch speichern'); } catch (err) { toast('Fehler: ' + err.message, 5000); }
+};
+$('#adLogoDel').onclick = () => adLogo('');
+$('#adSave').onclick = async () => {
+  if (DEMO) return toast('Demo-Modus – es wird nichts gespeichert');
+  const clean = PM_AD.normalize(adCollect(), me.id, CFG);
+  for (const [f, label] of [['web', 'Webseite'], ['mail', 'E-Mail'], ['tel', 'Telefon'], ['wa', 'WhatsApp-Nummer'], ['insta', 'Instagram']])
+    if ($('#ad_' + f).value.trim() && !clean[f]) return toast(`Bitte „${label}“ prüfen – so kann die Galerie den Eintrag nicht verlinken.`, 5000);
+  const blob = new Blob([JSON.stringify({ ...clean, at: new Date().toISOString() })], { type: 'application/json' });
+  const { error } = await sb.storage.from('photos').upload(PM_AD.path(me.id), blob, { upsert: true, contentType: 'application/json', cacheControl: '60' });
+  if (error) return toast('Fehler: ' + error.message, 6000);
+  adData = { ...adData, ...clean }; toast('Gespeichert – erscheint in deinen Galerien in etwa einer Minute', 4000);
+};
 document.addEventListener('click', e => {
   const k = e.target.dataset?.copy; if (!k) return;
   navigator.clipboard.writeText(k).then(() => toast('Schlüssel kopiert'));
