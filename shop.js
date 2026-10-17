@@ -1,25 +1,24 @@
-// Photobox Memories – Foto-Shop auf der Fotoseite der Gäste (QR-Code an der Fotobox): Druckprodukte über Gelato,
-// Bezahlung über Stripe. Einstellungen pflegt der Betreiber im Dashboard (Verwaltung → Foto-Shop); gespeichert als
+// Photobox Memories – Foto-Shop auf der Fotoseite der Gäste (QR-Code an der Fotobox): Druckprodukte über Gelato oder
+// Printful, Bezahlung über Stripe. Einstellungen pflegt der Betreiber im Dashboard (Verwaltung → Foto-Shop); gespeichert als
 // photos/<Konto>/shop.json. Preise und Produkte prüft der Server (Funktion photo-shop) selbst – hier nur Pflege und Anzeige.
 // normalize() gibt es gleich noch einmal in supabase/functions/photo-shop/index.ts – immer beide ändern.
 (function (G) {
   'use strict';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const cut = (s, n) => String(s ?? '').trim().slice(0, n);
-  const TYPES = [['poster', 'Poster'], ['canvas', 'Leinwand'], ['mug', 'Tasse'], ['print', 'Fotoabzug'], ['magnet', 'Magnet']];
+  const TYPES = [['mug', 'Tasse'], ['magnet', 'Magnet'], ['mousepad', 'Mauspad'], ['canvas', 'Leinwand'], ['poster', 'Poster'], ['print', 'Fotoabzug']];
+  // Druckdienste: Gelato braucht die „Product UID“, Printful die Varianten-ID (Zahl)
+  const PROVIDERS = [['gelato', 'Gelato'], ['printful', 'Printful']];
   const MODES = [['off', 'Aus'], ['test', 'Test (nur über den Test-Link sichtbar)'], ['live', 'Live (alle Gäste sehen den Shop)']];
-  // Vorschläge mit Gelato-Produktnummern (Katalog geprüft am 17.10.2026; Endung _ver/_hor stellt der Server passend zum Foto ein).
-  // Gelato-Kosten ohne MwSt. nach Deutschland: Poster A4 5,89 + 6,49 Versand, 30×45 8,39 + 6,89, 40×60 9,29 + 8,19,
-  // Leinwand 20×30 10,69 + 5,79, 40×60 26,39 + 10,19, Tasse 4,43 + 4,49. Fotoabzüge und Magnete hat Gelato nicht.
+  // Vorschläge (Kataloge geprüft am 17.10.2026). Gelato hat keine Magnete und Mauspads, deshalb kommen die von Printful.
+  // Kosten ohne MwSt.: Tasse (Gelato) 4,43 € + 4,49 € Versand; Mauspad 22×18 cm (Printful, gedruckt in Lettland) 9,75 $;
+  // Magnet 10×10 cm (Printful, nur aus den USA – längere Lieferung, deshalb ausgeschaltet) 3,91 $.
   const DEFAULTS = [
-    { id: 'poster-a4', type: 'poster', name: 'Poster A4', cents: 1490, uid: 'flat_a4-8x12-inch_200-gsm-80lb-coated-silk_4-0_ver' },
-    { id: 'poster-m', type: 'poster', name: 'Poster 30 × 45 cm', cents: 2490, uid: 'flat_300x450-mm-12x18-inch_200-gsm-80lb-coated-silk_4-0_ver' },
-    { id: 'poster-l', type: 'poster', name: 'Poster 40 × 60 cm', cents: 2990, uid: 'flat_400x600-mm-16x24-inch_200-gsm-80lb-coated-silk_4-0_ver' },
-    { id: 'canvas-s', type: 'canvas', name: 'Leinwand 20 × 30 cm', cents: 3490, uid: 'canvas_200x300-mm-8x12-inch_canvas_wood-fsc-slim_4-0_ver' },
-    { id: 'canvas-l', type: 'canvas', name: 'Leinwand 40 × 60 cm', cents: 5990, uid: 'canvas_400x600-mm-16x24-inch_canvas_wood-fsc-slim_4-0_ver' },
-    { id: 'mug', type: 'mug', name: 'Fototasse', cents: 1990, uid: 'mug_product_msz_11-oz_mmat_ceramic-white_cl_4-0' }
+    { id: 'mug', type: 'mug', provider: 'gelato', name: 'Fototasse', cents: 1990, uid: 'mug_product_msz_11-oz_mmat_ceramic-white_cl_4-0' },
+    { id: 'mousepad', type: 'mousepad', provider: 'printful', name: 'Mauspad', cents: 2490, uid: '13097' },
+    { id: 'magnet', type: 'magnet', provider: 'printful', name: 'Fotomagnet 10 × 10 cm', cents: 1290, uid: '16367', on: false }
   ];
-  const UID = /^[a-z0-9][a-z0-9_.-]{4,199}$/i;
+  const UID = { gelato: /^[a-z0-9][a-z0-9_.-]{4,199}$/i, printful: /^\d{1,9}$/ };
   const httpUrl = u => {
     u = cut(u, 300); if (!u) return '';
     try { const x = new URL(/^https?:\/\//i.test(u) ? u : 'https://' + u); return /^https?:$/.test(x.protocol) && x.hostname.includes('.') ? x.href : ''; } catch { return ''; }
@@ -33,9 +32,9 @@
     const products = (Array.isArray(o.products) ? o.products : DEFAULTS).slice(0, 16).map((p, i) => {
       let id = /^[a-z0-9-]{1,30}$/.test(String(p?.id)) ? String(p.id) : 'p' + i;
       while (seen.has(id)) id += 'x'; seen.add(id);
-      const type = TYPES.some(t => t[0] === p?.type) ? p.type : 'poster';
-      const uid = cut(p?.uid, 200);
-      return { id, type, name: cut(p?.name, 60) || TYPES.find(t => t[0] === type)[1], cents: money(p?.cents, 100, 100000) ?? 0, uid: UID.test(uid) ? uid : '', on: p?.on !== false };
+      const type = TYPES.some(t => t[0] === p?.type) ? p.type : 'mug';
+      const provider = p?.provider === 'printful' ? 'printful' : 'gelato', uid = cut(p?.uid, 200);
+      return { id, type, provider, name: cut(p?.name, 60) || TYPES.find(t => t[0] === type)[1], cents: money(p?.cents, 100, 100000) ?? 0, uid: UID[provider].test(uid) ? uid : '', on: p?.on !== false };
     });
     const countries = [...new Set(String(o.countries ?? 'DE, AT').toUpperCase().split(/[^A-Z]+/).filter(x => /^[A-Z]{2}$/.test(x)))].slice(0, 40);
     const l = o.legal || {};
@@ -58,6 +57,7 @@
     if (type === 'canvas') return `<div class="mk mk-canvas"><div class="cv ${o}"><img src="${u}" alt=""></div></div>`;
     if (type === 'print') return `<div class="mk mk-print"><div class="pc ${o} back"></div><div class="pc ${o}"><img src="${u}" alt=""></div></div>`;
     if (type === 'magnet') return `<div class="mk mk-magnet"><div class="mg"><img src="${u}" alt=""></div></div>`;
+    if (type === 'mousepad') return `<div class="mk mk-pad"><div class="pad" style="background-image:url('${u}')"></div></div>`;
     return `<div class="mk mk-poster"><div class="fr ${o}"><img src="${u}" alt=""></div></div>`;
   }
   const CSS = `.mk{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:12px;background:linear-gradient(180deg,#f3efe7 0%,#e8e2d6 78%,#d9d1c2 78%,#cfc6b5 100%)}
@@ -79,9 +79,11 @@
 .mk-print .pc.l.back{height:44%}
 .mk-magnet{background:linear-gradient(90deg,#e4e6e8,#f7f8f9 45%,#dfe2e5)}
 .mk-magnet .mg{width:56%;aspect-ratio:1;border-radius:10%;overflow:hidden;box-shadow:0 2px 0 #9aa0a6,0 8px 14px rgba(0,0,0,.28)}
-.mk-magnet .mg img{height:100%}`;
+.mk-magnet .mg img{height:100%}
+.mk-pad{background:linear-gradient(180deg,#d9d4cc,#c9c2b6)}
+.mk-pad .pad{width:74%;aspect-ratio:22/18;border-radius:7%;background:center/cover no-repeat;transform:perspective(520px) rotateX(38deg);box-shadow:0 2px 0 #2b2b2b,0 3px 0 #1d1d1b,0 16px 18px rgba(0,0,0,.28)}`;
   let cssDone = false;
   function addCss(doc = document) { if (cssDone && doc === document) return; const s = doc.createElement('style'); s.textContent = CSS; doc.head.appendChild(s); if (doc === document) cssDone = true; }
 
-  G.PM_SHOP = { TYPES, MODES, DEFAULTS, normalize, legalOk, active, price, path, mockup, addCss, esc };
+  G.PM_SHOP = { TYPES, MODES, PROVIDERS, DEFAULTS, normalize, legalOk, active, price, path, mockup, addCss, esc };
 })(typeof window !== 'undefined' ? window : globalThis);
