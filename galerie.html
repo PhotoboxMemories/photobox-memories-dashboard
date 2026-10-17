@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Fotogalerie – Photobox Memories</title>
-<script>window.I18N_V = '20261015-10';</script>
-<script src="i18n.js?v=20261015-10"></script>
+<script>window.I18N_V = '20261017-2';</script>
+<script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache: vom QR-Code der Fotobox (?l=…), sonst die des Handys
 (function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
   window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
@@ -76,14 +76,16 @@
 </style>
 </head>
 <body>
+<div id="pmad"></div>
 <header><div class="brand">Photobox Memories</div><h1 id="title">Fotogalerie</h1><p id="sub"></p></header>
 <main id="main"><div class="box"><p>Lädt …</p></div></main>
 <div id="light"><div id="lightMedia"></div><div class="row"><button class="btn" id="lDl">Herunterladen</button><button class="btn ghost" id="lClose">Schließen</button></div><div id="lInfo" style="color:#aaa;font-size:13px"></div>
   <button class="nav l" id="lPrev" aria-label="Vorheriges">‹</button><button class="nav r" id="lNext" aria-label="Nächstes">›</button></div>
 <footer>Diese Seite ist nur über den persönlichen Link erreichbar. Bitte den Link nur an Gäste dieser Veranstaltung weitergeben.</footer>
 
-<script src="config.js?v=20261014-4"></script>
-<script src="icons.js?v=20261014-4"></script>
+<script src="config.js?v=20261017-2"></script>
+<script src="icons.js?v=20261017-2"></script>
+<script src="ad.js?v=20261017-2"></script>
 <script>
 (function () {
   'use strict';
@@ -102,6 +104,12 @@
   let photos = [], current = 0, info = null;
 
   const box = html => { $('#main').innerHTML = `<div class="box">${html}</div>`; };
+  // Werbung des Vermieters oben (Logo, Text, Webseite, E-Mail, Telefon …) – gepflegt im Dashboard unter „Meine Lizenzen“
+  async function showAd(owner) {
+    if (show || !window.PM_AD || !owner) return;
+    const b = await PM_AD.load(owner, CFG); if (!PM_AD.has(b)) return;
+    PM_AD.addCss(); $('#pmad').innerHTML = PM_AD.html(b);
+  }
   async function fetchGallery(password) {
     const res = await fetch(CFG.supabaseUrl + '/rest/v1/rpc/gallery_public', { method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey },
@@ -126,6 +134,7 @@
     }
     info = r; photos = r.photos || [];
     if (show) return slideshow(password);
+    showAd(window.PM_AD?.ownerOf(photos[0]?.path));
     $('#sub').setAttribute('translate', 'no');
     $('#sub').textContent = [r.subtitle, r.date ? new Date(r.date).toLocaleDateString(LOC) : ''].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(' · ');
     if (!photos.length) return box('<h2>Noch keine Fotos</h2><p>Sobald Fotos gemacht wurden, erscheinen sie hier. Einfach später noch einmal öffnen.</p>');
@@ -172,6 +181,7 @@
     const vid = /\.(mp4|webm)$/i.test(single), u = url(single), what = vid ? 'Video' : 'Foto';
     const ext = single.split('.').pop().toLowerCase(), type = vid ? 'video/' + ext : ext === 'gif' ? 'image/gif' : ext === 'png' ? 'image/png' : 'image/jpeg';
     document.body.classList.add('solo');
+    showAd(window.PM_AD?.ownerOf(single));
     document.title = T(vid ? 'Dein Video' : 'Dein Foto') + ' – Photobox Memories';
     document.querySelector('header').innerHTML = `${window.LOGO ? LOGO(44) : '<div class="brand">Photobox Memories</div>'}<h1 id="title">${vid ? 'Dein Video' : 'Dein Foto'}</h1><p id="sub">Einen Moment bitte …</p>`;
     document.querySelector('footer').innerHTML = '<span>Danke, dass du dabei warst!</span>'; langSel();
