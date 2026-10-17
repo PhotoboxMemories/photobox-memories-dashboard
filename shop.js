@@ -10,6 +10,8 @@
   // Druckdienste: Gelato braucht die „Product UID“, Printful die Varianten-ID (Zahl)
   const PROVIDERS = [['gelato', 'Gelato'], ['printful', 'Printful']];
   const MODES = [['off', 'Aus'], ['test', 'Test (nur über den Test-Link sichtbar)'], ['live', 'Live (alle Gäste sehen den Shop)']];
+  // Umsatzsteuer auf Bezahlseite und Rechnung: 19 % in den Preisen enthalten, oder Kleinunternehmer ohne Ausweis
+  const VATS = [[19, '19 % MwSt. (in den Preisen enthalten)'], [0, 'Kleinunternehmer (§ 19 UStG, ohne MwSt.)']];
   // Vorschläge (Kataloge geprüft am 17.10.2026). Gelato hat keine Magnete und Mauspads, deshalb kommen die von Printful.
   // Kosten ohne MwSt.: Tasse (Gelato) 4,43 € + 4,49 € Versand; Mauspad 22×18 cm (Printful, gedruckt in Lettland) 9,75 $;
   // Magnet 10×10 cm (Printful, nur aus den USA – längere Lieferung, deshalb ausgeschaltet) 3,91 $.
@@ -39,7 +41,7 @@
     const countries = [...new Set(String(o.countries ?? 'DE, AT').toUpperCase().split(/[^A-Z]+/).filter(x => /^[A-Z]{2}$/.test(x)))].slice(0, 40);
     const l = o.legal || {};
     return {
-      mode: MODES.some(m => m[0] === o.mode) ? o.mode : 'off', seller: cut(o.seller, 80), ship: money(o.ship, 0, 10000) ?? 590,
+      mode: MODES.some(m => m[0] === o.mode) ? o.mode : 'off', seller: cut(o.seller, 80), ship: money(o.ship, 0, 10000) ?? 590, vat: Number(o.vat) === 0 ? 0 : 19,
       countries: countries.length ? countries : ['DE'],
       legal: { agb: httpUrl(l.agb), privacy: httpUrl(l.privacy), imprint: httpUrl(l.imprint), withdrawal: httpUrl(l.withdrawal) },
       products
@@ -85,5 +87,5 @@
   let cssDone = false;
   function addCss(doc = document) { if (cssDone && doc === document) return; const s = doc.createElement('style'); s.textContent = CSS; doc.head.appendChild(s); if (doc === document) cssDone = true; }
 
-  G.PM_SHOP = { TYPES, MODES, PROVIDERS, DEFAULTS, normalize, legalOk, active, price, path, mockup, addCss, esc };
+  G.PM_SHOP = { TYPES, MODES, VATS, PROVIDERS, DEFAULTS, normalize, legalOk, active, price, path, mockup, addCss, esc };
 })(typeof window !== 'undefined' ? window : globalThis);
