@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261017-4';</script>
+<script>window.I18N_V = '20261017-5';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -14,7 +14,7 @@
 <script src="config.js?v=20261017-2"></script>
 <script src="icons.js?v=20261017-2"></script>
 <script src="ad.js?v=20261017-2"></script>
-<script src="shop.js?v=20261017-4"></script>
+<script src="shop.js?v=20261017-5"></script>
 <script src="render.js?v=20261017-2"></script>
 <script src="mosaic.js?v=20261017-2"></script>
 <script src="editor.js?v=20261017-2"></script>
@@ -270,8 +270,8 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <div id="planList"><p class="small muted">Lädt …</p></div>
       </div>
       <div class="card" style="margin-bottom:20px" id="shopCard">
-        <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Foto-Shop für Gäste (Gelato)</h2><span class="badge" id="shState"></span></div>
-        <p class="small muted" style="margin:0 0 12px">Gäste bestellen auf ihrer Fotoseite (QR-Code an der Fotobox) ihr Foto als Poster, Leinwand, Tasse und mehr. Bezahlt wird über Stripe, gedruckt und verschickt wird von Gelato. Vorerst nur für die Fotos deiner eigenen Fotoboxen.</p>
+        <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Foto-Shop für Gäste</h2><span class="badge" id="shState"></span></div>
+        <p class="small muted" style="margin:0 0 12px">Gäste bestellen auf ihrer Fotoseite (QR-Code an der Fotobox) ihr Foto als Tasse, Mauspad, Magnet und mehr. Bezahlt wird über Stripe, gedruckt und verschickt wird von Gelato oder Printful. Vorerst nur für die Fotos deiner eigenen Fotoboxen.</p>
         <div class="small" id="shServer" style="margin-bottom:12px"></div>
         <div class="grid3">
           <div><label>Shop</label><select id="sh_mode"></select></div>
@@ -284,7 +284,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <div><label>Widerrufsbelehrung (Link, freiwillig)</label><input id="sh_withdrawal" placeholder="https://…"></div>
         </div>
         <label style="margin-top:16px">Produkte</label>
-        <p class="small muted" style="margin:0 0 8px">Gelato-Produktnummer: in Gelato unter „Produktkatalog“ Produkt und Größe wählen, dann unter der Beschreibung die „Product UID“ kopieren. Hoch- oder Querformat wählt der Shop selbst passend zum Foto. Produkte ohne Nummer erscheinen nicht.</p>
+        <p class="small muted" style="margin:0 0 8px"><span>Gelato-Produktnummer: in Gelato unter „Produktkatalog“ Produkt und Größe wählen, dann unter der Beschreibung die „Product UID“ kopieren. Hoch- oder Querformat wählt der Shop selbst passend zum Foto.</span> <span>Printful: die Varianten-ID (eine Zahl) aus dem Printful-Katalog.</span> <span>Produkte ohne Nummer erscheinen nicht.</span></p>
         <div id="shProducts"></div>
         <div class="row" style="margin-top:12px"><button class="btn" id="shAdd" type="button">+ Produkt</button><span style="flex:1"></span><a class="btn hidden" id="shTest" target="_blank" rel="noopener">Fotoseite ansehen</a><button class="btn primary" id="shSave" type="button">Speichern</button></div>
         <h3 style="margin:22px 0 8px">Bestellungen</h3>
@@ -843,9 +843,10 @@ async function loadShopCfg() {
 function shRender() {
   $('#shProducts').innerHTML = shCfg.products.map(p => `<div class="planrow" data-id="${esc(p.id)}">
       <div class="grid3"><div><label>Art</label><select data-f="type">${PM_SHOP.TYPES.map(([k, n]) => `<option value="${k}" ${p.type === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+        <div><label>Druckdienst</label><select data-f="provider">${PM_SHOP.PROVIDERS.map(([k, n]) => `<option value="${k}" ${p.provider === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
         <div><label>Name für Gäste</label><input data-f="name" maxlength="60" value="${esc(p.name)}"></div>
         <div><label>Preis (€, brutto)</label><input data-f="price" type="number" min="1" step="0.01" value="${p.cents ? (p.cents / 100).toFixed(2) : ''}"></div>
-        <div style="grid-column:1/-1"><label>Gelato-Produktnummer (Product UID)</label><input data-f="uid" value="${esc(p.uid)}" placeholder="z. B. flat_300x450-mm-…_ver" spellcheck="false"></div></div>
+        <div style="grid-column:1/-1"><label>Produktnummer (Gelato: Product UID · Printful: Varianten-ID)</label><input data-f="uid" value="${esc(p.uid)}" placeholder="${p.provider === 'printful' ? 'z. B. 13097' : 'z. B. mug_product_msz_11-oz_…'}" spellcheck="false"></div></div>
       <div class="row" style="margin-top:10px"><label class="row" style="margin:0;color:var(--fg);font-weight:400;font-size:14px"><input type="checkbox" data-f="on" ${p.on ? 'checked' : ''}> Im Shop zeigen</label>
         <span style="flex:1"></span><span class="small muted">${p.on && p.uid && p.cents ? '' : 'erscheint noch nicht'}</span><button class="btn small danger" type="button" data-sh-del>Entfernen</button></div></div>`).join('')
     || '<p class="small muted">Noch keine Produkte – mit „+ Produkt“ anlegen.</p>';
@@ -854,26 +855,30 @@ function shRender() {
 function shCollect() {
   const products = [...document.querySelectorAll('#shProducts .planrow')].map(r => {
     const f = k => r.querySelector(`[data-f="${k}"]`);
-    return { id: r.dataset.id, type: f('type').value, name: f('name').value, cents: shCents(f('price').value) || 0, uid: f('uid').value.trim(), on: f('on').checked };
+    return { id: r.dataset.id, type: f('type').value, provider: f('provider').value, name: f('name').value, cents: shCents(f('price').value) || 0, uid: f('uid').value.trim(), on: f('on').checked };
   });
   return { mode: $('#sh_mode').value, seller: $('#sh_seller').value, ship: shCents($('#sh_ship').value || 0), countries: $('#sh_countries').value,
     legal: { agb: $('#sh_agb').value, privacy: $('#sh_privacy').value, imprint: $('#sh_imprint').value, withdrawal: $('#sh_withdrawal').value }, products };
 }
-$('#shAdd').onclick = () => { shCfg = PM_SHOP.normalize(shCollect()); shCfg.products.push({ id: 'p' + Date.now().toString(36), type: 'poster', name: 'Poster', cents: 0, uid: '', on: true }); shRender(); };
+$('#shAdd').onclick = () => { shCfg = PM_SHOP.normalize(shCollect()); shCfg.products.push({ id: 'p' + Date.now().toString(36), type: 'mug', provider: 'gelato', name: 'Tasse', cents: 0, uid: '', on: true }); shRender(); };
 $('#shProducts').addEventListener('click', e => {
   const row = e.target.closest('[data-sh-del]')?.closest('.planrow'); if (!row) return;
   shCfg = PM_SHOP.normalize(shCollect()); shCfg.products = shCfg.products.filter(p => p.id !== row.dataset.id); shRender();
 });
 $('#sh_mode').addEventListener('change', shSampleLink);
+$('#shProducts').addEventListener('change', e => {
+  if (e.target.dataset.f !== 'provider') return;
+  e.target.closest('.planrow').querySelector('[data-f="uid"]').placeholder = e.target.value === 'printful' ? 'z. B. 13097' : 'z. B. mug_product_msz_11-oz_…';
+});
 $('#shSave').onclick = async () => {
   if (DEMO) return toast('Demo-Modus – es wird nichts gespeichert');
   const raw = shCollect(), clean = PM_SHOP.normalize(raw);
   for (const k of ['agb', 'privacy', 'imprint', 'withdrawal']) if (raw.legal[k].trim() && !clean.legal[k]) return toast('Bitte die Links zu den Rechtstexten prüfen.', 5000);
   const bad = raw.products.find(p => p.uid && !clean.products.find(q => q.id === p.id)?.uid);
-  if (bad) return toast(`Die Gelato-Produktnummer bei „${bad.name}“ sieht nicht richtig aus.`, 5000);
+  if (bad) return toast(`Die Produktnummer bei „${bad.name}“ passt nicht zum Druckdienst.`, 5000);
   if (clean.mode !== 'off') {
     if (!PM_SHOP.legalOk(clean)) return toast('Für den Shop brauchst du Links zu AGB, Datenschutz und Impressum.', 6000);
-    if (!PM_SHOP.active(clean).length) return toast('Mindestens ein Produkt braucht Preis und Gelato-Produktnummer.', 6000);
+    if (!PM_SHOP.active(clean).length) return toast('Mindestens ein Produkt braucht Preis und Produktnummer.', 6000);
   }
   const blob = new Blob([JSON.stringify({ ...clean, at: new Date().toISOString() })], { type: 'application/json' });
   const { error } = await sb.storage.from('photos').upload(PM_SHOP.path(me.id), blob, { upsert: true, contentType: 'application/json', cacheControl: '60' });
@@ -886,8 +891,8 @@ async function shServer() {
   let st = null;
   try { const r = await fetch(CFG.supabaseUrl + '/functions/v1/photo-shop', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey }, body: '{"action":"status"}' }); if (r.ok) st = await r.json(); } catch {}
   if (!st) { el.innerHTML = '<span style="color:var(--warn)">Die Server-Funktion „photo-shop“ ist noch nicht eingerichtet (siehe FOTO-SHOP.md).</span>'; $('#shState').textContent = 'nicht bereit'; return; }
-  el.innerHTML = [ok(st.stripe, st.stripeTest ? 'Stripe (Testschlüssel)' : 'Stripe'), ok(st.gelato, 'Gelato'), ok(st.storage, 'Foto-Speicher')].join(' &nbsp; ');
-  const ready = st.stripe && st.gelato && st.storage && shCfg && PM_SHOP.legalOk(shCfg) && PM_SHOP.active(shCfg).length;
+  el.innerHTML = [ok(st.stripe, st.stripeTest ? 'Stripe (Testschlüssel)' : 'Stripe'), ok(st.gelato, 'Gelato'), ok(st.printful, 'Printful'), ok(st.storage, 'Foto-Speicher')].join(' &nbsp; ');
+  const ready = st.stripe && st.storage && shCfg && PM_SHOP.legalOk(shCfg) && PM_SHOP.active(shCfg).some(p => st[p.provider]);
   $('#shState').textContent = !ready ? 'nicht bereit' : shCfg.mode === 'live' ? 'live' : shCfg.mode === 'test' ? 'Test' : 'aus';
 }
 // Link zur Fotoseite mit einem eigenen Foto (im Testmodus mit &shop=test)
@@ -899,7 +904,7 @@ async function shSampleLink() {
   const a = $('#shTest'); a.classList.toggle('hidden', !shSample);
   if (shSample) a.href = 'galerie.html?f=' + encodeURIComponent(shSample) + ($('#sh_mode').value === 'test' ? '&shop=test' : '');
 }
-const SH_STATUS = { paid: 'Bezahlt – geht an Gelato', sending: 'Wird an Gelato gesendet', sent: 'An Gelato übergeben', error: 'Fehler' };
+const SH_STATUS = { paid: 'Bezahlt – geht an den Druckdienst', sending: 'Wird an den Druckdienst gesendet', sent: 'An den Druckdienst übergeben', error: 'Fehler' };
 async function shOrders() {
   if (DEMO) { $('#shOrders').innerHTML = '<tr><td colspan="5" class="empty">Noch keine Bestellungen.</td></tr>'; return; }
   const { data, error } = await sb.from('shop_orders').select('*').order('created_at', { ascending: false }).limit(100);
@@ -907,7 +912,7 @@ async function shOrders() {
   $('#shOrders').innerHTML = (data || []).length ? data.map(o => `<tr><td data-l="Datum">${fmtDate(o.created_at)}${o.test ? ' <span class="badge">Test</span>' : ''}</td>
       <td data-l="Produkt">${o.qty} × <span translate="no">${esc(o.product_name || o.product)}</span></td><td data-l="Betrag">${PM_SHOP.price(o.cents)}</td>
       <td data-l="Kunde"><span translate="no">${esc(o.customer || '–')}</span><div class="small muted" translate="no">${esc([o.email, o.country].filter(Boolean).join(' · '))}</div></td>
-      <td data-l="Status"><span style="color:var(--${o.status === 'sent' ? 'ok' : o.status === 'error' ? 'bad' : 'warn'})">${SH_STATUS[o.status] || esc(o.status)}</span>${o.gelato_id ? `<div class="small muted" translate="no">Gelato ${esc(o.gelato_id)}</div>` : ''}${o.error ? `<div class="small muted" translate="no">${esc(o.error)}</div>` : ''}</td></tr>`).join('')
+      <td data-l="Status"><span style="color:var(--${o.status === 'sent' ? 'ok' : o.status === 'error' ? 'bad' : 'warn'})">${SH_STATUS[o.status] || esc(o.status)}</span>${o.provider_order ? `<div class="small muted" translate="no">${o.provider === 'printful' ? 'Printful' : 'Gelato'} ${esc(o.provider_order)}</div>` : ''}${o.error ? `<div class="small muted" translate="no">${esc(o.error)}</div>` : ''}</td></tr>`).join('')
     : '<tr><td colspan="5" class="empty">Noch keine Bestellungen.</td></tr>';
 }
 
