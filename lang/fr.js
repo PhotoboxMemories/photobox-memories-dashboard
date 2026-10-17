@@ -1628,6 +1628,8 @@ I18N.add('fr', {
 "Poster": "Poster",
 "Poster 20 × 30 cm": "Poster 20 × 30 cm",
 "Poster 30 × 45 cm": "Poster 30 × 45 cm",
+"Poster 40 × 60 cm": "Poster 40 × 60 cm",
+"Poster A4": "Poster A4",
 "postimpressionistisches Gemälde mit wirbelnden, kräftigen Pinselstrichen.": "peinture postimpressionniste aux coups de pinceau tourbillonnants et vigoureux.",
 "Preis": "Prix",
 "Preis (€, brutto)": "Prix (€, TTC)",
