@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261017-2';</script>
+<script>window.I18N_V = '20261017-3';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -14,6 +14,7 @@
 <script src="config.js?v=20261017-2"></script>
 <script src="icons.js?v=20261017-2"></script>
 <script src="ad.js?v=20261017-2"></script>
+<script src="shop.js?v=20261017-3"></script>
 <script src="render.js?v=20261017-2"></script>
 <script src="mosaic.js?v=20261017-2"></script>
 <script src="editor.js?v=20261017-2"></script>
@@ -268,6 +269,30 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <p class="small muted" style="margin:0 0 12px">Preise pro Fotobox, brutto. Kunden sehen nur eingeschaltete Tarife unter „Meine Lizenzen“ und kaufen über Stripe – die Lizenz entsteht nach der Zahlung von selbst. Abos verlängern sich automatisch; gekündigte laufen bis zum Ende der bezahlten Zeit.</p>
         <div id="planList"><p class="small muted">Lädt …</p></div>
       </div>
+      <div class="card" style="margin-bottom:20px" id="shopCard">
+        <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Foto-Shop für Gäste (Gelato)</h2><span class="badge" id="shState"></span></div>
+        <p class="small muted" style="margin:0 0 12px">Gäste bestellen auf ihrer Fotoseite (QR-Code an der Fotobox) ihr Foto als Poster, Leinwand, Tasse und mehr. Bezahlt wird über Stripe, gedruckt und verschickt wird von Gelato. Vorerst nur für die Fotos deiner eigenen Fotoboxen.</p>
+        <div class="small" id="shServer" style="margin-bottom:12px"></div>
+        <div class="grid3">
+          <div><label>Shop</label><select id="sh_mode"></select></div>
+          <div><label>Verkäufer (Name oder Firma)</label><input id="sh_seller" maxlength="80" placeholder="z. B. Photobox Memories"></div>
+          <div><label>Versand pro Bestellung (€, brutto)</label><input id="sh_ship" type="number" min="0" step="0.01"></div>
+          <div><label>Lieferländer (Ländercodes)</label><input id="sh_countries" placeholder="DE, AT"></div>
+          <div><label>AGB (Link)</label><input id="sh_agb" placeholder="https://…"></div>
+          <div><label>Datenschutz (Link)</label><input id="sh_privacy" placeholder="https://…"></div>
+          <div><label>Impressum (Link)</label><input id="sh_imprint" placeholder="https://…"></div>
+          <div><label>Widerrufsbelehrung (Link, freiwillig)</label><input id="sh_withdrawal" placeholder="https://…"></div>
+        </div>
+        <label style="margin-top:16px">Produkte</label>
+        <p class="small muted" style="margin:0 0 8px">Gelato-Produktnummer: in Gelato unter „Produktkatalog“ Produkt und Größe wählen, dann unter der Beschreibung die „Product UID“ kopieren. Hoch- oder Querformat wählt der Shop selbst passend zum Foto. Produkte ohne Nummer erscheinen nicht.</p>
+        <div id="shProducts"></div>
+        <div class="row" style="margin-top:12px"><button class="btn" id="shAdd" type="button">+ Produkt</button><span style="flex:1"></span><a class="btn hidden" id="shTest" target="_blank" rel="noopener">Fotoseite ansehen</a><button class="btn primary" id="shSave" type="button">Speichern</button></div>
+        <h3 style="margin:22px 0 8px">Bestellungen</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Datum</th><th>Produkt</th><th>Betrag</th><th>Kunde</th><th>Status</th></tr></thead>
+          <tbody id="shOrders"><tr><td colspan="5" class="empty">Lädt …</td></tr></tbody>
+        </table></div>
+      </div>
       <div class="card" style="margin-bottom:20px">
         <h2>Fotobox-Software veröffentlichen</h2>
         <p class="small muted" style="margin:0 0 10px">Neue Installationsdatei <b>FotoBox-Setup-…exe</b> auswählen (liegt nach jedem Bau auf dem Schreibtisch und in Dropbox unter „Photobox Memories Installer“). Sie wird in den privaten Software-Bereich hochgeladen; danach bietet „Neueste Version herunterladen“ unter „Geräte“ genau diese Version an – für alle Kunden.</p>
@@ -492,7 +517,7 @@ async function boot() {
   await Promise.all([loadEvents(), loadDevices(), loadLicenses()]);
   loadMyCredits(); loadShop(); loadPlans();
   loadSoftware();
-  if (profile.is_admin) { loadRelease(); loadCredits(); loadOverview(); }
+  if (profile.is_admin) { loadRelease(); loadCredits(); loadOverview(); loadShopCfg(); }
 }
 
 /* ---------- Tabs ---------- */
@@ -801,6 +826,90 @@ document.addEventListener('click', e => {
   const k = e.target.dataset?.copy; if (!k) return;
   navigator.clipboard.writeText(k).then(() => toast('Schlüssel kopiert'));
 });
+
+/* ---------- Foto-Shop für Gäste (Verwaltung): Produkte, Preise, Rechtstexte – gespeichert als photos/<Konto>/shop.json ---------- */
+let shCfg = null, shSample = '';
+const shCents = v => Math.round(parseFloat(String(v).replace(',', '.')) * 100);
+async function loadShopCfg() {
+  if (!profile?.is_admin || !$('#shopCard')) return;
+  const b = DEMO ? null : await fetch(`${CFG.supabaseUrl}/storage/v1/object/public/photos/${PM_SHOP.path(me.id)}?t=${Date.now()}`, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+  shCfg = PM_SHOP.normalize(b);
+  $('#sh_mode').innerHTML = PM_SHOP.MODES.map(([k, n]) => `<option value="${k}">${n}</option>`).join('');
+  $('#sh_mode').value = shCfg.mode; $('#sh_seller').value = shCfg.seller; $('#sh_ship').value = (shCfg.ship / 100).toFixed(2);
+  $('#sh_countries').value = shCfg.countries.join(', ');
+  for (const k of ['agb', 'privacy', 'imprint', 'withdrawal']) $('#sh_' + k).value = shCfg.legal[k];
+  shRender(); shServer(); shOrders(); shSampleLink();
+}
+function shRender() {
+  $('#shProducts').innerHTML = shCfg.products.map(p => `<div class="planrow" data-id="${esc(p.id)}">
+      <div class="grid3"><div><label>Art</label><select data-f="type">${PM_SHOP.TYPES.map(([k, n]) => `<option value="${k}" ${p.type === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+        <div><label>Name für Gäste</label><input data-f="name" maxlength="60" value="${esc(p.name)}"></div>
+        <div><label>Preis (€, brutto)</label><input data-f="price" type="number" min="1" step="0.01" value="${p.cents ? (p.cents / 100).toFixed(2) : ''}"></div>
+        <div style="grid-column:1/-1"><label>Gelato-Produktnummer (Product UID)</label><input data-f="uid" value="${esc(p.uid)}" placeholder="z. B. flat_300x450-mm-…_ver" spellcheck="false"></div></div>
+      <div class="row" style="margin-top:10px"><label class="row" style="margin:0;color:var(--fg);font-weight:400;font-size:14px"><input type="checkbox" data-f="on" ${p.on ? 'checked' : ''}> Im Shop zeigen</label>
+        <span style="flex:1"></span><span class="small muted">${p.on && p.uid && p.cents ? '' : 'erscheint noch nicht'}</span><button class="btn small danger" type="button" data-sh-del>Entfernen</button></div></div>`).join('')
+    || '<p class="small muted">Noch keine Produkte – mit „+ Produkt“ anlegen.</p>';
+}
+// Felder ins Objekt übernehmen (vor Speichern, Hinzufügen und Entfernen)
+function shCollect() {
+  const products = [...document.querySelectorAll('#shProducts .planrow')].map(r => {
+    const f = k => r.querySelector(`[data-f="${k}"]`);
+    return { id: r.dataset.id, type: f('type').value, name: f('name').value, cents: shCents(f('price').value) || 0, uid: f('uid').value.trim(), on: f('on').checked };
+  });
+  return { mode: $('#sh_mode').value, seller: $('#sh_seller').value, ship: shCents($('#sh_ship').value || 0), countries: $('#sh_countries').value,
+    legal: { agb: $('#sh_agb').value, privacy: $('#sh_privacy').value, imprint: $('#sh_imprint').value, withdrawal: $('#sh_withdrawal').value }, products };
+}
+$('#shAdd').onclick = () => { shCfg = PM_SHOP.normalize(shCollect()); shCfg.products.push({ id: 'p' + Date.now().toString(36), type: 'poster', name: 'Poster', cents: 0, uid: '', on: true }); shRender(); };
+$('#shProducts').addEventListener('click', e => {
+  const row = e.target.closest('[data-sh-del]')?.closest('.planrow'); if (!row) return;
+  shCfg = PM_SHOP.normalize(shCollect()); shCfg.products = shCfg.products.filter(p => p.id !== row.dataset.id); shRender();
+});
+$('#sh_mode').addEventListener('change', shSampleLink);
+$('#shSave').onclick = async () => {
+  if (DEMO) return toast('Demo-Modus – es wird nichts gespeichert');
+  const raw = shCollect(), clean = PM_SHOP.normalize(raw);
+  for (const k of ['agb', 'privacy', 'imprint', 'withdrawal']) if (raw.legal[k].trim() && !clean.legal[k]) return toast('Bitte die Links zu den Rechtstexten prüfen.', 5000);
+  const bad = raw.products.find(p => p.uid && !clean.products.find(q => q.id === p.id)?.uid);
+  if (bad) return toast(`Die Gelato-Produktnummer bei „${bad.name}“ sieht nicht richtig aus.`, 5000);
+  if (clean.mode !== 'off') {
+    if (!PM_SHOP.legalOk(clean)) return toast('Für den Shop brauchst du Links zu AGB, Datenschutz und Impressum.', 6000);
+    if (!PM_SHOP.active(clean).length) return toast('Mindestens ein Produkt braucht Preis und Gelato-Produktnummer.', 6000);
+  }
+  const blob = new Blob([JSON.stringify({ ...clean, at: new Date().toISOString() })], { type: 'application/json' });
+  const { error } = await sb.storage.from('photos').upload(PM_SHOP.path(me.id), blob, { upsert: true, contentType: 'application/json', cacheControl: '60' });
+  if (error) return toast('Fehler: ' + error.message, 6000);
+  shCfg = clean; shRender(); shSampleLink(); shServer(); toast('Gespeichert – gilt auf den Fotoseiten in etwa einer Minute', 4000);
+};
+// Stand der Server-Funktion: welche Zugänge sind in Supabase eingetragen
+async function shServer() {
+  const el = $('#shServer'), ok = (b, t) => `<span style="color:var(--${b ? 'ok' : 'bad'})">${b ? '✓' : '✗'} ${t}</span>`;
+  let st = null;
+  try { const r = await fetch(CFG.supabaseUrl + '/functions/v1/photo-shop', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey }, body: '{"action":"status"}' }); if (r.ok) st = await r.json(); } catch {}
+  if (!st) { el.innerHTML = '<span style="color:var(--warn)">Die Server-Funktion „photo-shop“ ist noch nicht eingerichtet (siehe FOTO-SHOP.md).</span>'; $('#shState').textContent = 'nicht bereit'; return; }
+  el.innerHTML = [ok(st.stripe, st.stripeTest ? 'Stripe (Testschlüssel)' : 'Stripe'), ok(st.gelato, 'Gelato'), ok(st.storage, 'Foto-Speicher')].join(' &nbsp; ');
+  const ready = st.stripe && st.gelato && st.storage && shCfg && PM_SHOP.legalOk(shCfg) && PM_SHOP.active(shCfg).length;
+  $('#shState').textContent = !ready ? 'nicht bereit' : shCfg.mode === 'live' ? 'live' : shCfg.mode === 'test' ? 'Test' : 'aus';
+}
+// Link zur Fotoseite mit einem eigenen Foto (im Testmodus mit &shop=test)
+async function shSampleLink() {
+  if (!shSample && !DEMO) {
+    const { data } = await sb.from('photos').select('path,kind').eq('kind', 'photo').order('created_at', { ascending: false }).limit(60);
+    shSample = (data || []).map(x => x.path).find(x => PM_AD.ownerOf(x) === me.id && /\.(jpe?g|png)$/i.test(x)) || '';
+  }
+  const a = $('#shTest'); a.classList.toggle('hidden', !shSample);
+  if (shSample) a.href = 'galerie.html?f=' + encodeURIComponent(shSample) + ($('#sh_mode').value === 'test' ? '&shop=test' : '');
+}
+const SH_STATUS = { paid: 'Bezahlt – geht an Gelato', sending: 'Wird an Gelato gesendet', sent: 'An Gelato übergeben', error: 'Fehler' };
+async function shOrders() {
+  if (DEMO) { $('#shOrders').innerHTML = '<tr><td colspan="5" class="empty">Noch keine Bestellungen.</td></tr>'; return; }
+  const { data, error } = await sb.from('shop_orders').select('*').order('created_at', { ascending: false }).limit(100);
+  if (error) { $('#shOrders').innerHTML = `<tr><td colspan="5" class="empty" style="color:var(--warn)">${/relation|does not exist|schema cache/i.test(error.message) ? 'Die Bestell-Liste ist auf dem Server noch nicht eingerichtet (supabase/migrations/202610170001_foto_shop.sql im SQL Editor ausführen).' : esc(error.message)}</td></tr>`; return; }
+  $('#shOrders').innerHTML = (data || []).length ? data.map(o => `<tr><td data-l="Datum">${fmtDate(o.created_at)}${o.test ? ' <span class="badge">Test</span>' : ''}</td>
+      <td data-l="Produkt">${o.qty} × <span translate="no">${esc(o.product_name || o.product)}</span></td><td data-l="Betrag">${PM_SHOP.price(o.cents)}</td>
+      <td data-l="Kunde"><span translate="no">${esc(o.customer || '–')}</span><div class="small muted" translate="no">${esc([o.email, o.country].filter(Boolean).join(' · '))}</div></td>
+      <td data-l="Status"><span style="color:var(--${o.status === 'sent' ? 'ok' : o.status === 'error' ? 'bad' : 'warn'})">${SH_STATUS[o.status] || esc(o.status)}</span>${o.gelato_id ? `<div class="small muted" translate="no">Gelato ${esc(o.gelato_id)}</div>` : ''}${o.error ? `<div class="small muted" translate="no">${esc(o.error)}</div>` : ''}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty">Noch keine Bestellungen.</td></tr>';
+}
 
 /* ---------- Verwaltung (Admin) ---------- */
 // Neue Fotobox-Software veröffentlichen: Datei direkt in den privaten Software-Bereich hochladen und als neueste Version eintragen
