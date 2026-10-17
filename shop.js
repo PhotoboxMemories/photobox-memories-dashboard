@@ -8,15 +8,16 @@
   const cut = (s, n) => String(s ?? '').trim().slice(0, n);
   const TYPES = [['poster', 'Poster'], ['canvas', 'Leinwand'], ['mug', 'Tasse'], ['print', 'Fotoabzug'], ['magnet', 'Magnet']];
   const MODES = [['off', 'Aus'], ['test', 'Test (nur über den Test-Link sichtbar)'], ['live', 'Live (alle Gäste sehen den Shop)']];
-  // Vorschläge – Gelato-Produktnummer (UID) trägt der Betreiber selbst ein, ohne sie erscheint das Produkt nicht.
+  // Vorschläge mit Gelato-Produktnummern (Katalog geprüft am 17.10.2026; Endung _ver/_hor stellt der Server passend zum Foto ein).
+  // Gelato-Kosten ohne MwSt. nach Deutschland: Poster A4 5,89 + 6,49 Versand, 30×45 8,39 + 6,89, 40×60 9,29 + 8,19,
+  // Leinwand 20×30 10,69 + 5,79, 40×60 26,39 + 10,19, Tasse 4,43 + 4,49. Fotoabzüge und Magnete hat Gelato nicht.
   const DEFAULTS = [
-    { id: 'poster-s', type: 'poster', name: 'Poster 20 × 30 cm', cents: 1990 },
-    { id: 'poster-l', type: 'poster', name: 'Poster 30 × 45 cm', cents: 2990 },
-    { id: 'canvas-s', type: 'canvas', name: 'Leinwand 20 × 30 cm', cents: 3990 },
-    { id: 'canvas-l', type: 'canvas', name: 'Leinwand 40 × 60 cm', cents: 6990 },
-    { id: 'mug', type: 'mug', name: 'Fototasse', cents: 1990 },
-    { id: 'print', type: 'print', name: 'Fotoabzug 10 × 15 cm', cents: 790 },
-    { id: 'magnet', type: 'magnet', name: 'Fotomagnet', cents: 990 }
+    { id: 'poster-a4', type: 'poster', name: 'Poster A4', cents: 1490, uid: 'flat_a4-8x12-inch_200-gsm-80lb-coated-silk_4-0_ver' },
+    { id: 'poster-m', type: 'poster', name: 'Poster 30 × 45 cm', cents: 2490, uid: 'flat_300x450-mm-12x18-inch_200-gsm-80lb-coated-silk_4-0_ver' },
+    { id: 'poster-l', type: 'poster', name: 'Poster 40 × 60 cm', cents: 2990, uid: 'flat_400x600-mm-16x24-inch_200-gsm-80lb-coated-silk_4-0_ver' },
+    { id: 'canvas-s', type: 'canvas', name: 'Leinwand 20 × 30 cm', cents: 3490, uid: 'canvas_200x300-mm-8x12-inch_canvas_wood-fsc-slim_4-0_ver' },
+    { id: 'canvas-l', type: 'canvas', name: 'Leinwand 40 × 60 cm', cents: 5990, uid: 'canvas_400x600-mm-16x24-inch_canvas_wood-fsc-slim_4-0_ver' },
+    { id: 'mug', type: 'mug', name: 'Fototasse', cents: 1990, uid: 'mug_product_msz_11-oz_mmat_ceramic-white_cl_4-0' }
   ];
   const UID = /^[a-z0-9][a-z0-9_.-]{4,199}$/i;
   const httpUrl = u => {
@@ -39,7 +40,7 @@
     const countries = [...new Set(String(o.countries ?? 'DE, AT').toUpperCase().split(/[^A-Z]+/).filter(x => /^[A-Z]{2}$/.test(x)))].slice(0, 40);
     const l = o.legal || {};
     return {
-      mode: MODES.some(m => m[0] === o.mode) ? o.mode : 'off', seller: cut(o.seller, 80), ship: money(o.ship, 0, 10000) ?? 490,
+      mode: MODES.some(m => m[0] === o.mode) ? o.mode : 'off', seller: cut(o.seller, 80), ship: money(o.ship, 0, 10000) ?? 590,
       countries: countries.length ? countries : ['DE'],
       legal: { agb: httpUrl(l.agb), privacy: httpUrl(l.privacy), imprint: httpUrl(l.imprint), withdrawal: httpUrl(l.withdrawal) },
       products
