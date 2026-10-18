@@ -597,7 +597,7 @@
         ai.seed = ai.edit >= 0 && !(ai.p || ai.a) ? S.ai.prompts[ai.edit] : (ai.p || ai.a) ? aiCompose(aiFind(AI_MOTIFS, ai.p), aiFind(AI_ARTS, ai.a)) : null;
         ai.p = ai.a = ''; ai.custom = true; ai.cname = ai.ctext = undefined; render(); return;
       }
-      if (a === 'ai-new') { e.preventDefault(); ai.p = ai.a = ''; ai.custom = false; ai.edit = -1; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = undefined; render(); return; }
+      if (a === 'ai-new') { e.preventDefault(); ai.p = ai.a = ''; ai.custom = false; ai.edit = -1; ai.libEdit = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = undefined; render(); return; }
       if (a === 'ai-save') {
         if (!ai.custom && !ai.p && !ai.a) return;
         const item = aiDraft();
@@ -608,14 +608,51 @@
         t.disabled = false;
         if (at < 0) return;
         const saved = S.ai.prompts[at];
-        ai.p = ai.a = ''; ai.custom = false; ai.edit = -1; ai.seed = null; ai.draftId = ''; ai.resultId = ''; ai.cname = ai.ctext = undefined;
+        if (ai.custom) { ai.edit = at; ai.seed = null; ai.draftId = ''; ai.resultId = ''; ai.cname = ai.ctext = undefined; } // eigener Text bleibt offen: weiter ändern und neu generieren
+        else { ai.p = ai.a = ''; ai.edit = -1; ai.seed = null; ai.draftId = ''; ai.resultId = ''; ai.cname = ai.ctext = undefined; }
         render(); ctx.toast(saved?.thumb ? 'Stil mit Vorschaubild gespeichert' : 'Stil gespeichert'); return;
       }
-      if (a === 'ai-open') {
-        const item = S.ai.prompts[+t.dataset.i], parts = aiParts(item.id), same = aiCompose(parts.p, parts.a);
-        ai.edit = +t.dataset.i; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = undefined; ai.custom = !(parts.p || parts.a) || same.prompt !== item.prompt || same.name !== item.name;
-        ai.p = ai.custom ? '' : parts.p?.key || ''; ai.a = ai.custom ? '' : parts.a?.key || '';
+      if (a === 'ai-open') { // gespeicherten Stil immer mit seinem vollständigen Text öffnen: ändern, neu generieren, speichern
+        ai.edit = +t.dataset.i; ai.libEdit = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = undefined; ai.custom = true; ai.p = ai.a = '';
         render(); main.querySelector('[data-ai-builder]')?.scrollIntoView({ block: 'center' }); return;
+      }
+      if (a === 'ai-lib-edit' || a === 'ai-common-edit') { // Stil aus „Meine KI-Stile“ bearbeiten bzw. einen fertigen Stil als Vorlage für einen eigenen nehmen
+        const x = (a === 'ai-common-edit' ? ai.common || [] : Array.isArray(ai.lib) ? ai.lib : [])[+t.dataset.i]; if (!x) return;
+        ai.libEdit = a === 'ai-lib-edit' ? x.id : ''; ai.edit = -1; ai.custom = true; ai.p = ai.a = ''; ai.seed = { name: x.name, prompt: x.prompt }; ai.draftId = ''; ai.cname = ai.ctext = undefined;
+        render(); main.querySelector('[data-ai-builder]')?.scrollIntoView({ block: 'center' }); return;
+      }
+      if (a === 'ai-set-thumb') { // aktuelles Testbild (auch aus „Letzte Generierungen“) als Bild des bearbeiteten Stils – der Text bleibt, wie er gespeichert ist
+        const ev = ai.edit >= 0 ? S.ai.prompts[ai.edit] : null, lx = !ev && ai.libEdit && Array.isArray(ai.lib) ? ai.lib.find(y => y.id === ai.libEdit) : null;
+        if (!ai.result || (!ev && !lx)) return;
+        t.disabled = true; status('Lädt Vorschaubild hoch …');
+        let url = '';
+        try { url = await ctx.uploadFile(await aiThumbFile(ai.result)); } catch (error) { ctx.toast('Vorschaubild konnte nicht hochgeladen werden: ' + error.message, 6000); }
+        t.disabled = false; status('');
+        if (!url) return;
+        if (ev) { ev.thumb = url; S.ai = AIEvent.normalize(S.ai); save(); }
+        else {
+          const { error } = await ctx.sb.from('ai_styles').update({ thumb: url }).eq('id', lx.id);
+          if (error) return ctx.toast('Speichern fehlgeschlagen: ' + error.message, 6000);
+          lx.thumb = url;
+        }
+        render(); ctx.toast('Neues Bild für „' + (ev || lx).name + '“ gespeichert'); return;
+      }
+      if (a === 'ai-lib-update') { // bearbeiteten Stil in „Meine KI-Stile“ zurückschreiben – mit neuem Bild, wenn eins zu genau diesem Text erzeugt wurde
+        const x = Array.isArray(ai.lib) && ai.lib.find(y => y.id === ai.libEdit); if (!x) return;
+        const item = aiDraft();
+        if (aiEmptyText(item.prompt)) return ctx.toast('Bitte beschreibe zuerst, wie das Bild aussehen soll.');
+        const patch = { name: item.name, prompt: item.prompt };
+        t.disabled = true;
+        if (ai.result && ai.resultPrompt === item.prompt) {
+          status('Lädt Vorschaubild hoch …');
+          try { patch.thumb = await ctx.uploadFile(await aiThumbFile(ai.result)); } catch (error) { ctx.toast('Vorschaubild konnte nicht hochgeladen werden: ' + error.message, 5000); }
+          status('');
+        }
+        const { error } = await ctx.sb.from('ai_styles').update(patch).eq('id', x.id);
+        t.disabled = false;
+        if (error) return ctx.toast('Speichern fehlgeschlagen: ' + error.message, 6000);
+        Object.assign(x, patch); ai.seed = { name: x.name, prompt: x.prompt }; ai.cname = ai.ctext = undefined; ai.resultId = ''; render();
+        ctx.toast(patch.thumb ? '„Meine KI-Stile“ gespeichert – mit neuem Bild' : '„Meine KI-Stile“ gespeichert'); return;
       }
       if (a === 'ai-lib-result') { // aktuelles Testbild samt Prompt in die Sammlung
         const prompt = ai.resultPrompt || aiDraft().prompt;
@@ -639,22 +676,14 @@
         S.ai.prompts.push({ id: crypto.randomUUID(), name: x.name, prompt: x.prompt, ...(x.thumb ? { thumb: x.thumb } : {}) });
         S.ai = AIEvent.normalize(S.ai); save(); render(); ctx.toast('Stil übernommen – ohne Credits'); return;
       }
-      if (a === 'ai-lib-rename') {
-        const x = Array.isArray(ai.lib) && ai.lib[+t.dataset.i]; if (!x) return;
-        const name = (prompt('Neuer Name für den Stil (sehen auch die Gäste, wenn du ihn in ein Event übernimmst):', x.name) || '').trim().slice(0, 60);
-        if (!name || name === x.name) return;
-        const { error } = await ctx.sb.from('ai_styles').update({ name }).eq('id', x.id);
-        if (error) return ctx.toast(error.message, 5000);
-        x.name = name; render(); return;
-      }
       if (a === 'ai-lib-del') {
         const x = Array.isArray(ai.lib) && ai.lib[+t.dataset.i]; if (!x) return;
         if (!await (G.pmConfirm || (async text => confirm(text)))(`„${x.name}“ aus „Meine KI-Stile“ löschen? In Events bleibt der Stil erhalten.`)) return;
         const { error } = await ctx.sb.from('ai_styles').delete().eq('id', x.id);
         if (error) return ctx.toast(error.message, 5000);
-        ai.lib = ai.lib.filter(y => y.id !== x.id); render(); return;
+        ai.lib = ai.lib.filter(y => y.id !== x.id); if (ai.libEdit === x.id) { ai.libEdit = ''; ai.custom = false; ai.seed = null; ai.cname = ai.ctext = undefined; } render(); return;
       }
-      if (a === 'ai-delete') { S.ai.prompts.splice(+t.dataset.i, 1); ai.edit = -1; ai.custom = false; ai.p = ai.a = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = undefined; S.ai = AIEvent.normalize(S.ai); save(); render(); return; }
+      if (a === 'ai-delete') { S.ai.prompts.splice(+t.dataset.i, 1); ai.edit = -1; ai.libEdit = ''; ai.custom = false; ai.p = ai.a = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = undefined; S.ai = AIEvent.normalize(S.ai); save(); render(); return; }
       if (a === 'ai-status') {
         t.disabled = true;
         try {
@@ -1069,6 +1098,7 @@
           const el = main.querySelector('[data-ai-bal]'); if (el) el.textContent = error ? 'Guthaben nicht abrufbar' : (data?.balance || 0) + ' Credits';
         });
         const pp = aiFind(AI_MOTIFS, ai.p), aa = aiFind(AI_ARTS, ai.a), editing = ai.edit >= 0 ? S.ai.prompts[ai.edit] : null;
+        const libEditing = ai.libEdit && Array.isArray(ai.lib) ? ai.lib.find(x => x.id === ai.libEdit) || null : null; // Stil aus „Meine KI-Stile“ wird bearbeitet
         // Eigener Text: bei zentraler KI erst speichern, wenn dafür ein Bild erzeugt wurde – so hat jede eigene Kachel ein Bild.
         const hasResult = !!(ai.result && !ai.busy && ai.resultId && ai.resultId === (ai.custom ? (ai.edit >= 0 && !S.ai.prompts[ai.edit].id.startsWith('lib-') ? S.ai.prompts[ai.edit].id : ai.draftId) : (pp || aa) ? aiCompose(pp, aa).id : ''));
         const canSave = !ai.busy && (ai.custom ? (!central || hasResult || !!editing) : !!(pp || aa));
@@ -1086,30 +1116,33 @@
           <div class="between" style="margin-top:10px"><small>${ai.own ? 'Eigenes Testfoto' : 'Standard-Testfoto'}</small><span>${ai.own ? '<a href="#" data-a="ai-photo-reset">Standardbild</a> · ' : ''}<a href="#" data-a="ai-photo">${ai.photo ? 'Bild ändern' : 'Bild wählen'}</a></span></div>
           <button class="ghost" style="width:100%;margin-top:10px" data-a="ai-test" ${(ai.custom || pp || aa) && !ai.busy ? '' : 'disabled'}>${ai.custom || pp || aa ? `✨ Generieren${central ? ` <small>(1 Credit)</small>` : ''}` : 'Wähle einen Stil aus oder füge einen hinzu, um zu generieren'}</button>
           ${central ? `<label style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:13px"><input type="checkbox" data-ai-consent style="margin-top:3px" ${ai.consentOk ? 'checked' : ''}> Dieses Foto darf zum Testen an den KI-Dienst (xAI) übertragen werden.</label>` : ''}
-          ${ai.result && !ai.busy ? '<button class="ghost" style="width:100%;margin-top:8px" data-a="ai-lib-result">☆ In „Meine KI-Stile“ speichern</button>' : ''}
+          ${ai.result && !ai.busy && (editing || libEditing) ? `<button class="btn pri" style="width:100%;margin-top:8px" data-a="ai-set-thumb">🖼 Als Bild für „${esc((editing || libEditing).name)}“ übernehmen</button>` : ''}
+          ${ai.result && !ai.busy && !libEditing ? '<button class="ghost" style="width:100%;margin-top:8px" data-a="ai-lib-result">☆ In „Meine KI-Stile“ speichern</button>' : ''}
           ${ai.recent.length ? `<small style="display:block;margin-top:10px">Letzte Generierungen</small><div class="airecent">${ai.recent.map((r, n) => `<img src="${r.image}" title="${esc(r.name)}" data-a="ai-recent" data-i="${n}">`).join('')}</div>` : ''}</div>
           <div class="card"><div class="aibar">${central
             ? `<span>KI-Guthaben:</span><span class="bal" data-ai-bal>…</span><small>1 Credit pro Bild</small><span class="sp" style="flex:1"></span><button class="ghost" data-a="ai-status">Verbindung prüfen</button>`
             : `<span>Eigener API-Schlüssel auf der Fotobox · ${({ grok: 'Grok (xAI)', openai: 'OpenAI', gemini: 'Google Gemini' })[S.ai.provider]}</span>`}</div></div>`;
         const lib = ai.lib;
-        const libCard = `<div class="card"><b>Meine KI-Stile${Array.isArray(lib) ? ` (${lib.length})` : ''}</b><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Deine gesammelten Stile mit Bild – für jedes Event. Antippen übernimmt den Stil in dieses Event, ohne Credits.</p>
+        const libCard = `<div class="card"><b>Meine KI-Stile${Array.isArray(lib) ? ` (${lib.length})` : ''}</b><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Deine gesammelten Stile mit Bild – für jedes Event. Antippen übernimmt den Stil in dieses Event, ohne Credits. ✎ = Text ändern und neu generieren.</p>
           ${!lib || lib === 'loading' ? '<p style="color:#6b6b78;font-size:13px">Lädt …</p>' : lib.error ? `<p style="color:#c98a00;font-size:13px">${lib.error === 'setup' ? 'Noch nicht eingerichtet (supabase/migrations/202610170004_ki_stile.sql im SQL Editor ausführen).' : esc(lib.error)}</p>`
-            : lib.length ? `<div class="aitiles">${lib.map((x, n) => `<button data-a="ai-lib-use" data-i="${n}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}${ctx.admin ? `<span class="fav ${x.shared ? 'on' : ''}" data-a="ai-lib-share" data-i="${n}" title="${x.shared ? 'Für alle Kunden freigegeben – antippen zum Zurücknehmen' : 'Für alle Kunden freigeben'}">👥</span>` : ''}<span class="del" data-a="ai-lib-del" data-i="${n}" title="Aus der Sammlung löschen">🗑</span><span class="edit" data-a="ai-lib-rename" data-i="${n}" title="Umbenennen">✎</span><b>${esc(x.name)}</b></button>`).join('')}</div>`
+            : lib.length ? `<div class="aitiles">${lib.map((x, n) => `<button data-a="ai-lib-use" data-i="${n}" class="${ai.libEdit === x.id ? 'on' : ''}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}${ctx.admin ? `<span class="fav ${x.shared ? 'on' : ''}" data-a="ai-lib-share" data-i="${n}" title="${x.shared ? 'Für alle Kunden freigegeben – antippen zum Zurücknehmen' : 'Für alle Kunden freigeben'}">👥</span>` : ''}<span class="del" data-a="ai-lib-del" data-i="${n}" title="Aus der Sammlung löschen">🗑</span><span class="edit" data-a="ai-lib-edit" data-i="${n}" title="Text ändern und neu generieren">✎</span><b>${esc(x.name)}</b></button>`).join('')}</div>`
             : '<p style="color:#6b6b78;font-size:13px">Noch leer. Speichere ein Testbild mit „In Meine KI-Stile speichern“ oder tippe oben bei einem Stil auf ★.</p>'}
           ${ctx.admin && Array.isArray(lib) && lib.length ? '<p style="color:#6b6b78;font-size:13px;margin-top:8px">👥 = für alle Software-Kunden freigeben. Freigegebene Stile sehen deine Kunden unter „Stile von Photobox Memories“.</p>' : ''}</div>
-          ${(ai.common || []).length ? `<div class="card"><b>Stile von Photobox Memories (${ai.common.length})</b><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Fertige Stile mit Beispielbild. Antippen übernimmt den Stil in dieses Event, ohne Credits.</p>
-            <div class="aitiles">${ai.common.map((x, n) => `<button data-a="ai-lib-use" data-common="1" data-i="${n}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}<b>${esc(x.name)}</b></button>`).join('')}</div></div>` : ''}`;
+          ${(ai.common || []).length ? `<div class="card"><b>Stile von Photobox Memories (${ai.common.length})</b><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Fertige Stile mit Beispielbild. Antippen übernimmt den Stil in dieses Event, ohne Credits. ✎ = als Vorlage für einen eigenen Stil nehmen.</p>
+            <div class="aitiles">${ai.common.map((x, n) => `<button data-a="ai-lib-use" data-common="1" data-i="${n}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}<span class="edit" data-a="ai-common-edit" data-i="${n}" title="Als Vorlage für einen eigenen Stil nehmen">✎</span><b>${esc(x.name)}</b></button>`).join('')}</div></div>` : ''}`;
         return `${titleSw('KI-Porträts', 'ai.enabled')}<p class="sub" style="margin:-6px 0 14px;color:#6b6b78">Verwandle deine Gäste mit generativer KI</p><div class="aigrid"><div class="left">
-          <div class="card" data-ai-builder>${ai.custom ? '<p style="margin:0 0 6px"><a href="#" data-a="ai-new">← Zurück zu den Vorgaben</a></p>' : ''}<b>${editing ? 'Vorgabe bearbeiten: ' + esc(editing.name) : ai.custom ? 'Benutzerdefinierter Prompt' : 'Vorgabe erstellen'}</b>
+          <div class="card" data-ai-builder>${ai.custom ? '<p style="margin:0 0 6px"><a href="#" data-a="ai-new">← Zurück zu den Vorgaben</a></p>' : ''}<b>${editing ? 'Vorgabe bearbeiten: ' + esc(editing.name) : libEditing ? 'Meinen KI-Stil bearbeiten: ' + esc(libEditing.name) : ai.custom ? 'Benutzerdefinierter Prompt' : 'Vorgabe erstellen'}</b>
+          ${editing || libEditing ? '<p class="small" style="margin:6px 0 0;color:#6b6b78">Text ändern, rechts neu generieren und speichern. Der Text bleibt danach offen – so kannst du ihn Schritt für Schritt verbessern.</p>' : ''}
           ${ai.custom ? `<label class="l">Name (sehen die Gäste)</label><input type="text" maxlength="60" data-ai-cname value="${esc(ai.cname ?? (ai.seed || editing)?.name ?? '')}" placeholder="z. B. Unser Firmenlook">
             <label class="l">Beschreibung für die KI</label><textarea rows="5" maxlength="1200" data-ai-ctext placeholder="Motiv: was die Gäste werden · Szene: wo sie sind · Stil: wie das Bild aussieht">${esc(ai.ctext ?? ((ai.seed || editing)?.prompt || AI_KEEP))}</textarea>
             <small style="display:block;margin-top:10px"><b>Beispiel ausprobieren</b> · jedes lädt eine andere Kombination</small>
             <div class="aichips" style="margin-top:6px">${aiExamples().map((x, n) => `<button data-a="ai-example" data-i="${n}">${esc(x.name)}</button>`).join('')}</div>`
             : `<div class="aislots">${slot('p', pp, 'Porträtstil')}${slot('a', aa, 'Kunststil')}<button class="aislot" data-a="ai-custom"><span style="font-size:22px">+</span><div><b>Benutzerdefinierter Prompt</b><small>selbst beschreiben</small></div></button></div>
             <small>Wähle einen Porträtstil, einen Kunststil oder beides zusammen. ${pp || aa ? '<a href="#" data-a="ai-custom">Text selbst anpassen</a>' : ''}</small>`}
-          ${central ? '<p class="small" style="margin-top:8px;color:#6b6b78">Erst rechts „Generieren“, dann „Vorgabe speichern“: Das erzeugte Bild wird das Bild auf der Kachel. Dieses Bild sieht jeder, der die Stile sieht – nimm ein Testfoto, das gezeigt werden darf.</p>' : ''}
-          ${ai.result && !ai.busy && ai.resultId && ai.resultId === curId ? '<p style="margin-top:10px;font-weight:600">' + (editing ? '✓ Bild erstellt. Mit „Änderung speichern“ wird es das Bild auf der Kachel.' : '✓ Bild erstellt. Mit „Vorgabe speichern“ wird es das Bild auf der Kachel.') + '</p>' : ''}
-          <div class="row" style="margin-top:12px"><button class="btn pri" style="flex:1" data-a="ai-save" ${canSave ? '' : 'disabled'} ${canSave ? '' : 'title="Erst ein Bild generieren, dann speichern"'}>${editing ? 'Änderung speichern' : 'Vorgabe speichern'}</button>${editing ? '<button class="ghost" data-a="ai-new">Abbrechen</button>' : ''}</div></div>
+          ${central && !libEditing ? '<p class="small" style="margin-top:8px;color:#6b6b78">Erst rechts „Generieren“, dann „Vorgabe speichern“: Das erzeugte Bild wird das Bild auf der Kachel. Dieses Bild sieht jeder, der die Stile sieht – nimm ein Testfoto, das gezeigt werden darf.</p>' : ''}
+          ${ai.result && !ai.busy && ai.resultId && ai.resultId === curId ? '<p style="margin-top:10px;font-weight:600">' + (editing ? '✓ Bild erstellt. Mit „Änderung speichern“ wird es das Bild auf der Kachel.' : libEditing ? '✓ Bild erstellt. Mit „In Meine KI-Stile speichern“ wird es das neue Bild dieses Stils.' : '✓ Bild erstellt. Mit „Vorgabe speichern“ wird es das Bild auf der Kachel.') + '</p>' : ''}
+          <div class="row" style="margin-top:12px">${libEditing ? `<button class="btn pri" style="flex:1" data-a="ai-lib-update" ${ai.busy ? 'disabled' : ''}>In „Meine KI-Stile“ speichern</button><button class="ghost" data-a="ai-new">Fertig</button>`
+            : `<button class="btn pri" style="flex:1" data-a="ai-save" ${canSave ? '' : 'disabled'} ${canSave ? '' : 'title="Erst ein Bild generieren, dann speichern"'}>${editing ? 'Änderung speichern' : 'Vorgabe speichern'}</button>${editing ? '<button class="ghost" data-a="ai-new">Fertig</button>' : ''}`}</div></div>
           <div class="card"><b>Vorgefertigte Stile (${S.ai.prompts.length}/15)</b>
           <div class="aitiles"><button data-a="ai-new"><span class="pic" style="background:#fafafc;border:2px dashed #cfcfd8;color:#6b6b78">+</span><b>Neue Vorgabe</b></button>
           ${S.ai.prompts.map((p, i) => `<button data-a="ai-open" data-i="${i}" class="${ai.edit === i ? 'on' : ''}" title="Antippen zum Bearbeiten">${aiPic(p.id, p.thumb)}<span class="num">${i + 1}</span><span class="fav ${aiInLib(p) ? 'on' : ''}" data-a="ai-lib-add" data-i="${i}" title="In „Meine KI-Stile“ speichern">★</span><span class="del" data-a="ai-delete" data-i="${i}" title="Entfernen">🗑</span><span class="edit">✎</span><b>${esc(p.name)}</b></button>`).join('')}</div></div>
@@ -1117,7 +1150,8 @@
           <div class="card"><b>An der Fotobox</b>
           ${sw('ai.guestChoice', 'Gäste wählen ihren Stil', 'Aus = alle Fotos bekommen automatisch den Standard-Stil.')}
           <label class="l">Standard-Stil</label><select data-s="ai.selectedId"><option value="">Erster Stil</option>${S.ai.prompts.map(p => `<option value="${esc(p.id)}" ${p.id === S.ai.selectedId ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>
-          <div class="card">${sw('x.ai.skip', 'Option zum Überspringen der KI-Porträts hinzufügen ' + NEWAPP, 'Gäste können ihr Foto auch ohne KI-Stil behalten')}</div>
+          <div class="card">${sw('x.ai.skip', 'Option zum Überspringen der KI-Porträts hinzufügen ' + NEWAPP, 'Gäste können ihr Foto auch ohne KI-Stil behalten')}
+          ${sw('x.ai.consent', 'Gäste vor dem KI-Porträt um Zustimmung bitten ' + NEWAPP, 'Aus = keine Abfrage an der Fotobox. Das Foto wird trotzdem an den KI-Dienst (xAI, USA) übertragen – die Einwilligung regelst du dann selbst, zum Beispiel im Vertrag mit deinem Kunden oder per Aushang an der Fotobox.')}</div>
           <div class="card"><details class="adv"><summary>Texte für die Gäste anpassen ${NEWAPP}</summary><p style="color:#6b6b78;font-size:13px;margin:8px 0">Diese Texte sehen deine Gäste an der Fotobox, wenn sie ein KI-Porträt erstellen. Du kannst jede Formulierung ändern, zum Beispiel in eine andere Sprache oder in euren Ton.</p><div class="grid3x">
             ${text('x.ai.texts.choose', 'Überschrift der Stilauswahl')}${text('x.ai.texts.chooseBtn', 'Knopf: Stil auswählen')}${text('x.ai.texts.createBtn', 'Knopf: KI-Porträt erstellen')}${text('x.ai.texts.creating', 'Hinweis während der Erstellung')}
             ${text('x.ai.texts.retrying', 'Hinweis beim zweiten Versuch')}${text('x.ai.texts.retryBtn', 'Knopf: erneut versuchen')}${text('x.ai.texts.skipBtn', 'Knopf: ohne KI weiter')}${text('x.ai.texts.failed', 'Meldung, wenn es nicht geklappt hat')}</div></details></div>
