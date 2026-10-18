@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Fotogalerie – Photobox Memories</title>
-<script>window.I18N_V = '20261018-8';</script>
+<script>window.I18N_V = '20261018-9';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache: vom QR-Code der Fotobox (?l=…), sonst die des Handys
 (function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
@@ -120,7 +120,7 @@
   <button class="nav l" id="lPrev" aria-label="Vorheriges">‹</button><button class="nav r" id="lNext" aria-label="Nächstes">›</button></div>
 <footer>Diese Seite ist nur über den persönlichen Link erreichbar. Bitte den Link nur an Gäste dieser Veranstaltung weitergeben.</footer>
 
-<script src="config.js?v=20261017-2"></script>
+<script src="config.js?v=20261018-9"></script>
 <script src="icons.js?v=20261017-2"></script>
 <script src="ad.js?v=20261017-2"></script>
 <script src="shop.js?v=20261017-7"></script>
@@ -139,6 +139,12 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const Q = new URLSearchParams(location.search), token = Q.get('g') || '', single = Q.get('f') || '', show = Q.get('show') === '1';
   const url = path => window.FOTOBOX_PHOTOS ? FOTOBOX_PHOTOS.url(path) : CFG.supabaseUrl + '/storage/v1/object/public/photos/' + String(path).split('/').map(encodeURIComponent).join('/');
+  // Notfall-Kopie: antwortet der Foto-Speicher (Hetzner) nicht, das Bild bzw. Video von der Ersatzadresse laden
+  document.addEventListener('error', e => { const el = e.target; if (!/^(IMG|VIDEO)$/.test(el?.tagName) || el.dataset.alt) return; const a = window.FOTOBOX_PHOTOS?.altSrc?.(el.currentSrc || el.src); if (a) { el.dataset.alt = '1'; el.src = a; } }, true);
+  const fetchAny = async path => { // Herunterladen: erst Hetzner, sonst die Notfall-Kopie
+    try { const r = await fetch(url(path)); if (r.ok) return r; } catch {}
+    const a = window.FOTOBOX_PHOTOS?.alt?.(path); if (!a) throw new Error('nicht erreichbar'); const r = await fetch(a); if (!r.ok) throw new Error('nicht erreichbar'); return r;
+  };
   let photos = [], current = 0, info = null;
 
   const box = html => { $('#main').innerHTML = `<div class="box">${html}</div>`; };
@@ -198,7 +204,7 @@
   document.addEventListener('keydown', e => { if (!$('#light').classList.contains('on')) return; if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') open(current - 1); if (e.key === 'ArrowRight') open(current + 1); });
   $('#lDl').onclick = async () => {
     const p = photos[current], b = $('#lDl'); b.disabled = true;
-    try { const r = await fetch(url(p.path)); if (!r.ok) throw 0; save(await r.blob(), fileName(p, current)); }
+    try { const r = await fetchAny(p.path); save(await r.blob(), fileName(p, current)); }
     catch { window.open(url(p.path), '_blank'); } // Notlösung: Bild im neuen Tab, dort lange drücken und speichern
     b.disabled = false;
   };
@@ -207,7 +213,7 @@
     try {
       if (!window.JSZip) await new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
       const zip = new window.JSZip();
-      for (let i = 0; i < photos.length; i++) { b.textContent = `Lade ${i + 1} von ${photos.length} …`; try { const r = await fetch(url(photos[i].path)); if (r.ok) zip.file(fileName(photos[i], i), await r.blob()); } catch {} }
+      for (let i = 0; i < photos.length; i++) { b.textContent = `Lade ${i + 1} von ${photos.length} …`; try { const r = await fetchAny(photos[i].path); zip.file(fileName(photos[i], i), await r.blob()); } catch {} }
       b.textContent = 'Packe Datei …';
       save(await zip.generateAsync({ type: 'blob', compression: 'STORE' }), (info.name || 'Fotos').replace(/[^\wäöüÄÖÜß \-]/g, '_') + '.zip');
     } catch { alert('Das Herunterladen hat nicht geklappt. Bitte später noch einmal versuchen.'); }
@@ -305,8 +311,9 @@
     document.querySelector('footer').innerHTML = '<span>Danke, dass du dabei warst!</span>'; langSel();
     const I = (n, z = 20) => window.ICON ? ICON(n, z) : '';
     // Probe mit eigener Adresse je Versuch (?t=…), damit kein zwischengespeichertes „nicht gefunden“ hängen bleibt
-    const ready = () => new Promise(res => {
-      const t = u + '?t=' + Date.now(), el = vid ? document.createElement('video') : new Image();
+    const alt = window.FOTOBOX_PHOTOS?.alt?.(single) || '';
+    const ready = (base = u) => new Promise(res => {
+      const t = base + '?t=' + Date.now(), el = vid ? document.createElement('video') : new Image();
       let fin = false; const done = ok => { if (fin) return; fin = true; el.onload = el.onerror = el.onloadedmetadata = null; if (vid) el.removeAttribute('src'); res(ok ? t : null); };
       if (vid) { el.preload = 'metadata'; el.muted = true; el.onloadedmetadata = () => done(true); } else el.onload = () => done(true);
       el.onerror = () => done(false); setTimeout(() => done(false), 20000); el.src = t;
@@ -333,7 +340,7 @@
       if (!vid) showShop(src);
     };
     const wait = async n => {
-      const src = await ready(); if (src) return show(src);
+      const src = await ready() || (alt ? await ready(alt) : null); if (src) return show(src); // sonst die Notfall-Kopie
       $('#main').innerHTML = `<div class="polaroid"><div class="ph"><div class="spin"></div><b>${vid ? 'Dein Video ist gleich da …' : 'Dein Foto ist gleich da …'}</b><small>${n < 60
         ? 'Es wird gerade von der Fotobox hochgeladen. Die Seite zeigt es von selbst an.'
         : 'Das dauert gerade etwas länger. Die Seite schaut weiter nach – du kannst diesen Link auch später noch einmal öffnen.'}</small></div>
