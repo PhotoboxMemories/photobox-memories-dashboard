@@ -333,6 +333,8 @@
   #wsModal .et .ei{width:46px;height:46px;border-radius:10px;background:#FFF3C4;display:flex;align-items:center;justify-content:center;color:#1D1D1B;flex:none}
   #wsModal .et b{display:block;font-family:Fredoka,system-ui,sans-serif;letter-spacing:.02em}#wsModal .et small{color:#777}
   #wsModal .et[disabled]{opacity:.5;cursor:default}
+  #wsModal .et.hl{border:2px solid #F7C838;background:#FFFAEA}#wsModal .et.hl .ei{background:#F7C838}
+  #wsModal .soon{display:inline-block;font-size:11px;background:#FFF3C4;color:#8a6400;border-radius:999px;padding:2px 8px;margin-left:6px;font-weight:600;font-family:system-ui,sans-serif}#wsModal .soon.new{background:#1D1D1B;color:#F7C838}
   #wsModal .sec{margin:14px 20px 8px;font-size:12px;letter-spacing:.06em;color:#555}
   #ws #wsMzBoard svg{width:100%;height:auto;max-height:46vh;display:block;border:1px solid #e3e3ea;border-radius:8px;background:#fff}
   #ws .mzRes{background:#FFF8E1;border-left:4px solid #F7C838;border-radius:8px;padding:10px 14px;margin:10px 0;font-size:13px;line-height:1.55;color:#333}
@@ -428,7 +430,7 @@
     S.x = deepMerge(X_DEF, ev.settings?.x);
     S.layouts = S.layouts || [];
     let E = { name: ev.name, event_date: ev.event_date, logo_url: ev.logo_url, share_token: ev.share_token }; // share_token = Kennung im Freigabe-Link der Galerie
-    let page = 'dash', sub = {};
+    let page = ctx.page || 'dash', sub = {};
     const root = document.createElement('div'); root.id = 'ws';
     root.innerHTML = `<div class="wtop"><button class="tb mnav" data-a="mnav" title="Menü" aria-label="Menü">☰</button><div class="logo">${LOGO(28)}</div><span class="en"></span><span class="sp"></span>
       <span class="st"></span><button class="tb" data-a="sharelink" title="Teilen">${ICON('share', 16)}<span class="tl"> Teilen</span></button><button class="tb" data-a="preview" title="Vorschau">${ICON('eye', 16)}<span class="tl"> Vorschau</span></button></div>
@@ -1601,7 +1603,10 @@
   }
 
   // „Erstellen Sie ein neues Ereignis“ – Ereignisart wählen
+  // Live-Karikatur steht als eigene App ganz oben: nur Einzelfotos (jedes wird eine Karikatur, 1 Credit), Handy-Selfies an
   const TYPES = [
+    ['LIVE-KARIKATUR', 'cari', 'pen', 'LIVE-KARIKATUR', 'Eigene App: Gäste werden live Strich für Strich als Karikatur gezeichnet – an der Fotobox oder per Selfie vom Handy',
+      { modes: { single: true, strip: false, grid: false, gif: false, boomerang: false, video: false }, x: { caricature: { on: true, phone: true, needCode: true, print: true, approve: false } } }],
     ['FOTO', 'photo', 'camera', 'PHOTO BOOTH', 'Fotos für den Druck oder die digitale Weitergabe', {}],
     ['FOTO', 'glam', 'sparkles', 'GLAM BOOTH', 'Fotos mit Hautglättung und Farbfiltern', { beauty: true, beautyStrength: 55, filtersOn: true, filters: ['normal', 'bw', 'glam', 'warm'], template: 'elegant', frame: '#111111', textColor: '#f3efe6', font: 'elegant' }],
     ['FOTO', 'bgremoval', 'wand', 'BACKGROUND REMOVAL', 'Hintergrund per KI durch ein digitales Bild ersetzen', { bgMode: 'ai', bgGuestChoice: true }],
@@ -1614,7 +1619,7 @@
     const m = document.createElement('div'); m.id = 'wsModal';
     let sec = '';
     const rows = TYPES.map(([g, id, ic, t, d, preset]) => (g !== sec ? `<div class="sec">${sec = g}</div>` : '') +
-      `<button class="et" data-type="${id}" ${preset ? '' : 'disabled'}><span class="ei">${ICON(ic, 24)}</span><span><b>${t}${preset ? '' : ' <span class="soon">bald</span>'}</b><small>${d}</small></span></button>`).join('');
+      `<button class="et${id === 'cari' ? ' hl' : ''}" data-type="${id}" ${preset ? '' : 'disabled'}><span class="ei">${ICON(ic, 24)}</span><span><b>${t}${preset ? '' : ' <span class="soon">bald</span>'}${id === 'cari' ? ' <span class="soon new">NEU</span>' : ''}</b><small>${d}</small></span></button>`).join('');
     m.innerHTML = `<div class="box" style="width:min(460px,94vw);height:auto;max-height:92vh"><div class="mh"><div style="flex:1"><h3>Erstellen Sie ein neues Ereignis</h3><small>Wählen Sie die Ereignisart für Ihre Fotobox</small></div><button class="x" data-x="1">${ICON('x', 20)}</button></div>
       <div style="overflow:auto;padding-bottom:16px">${rows}<div class="sec">KOPIEREN</div>
       <button class="et" data-type="dup" ${events.length ? '' : 'disabled'}><span class="ei">${ICON('copy', 24)}</span><span><b>VORHERIGES EREIGNIS DUPLIZIEREN</b><small>Einstellungen eines früheren Ereignisses übernehmen</small></span></button>
@@ -1624,7 +1629,9 @@
       const b = e.target.closest('[data-type],[data-dup]'); if (!b || b.disabled) return;
       if (b.dataset.type === 'dup') { const l = $(m, '.dupList'); l.style.display = l.style.display === 'none' ? 'block' : 'none'; return; }
       if (b.dataset.dup) { const src = events.find(x => x.id === b.dataset.dup); m.remove(); return onPick(structuredClone(src.settings || {}), src.logo_url, src.name + ' (Kopie)'); }
-      const t = TYPES.find(x => x[1] === b.dataset.type); m.remove(); onPick(structuredClone(t[5]), null, null, t[3]);
+      const t = TYPES.find(x => x[1] === b.dataset.type), set = structuredClone(t[5]); m.remove();
+      if (t[1] === 'cari') { set.x.caricature.secret = Caricature.newSecret(); return onPick(set, null, null, 'Live-Karikatur', 'cari'); } // gleich auf der Karikatur-Seite öffnen
+      onPick(set, null, null, t[3]);
     });
     document.body.appendChild(m);
   }
