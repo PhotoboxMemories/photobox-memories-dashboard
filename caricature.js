@@ -8,10 +8,46 @@
     'gezeichnet, flache helle Farben, ein großer goldener Kreis hinter den Personen, sonst reiner weißer Hintergrund. Kein Text, keine Schrift, kein Rahmen.';
   const TITLE = 'Strich für Strich – dein Porträt entsteht';
   const num = (v, a, b, d) => { const n = Math.round(+v); return Number.isFinite(n) ? Math.min(b, Math.max(a, n)) : d; };
+  // phone: Gäste schicken Selfies vom Handy (QR-Code auf der Wand) · needCode: zweistelliger Code vom Bildschirm nötig ·
+  // approve: jede Einsendung erst im Dashboard freigeben · print: Karikaturen vom Handy ausdrucken · secret: für den Code
   function normalize(x) {
     const o = x && typeof x === 'object' ? x : {};
     return { on: o.on === true, prompt: typeof o.prompt === 'string' && o.prompt.trim() ? o.prompt.slice(0, 1200) : '', secs: num(o.secs, 6, 20, 10),
-      title: typeof o.title === 'string' ? o.title.slice(0, 80) : '' };
+      title: typeof o.title === 'string' ? o.title.slice(0, 80) : '', phone: o.phone !== false, needCode: o.needCode !== false, approve: o.approve === true,
+      print: o.print !== false, secret: typeof o.secret === 'string' && /^[0-9a-f]{16,64}$/.test(o.secret) ? o.secret : '' };
+  }
+  const newSecret = () => [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('');
+  // Zweistelliger Code für die Wand – wechselt alle 2 Minuten, gleiche Rechnung wie in der Funktion „cari“
+  const SLOT = 120000;
+  async function code(secret, slot = Math.floor(Date.now() / SLOT)) {
+    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const s = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode('cari:' + slot)));
+    return String((((s[0] << 24) | (s[1] << 16) | (s[2] << 8) | s[3]) >>> 0) % 90 + 10);
+  }
+  const HAND = '"Segoe Print", "Ink Free", "Comic Sans MS", "Snell Roundhand", "Chalkboard SE", cursive';
+  // Fertiges Bild mit Gruß in einer Sprechblase (oben) und dem Namen als Unterschrift (unten). Beides wird später
+  // Strich für Strich mitgezeichnet, weil es schwarz auf weiß steht.
+  function compose(img, { name = '', message = '' } = {}) {
+    const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height, k = Math.min(1, 1600 / Math.max(iw, ih));
+    const W = Math.round(iw * k), H0 = Math.round(ih * k), top = message ? Math.round(W * .3) : 0, bottom = name ? Math.round(W * .14) : 0;
+    const c = document.createElement('canvas'); c.width = W; c.height = H0 + top + bottom; const x = c.getContext('2d');
+    x.fillStyle = '#fff'; x.fillRect(0, 0, W, c.height); x.drawImage(img, 0, top, W, H0);
+    if (message) {
+      const fs = Math.round(W * .046); x.font = `600 ${fs}px ${HAND}`;
+      const lines = wrap(x, message, W * .62).slice(0, 4), tw = Math.max(...lines.map(l => x.measureText(l).width));
+      const bw = Math.min(W * .78, tw + fs * 2.2), bh = lines.length * fs * 1.3 + fs * 1.4, bx = W - bw - W * .05, by = Math.max(W * .02, (top - bh) / 2);
+      x.lineWidth = Math.max(3, W * .006); x.strokeStyle = '#1d1d1b'; x.fillStyle = '#fff';
+      x.beginPath(); x.roundRect(bx, by, bw, bh, Math.min(bh / 2, fs * 1.4)); x.fill(); x.stroke();
+      const tx = bx + bw * .3; x.beginPath(); x.moveTo(tx, by + bh - x.lineWidth); x.lineTo(tx - fs * .9, by + bh + fs * 1.3); x.lineTo(tx + fs * .9, by + bh - x.lineWidth); x.fill(); x.stroke();
+      x.fillStyle = '#fff'; x.fillRect(tx - fs * .6, by + bh - x.lineWidth * 2.2, fs * 1.4, x.lineWidth * 1.6); // Übergang Blase → Spitze ohne Linie
+      x.fillStyle = '#1d1d1b'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      lines.forEach((l, i) => x.fillText(l, bx + bw / 2, by + fs * .7 + fs * 1.3 * (i + .5)));
+    }
+    if (name) {
+      const fs = Math.round(W * .07); x.font = `600 ${fs}px ${HAND}`; x.fillStyle = '#1d1d1b'; x.textAlign = 'right'; x.textBaseline = 'middle';
+      x.save(); x.translate(W * .94, top + H0 + bottom / 2); x.rotate(-.04); x.fillText('\u2013 ' + name, 0, 0); x.restore();
+    }
+    return c;
   }
   const promptOf = c => (c && c.prompt) || PROMPT;
   // KI-Einstellungen für die Fotobox: immer die zentrale KI (1 Credit pro Bild) mit dem Prompt der Live-Karikatur
@@ -90,5 +126,5 @@
     if (now) return l.remove();
     l.style.opacity = '0'; setTimeout(() => l.remove(), 450);
   }
-  G.Caricature = { PROMPT, TITLE, normalize, promptOf, aiSettings, stage, show, hide };
+  G.Caricature = { PROMPT, TITLE, SLOT, normalize, newSecret, code, compose, promptOf, aiSettings, stage, show, hide };
 })(window);
