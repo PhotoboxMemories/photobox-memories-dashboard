@@ -264,7 +264,7 @@
   #ws .aitiles button b{font-size:13px;padding:0 4px 6px;text-align:center}
   #ws .aitiles button.on{border-color:#F7C838;background:#fffbea}
   #ws .aitiles button:hover .pic{filter:brightness(1.08)}
-  #ws .aitiles .fav{position:absolute;top:6px;left:6px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.6);color:#F7C838;display:flex;align-items:center;justify-content:center;font-size:14px}
+  #ws .aitiles .fav{position:absolute;left:6px;bottom:34px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.6);color:#F7C838;display:flex;align-items:center;justify-content:center;font-size:14px}
   #ws .aitiles .fav.on{background:#F7C838;color:#1D1D1B}
   #ws .aitiles .del{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px}
   #ws .aislots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
@@ -633,6 +633,14 @@
         if (S.ai.prompts.length >= 15) return ctx.toast('Maximal 15 Stile pro Event.');
         S.ai.prompts.push({ id: crypto.randomUUID(), name: x.name, prompt: x.prompt, ...(x.thumb ? { thumb: x.thumb } : {}) });
         S.ai = AIEvent.normalize(S.ai); save(); render(); ctx.toast('Stil übernommen – ohne Credits'); return;
+      }
+      if (a === 'ai-lib-rename') {
+        const x = Array.isArray(ai.lib) && ai.lib[+t.dataset.i]; if (!x) return;
+        const name = (prompt('Neuer Name für den Stil (sehen auch die Gäste, wenn du ihn in ein Event übernimmst):', x.name) || '').trim().slice(0, 60);
+        if (!name || name === x.name) return;
+        const { error } = await ctx.sb.from('ai_styles').update({ name }).eq('id', x.id);
+        if (error) return ctx.toast(error.message, 5000);
+        x.name = name; render(); return;
       }
       if (a === 'ai-lib-del') {
         const x = Array.isArray(ai.lib) && ai.lib[+t.dataset.i]; if (!x) return;
@@ -1074,7 +1082,7 @@
         const lib = ai.lib;
         const libCard = `<div class="card"><b>Meine KI-Stile${Array.isArray(lib) ? ` (${lib.length})` : ''}</b><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Deine gesammelten Stile mit Bild – für jedes Event. Antippen übernimmt den Stil in dieses Event, ohne Credits.</p>
           ${!lib || lib === 'loading' ? '<p style="color:#6b6b78;font-size:13px">Lädt …</p>' : lib.error ? `<p style="color:#c98a00;font-size:13px">${lib.error === 'setup' ? 'Noch nicht eingerichtet (supabase/migrations/202610170004_ki_stile.sql im SQL Editor ausführen).' : esc(lib.error)}</p>`
-            : lib.length ? `<div class="aitiles">${lib.map((x, n) => `<button data-a="ai-lib-use" data-i="${n}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}${ctx.admin ? `<span class="fav ${x.shared ? 'on' : ''}" data-a="ai-lib-share" data-i="${n}" title="${x.shared ? 'Für alle Kunden freigegeben – antippen zum Zurücknehmen' : 'Für alle Kunden freigeben'}">👥</span>` : ''}<span class="del" data-a="ai-lib-del" data-i="${n}" title="Aus der Sammlung löschen">🗑</span><b>${esc(x.name)}</b></button>`).join('')}</div>`
+            : lib.length ? `<div class="aitiles">${lib.map((x, n) => `<button data-a="ai-lib-use" data-i="${n}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}${ctx.admin ? `<span class="fav ${x.shared ? 'on' : ''}" data-a="ai-lib-share" data-i="${n}" title="${x.shared ? 'Für alle Kunden freigegeben – antippen zum Zurücknehmen' : 'Für alle Kunden freigeben'}">👥</span>` : ''}<span class="del" data-a="ai-lib-del" data-i="${n}" title="Aus der Sammlung löschen">🗑</span><span class="edit" data-a="ai-lib-rename" data-i="${n}" title="Umbenennen">✎</span><b>${esc(x.name)}</b></button>`).join('')}</div>`
             : '<p style="color:#6b6b78;font-size:13px">Noch leer. Speichere ein Testbild mit „In Meine KI-Stile speichern“ oder tippe oben bei einem Stil auf ★.</p>'}
           ${ctx.admin && Array.isArray(lib) && lib.length ? '<p style="color:#6b6b78;font-size:13px;margin-top:8px">👥 = für alle Software-Kunden freigeben. Freigegebene Stile sehen deine Kunden unter „Stile von Photobox Memories“.</p>' : ''}</div>
           ${(ai.common || []).length ? `<div class="card"><b>Stile von Photobox Memories (${ai.common.length})</b><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Fertige Stile mit Beispielbild. Antippen übernimmt den Stil in dieses Event, ohne Credits.</p>
