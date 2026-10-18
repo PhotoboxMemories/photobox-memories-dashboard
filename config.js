@@ -20,6 +20,13 @@ window.FOTOBOX_PHOTOS = {
     const C = window.FOTOBOX_CONFIG, p = String(path || '');
     return p.startsWith(this.prefix) ? String(C.photoStore || '').replace(/\/$/, '') + '/' + this.enc(p.slice(this.prefix.length)) : C.supabaseUrl + '/storage/v1/object/public/photos/' + this.enc(p);
   },
+  // Notfall-Kopie bei Supabase (gleicher Pfad ohne „hz/“): legt die Fotobox an, wenn Hetzner beim Hochladen nicht erreichbar ist.
+  // alt(Pfad) bzw. altSrc(Hetzner-Adresse) liefern die Ersatzadresse – Galerie und Fotoseite nehmen sie, wenn Hetzner nicht antwortet.
+  alt(path) { const p = String(path || ''); return p.startsWith(this.prefix) ? window.FOTOBOX_CONFIG.supabaseUrl + '/storage/v1/object/public/photos/' + this.enc(p.slice(this.prefix.length)) : ''; },
+  altSrc(src) {
+    const C = window.FOTOBOX_CONFIG, base = String(C.photoStore || '').replace(/\/$/, '') + '/', s = String(src || '').split('?')[0];
+    return C.photoStore && s.startsWith(base) ? C.supabaseUrl + '/storage/v1/object/public/photos/' + s.slice(base.length) : '';
+  },
   async call(body, token) {
     const C = window.FOTOBOX_CONFIG;
     const r = await fetch(C.supabaseUrl + '/functions/v1/photo-store', { method: 'POST', body: JSON.stringify(body),
