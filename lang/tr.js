@@ -756,6 +756,7 @@ I18N.add('tr', {
 "Effekte": "Efektler",
 "Effekte nicht verfügbar": "Efektler kullanılamıyor",
 "Effekte und Aufkleber": "Efektler ve çıkartmalar",
+"Eigene App: Gäste werden live Strich für Strich als Karikatur gezeichnet – an der Fotobox oder per Selfie vom Handy": "Kendi uygulaması: Misafirler fotoğraf kabininde ya da telefondan selfie ile canlı olarak çizgi çizgi karikatüre dönüştürülür",
 "Eigene Dateien": "Kendi dosyaların",
 "Eigene Dateien pro Schritt ersetzen die Standardansage.": "Adım başına kendi dosyaların standart anonsun yerini alır.",
 "Eigene Dateien pro Schritt ersetzen die Standardansage. {x}": "Adım başına kendi dosyaların standart anonsun yerini alır. {x}",
