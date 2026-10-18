@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Live-Karikatur – Photobox Memories</title>
+<script>window.I18N_V = '20261018-10';</script>
+<script src="i18n.js?v=20261017-2"></script>
+<script>// Sprache: vom QR-Code (?l=…), sonst die des Handys
+(function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
+  window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--y:#F9CB38;--k:#1D1D1B;--bg:#111110;--card:#1c1c1f;--line:#2e2e33;--muted:#a3a3ad}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:#fff;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:22px 16px 16px;text-align:center;border-bottom:3px solid var(--y);background:var(--k)}
+  header h1{margin:10px 0 4px;font:700 clamp(26px,7vw,38px)/1.12 Fredoka,system-ui,sans-serif}
+  header p{margin:0;color:var(--muted)}
+  main{max-width:520px;margin:0 auto;padding:16px 16px 40px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:0 0 14px}
+  .card h2{margin:0 0 10px;font:600 19px Fredoka,system-ui,sans-serif;display:flex;gap:10px;align-items:center}
+  .card h2 .n{display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--y);color:var(--k);align-items:center;justify-content:center;font-size:16px;flex:none}
+  .muted{color:var(--muted);font-size:14px}
+  .btn{background:var(--y);color:var(--k);border:0;border-radius:999px;padding:14px 20px;font:700 17px system-ui,sans-serif;cursor:pointer;width:100%}
+  .btn.ghost{background:#2a2a2e;color:#fff}
+  .btn:disabled{opacity:.5;cursor:default}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  input[type=text],textarea{width:100%;background:#111114;border:1px solid var(--line);color:#fff;border-radius:12px;padding:12px;font:16px system-ui,sans-serif}
+  textarea{resize:none;height:84px}
+  label.l{display:block;margin:10px 0 6px;font-weight:600}
+  .code{font:700 40px Fredoka,system-ui,sans-serif;text-align:center;letter-spacing:.3em;padding:8px}
+  .pv{margin-top:12px;border-radius:14px;overflow:hidden;background:#000;display:none}
+  .pv img{display:block;width:100%;max-height:420px;object-fit:contain}
+  .ok{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#d8d8de;margin:4px 0 14px}
+  .ok input{width:22px;height:22px;flex:none;margin-top:1px}
+  .err{color:#ff8a8a;font-weight:600;min-height:1.4em;margin:6px 0}
+  .state{text-align:center;padding:26px 10px}
+  .state .big{font-size:64px;line-height:1}
+  .state h2{font:700 26px Fredoka,system-ui,sans-serif;margin:14px 0 6px}
+  .spin{width:46px;height:46px;border-radius:50%;border:5px solid #333;border-top-color:var(--y);animation:sp 1s linear infinite;margin:6px auto}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .count{color:var(--muted);text-align:right;font-size:12px}
+  a{color:var(--y)}
+  footer{text-align:center;color:#77777f;font-size:12px;padding:10px 16px 30px}
+  .langSel{margin-top:10px;background:#1c1c1f;color:#ddd;border:1px solid var(--line);border-radius:8px;padding:6px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="pmad"></div>
+<header><div id="logo"></div><h1>Lass dich live zeichnen!</h1><p id="sub">Einen Moment bitte …</p></header>
+<main id="main">
+  <form id="form" hidden>
+    <div class="card" id="codeCard"><h2><span class="n">1</span><span>Code vom Bildschirm</span></h2>
+      <p class="muted" style="margin:0 0 8px">Die zwei Ziffern stehen auf dem großen Bildschirm neben dem QR-Code.</p>
+      <input type="text" id="code" class="code" inputmode="numeric" maxlength="2" autocomplete="off" placeholder="··"></div>
+    <div class="card"><h2><span class="n" id="n2">2</span><span>Dein Foto</span></h2>
+      <p class="muted" style="margin:0 0 10px">Allein oder in der Gruppe – Gesichter gut sichtbar und hell.</p>
+      <div class="two"><button type="button" class="btn" id="cam">📷 Selfie machen</button><button type="button" class="btn ghost" id="pick">🖼 Foto wählen</button></div>
+      <input type="file" id="fCam" accept="image/*" capture="user" hidden><input type="file" id="fPick" accept="image/*" hidden>
+      <div class="pv" id="pv"><img id="pvImg" alt="Dein Foto"></div></div>
+    <div class="card"><h2><span class="n" id="n3">3</span><span>Gruß und Name</span></h2>
+      <label class="l" for="msg">Dein Gruß (kommt in die Sprechblase)</label><textarea id="msg" maxlength="80" placeholder="z. B. Alles Liebe euch beiden!"></textarea><div class="count"><span id="cnt">0</span>/80</div>
+      <label class="l" for="name">Dein Name (als Unterschrift)</label><input type="text" id="name" maxlength="30" autocomplete="name" placeholder="z. B. Lisa"></div>
+    <label class="ok"><input type="checkbox" id="agree"><span>Ich bin einverstanden, dass mein Foto von einer KI zu einer Karikatur gezeichnet und auf dem Bildschirm, im Ausdruck und in der Online-Galerie des Events gezeigt wird. <a href="https://photobox-memories.de/datenschutz" target="_blank" rel="noopener">Datenschutz</a></span></label>
+    <div class="err" id="err"></div>
+    <button type="submit" class="btn" id="send">✨ Abschicken</button>
+  </form>
+  <div id="state" class="card state" hidden></div>
+</main>
+<footer>Photobox Memories · Live-Karikatur</footer>
+
+<script src="config.js?v=20261018-9"></script>
+<script src="icons.js?v=20261017-2"></script>
+<script src="ad.js?v=20261017-2"></script>
+<script>
+(function () {
+  'use strict';
+  const CFG = window.FOTOBOX_CONFIG || {}, $ = s => document.querySelector(s);
+  const T = s => I18N.t(s, PM_LANG);
+  I18N.watch(document.body, () => PM_LANG);
+  document.title = T('Live-Karikatur') + ' – Photobox Memories';
+  if (window.LOGO) $('#logo').innerHTML = LOGO(40);
+  const langSel = () => { const sel = document.createElement('select'); sel.className = 'langSel'; sel.setAttribute('translate', 'no'); sel.setAttribute('aria-label', 'Sprache');
+    sel.innerHTML = I18N.LANGS.map(l => `<option value="${l.code}" ${l.code === PM_LANG ? 'selected' : ''}>${l.name}</option>`).join('');
+    sel.onchange = () => { const u = new URL(location.href); u.searchParams.set('l', sel.value); location.replace(u.href); };
+    document.querySelector('footer').appendChild(document.createElement('br')); document.querySelector('footer').appendChild(sel); };
+  langSel();
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const event = new URLSearchParams(location.search).get('e') || '', store = 'pm-cari-' + event;
+  const call = async body => {
+    const r = await fetch(CFG.supabaseUrl + '/functions/v1/cari', { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw Object.assign(new Error(j.error || 'Gerade nicht erreichbar. Bitte noch einmal versuchen.'), { code: !!j.code });
+    return j;
+  };
+  const fail = msg => { $('#sub').textContent = ''; const s = $('#state'); s.hidden = false; s.innerHTML = `<div class="big">🙈</div><h2>Das geht gerade nicht</h2><p class="muted">${esc(msg)}</p>`; };
+  let info = null, photo = '';
+
+  // Foto verkleinern (schneller hochgeladen, die KI braucht nicht mehr)
+  const shrink = file => new Promise((res, rej) => { const u = URL.createObjectURL(file), img = new Image();
+    img.onload = () => { const k = Math.min(1, 1536 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(u); res(c.toDataURL('image/jpeg', .88)); };
+    img.onerror = () => { URL.revokeObjectURL(u); rej(new Error('Dieses Foto kann nicht geöffnet werden. Bitte ein anderes wählen.')); }; img.src = u; });
+  const takeFile = async e => { const f = e.target.files?.[0]; e.target.value = ''; if (!f) return; $('#err').textContent = '';
+    try { photo = await shrink(f); $('#pvImg').src = photo; $('#pv').style.display = 'block'; } catch (er) { $('#err').textContent = T(er.message); } };
+  $('#cam').onclick = () => $('#fCam').click(); $('#pick').onclick = () => $('#fPick').click();
+  $('#fCam').onchange = takeFile; $('#fPick').onchange = takeFile;
+  $('#msg').oninput = () => { $('#cnt').textContent = $('#msg').value.length; };
+  $('#code').oninput = () => { $('#code').value = $('#code').value.replace(/\D/g, '').slice(0, 2); };
+
+  $('#form').onsubmit = async e => {
+    e.preventDefault(); const err = m => { $('#err').textContent = T(m); };
+    if (info.needCode && !/^\d{2}$/.test($('#code').value)) return err('Bitte den zweistelligen Code vom großen Bildschirm eingeben.');
+    if (!photo) return err('Bitte zuerst ein Foto machen oder auswählen.');
+    if (!$('#agree').checked) return err('Bitte bestätige das Einverständnis.');
+    $('#send').disabled = true; $('#send').textContent = T('Wird gesendet …'); err('');
+    try {
+      const r = await call({ action: 'submit', event, code: $('#code').value, name: $('#name').value, message: $('#msg').value, image: photo, lang: PM_LANG });
+      try { localStorage.setItem(store, JSON.stringify({ id: r.id, key: r.key, at: Date.now() })); } catch {}
+      watch(r.id, r.key);
+    } catch (er) { err(er.message); if (er.code) $('#code').focus(); }
+    $('#send').disabled = false; $('#send').textContent = T('✨ Abschicken');
+  };
+
+  // Stand der Einsendung, bis das Bild fertig ist
+  async function watch(id, key) {
+    $('#form').hidden = true; const s = $('#state'); s.hidden = false; $('#sub').textContent = info?.title || '';
+    let last = '';
+    const again = () => { try { localStorage.removeItem(store); } catch {} location.reload(); };
+    const tick = async () => {
+      let st; try { st = await call({ action: 'status', id, key }); } catch { setTimeout(tick, 5000); return; }
+      const k = st.status + st.position + (st.result || '');
+      if (k !== last) {
+        last = k;
+        const link = st.result ? `galerie.html?f=${encodeURIComponent(st.result)}&l=${PM_LANG}` : '';
+        s.innerHTML = st.status === 'review' ? '<div class="spin"></div><h2>Danke!</h2><p class="muted">Dein Foto wird kurz geprüft – gleich geht es los.</p>'
+          : st.status === 'new' ? `<div class="big">⏳</div><h2>${st.position > 1 ? esc(T('Du bist Nummer {n} in der Reihe').replace('{n}', st.position)) : esc(T('Du bist als Nächstes dran!'))}</h2><p class="muted">Schau gleich auf den großen Bildschirm.</p>`
+          : st.status === 'processing' ? '<div class="big">✏️</div><h2>Jetzt wirst du gezeichnet!</h2><p class="muted">Schau auf den großen Bildschirm – Strich für Strich entsteht deine Karikatur.</p><div class="spin"></div>'
+          : st.status === 'done' ? `<div class="big">🎉</div><h2>Fertig!</h2><p class="muted">Deine Karikatur ist da – speichern, teilen, Erinnerung behalten.</p>${link ? `<p><a class="btn" style="display:block;text-decoration:none" href="${esc(link)}">Mein Bild ansehen</a></p>` : ''}<p><button class="btn ghost" id="again">Noch eine Karikatur</button></p>`
+          : st.status === 'rejected' ? '<div class="big">🙈</div><h2>Leider nicht möglich</h2><p class="muted">Dieses Foto oder dieser Text kann nicht verwendet werden.</p><p><button class="btn" id="again">Nochmal versuchen</button></p>'
+          : '<div class="big">😕</div><h2>Das hat nicht geklappt</h2><p class="muted">Bitte versuch es noch einmal – am besten mit einem anderen Foto.</p><p><button class="btn" id="again">Nochmal versuchen</button></p>';
+        const b = $('#again'); if (b) b.onclick = again;
+      }
+      if (st.status === 'done' || st.status === 'rejected' || st.status === 'failed') return;
+      setTimeout(tick, 3000);
+    };
+    tick();
+  }
+
+  (async () => {
+    if (!/^[0-9a-f-]{36}$/i.test(event) || !CFG.supabaseUrl) return fail(T('Der Link ist unvollständig. Bitte den QR-Code noch einmal scannen.'));
+    try { info = await call({ action: 'info', event }); } catch (er) { return fail(er.message); }
+    $('#sub').textContent = info.title || '';
+    if (info.owner && window.PM_AD) { try { const b = await PM_AD.load(info.owner, CFG); if (PM_AD.has(b)) { PM_AD.addCss(); $('#pmad').innerHTML = PM_AD.html(b); } } catch {} }
+    let saved = null; try { saved = JSON.parse(localStorage.getItem(store) || 'null'); } catch {}
+    if (saved?.id && Date.now() - saved.at < 6 * 3600e3) return watch(saved.id, saved.key);
+    if (!info.needCode) { $('#codeCard').hidden = true; $('#n2').textContent = '1'; $('#n3').textContent = '2'; }
+    $('#form').hidden = false;
+  })();
+})();
+</script>
+</body>
+</html>
