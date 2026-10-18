@@ -417,7 +417,7 @@
     ['h', 'Grundlagen'], ['layout', 'aperture', 'Photo booth experience'], ['capture', 'sliders', 'Aufnahmeeinstellungen'], ['voice', 'mic', 'Virtueller Berater'], ['lang', 'globe', 'Sprache'],
     ['h', 'Erweiterte Einstellungen'], ['start', 'monitor', 'Startbildschirm'], ['fx', 'sparkles', 'Filter & Effekte'], ['bg', 'wand', 'Hintergrundentfernung'],
     ['ai', 'user', 'KI-Porträts'], ['survey', 'clipboard', 'Umfrage & Haftungsausschluss'],
-    ['h', 'Drucken & Teilen'], ['share', 'share', 'Einstellungen für Teilen'], ['print', 'printer', 'Druckeinstellungen'], ['mosaic', 'mosaic', 'Fotomosaik']
+    ['h', 'Drucken & Teilen'], ['share', 'share', 'Einstellungen für Teilen'], ['print', 'printer', 'Druckeinstellungen'], ['mosaic', 'mosaic', 'Fotomosaik'], ['cari', 'pen', 'Live-Karikatur']
   ];
 
   function open(ev, ctx) {
@@ -461,6 +461,15 @@
       ai.lib = [data, ...ai.lib]; render(); ctx.toast('In „Meine KI-Stile“ gespeichert');
     }
     try { ai.photo = localStorage.getItem('pm-ai-testphoto') || ''; } catch {}
+    // Live-Karikatur: Testergebnis und Abspielen (Vollbild, Klick schließt)
+    const cariT = { busy: false, result: '', consent: false };
+    const imgOf = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+    async function cariShow() {
+      try {
+        const c = Caricature.normalize(S.x?.caricature), [img, photo] = await Promise.all([imgOf(cariT.result), ai.photo ? imgOf(ai.photo) : null]);
+        Caricature.show(img, photo, { secs: c.secs, title: c.title, closable: true, hold: 6000 });
+      } catch (error) { ctx.toast('Zeichnung konnte nicht abgespielt werden: ' + error.message); }
+    }
     ai.own = !!ai.photo;
     const aiThumbFile = dataUrl => new Promise((res, rej) => { const img = new Image(); img.onload = () => { const k = Math.min(1, 480 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); c.toBlob(b => b ? res(new File([b], 'ki-stil.jpg', { type: 'image/jpeg' })) : rej(new Error('Bild nicht lesbar')), 'image/jpeg', .85); }; img.onerror = () => rej(new Error('Bild nicht lesbar')); img.src = dataUrl; });
     // Aktuellen Entwurf aus dem Baukasten lesen (Bibliothek oder eigener Text).
@@ -490,7 +499,7 @@
     const aiShrink = file => new Promise((res, rej) => { const img = new Image(); img.onload = () => { const k = Math.min(1, 1536 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(img.src); res(c.toDataURL('image/jpeg', .9)); }; img.onerror = () => rej(new Error('Bild nicht lesbar')); img.src = URL.createObjectURL(file); });
     // Standard-Testfoto für KI-Tests und Filter-Vorschau (testfoto.jpg neben dem Dashboard); ein eigenes Foto ersetzt es nur in diesem Browser.
     const aiDefaultPhoto = () => new Promise(res => { const img = new Image(); img.onload = () => { try { const k = Math.min(1, 1536 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', .9)); } catch { res(''); } }; img.onerror = () => res(''); img.src = 'testfoto.jpg?v=1'; });
-    if (!ai.own) aiDefaultPhoto().then(u => { if (u && !ai.own && !ai.photo) { ai.photo = u; if (page === 'ai' || page === 'fx') render(); } });
+    if (!ai.own) aiDefaultPhoto().then(u => { if (u && !ai.own && !ai.photo) { ai.photo = u; if (page === 'ai' || page === 'fx' || page === 'cari') render(); } });
     const status = t => { $(root, '.st').textContent = t; };
     function save() {
       status('Speichert …'); clearTimeout(saveT);
@@ -544,6 +553,7 @@
         S.x.lang.list = list.length === I18N.CODES.length ? [] : list; save(); return;
       }
       if (t.dataset.aiConsent !== undefined) { ai.consentOk = t.checked; return; }
+      if (t.dataset.cariConsent !== undefined) { cariT.consent = t.checked; return; }
       if (t.dataset.aiCname !== undefined) { ai.cname = t.value; return; }
       if (t.dataset.aiCtext !== undefined) { ai.ctext = t.value; return; }
       if (t.dataset.aiSearch !== undefined) { const q = t.value.trim().toLowerCase(); $$(main, '.aimodal [data-n]').forEach(b => { b.style.display = !q || b.dataset.n.includes(q) ? '' : 'none'; }); return; }
@@ -557,7 +567,7 @@
       if (t.type === 'checkbox') { const l = t.closest('.row,h1')?.querySelector('.swl'); if (l) l.textContent = v ? 'Ein' : 'Aus'; }
       if (t.dataset.num) $$(main, `[data-s="${p}"]`).forEach(x => { if (x !== t) x.value = v; });
       save(); drawPreview();
-      if (t.type === 'radio' || p === 'startDisplay' || t.dataset.rerender) render();
+      if (t.type === 'radio' || p === 'startDisplay' || p === 'x.caricature.on' || t.dataset.rerender) render();
     });
     main.addEventListener('change', e => {
       const t = e.target;
@@ -620,6 +630,29 @@
         const x = (a === 'ai-common-edit' ? ai.common || [] : Array.isArray(ai.lib) ? ai.lib : [])[+t.dataset.i]; if (!x) return;
         ai.libEdit = a === 'ai-lib-edit' ? x.id : ''; ai.edit = -1; ai.custom = true; ai.p = ai.a = ''; ai.seed = { name: x.name, prompt: x.prompt }; ai.draftId = ''; ai.cname = ai.ctext = undefined;
         render(); main.querySelector('[data-ai-builder]')?.scrollIntoView({ block: 'center' }); return;
+      }
+      if (a === 'cari-reset') { e.preventDefault(); S.x.caricature = { ...(S.x.caricature || {}), prompt: '' }; save(); render(); return; }
+      if (a === 'cari-play') { e.preventDefault?.(); if (cariT.result) cariShow(); return; }
+      if (a === 'cari-test') {
+        const c = Caricature.normalize(S.x?.caricature);
+        if (cariT.busy || !c.on) return;
+        if (!ai.photo) return ctx.toast('Kein Testfoto vorhanden.');
+        if (!$(main, '[data-cari-consent]')?.checked) return ctx.toast('Bitte bestätigen, dass das Testfoto an den KI-Dienst übertragen werden darf.');
+        cariT.consent = true; clearTimeout(saveT);
+        const { error: se } = await ctx.sb.from('events').update({ name: E.name, event_date: E.event_date || null, logo_url: E.logo_url || null, settings: S }).eq('id', ev.id); // Server muss die Live-Karikatur sehen
+        if (se) return ctx.toast('Event konnte nicht gespeichert werden: ' + se.message);
+        cariT.busy = true; render();
+        try {
+          const { data, error } = await ctx.sb.functions.invoke('ai-generate', { body: { image: ai.photo, prompt: Caricature.promptOf(c), consent: true, eventId: ev.id, requestId: crypto.randomUUID() } });
+          let result = data;
+          if (error?.context?.json) { try { result = await error.context.json(); } catch {} }
+          if (error || result?.error) throw new Error(result?.error || error.message);
+          if (!result?.image) throw new Error('Der KI-Dienst hat kein Bild geliefert.');
+          cariT.result = result.image;
+        } catch (error) { ctx.toast(error instanceof TypeError ? 'KI-Dienst ist nicht erreichbar. Bitte Internet prüfen.' : error.message, 9000); }
+        cariT.busy = false; render();
+        if (cariT.result) cariShow();
+        return;
       }
       if (a === 'ai-set-thumb') { // aktuelles Testbild (auch aus „Letzte Generierungen“) als Bild des bearbeiteten Stils – der Text bleibt, wie er gespeichert ist
         const ev = ai.edit >= 0 ? S.ai.prompts[ai.edit] : null, lx = !ev && ai.libEdit && Array.isArray(ai.lib) ? ai.lib.find(y => y.id === ai.libEdit) : null;
@@ -1218,6 +1251,24 @@
               ${sw('showPrintsLeft', 'Restlimit an der Fotobox anzeigen ' + NEWAPP, 'Unter dem Drucken-Symbol steht, wie viele Ausdrucke noch übrig sind, zum Beispiel „Noch 37 Drucke“. Nur wenn oben ein Limit eingetragen ist.')}</div>`)}`;
       },
       // Fotomosaik: viele Gästefotos ergeben ein großes Bild (Bildschirm und/oder Klebewand mit nummerierter Tafel)
+      cari() { // Live-Karikatur: Foto → KI-Karikatur → live gezeichnet an der Fotobox und auf dem zweiten Bildschirm
+        S.x ??= {}; const c0 = S.x.caricature ??= {}; c0.secs ??= 10;
+        const c = Caricature.normalize(c0);
+        return `${titleSw('Live-Karikatur', 'x.caricature.on')}<p class="sub" style="margin:-6px 0 14px;color:#6b6b78">Jedes Foto wird zur Karikatur – live gezeichnet vor allen Gästen</p>
+          <div class="card"><b>So funktioniert es</b> ${NEWAPP}
+            <ol style="margin:8px 0 6px;padding-left:20px;line-height:1.6"><li>Der Gast macht an der Fotobox ein Foto.</li><li>Die KI macht daraus eine Karikatur – 1 Credit pro Foto (zentrale KI).</li>
+            <li>Auf dem Bildschirm der Fotobox und auf dem zweiten Bildschirm (Fernseher/Beamer) wird sie Strich für Strich gezeichnet und eingefärbt.</li><li>Danach wie gewohnt: Drucken, QR-Code, Galerie.</li></ol>
+            <p style="margin:0;color:#6b6b78;font-size:13px">Ist die Live-Karikatur an, entfällt die Stilauswahl der KI-Porträts. Den zweiten Bildschirm öffnest du an der Fotobox unter Menü → Live-Karikatur.</p></div>
+          <div class="card">${slider('x.caricature.secs', 'Dauer der Zeichnung', 6, 20, 1, 's')}
+            ${text('x.caricature.title', 'Überschrift beim Zeichnen', Caricature.TITLE)}
+            <label class="l">Beschreibung für die KI</label><textarea rows="6" maxlength="1200" data-s="x.caricature.prompt">${esc(Caricature.promptOf(c))}</textarea>
+            <div class="between" style="margin-top:6px"><small style="color:#6b6b78">Wichtig für die Zeichnung: kräftige schwarze Linien und weißer Hintergrund.</small><a href="#" data-a="cari-reset">Standard-Text einsetzen</a></div></div>
+          <div class="card"><b>Ausprobieren</b><p style="margin:4px 0 10px;color:#6b6b78;font-size:13px">Mit dem Testfoto eine Karikatur erstellen und die Live-Zeichnung ansehen. Das Testfoto änderst du unter KI-Porträts.</p>
+            <div class="row" style="gap:10px;align-items:center">${ai.photo ? `<img src="${ai.photo}" alt="Testfoto" style="height:120px;border-radius:8px">` : ''}${cariT.result ? `<span style="font-size:22px">→</span><img src="${cariT.result}" alt="Karikatur" data-a="cari-play" title="Zeichnung ansehen" style="height:120px;border-radius:8px;cursor:pointer;box-shadow:0 0 0 1px #e5e5ec">` : ''}</div>
+            <label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0;font-size:13px"><input type="checkbox" data-cari-consent ${cariT.consent ? 'checked' : ''} style="margin-top:3px"> Dieses Foto darf zum Testen an den KI-Dienst (xAI) übertragen werden.</label>
+            <div class="row" style="gap:8px"><button class="btn pri" data-a="cari-test" ${cariT.busy || !c.on ? 'disabled' : ''}>${cariT.busy ? 'KI zeichnet … (10–40 Sekunden)' : '✨ Karikatur erstellen und zeichnen <small>(1 Credit)</small>'}</button>${cariT.result && !cariT.busy ? '<button class="ghost" data-a="cari-play">▶ Zeichnung nochmal ansehen</button>' : ''}</div>
+            ${c.on ? '' : '<p style="margin:8px 0 0;color:#c98a00;font-size:13px">Zum Ausprobieren oben die Live-Karikatur einschalten.</p>'}</div>`;
+      },
       mosaic() {
         const c = Mosaic.normalize(S.x.mosaic);
         const cmIn = (p, v, min, max, step) => `<input type="number" data-s="x.mosaic.${p}" data-num="1" min="${min}" max="${max}" step="${step}" value="${v}" style="width:110px">`;
