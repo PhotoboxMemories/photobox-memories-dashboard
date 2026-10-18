@@ -756,6 +756,7 @@ I18N.add('es', {
 "Effekte": "Efectos",
 "Effekte nicht verfügbar": "Efectos no disponibles",
 "Effekte und Aufkleber": "Efectos y pegatinas",
+"Eigene App: Gäste werden live Strich für Strich als Karikatur gezeichnet – an der Fotobox oder per Selfie vom Handy": "Una app propia: los invitados se dibujan en directo, trazo a trazo, como caricatura – en el fotomatón o con un selfie desde el móvil",
 "Eigene Dateien": "Archivos propios",
 "Eigene Dateien pro Schritt ersetzen die Standardansage.": "Tus propios archivos por paso sustituyen el anuncio estándar.",
 "Eigene Dateien pro Schritt ersetzen die Standardansage. {x}": "Tus propios archivos por paso sustituyen el anuncio estándar. {x}",
