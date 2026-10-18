@@ -321,6 +321,7 @@
   #wsModal .tp:hover img{border-color:#F7C838}
   #wsModal .two{flex:1;display:flex;min-height:0}
   #wsModal .fl{width:280px;overflow:auto;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start;border-right:1px solid #eee}
+  #wsModal .fl .sec{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b6b78;margin:4px 0 -2px}
   #wsModal .fi{border:2px solid #eee;border-radius:10px;padding:6px;cursor:pointer;font-size:11px;text-align:center}
   #wsModal .fi.on{border-color:#F7C838}
   #wsModal .fi img{width:100%;height:90px;object-fit:contain}
@@ -719,6 +720,7 @@
 
       if (a === 'newlay') { $(main, '.dd .menu').classList.toggle('hidden-m'); $(main, '.dd .menu').style.display = $(main, '.dd .menu').style.display === 'block' ? 'none' : 'block'; }
       if (a === 'fromtpl') pickTemplate(vals(), addLayout);
+      if (a === 'fromplain') pickFormat(modal(''), 'plain', vals(), addLayout);
       if (a === 'fromimg') fromImage();
       if (a === 'editlay') editLayout(t.dataset.id);
       if (a === 'sellay') { sub.laySel = sub.laySel === t.dataset.id ? '' : t.dataset.id; render(); }
@@ -784,7 +786,7 @@
     const vals = () => ({ titel: S.title || E.name, untertitel: S.subtitle || (E.event_date ? new Date(E.event_date).toLocaleDateString('de-DE') : ''), datum: new Date().toLocaleDateString('de-DE'), uhrzeit: '20:15', event: E.name, name: 'Lisa' });
     function layoutCards() {
       return `<div class="dd"><button class="btn" data-a="newlay">${ICON('plus', 16)} Neues Layout ${ICON('chevronDown', 16)}</button><div class="menu" style="display:none">
-          <button data-a="fromtpl">${ICON('gallery', 16)} Vorlage wählen</button><button data-a="fromimg">${ICON('upload', 16)} Bild hochladen</button></div></div>
+          <button data-a="fromtpl">${ICON('gallery', 16)} Vorlage wählen</button><button data-a="fromplain">${ICON('image', 16)} Ohne Vorlage (nur Foto)</button><button data-a="fromimg">${ICON('upload', 16)} Bild hochladen</button></div></div>
         <div class="lays">${S.layouts.length ? S.layouts.map(L => `<div class="lay ${sub.laySel === L.id ? 'on' : ''}" data-a="sellay" data-id="${L.id}" draggable="true" title="Anklicken zum Auswählen · am Griff ziehen zum Umsortieren">
             <span class="grip" title="Ziehen zum Umsortieren">⋮⋮</span>
             <div class="acts"><button data-a="dellay" data-id="${L.id}" title="Löschen">${ICON('trash', 13)}</button></div>
@@ -1420,13 +1422,14 @@
   }
   // Vorlagen-Galerie → Format wählen → onPick(neues Layout)
   function pickTemplate(values, onPick) {
-    const cats = ['Alle', ...new Set(FBR.TEMPLATES.map(t => t.cat))];
+    const tpls = [...FBR.TEMPLATES].sort((a, b) => !!b.plain - !!a.plain); // „Ohne Vorlage“ zuerst
+    const cats = ['Alle', ...new Set(tpls.map(t => t.cat))];
     let cat = 'Alle', q = '';
     const m = modal(`<div class="mh"><h3>Vorlage wählen</h3><input placeholder="Vorlagen suchen …" data-q><button class="x" data-x="1">${ICON('x', 20)}</button></div>
       <div class="cats">${cats.map(c => `<button data-c="${c}" class="${c === cat ? 'on' : ''}">${c}</button>`).join('')}</div><div class="grid"></div>`);
     const thumbs = {};
     const grid = () => {
-      $(m, '.grid').innerHTML = FBR.TEMPLATES.filter(t => (cat === 'Alle' || t.cat === cat) && t.name.toLowerCase().includes(q)).map(t => {
+      $(m, '.grid').innerHTML = tpls.filter(t => (cat === 'Alle' || t.cat === cat) && t.name.toLowerCase().includes(q)).map(t => {
         thumbs[t.id] ||= thumbOf(FBR.createLayout('4x6p', 3, t.id), 260, values);
         return `<div class="tp" data-t="${t.id}"><img src="${thumbs[t.id]}"><div>${esc(t.name)}</div></div>`;
       }).join('');
@@ -1440,13 +1443,21 @@
   }
   function pickFormat(m, tplId, values, onPick) {
     const t = FBR.templateById(tplId);
-    const items = FBR.PRESETS.map(([f, n]) => ({ f, n, L: FBR.createLayout(f, n, tplId) }));
-    let cur = 0;
+    // Einzelbild in jedem Format, danach die Aufteilungen mit mehreren Fotos (bei „Ohne Vorlage“ nur Einzelbild)
+    const single = FBR.SINGLE_FORMATS.map(f => ({ f, n: 1 }));
+    const items = [...single, ...(t.plain ? [] : FBR.PRESETS.filter(([, n]) => n > 1).map(([f, n]) => ({ f, n })))];
+    items.forEach(it => { it.L = FBR.createLayout(it.f, it.n, tplId); });
+    let cur = Math.max(0, items.findIndex(it => it.f === '4x6p'));
     $(m, '.box').innerHTML = `<div class="mh"><button class="x" data-back="1">${ICON('chevronLeft', 20)}</button><h3>${esc(t.name)}</h3><button class="x" data-x="1">${ICON('x', 20)}</button></div>
-      <div class="two"><div class="fl">${items.map((it, i) => `<div class="fi ${i === cur ? 'on' : ''}" data-i="${i}"><img src="${thumbOf(it.L, 160, values)}"><div>${FBR.FORMATS[it.f].label.replace(' Streifen', '')} · ${it.n} Foto${it.n > 1 ? 's' : ''}</div></div>`).join('')}</div>
+      <div class="two"><div class="fl">${items.map((it, i) => `${i === 0 ? '<div class="sec">Einzelbild</div>' : i === single.length ? '<div class="sec">Mehrere Fotos</div>' : ''}<div class="fi ${i === cur ? 'on' : ''}" data-i="${i}"><img data-th="${i}" alt=""><div>${FBR.FORMATS[it.f].label.replace(' Streifen', '')} · ${it.n} Foto${it.n > 1 ? 's' : ''}</div></div>`).join('')}</div>
       <div class="bigpv"><img><div class="ft"><div><b class="fn"></b><br><small class="fs"></small></div><button class="btn" data-go="1">Layout auswählen</button></div></div></div>`;
     const show = () => { const it = items[cur]; $(m, '.bigpv img').src = thumbOf(it.L, 700, values); $(m, '.fn').textContent = `${FBR.FORMATS[it.f].label} (${it.n} Foto${it.n > 1 ? 's' : ''})`; $(m, '.fs').textContent = `${it.L.w} × ${it.L.h} px`; $$(m, '.fi').forEach((e, i) => e.classList.toggle('on', i === cur)); };
     show();
+    { const fl = $(m, '.fl'), on = $(m, '.fi.on'); if (fl && on) fl.scrollTop += on.getBoundingClientRect().top - fl.getBoundingClientRect().top - (fl.clientHeight - on.offsetHeight) / 2; } // gewähltes Format (4×6) sichtbar
+    // Vorschaubilder in kleinen Portionen zeichnen, damit das Fenster sofort aufgeht
+    let k = 0;
+    const fill = () => { if (!m.isConnected || !$(m, '[data-th]')) return; for (const end = Math.min(items.length, k + 4); k < end; k++) { const im = $(m, `[data-th="${k}"]`); if (im) im.src = thumbOf(items[k].L, 160, values); } if (k < items.length) setTimeout(fill, 0); };
+    fill();
     m.onclick = e => {
       if (e.target === m || e.target.closest('[data-x]')) return m.remove();
       if (e.target.closest('[data-back]')) { m.remove(); return pickTemplate(values, onPick); }
