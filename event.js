@@ -1443,13 +1443,11 @@
   }
   function pickFormat(m, tplId, values, onPick) {
     const t = FBR.templateById(tplId);
-    // Einzelbild in jedem Format, danach die Aufteilungen mit mehreren Fotos (bei „Ohne Vorlage“ nur Einzelbild)
-    const single = FBR.SINGLE_FORMATS.map(f => ({ f, n: 1 }));
-    const items = [...single, ...(t.plain ? [] : FBR.PRESETS.filter(([, n]) => n > 1).map(([f, n]) => ({ f, n })))];
-    items.forEach(it => { it.L = FBR.createLayout(it.f, it.n, tplId); });
-    let cur = Math.max(0, items.findIndex(it => it.f === '4x6p'));
+    // Einzelbild, 3er-Collage und Fotostreifen – je Vorlage, auch „Ohne Vorlage“
+    const items = FBR.PRESETS.map(([f, n]) => ({ f, n, L: FBR.createLayout(f, n, tplId), sec: FBR.FORMATS[f].size === '2x6' ? 'Fotostreifen' : n === 1 ? 'Einzelbild' : 'Collage' }));
+    let cur = 0;
     $(m, '.box').innerHTML = `<div class="mh"><button class="x" data-back="1">${ICON('chevronLeft', 20)}</button><h3>${esc(t.name)}</h3><button class="x" data-x="1">${ICON('x', 20)}</button></div>
-      <div class="two"><div class="fl">${items.map((it, i) => `${i === 0 ? '<div class="sec">Einzelbild</div>' : i === single.length ? '<div class="sec">Mehrere Fotos</div>' : ''}<div class="fi ${i === cur ? 'on' : ''}" data-i="${i}"><img data-th="${i}" alt=""><div>${FBR.FORMATS[it.f].label.replace(' Streifen', '')} · ${it.n} Foto${it.n > 1 ? 's' : ''}</div></div>`).join('')}</div>
+      <div class="two"><div class="fl">${items.map((it, i) => `${!i || items[i - 1].sec !== it.sec ? `<div class="sec">${it.sec}</div>` : ''}<div class="fi ${i === cur ? 'on' : ''}" data-i="${i}"><img data-th="${i}" alt=""><div>${FBR.FORMATS[it.f].label.replace(' Streifen', '')} · ${it.n} Foto${it.n > 1 ? 's' : ''}</div></div>`).join('')}</div>
       <div class="bigpv"><img><div class="ft"><div><b class="fn"></b><br><small class="fs"></small></div><button class="btn" data-go="1">Layout auswählen</button></div></div></div>`;
     const show = () => { const it = items[cur]; $(m, '.bigpv img').src = thumbOf(it.L, 700, values); $(m, '.fn').textContent = `${FBR.FORMATS[it.f].label} (${it.n} Foto${it.n > 1 ? 's' : ''})`; $(m, '.fs').textContent = `${it.L.w} × ${it.L.h} px`; $$(m, '.fi').forEach((e, i) => e.classList.toggle('on', i === cur)); };
     show();
