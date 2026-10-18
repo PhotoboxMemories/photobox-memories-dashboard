@@ -188,7 +188,9 @@
         if (!b) return;
         x.fillStyle = '#ff9f1c'; x.beginPath(); x.arc(b.x + b.w - b.h * .45, b.y + b.h * .5, b.h * .28, 0, 7); x.fill();
         [[-.6, '#2a9d8f'], [-.2, '#3fb68b'], [.25, '#2a9d8f']].forEach(([a, c]) => leaf(x, b.x + b.h * .1, b.y + b.h * .95, b.h * .9, -Math.PI / 2 + a, c));
-      } }
+      } },
+    // Ohne Vorlage: nur das Foto, randlos über das ganze Blatt – kein Rahmen, kein Text (steht hinten, damit unbekannte Vorlagen weiter auf „Klassisch“ fallen)
+    { id: 'plain', name: 'Ohne Vorlage (nur Foto)', cat: 'Ohne Vorlage', frame: '#ffffff', text: '#222222', accent: '#222222', font: 'modern', plain: true }
   ];
   const byId = id => TEMPLATES.find(t => t.id === id) || TEMPLATES[0];
 
@@ -306,6 +308,8 @@
     FORMATS[size + 'l'] = { w: b * 300, h: a * 300, in: [b, a], size, orient: 'l', pair, label: nm + (size === '2x6' ? ' quer' : ' Querformat') };
   }
   const SIZE_LIST = SIZES.map(([size, a, b, name]) => ({ size, square: a === b, label: name || `${String(a).replace('.', ',')}×${String(b).replace('.', ',')}` }));
+  // Einzelbild gibt es in jedem Format außer den Panoramen (Hochformat vor Querformat, quadratische einmal)
+  const SINGLE_FORMATS = Object.keys(FORMATS).filter(k => FORMATS[k].pair);
   const formatKey = (size, orient) => Object.keys(FORMATS).find(k => FORMATS[k].size === size && (FORMATS[k].orient === orient || !FORMATS[k].orient)) || null;
   const uid = () => Math.random().toString(36).slice(2, 10);
   // Grundaufteilungen je Format: [Format, Anzahl Fotos, Fotofelder]
@@ -337,6 +341,8 @@
   // Neues Layout aus Format + Vorlage (Design) erzeugen
   function createLayout(format, n, tplId = 'classic', name) {
     const F = FORMATS[format], t = byId(tplId), W = F.w, H = F.h;
+    if (t.plain) return { id: uid(), name: name || `${F.label} · nur Foto`, format, w: W, h: H, bg: t.frame, tpl: t.id, twoPerPage: F.size === '2x6', secondary: false,
+      elements: [{ id: uid(), type: 'photo', n: 1, x: 0, y: 0, w: W, h: H, rot: 0, radius: 0, stroke: '', strokeW: 0, shadow: false }] };
     const slots = presetSlots(format, n);
     const last = slots.reduce((a, s) => Math.max(a, s[1] + s[3]), 0);
     const m = Math.round(Math.min(W, H) * .05), bandY = last + m * .6, bandH = H - bandY - m * .6;
@@ -566,6 +572,6 @@
   }
 
   G.FBR = { FONTS, FONT_NAMES, LAYOUTS, TEMPLATES, templateById: byId, render, drawBand, drawCover, placeholder,
-    FORMATS, SIZE_LIST, formatKey, sheetOf, PRESETS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid,
+    FORMATS, SIZE_LIST, formatKey, sheetOf, PRESETS, SINGLE_FORMATS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid,
     SCREEN_SIZES, SCREEN_THEMES, createScreen, adaptScreen, applyTheme };
 })(window);
