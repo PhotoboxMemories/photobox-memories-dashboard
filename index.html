@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261018-6';</script>
+<script>window.I18N_V = '20261018-7';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -20,7 +20,7 @@
 <script src="editor.js?v=20261017-2"></script>
 <script src="ai-event.js?v=20261018-4"></script>
 <script src="ai-test.js?v=20261018-3"></script>
-<script src="event.js?v=20261018-6"></script>
+<script src="event.js?v=20261018-7"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -421,6 +421,10 @@ function demoClient() {
       { id: 'l1', key: 'FBX-7KQM-2XRT-P9DW-HJ4N', customer_name: 'Fotoexakt', customer_email: 'demo@fotobox.de', owner_id: 'demo', kind: 'lifetime', updates_until: iso(365), max_devices: 3, active: true, devices: [{ id: 'd1' }, { id: 'd2' }] },
       { id: 'l2', key: 'FBX-N4VB-8CEL-TT2Z-QW7S', customer_name: 'Studio Lichtblick', customer_email: 'info@lichtblick.de', owner_id: 'k2', kind: 'subscription', valid_until: iso(9), max_devices: 1, active: true, notes: 'RE-2026-041', devices: [{ id: 'd3' }] },
       { id: 'l3', key: 'FBX-ZP3R-6YHA-M2KD-UE8F', customer_name: 'Event Kids GmbH', customer_email: 'hallo@eventkids.de', owner_id: null, kind: 'subscription', valid_until: iso(-20), max_devices: 2, active: true, devices: [] }
+    ],
+    ai_styles: [
+      { id: 's1', owner: 'demo', name: 'Roter Teppich', shared: true, thumb: null, prompt: 'Bearbeite das Gästefoto. Behalte die Anzahl der Personen und ihre Gesichter. Motiv: Stars auf dem roten Teppich bei einer Filmpremiere, elegante Abendgarderobe, Blitzlichter der Fotografen im Hintergrund. Stil: hochwertiges Pressefoto, warmes Licht.' },
+      { id: 's2', owner: 'demo', name: 'Anime-Held', shared: false, thumb: null, prompt: 'Bearbeite das Gästefoto. Behalte die Anzahl der Personen und ihre Gesichter. Motiv: Helden in einem japanischen Anime, dynamische Pose, Stadt bei Sonnenuntergang. Stil: klare Linien, leuchtende Farben, Anime-Film.' }
     ],
     plans: [
       { id: 'monat', name: 'Monatlich', billing: 'month', cents: 3900, features: 'Alle Funktionen inklusive\nDashboard, Online-Galerie, Fotomosaik, KI-Porträts\nMonatlich kündbar', sort: 1, active: true },
