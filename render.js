@@ -308,17 +308,15 @@
     FORMATS[size + 'l'] = { w: b * 300, h: a * 300, in: [b, a], size, orient: 'l', pair, label: nm + (size === '2x6' ? ' quer' : ' Querformat') };
   }
   const SIZE_LIST = SIZES.map(([size, a, b, name]) => ({ size, square: a === b, label: name || `${String(a).replace('.', ',')}×${String(b).replace('.', ',')}` }));
-  // Einzelbild gibt es in jedem Format außer den Panoramen (Hochformat vor Querformat, quadratische einmal)
-  const SINGLE_FORMATS = Object.keys(FORMATS).filter(k => FORMATS[k].pair);
   const formatKey = (size, orient) => Object.keys(FORMATS).find(k => FORMATS[k].size === size && (FORMATS[k].orient === orient || !FORMATS[k].orient)) || null;
   const uid = () => Math.random().toString(36).slice(2, 10);
   // Grundaufteilungen je Format: [Format, Anzahl Fotos, Fotofelder]
-  function presetSlots(format, n) {
+  function presetSlots(format, n, noBand = false) { // noBand: ohne Vorlage – kein Platz für Titel und Untertitel
     const F = FORMATS[format], W = F.w, H = F.h;
     const m = Math.round(Math.min(W, H) * .05), g = Math.round(m * .6);
     const tall = H / W >= 2, wide = W / H >= 2; // Streifen und Panoramen
-    const bandH = tall ? Math.round(W * .47) : Math.round(H * (W > H ? .17 : .15));
-    const top = m, availH = H - bandH - m - m / 2, availW = W - 2 * m;
+    const bandH = noBand ? 0 : tall ? Math.round(W * .47) : Math.round(H * (W > H ? .17 : .15));
+    const top = m, availH = H - bandH - m - (noBand ? m : m / 2), availW = W - 2 * m;
     const rows = (k, cols = 1) => {
       const out = [], r = Math.ceil(k / cols), cw = (availW - g * (cols - 1)) / cols, ch = (availH - g * (r - 1)) / r;
       for (let i = 0; i < k; i++) out.push([m + (i % cols) * (cw + g), top + Math.floor(i / cols) * (ch + g), cw, ch]);
@@ -335,14 +333,16 @@
     if (n === 3) return rows(3);
     return rows(n, 2);
   }
-  const PRESETS = [['2x6', 2], ['2x6', 3], ['2x6', 4], ['2x6l', 3], ['4x6p', 1], ['4x6p', 2], ['4x6p', 3], ['4x6p', 4],
-    ['4x6l', 1], ['4x6l', 2], ['4x6l', 3], ['4x6l', 4], ['5x7p', 1], ['5x7l', 1], ['5x7l', 3], ['sq', 1], ['sq', 4], ['6x6', 1], ['6x6', 4],
-    ['6x8p', 1], ['6x8p', 4], ['6x8l', 1], ['6x8l', 3], ['6x9p', 3], ['8x10p', 1], ['8x10p', 4], ['8x10l', 4], ['6x20p', 3], ['6x14l', 3]];
+  // Auswahl beim Anlegen aus einer Vorlage: 4×6 Einzelbild und 3er-Collage (hoch und quer), Fotostreifen mit 2 (hoch) und 3 Fotos (quer)
+  const PRESETS = [['4x6p', 1], ['4x6l', 1], ['4x6p', 3], ['4x6l', 3], ['2x6', 2], ['2x6l', 3]];
   // Neues Layout aus Format + Vorlage (Design) erzeugen
   function createLayout(format, n, tplId = 'classic', name) {
     const F = FORMATS[format], t = byId(tplId), W = F.w, H = F.h;
-    if (t.plain) return { id: uid(), name: name || `${F.label} · nur Foto`, format, w: W, h: H, bg: t.frame, tpl: t.id, twoPerPage: F.size === '2x6', secondary: false,
-      elements: [{ id: uid(), type: 'photo', n: 1, x: 0, y: 0, w: W, h: H, rot: 0, radius: 0, stroke: '', strokeW: 0, shadow: false }] };
+    if (t.plain) { // Ohne Vorlage: Einzelbild randlos über das ganze Blatt, mehrere Fotos mit schmalem weißem Rand – kein Text
+      const ps = n === 1 ? [[0, 0, W, H]] : presetSlots(format, n, true);
+      return { id: uid(), name: name || `${F.label} · ${n === 1 ? 'nur Foto' : `${n} Fotos ohne Vorlage`}`, format, w: W, h: H, bg: t.frame, tpl: t.id, twoPerPage: F.size === '2x6', secondary: false,
+        elements: ps.map((s, i) => ({ id: uid(), type: 'photo', n: i + 1, x: Math.round(s[0]), y: Math.round(s[1]), w: Math.round(s[2]), h: Math.round(s[3]), rot: 0, radius: 0, stroke: '', strokeW: 0, shadow: false })) };
+    }
     const slots = presetSlots(format, n);
     const last = slots.reduce((a, s) => Math.max(a, s[1] + s[3]), 0);
     const m = Math.round(Math.min(W, H) * .05), bandY = last + m * .6, bandH = H - bandY - m * .6;
@@ -572,6 +572,6 @@
   }
 
   G.FBR = { FONTS, FONT_NAMES, LAYOUTS, TEMPLATES, templateById: byId, render, drawBand, drawCover, placeholder,
-    FORMATS, SIZE_LIST, formatKey, sheetOf, PRESETS, SINGLE_FORMATS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid,
+    FORMATS, SIZE_LIST, formatKey, sheetOf, PRESETS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid,
     SCREEN_SIZES, SCREEN_THEMES, createScreen, adaptScreen, applyTheme };
 })(window);
