@@ -264,7 +264,7 @@
   #ws .aitiles button b{font-size:13px;padding:0 4px 6px;text-align:center}
   #ws .aitiles button.on{border-color:#F7C838;background:#fffbea}
   #ws .aitiles button:hover .pic{filter:brightness(1.08)}
-  #ws .aitiles .fav{position:absolute;left:6px;bottom:34px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.6);color:#F7C838;display:flex;align-items:center;justify-content:center;font-size:14px}
+  #ws .aitiles .fav{position:absolute;top:6px;right:38px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.6);color:#F7C838;display:flex;align-items:center;justify-content:center;font-size:14px}
   #ws .aitiles .fav.on{background:#F7C838;color:#1D1D1B}
   #ws .aitiles .del{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px}
   #ws .aislots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
@@ -297,7 +297,7 @@
   #ws .aipair .arrow{flex:none;color:#9a9aa8;font-size:18px}
   #ws .aipair .out{flex:1;min-width:0}#ws .aipair .out img{width:100%;border-radius:12px;display:block;margin-bottom:4px;max-height:none}
   #ws .aitiles .num{position:absolute;top:6px;left:6px;min-width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
-  #ws .aitiles .edit{position:absolute;right:6px;bottom:34px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px}
+  #ws .aitiles .edit{position:absolute;right:6px;top:38px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px}
   #ws .airecent{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   #ws .airecent img{height:64px;border-radius:6px;cursor:pointer}
   #ws .aiwait{padding:40px 16px;font-weight:600}
@@ -460,6 +460,7 @@
       ai.lib = [data, ...ai.lib]; render(); ctx.toast('In „Meine KI-Stile“ gespeichert');
     }
     try { ai.photo = localStorage.getItem('pm-ai-testphoto') || ''; } catch {}
+    ai.own = !!ai.photo;
     const aiThumbFile = dataUrl => new Promise((res, rej) => { const img = new Image(); img.onload = () => { const k = Math.min(1, 480 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); c.toBlob(b => b ? res(new File([b], 'ki-stil.jpg', { type: 'image/jpeg' })) : rej(new Error('Bild nicht lesbar')), 'image/jpeg', .85); }; img.onerror = () => rej(new Error('Bild nicht lesbar')); img.src = dataUrl; });
     // Aktuellen Entwurf aus dem Baukasten lesen (Bibliothek oder eigener Text).
     const aiDraft = () => {
@@ -486,6 +487,9 @@
     }
     const aiEmptyText = text => !text.trim() || text.trim() === AI_KEEP.trim(); // nur der Standard-Vorspann ist noch kein Stil
     const aiShrink = file => new Promise((res, rej) => { const img = new Image(); img.onload = () => { const k = Math.min(1, 1536 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(img.src); res(c.toDataURL('image/jpeg', .9)); }; img.onerror = () => rej(new Error('Bild nicht lesbar')); img.src = URL.createObjectURL(file); });
+    // Standard-Testfoto für KI-Tests und Filter-Vorschau (testfoto.jpg neben dem Dashboard); ein eigenes Foto ersetzt es nur in diesem Browser.
+    const aiDefaultPhoto = () => new Promise(res => { const img = new Image(); img.onload = () => { try { const k = Math.min(1, 1536 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', .9)); } catch { res(''); } }; img.onerror = () => res(''); img.src = 'testfoto.jpg?v=1'; });
+    if (!ai.own) aiDefaultPhoto().then(u => { if (u && !ai.own && !ai.photo) { ai.photo = u; if (page === 'ai' || page === 'fx') render(); } });
     const status = t => { $(root, '.st').textContent = t; };
     function save() {
       status('Speichert …'); clearTimeout(saveT);
@@ -663,8 +667,13 @@
       }
       if (a === 'ai-photo') {
         const f = await pick('image/jpeg,image/png,image/webp'); if (!f) return;
-        try { ai.photo = await aiShrink(f); ai.result = ''; try { localStorage.setItem('pm-ai-testphoto', ai.photo); } catch {} render(); }
+        try { ai.photo = await aiShrink(f); ai.own = true; ai.result = ''; try { localStorage.setItem('pm-ai-testphoto', ai.photo); } catch {} render(); }
         catch (error) { ctx.toast(error.message); }
+        return;
+      }
+      if (a === 'ai-photo-reset') {
+        try { localStorage.removeItem('pm-ai-testphoto'); } catch {}
+        ai.own = false; ai.result = ''; ai.photo = await aiDefaultPhoto(); render();
         return;
       }
       if (a === 'ai-zoom') { // erzeugtes Bild groß ansehen; Klick oder Esc schließt
@@ -689,7 +698,7 @@
           if (error) return ctx.toast('Event konnte nicht gespeichert werden: ' + error.message);
           status('✓ Alle Änderungen gespeichert');
         }
-        if (!central) { AITest.open({ ...item, provider: S.ai.provider, resolution: S.ai.resolution }); return; }
+        if (!central) { AITest.open({ ...item, provider: S.ai.provider, resolution: S.ai.resolution, photo: ai.photo }); return; }
         // Zentrale KI: direkt mit dem Testfoto generieren, Ergebnis erscheint rechts neben dem Original.
         if (ai.busy) return;
         if (!ai.photo) return ctx.toast('Bitte zuerst rechts ein Testfoto hochladen.');
@@ -1037,6 +1046,7 @@
           : sub.fx === 'color' ? `${titleSw('Farbfilter', 'filtersOn')}<div class="card">Wenden Sie einen Farbfilter an, um Töne zu verändern und Farben anzupassen.
               <label class="l">Filter</label><div class="row">${[['auto', 'Automatisch durchwechseln'], ['guest', 'Gäste wählen den Filter']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="fxm" data-s="x.fx.mode" value="${k}" ${S.x.fx.mode === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
               <div class="filters" style="margin-top:12px">${FILTERS.map(([id, n, css]) => `<div class="flt ${S.filters.includes(id) ? 'on' : ''}" data-flt="${id}"><img src="${filterThumb(css)}"><span>${n}</span></div>`).join('')}</div>
+              <div class="between" style="margin-top:8px"><small style="color:#6b6b78">${ai.own ? 'Vorschau mit deinem eigenen Testfoto' : 'Vorschau mit dem Standard-Testfoto'}</small><span>${ai.own ? '<a href="#" data-a="ai-photo-reset">Standardbild</a> · ' : ''}<a href="#" data-a="ai-photo">Bild ändern</a></span></div>
               <div style="margin-top:14px">${up('x.fx.lut', 'Eigener Farb-Look (LUT) ' + NEWAPP, '.cube', 'nur .cube-Dateien')}</div></div>`
           : `${titleSw('Aufkleber', 'stickers')}<div class="card">Lassen Sie Ihre Gäste ihre Fotos mit lustigen Aufklebern verzieren.
               <label class="l">Aufkleberstil</label><div class="row">${[['standard', 'Standard'], ['custom', 'Benutzerdefinierte']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="stm" data-s="x.fx.stickerStyle" value="${k}" ${S.x.fx.stickerStyle === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
@@ -1071,7 +1081,7 @@
         const right = `<div class="card"><div class="aiphoto">${ai.busy ? '<div class="aiwait">KI-Porträt wird erstellt …<br><small>Das dauert meist 10–40 Sekunden.</small></div>'
             : ai.result ? `<div class="aipair" style="padding:10px"><figure class="src"><img src="${ai.photo}" alt="">Testfoto</figure><span class="arrow">→</span><figure class="out"><img src="${ai.result}" alt="" data-a="ai-zoom" title="Anklicken zum Vergrößern" style="cursor:zoom-in">Ergebnis · zum Vergrößern anklicken</figure></div>`
             : ai.photo ? `<img src="${ai.photo}" alt="Testfoto">` : '<div class="ph" data-a="ai-photo"><div style="font-size:34px">📷</div><b>Testfoto hochladen</b><br><small>Ein eigenes Foto, um Stile auszuprobieren. Es bleibt in diesem Browser.</small></div>'}</div>
-          <div class="between" style="margin-top:10px"><small>Testfoto</small><a href="#" data-a="ai-photo">${ai.photo ? 'Bild ändern' : 'Bild wählen'}</a></div>
+          <div class="between" style="margin-top:10px"><small>${ai.own ? 'Eigenes Testfoto' : 'Standard-Testfoto'}</small><span>${ai.own ? '<a href="#" data-a="ai-photo-reset">Standardbild</a> · ' : ''}<a href="#" data-a="ai-photo">${ai.photo ? 'Bild ändern' : 'Bild wählen'}</a></span></div>
           <button class="ghost" style="width:100%;margin-top:10px" data-a="ai-test" ${(ai.custom || pp || aa) && !ai.busy ? '' : 'disabled'}>${ai.custom || pp || aa ? `✨ Generieren${central ? ` <small>(1 Credit)</small>` : ''}` : 'Wähle einen Stil aus oder füge einen hinzu, um zu generieren'}</button>
           ${central ? `<label style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:13px"><input type="checkbox" data-ai-consent style="margin-top:3px" ${ai.consentOk ? 'checked' : ''}> Dieses Foto darf zum Testen an den KI-Dienst (xAI) übertragen werden.</label>` : ''}
           ${ai.result && !ai.busy ? '<button class="ghost" style="width:100%;margin-top:8px" data-a="ai-lib-result">☆ In „Meine KI-Stile“ speichern</button>' : ''}
@@ -1270,11 +1280,23 @@
         onClose: () => render()
       });
     }
-    const fThumbCache = {};
+    // Farbfilter-Vorschau: mit dem Testfoto der KI-Seite (Standard- oder eigenes Foto), bis es geladen ist mit Platzhalter
+    let fThumbCache = {}; const fxPhoto = { src: '', img: null };
+    function fxTestImage() {
+      if (!ai.photo) return null;
+      if (fxPhoto.src !== ai.photo) {
+        const src = fxPhoto.src = ai.photo; fxPhoto.img = null; fThumbCache = {};
+        const im = new Image(); im.onload = () => { if (fxPhoto.src !== src) return; fxPhoto.img = im; fThumbCache = {}; if (page === 'fx') render(); }; im.src = src;
+      }
+      return fxPhoto.img;
+    }
     function filterThumb(css) {
+      const im = fxTestImage();
       if (fThumbCache[css]) return fThumbCache[css];
       const c = document.createElement('canvas'); c.width = c.height = 160; const x = c.getContext('2d');
-      if (css !== 'none') x.filter = css; x.drawImage(FBR.placeholder(1, 400, 400), 0, 0, 160, 160);
+      if (css !== 'none') x.filter = css;
+      if (im) { const s = Math.min(im.width, im.height), sy = Math.min(im.height - s, Math.round(im.height * .06)); x.drawImage(im, (im.width - s) / 2, sy, s, s, 0, 0, 160, 160); } // oben ausschneiden, damit die Gesichter zu sehen sind
+      else x.drawImage(FBR.placeholder(1, 400, 400), 0, 0, 160, 160);
       return fThumbCache[css] = c.toDataURL('image/jpeg', .8);
     }
     // Fotomosaik: Vorschau mit Beispielfotos, Tafel und Maße (ändert sich sofort beim Schieben der Regler)
