@@ -462,7 +462,19 @@
     }
     try { ai.photo = localStorage.getItem('pm-ai-testphoto') || ''; } catch {}
     // Live-Karikatur: Testergebnis und Abspielen (Vollbild, Klick schließt)
-    const cariT = { busy: false, result: '', consent: false };
+    const cariT = { busy: false, result: '', consent: false, list: null, loaded: false };
+    // Einsendungen vom Handy (Tabelle cari_queue) mit Vorschau der Selfies (privater Speicher, Links 10 Minuten gültig)
+    async function cariLoad() {
+      try {
+        const { data, error } = await ctx.sb.from('cari_queue').select('id,name,message,status,selfie,error,created_at').eq('event_id', ev.id).order('created_at', { ascending: false }).limit(60);
+        if (error) { cariT.list = []; if (!/cari_queue/.test(error.message)) ctx.toast(error.message, 5000); return; }
+        const paths = (data || []).filter(r => r.selfie).map(r => r.selfie), urls = {};
+        if (paths.length && ctx.sb.storage.from('cari').createSignedUrls) { const { data: su } = await ctx.sb.storage.from('cari').createSignedUrls(paths, 600); (su || []).forEach(x => { if (x.signedUrl) urls[x.path] = x.signedUrl; }); }
+        cariT.list = (data || []).map(r => ({ ...r, url: urls[r.selfie] || '' }));
+      } catch (error) { console.warn('Einsendungen:', error); cariT.list = cariT.list || []; }
+      if (page === 'cari') render();
+    }
+    setInterval(() => { if (page === 'cari' && document.visibilityState === 'visible' && !ctx.demo) cariLoad(); }, 10000);
     const imgOf = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
     async function cariShow() {
       try {
@@ -630,6 +642,25 @@
         const x = (a === 'ai-common-edit' ? ai.common || [] : Array.isArray(ai.lib) ? ai.lib : [])[+t.dataset.i]; if (!x) return;
         ai.libEdit = a === 'ai-lib-edit' ? x.id : ''; ai.edit = -1; ai.custom = true; ai.p = ai.a = ''; ai.seed = { name: x.name, prompt: x.prompt }; ai.draftId = ''; ai.cname = ai.ctext = undefined;
         render(); main.querySelector('[data-ai-builder]')?.scrollIntoView({ block: 'center' }); return;
+      }
+      if (a === 'cari-refresh') { await cariLoad(); return; }
+      if (a === 'cari-copy') { const i = $(main, '[data-cari-link]'); try { await navigator.clipboard.writeText(i.value); ctx.toast('Link kopiert'); } catch { i.select(); } return; }
+      if (a === 'cari-qr') { // QR-Code für Tischkarten (Bibliothek erst bei Bedarf laden)
+        const box = $(main, '[data-cari-qr]'), url = $(main, '[data-cari-link]').value;
+        if (!window.qrcode) await new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }).catch(() => {});
+        if (!window.qrcode) return ctx.toast('QR-Code konnte nicht geladen werden.');
+        const q = qrcode(0, 'M'); q.addData(url); q.make();
+        box.innerHTML = `<div style="display:inline-block;background:#fff;padding:10px;border-radius:12px;border:1px solid #eee">${q.createSvgTag({ cellSize: 6, margin: 2 })}</div><p style="margin:6px 0 0;color:#6b6b78;font-size:13px">Rechtsklick → „Bild speichern“ oder Bildschirmfoto für Tischkarten. Mit Code-Pflicht brauchen Gäste zusätzlich den Code vom Bildschirm.</p>`;
+        return;
+      }
+      if (a === 'cari-ok' || a === 'cari-no' || a === 'cari-del') {
+        const r = (cariT.list || []).find(x => x.id === t.dataset.id); if (!r) return;
+        if (a === 'cari-del' && !await (G.pmConfirm || (async q => confirm(q)))('Einsendung und Selfie löschen?')) return;
+        if (r.selfie && a !== 'cari-ok') await ctx.sb.storage.from('cari').remove([r.selfie]).catch(() => {});
+        const q = a === 'cari-del' ? ctx.sb.from('cari_queue').delete().eq('id', r.id)
+          : ctx.sb.from('cari_queue').update(a === 'cari-ok' ? { status: 'new', updated_at: new Date().toISOString() } : { status: 'rejected', selfie: null, updated_at: new Date().toISOString() }).eq('id', r.id);
+        const { error } = await q; if (error) return ctx.toast(error.message, 6000);
+        await cariLoad(); return;
       }
       if (a === 'cari-reset') { e.preventDefault(); S.x.caricature = { ...(S.x.caricature || {}), prompt: '' }; save(); render(); return; }
       if (a === 'cari-play') { e.preventDefault?.(); if (cariT.result) cariShow(); return; }
@@ -1252,13 +1283,33 @@
       },
       // Fotomosaik: viele Gästefotos ergeben ein großes Bild (Bildschirm und/oder Klebewand mit nummerierter Tafel)
       cari() { // Live-Karikatur: Foto → KI-Karikatur → live gezeichnet an der Fotobox und auf dem zweiten Bildschirm
-        S.x ??= {}; const c0 = S.x.caricature ??= {}; c0.secs ??= 10;
-        const c = Caricature.normalize(c0);
+        S.x ??= {}; const c0 = S.x.caricature ??= {}; c0.secs ??= 10; c0.phone ??= true; c0.needCode ??= true; c0.print ??= true; c0.approve ??= false;
+        if (!/^[0-9a-f]{16,64}$/.test(c0.secret || '')) { c0.secret = Caricature.newSecret(); save(); } // für den wechselnden Code auf der Wand
+        const c = Caricature.normalize(c0), link = (window.FOTOBOX_CONFIG?.dashboardUrl || location.origin + location.pathname.replace(/[^/]*$/, '')).replace(/\/?$/, '/') + 'karikatur.html?e=' + ev.id;
+        if (!cariT.loaded && !ctx.demo) { cariT.loaded = true; cariLoad(); }
+        const stTxt = { review: 'wartet auf Freigabe', new: 'in der Reihe', processing: 'wird gezeichnet', done: 'fertig', rejected: 'abgelehnt', failed: 'fehlgeschlagen' };
+        const rows = (cariT.list || []).map(r => `<div class="between" style="gap:10px;padding:8px 0;border-top:1px solid #eee">
+            ${r.url ? `<img src="${esc(r.url)}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex:none">` : '<span style="width:64px;flex:none"></span>'}
+            <div style="flex:1;min-width:0"><b>${esc(r.name || 'Ohne Namen')}</b> <small style="color:#6b6b78">· ${new Date(r.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} · ${stTxt[r.status] || r.status}</small>
+              ${r.message ? `<div style="font-size:13px;color:#444;overflow-wrap:anywhere">„${esc(r.message)}“</div>` : ''}${r.error ? `<div style="font-size:12px;color:#c0392b">${esc(r.error)}</div>` : ''}</div>
+            <div class="row" style="gap:6px;flex:none">${r.status === 'review' ? `<button class="btn pri" data-a="cari-ok" data-id="${r.id}">Freigeben</button><button class="ghost" data-a="cari-no" data-id="${r.id}">Ablehnen</button>` : ''}
+              <button class="ghost" data-a="cari-del" data-id="${r.id}" title="Einsendung und Selfie löschen">🗑</button></div></div>`).join('');
         return `${titleSw('Live-Karikatur', 'x.caricature.on')}<p class="sub" style="margin:-6px 0 14px;color:#6b6b78">Jedes Foto wird zur Karikatur – live gezeichnet vor allen Gästen</p>
           <div class="card"><b>So funktioniert es</b> ${NEWAPP}
             <ol style="margin:8px 0 6px;padding-left:20px;line-height:1.6"><li>Der Gast macht an der Fotobox ein Foto.</li><li>Die KI macht daraus eine Karikatur – 1 Credit pro Foto (zentrale KI).</li>
             <li>Auf dem Bildschirm der Fotobox und auf dem zweiten Bildschirm (Fernseher/Beamer) wird sie Strich für Strich gezeichnet und eingefärbt.</li><li>Danach wie gewohnt: Drucken, QR-Code, Galerie.</li></ol>
             <p style="margin:0;color:#6b6b78;font-size:13px">Ist die Live-Karikatur an, entfällt die Stilauswahl der KI-Porträts. Den zweiten Bildschirm öffnest du an der Fotobox unter Menü → Live-Karikatur.</p></div>
+          <div class="card"><b>Selfies vom Handy</b> ${NEWAPP}
+            <p style="margin:4px 0 10px;color:#6b6b78;font-size:13px">Auf der Karikaturen-Wand (zweiter Bildschirm der Fotobox) stehen ein QR-Code und ein Code. Gäste schicken damit vom eigenen Handy ein Selfie mit Gruß und Namen – ohne App. Die Fotobox zeichnet, zeigt und druckt jede Karikatur.</p>
+            ${sw('x.caricature.phone', 'Gäste schicken Selfies vom Handy', 'Aus = nur Fotos direkt an der Fotobox.')}
+            ${sw('x.caricature.needCode', 'Code vom Bildschirm verlangen', 'Zwei Ziffern, wechseln alle 2 Minuten – so machen nur Gäste im Saal mit.')}
+            ${sw('x.caricature.approve', 'Jedes Foto vorher freigeben', 'Einsendungen werden erst gezeichnet, wenn du sie unten freigibst.')}
+            ${sw('x.caricature.print', 'Karikaturen vom Handy ausdrucken', 'Die Fotobox druckt jede fertige Karikatur auf dem Hauptdrucker.')}
+            <label class="l">Link für die Gäste (steht auch als QR-Code auf der Wand)</label>
+            <div class="row" style="gap:8px"><input type="text" readonly value="${esc(link)}" style="flex:1" data-cari-link><button class="ghost" data-a="cari-copy">Kopieren</button><button class="ghost" data-a="cari-qr">QR-Code</button></div>
+            <div data-cari-qr style="margin-top:10px"></div></div>
+          <div class="card"><div class="between"><b>Einsendungen (${(cariT.list || []).length})</b><button class="ghost" data-a="cari-refresh">Aktualisieren</button></div>
+            ${rows || '<p style="margin:8px 0 0;color:#6b6b78;font-size:13px">Noch keine Einsendungen vom Handy.</p>'}</div>
           <div class="card">${slider('x.caricature.secs', 'Dauer der Zeichnung', 6, 20, 1, 's')}
             ${text('x.caricature.title', 'Überschrift beim Zeichnen', Caricature.TITLE)}
             <label class="l">Beschreibung für die KI</label><textarea rows="6" maxlength="1200" data-s="x.caricature.prompt">${esc(Caricature.promptOf(c))}</textarea>
