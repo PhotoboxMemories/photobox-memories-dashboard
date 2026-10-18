@@ -6,12 +6,12 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261018-8';</script>
+<script>window.I18N_V = '20261018-9';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
   window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-<script src="config.js?v=20261017-2"></script>
+<script src="config.js?v=20261018-9"></script>
 <script src="icons.js?v=20261017-2"></script>
 <script src="ad.js?v=20261017-2"></script>
 <script src="shop.js?v=20261017-7"></script>
@@ -353,6 +353,8 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
 <div id="toast"></div>
 
 <script>
+// Notfall-Kopie: antwortet der Foto-Speicher (Hetzner) nicht, Vorschaubilder von der Ersatzadresse laden
+document.addEventListener('error', e => { const el = e.target; if (!/^(IMG|VIDEO)$/.test(el?.tagName) || el.dataset.alt) return; const a = window.FOTOBOX_PHOTOS?.altSrc?.(el.currentSrc || el.src); if (a) { el.dataset.alt = '1'; el.src = a; } }, true);
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -683,7 +685,7 @@ function renderDevices() {
       : `<span class="muted small">${d.event_id ? 'zugewiesen' : '–'}</span>`;
     return `<tr>
       <td><input value="${esc(d.name || 'FotoBox')}" data-dev="${d.id}" data-act="name" style="max-width:200px"></td>
-      <td><span class="dot ${online ? 'on' : ''}"></span>${online ? 'Online' : d.last_seen ? 'zuletzt ' + new Date(d.last_seen).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : 'nie'}</td>
+      <td><span class="dot ${online ? 'on' : ''}"></span>${online ? 'Online' : d.last_seen ? 'zuletzt ' + new Date(d.last_seen).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : 'nie'}${st.uploads > 0 ? `<div class="small" style="color:#c98a00;margin-top:2px" title="Liegen sicher auf der Fotobox und werden automatisch hochgeladen, sobald der Foto-Speicher erreichbar ist">⏳ ${st.uploads} ${st.uploads === 1 ? 'Foto wartet' : 'Fotos warten'} auf den Upload</div>` : ''}</td>
       <td>${opts}</td>
       <td>${st.prints != null ? `<b>${st.prints}</b>${st.printLimit ? ' / ' + st.printLimit : ''}` : '–'}</td>
       <td>${d.photos_total}</td>
