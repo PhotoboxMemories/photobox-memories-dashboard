@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261017-9';</script>
+<script>window.I18N_V = '20261018-1';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -924,8 +924,12 @@ async function shOrders() {
 $('#relPick').onclick = () => $('#relFile').click();
 $('#relFile').onchange = async e => {
   const f = e.target.files[0], st = $('#relState'); e.target.value = ''; if (!f) return;
-  const ver = (f.name.match(/(\d+\.\d+\.\d+)/) || [])[1];
-  if (!/\.exe$/i.test(f.name) || !ver) { st.textContent = '❌ Bitte die Datei „FotoBox-Setup-…exe“ mit Versionsnummer im Namen wählen.'; return; }
+  if (!/\.exe$/i.test(f.name)) { st.textContent = '❌ Bitte die Installationsdatei „FotoBox-Setup-….exe“ wählen.'; return; }
+  // Version aus der Datei selbst (Windows-Versionsangabe „ProductVersion“ am Dateianfang) – so geht auch „FotoBox-Setup-aktuell.exe“
+  let ver = '';
+  try { ver = (new TextDecoder('utf-16le').decode(await f.slice(0, 2 * 1024 * 1024).arrayBuffer()).match(/ProductVersion\u0000+(\d+\.\d+\.\d+)/) || [])[1] || ''; } catch {}
+  ver ||= (f.name.match(/(\d+\.\d+\.\d+)/) || [])[1] || '';
+  if (!ver) { st.textContent = '❌ In dieser Datei steht keine Versionsnummer. Bitte „FotoBox-Setup-…exe“ aus Dropbox oder vom Schreibtisch wählen.'; return; }
   if (f.size < 20e6 || f.size > 400e6) { st.textContent = '❌ Das sieht nicht nach der Fotobox-Installationsdatei aus.'; return; }
   $('#relPick').disabled = true;
   try {
