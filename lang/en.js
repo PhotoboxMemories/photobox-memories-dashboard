@@ -756,6 +756,7 @@ I18N.add('en', {
 "Effekte": "Effects",
 "Effekte nicht verfügbar": "Effects not available",
 "Effekte und Aufkleber": "Effects and stickers",
+"Eigene App: Gäste werden live Strich für Strich als Karikatur gezeichnet – an der Fotobox oder per Selfie vom Handy": "Its own app: guests are drawn live, stroke by stroke, as a caricature – at the photo booth or via a selfie from their phone",
 "Eigene Dateien": "Own files",
 "Eigene Dateien pro Schritt ersetzen die Standardansage.": "Your own files per step replace the standard announcement.",
 "Eigene Dateien pro Schritt ersetzen die Standardansage. {x}": "Your own files per step replace the standard announcement. {x}",
