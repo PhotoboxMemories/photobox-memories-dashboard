@@ -43,6 +43,8 @@
         source = canvas.toDataURL('image/jpeg', .92); q('original').src = source; q('original').hidden = false; status('Foto geladen. Noch nicht an den Anbieter gesendet.'); update();
       } catch { status('Das Foto konnte nicht geöffnet werden.'); }
     };
+    // Testfoto aus dem Event-Editor (Standard- oder eigenes Foto) gleich übernehmen; über das Dateifeld lässt es sich ändern
+    if (item.photo) { source = item.photo; q('original').src = source; q('original').hidden = false; status('Testfoto geladen. Noch nicht an den Anbieter gesendet.'); update(); }
     if (!central && app?.[provider + 'EventStatus']) app[provider + 'EventStatus']().then(s => {
       if (closed) return; storedKey = s.configured && s.secure;
       q('keybox').hidden = storedKey || provider !== 'gemini';
