@@ -430,11 +430,51 @@
 
   function open(ev, ctx) {
     if (!document.getElementById('ws-css')) { const s = document.createElement('style'); s.id = 'ws-css'; s.textContent = CSS; document.head.appendChild(s); }
-    const S = { ...structuredClone(DEF), ...(ev.settings || {}) };
-    S.modes = { ...DEF.modes, ...(ev.settings?.modes || {}) }; S.form = { ...DEF.form, ...(ev.settings?.form || {}) };
-    S.ai = AIEvent.normalize(ev.settings?.ai);
-    S.x = deepMerge(X_DEF, ev.settings?.x);
-    S.layouts = S.layouts || [];
+    const norm = st => { const o = { ...structuredClone(DEF), ...(st || {}) };
+      o.modes = { ...DEF.modes, ...(st?.modes || {}) }; o.form = { ...DEF.form, ...(st?.form || {}) };
+      o.ai = AIEvent.normalize(st?.ai); o.x = deepMerge(X_DEF, st?.x); o.layouts = o.layouts || []; return o; };
+    const S = norm(ev.settings);
+    // Abgleich mit den Fotoboxen: An der Fotobox gespeicherte Einstellungen landen ebenfalls im Ereignis. Darum schickt das
+    // Dashboard nur, was hier geändert wurde (gegenüber „base“ = zuletzt bekannter Stand), und übernimmt Änderungen von der
+    // Fotobox – beim Speichern und alle 15 Sekunden, solange das Ereignis offen ist.
+    const json = v => JSON.stringify(v ?? null);
+    let base = structuredClone(S), baseAt = ev.updated_at || '', persisting = null;
+    const dirtyKeys = () => Object.keys(S).filter(k => json(S[k]) !== json(base[k]));
+    function adoptRemote(raw) { // nur Einstellungen übernehmen, die hier nicht gerade geändert werden
+      const R = norm(raw), dirty = new Set(dirtyKeys()), took = [];
+      for (const k of new Set([...Object.keys(R), ...Object.keys(base)])) {
+        if (dirty.has(k) || json(R[k]) === json(base[k])) continue;
+        S[k] = structuredClone(R[k]); base[k] = structuredClone(R[k]); took.push(k);
+      }
+      return took;
+    }
+    async function persistNow() {
+      while (persisting) await persisting;
+      let done; persisting = new Promise(r => done = r);
+      try {
+        const { data: cur, error: e1 } = await ctx.sb.from('events').select('settings,updated_at').eq('id', ev.id).maybeSingle();
+        if (e1) return { error: e1 };
+        const took = cur ? adoptRemote(cur.settings) : [], keys = dirtyKeys();
+        const settings = { ...(cur?.settings || {}), ...Object.fromEntries(keys.map(k => [k, S[k]])) };
+        const { data: upd, error } = await ctx.sb.from('events').update({ name: E.name, event_date: E.event_date || null, logo_url: E.logo_url || null, settings }).eq('id', ev.id).select('updated_at').maybeSingle();
+        if (!error) { for (const k of keys) base[k] = structuredClone(S[k]); baseAt = upd?.updated_at || baseAt; }
+        if (took.length) refreshAfterRemote();
+        return { error };
+      } finally { persisting = null; done(); }
+    }
+    let remoteT = 0;
+    function refreshAfterRemote() { // nicht mitten ins Tippen hinein neu zeichnen
+      const a = document.activeElement;
+      if (a && root.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) { clearTimeout(remoteT); remoteT = setTimeout(refreshAfterRemote, 1500); return; }
+      render(); status('↻ Änderungen von der Fotobox übernommen');
+    }
+    const pollT = setInterval(async () => {
+      if (!document.body.contains(root)) return clearInterval(pollT);
+      if (ctx.demo || document.visibilityState !== 'visible' || persisting || dirtyKeys().length) return;
+      const { data } = await ctx.sb.from('events').select('settings,updated_at').eq('id', ev.id).maybeSingle();
+      if (!data || data.updated_at === baseAt) return;
+      baseAt = data.updated_at; if (adoptRemote(data.settings).length) refreshAfterRemote();
+    }, 15000);
     let E = { name: ev.name, event_date: ev.event_date, logo_url: ev.logo_url, share_token: ev.share_token }; // share_token = Kennung im Freigabe-Link der Galerie
     // Fotomosaik und Live-Karikatur nur mit Freigabe des Betreibers (Verwaltung → Lizenzen → „Freigaben“); ohne Freigabe
     // zeigt der Menüpunkt ein Schloss und die Seite nur einen Hinweis statt der Einstellungen
@@ -543,7 +583,7 @@
     function save() {
       status('Speichert …'); clearTimeout(saveT);
       saveT = setTimeout(async () => {
-        const { error } = await ctx.sb.from('events').update({ name: E.name, event_date: E.event_date || null, logo_url: E.logo_url || null, settings: S }).eq('id', ev.id);
+        const { error } = await persistNow();
         status(error ? '⚠️ ' + error.message : '✓ Alle Änderungen gespeichert');
       }, 600);
     }
@@ -697,7 +737,7 @@
         if (!ai.photo) return ctx.toast('Kein Testfoto vorhanden.');
         if (!$(main, '[data-cari-consent]')?.checked) return ctx.toast('Bitte bestätigen, dass das Testfoto an den KI-Dienst übertragen werden darf.');
         cariT.consent = true; clearTimeout(saveT);
-        const { error: se } = await ctx.sb.from('events').update({ name: E.name, event_date: E.event_date || null, logo_url: E.logo_url || null, settings: S }).eq('id', ev.id); // Server muss die Live-Karikatur sehen
+        const { error: se } = await persistNow(); // Server muss die Live-Karikatur sehen
         if (se) return ctx.toast('Event konnte nicht gespeichert werden: ' + se.message);
         cariT.busy = true; render();
         try {
@@ -840,7 +880,7 @@
         const central = S.ai.connection === 'central'; // Test geht auch, wenn KI-Porträts für die Gäste noch aus sind
         if (central) {
           clearTimeout(saveT);
-          const {error} = await ctx.sb.from('events').update({name: E.name, event_date: E.event_date || null, logo_url: E.logo_url || null, settings: S}).eq('id', ev.id);
+          const {error} = await persistNow();
           if (error) return ctx.toast('Event konnte nicht gespeichert werden: ' + error.message);
           status('✓ Alle Änderungen gespeichert');
         }
@@ -1610,8 +1650,8 @@
       if (!img) $(m, '.bigpv').innerHTML = '<p style="padding:30px">Noch kein Layout angelegt.</p>';
     }
     async function close() {
-      clearTimeout(saveT);
-      await ctx.sb.from('events').update({ name: E.name, event_date: E.event_date || null, logo_url: E.logo_url || null, settings: S }).eq('id', ev.id);
+      clearTimeout(saveT); clearInterval(pollT);
+      try { await persistNow(); } catch (e) { console.warn('Speichern beim Schließen:', e); }
       root.remove(); ctx.onClose?.();
     }
 
