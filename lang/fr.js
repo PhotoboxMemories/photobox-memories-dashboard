@@ -2515,6 +2515,7 @@ I18N.add('fr', {
 "{x}“ aus „Meine KI-Stile“ löschen? In Events bleibt der Stil erhalten.": "{x} » – supprimer de « Mes styles IA » ? Le style reste dans tes événements.",
 "Ändert die Farbe der Hauptschaltflächen und ihrer Ränder.": "Change la couleur des boutons principaux et de leurs bordures.",
 "Änderung speichern": "Enregistrer la modification",
+"Änderungen von der Fotobox übernommen": "Modifications du photobooth reprises",
 "Öffnen": "Ouvrir",
 "öffnen und mit diesem Konto (gleiche E-Mail & Passwort) anmelden – oder den Schlüssel eintragen.": "et se connecter avec ce compte (même e-mail et mot de passe) – ou saisir la clé.",
 "Ölgemälde": "Peinture à l'huile",
