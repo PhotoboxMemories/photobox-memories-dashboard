@@ -525,6 +525,18 @@
     const aiShrink = file => new Promise((res, rej) => { const img = new Image(); img.onload = () => { const k = Math.min(1, 1536 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(img.src); res(c.toDataURL('image/jpeg', .9)); }; img.onerror = () => rej(new Error('Bild nicht lesbar')); img.src = URL.createObjectURL(file); });
     // Standard-Testfoto für KI-Tests und Filter-Vorschau (testfoto.jpg neben dem Dashboard); ein eigenes Foto ersetzt es nur in diesem Browser.
     const aiDefaultPhoto = () => new Promise(res => { const img = new Image(); img.onload = () => { try { const k = Math.min(1, 1536 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', .9)); } catch { res(''); } }; img.onerror = () => res(''); img.src = 'testfoto.jpg?v=1'; });
+    // „Meine KI-Stile“ zeigen immer unser Testpaar (testfoto.jpg) – nie echte Gäste oder eigene Testfotos. Erzeugt ein Bild
+    // zum Text mit dem Testpaar (zentrale KI, 1 Credit) und lädt es als Vorschaubild hoch.
+    async function aiPairThumb(prompt) {
+      const photo = await aiDefaultPhoto(); if (!photo) throw new Error('Das Testfoto konnte nicht geladen werden.');
+      const { data, error } = await ctx.sb.functions.invoke('ai-generate', { body: { image: photo, prompt: String(prompt).trim(), consent: true, eventId: ev.id, requestId: crypto.randomUUID(), test: true } });
+      let result = data; if (error?.context?.json) { try { result = await error.context.json(); } catch {} }
+      if (error || result?.error) throw new Error(result?.error || error.message);
+      if (!result?.image) throw new Error('Der KI-Dienst hat kein Bild geliefert.');
+      return ctx.uploadFile(await aiThumbFile(result.image));
+    }
+    // Testbild mit eigenem Foto: für „Meine KI-Stile“ stattdessen ein Bild mit dem Testpaar erzeugen (nach Rückfrage)
+    const aiPairAsk = () => (G.pmConfirm || (async x => confirm(x)))('Für „Meine KI-Stile“ nehmen wir als Bild immer unser Testpaar – nicht dein eigenes Testfoto. Jetzt ein Bild mit dem Testpaar erzeugen? (1 Credit)');
     if (!ai.own) aiDefaultPhoto().then(u => { if (u && !ai.own && !ai.photo) { ai.photo = u; if (page === 'ai' || page === 'fx' || page === 'cari') render(); } });
     const status = t => { $(root, '.st').textContent = t; };
     function save() {
@@ -702,9 +714,10 @@
       if (a === 'ai-set-thumb') { // aktuelles Testbild (auch aus „Letzte Generierungen“) als Bild des bearbeiteten Stils – der Text bleibt, wie er gespeichert ist
         const ev = ai.edit >= 0 ? S.ai.prompts[ai.edit] : null, lx = !ev && ai.libEdit && Array.isArray(ai.lib) ? ai.lib.find(y => y.id === ai.libEdit) : null;
         if (!ai.result || (!ev && !lx)) return;
-        t.disabled = true; status('Lädt Vorschaubild hoch …');
+        const pair = lx && ai.resultOwn; if (pair && !await aiPairAsk()) return;
+        t.disabled = true; status(pair ? 'Erzeugt das Bild mit dem Testpaar …' : 'Lädt Vorschaubild hoch …');
         let url = '';
-        try { url = await ctx.uploadFile(await aiThumbFile(ai.result)); } catch (error) { ctx.toast('Vorschaubild konnte nicht hochgeladen werden: ' + error.message, 6000); }
+        try { url = pair ? await aiPairThumb(lx.prompt) : await ctx.uploadFile(await aiThumbFile(ai.result)); } catch (error) { ctx.toast('Vorschaubild konnte nicht erstellt werden: ' + error.message, 6000); }
         t.disabled = false; status('');
         if (!url) return;
         if (ev) { ev.thumb = url; S.ai = AIEvent.normalize(S.ai); save(); }
@@ -722,9 +735,12 @@
         const patch = { name: item.name, prompt: item.prompt };
         t.disabled = true;
         if (ai.result && ai.resultPrompt === item.prompt) {
-          status('Lädt Vorschaubild hoch …');
-          try { patch.thumb = await ctx.uploadFile(await aiThumbFile(ai.result)); } catch (error) { ctx.toast('Vorschaubild konnte nicht hochgeladen werden: ' + error.message, 5000); }
-          status('');
+          const pair = ai.resultOwn && await aiPairAsk(); // mit eigenem Foto getestet: Bild mit dem Testpaar oder altes Bild behalten
+          if (!ai.resultOwn || pair) {
+            status(pair ? 'Erzeugt das Bild mit dem Testpaar …' : 'Lädt Vorschaubild hoch …');
+            try { patch.thumb = pair ? await aiPairThumb(item.prompt) : await ctx.uploadFile(await aiThumbFile(ai.result)); } catch (error) { ctx.toast('Vorschaubild konnte nicht erstellt werden: ' + error.message, 5000); }
+            status('');
+          }
         }
         const { error } = await ctx.sb.from('ai_styles').update(patch).eq('id', x.id);
         t.disabled = false;
@@ -735,10 +751,25 @@
       if (a === 'ai-lib-result') { // aktuelles Testbild samt Prompt in die Sammlung
         const prompt = ai.resultPrompt || aiDraft().prompt;
         if (!ai.result || aiEmptyText(prompt || '')) return ctx.toast('Bitte zuerst ein Testbild generieren.');
-        t.disabled = true; status('Lädt Vorschaubild hoch …');
-        try { await aiLibSave({ name: ai.resultName || aiDraft().name, prompt, thumb: await ctx.uploadFile(await aiThumbFile(ai.result)) }); }
-        catch (error) { ctx.toast('Vorschaubild konnte nicht hochgeladen werden: ' + error.message, 5000); }
+        const pair = ai.resultOwn; if (pair && !await aiPairAsk()) return;
+        t.disabled = true; status(pair ? 'Erzeugt das Bild mit dem Testpaar …' : 'Lädt Vorschaubild hoch …');
+        try { await aiLibSave({ name: ai.resultName || aiDraft().name, prompt, thumb: pair ? await aiPairThumb(prompt) : await ctx.uploadFile(await aiThumbFile(ai.result)) }); }
+        catch (error) { ctx.toast('Vorschaubild konnte nicht erstellt werden: ' + error.message, 5000); }
         status(''); t.disabled = false; return;
+      }
+      if (a === 'ai-lib-pair') { // alle Bilder in „Meine KI-Stile“ mit unserem Testpaar neu erzeugen (1 Credit je Stil)
+        const L = Array.isArray(ai.lib) ? [...ai.lib] : []; if (!L.length || ai.busy) return;
+        if (!await (G.pmConfirm || (async x => confirm(x)))(`Alle ${L.length} Bilder in „Meine KI-Stile“ mit unserem Testpaar neu erzeugen? Das kostet ${L.length} Credits (1 je Stil) und dauert etwa ${Math.max(1, Math.ceil(L.length / 3))} Minuten. Die Texte bleiben, wie sie sind.`)) return;
+        ai.busy = true; render(); let ok = 0, fail = 0, last = '';
+        for (const [i, x] of L.entries()) {
+          status(`Testpaar-Bild ${i + 1} von ${L.length}: ${x.name} …`);
+          try {
+            const url = await aiPairThumb(x.prompt), { error } = await ctx.sb.from('ai_styles').update({ thumb: url }).eq('id', x.id);
+            if (error) throw error; x.thumb = url; ok++; if (page === 'ai') render();
+          } catch (e) { fail++; last = e.message; if (/Guthaben|anmelden|freigegeben|nicht erreichbar/i.test(e.message)) break; }
+        }
+        ai.busy = false; status(''); render();
+        ctx.toast(`${ok} von ${L.length} Bildern mit dem Testpaar erneuert${fail ? ` – Fehler: ${last}` : ''}`, 9000); return;
       }
       if (a === 'ai-lib-add') { const p = S.ai.prompts[+t.dataset.i]; if (p) await aiLibSave(p); return; }
       if (a === 'ai-lib-share') { // nur Betreiber: Stil für alle Kunden freigeben oder zurücknehmen
@@ -793,13 +824,12 @@
         o.onclick = close; document.addEventListener('keydown', key); document.body.appendChild(o);
         return;
       }
-      if (a === 'ai-recent') { const r = ai.recent[+t.dataset.i]; ai.result = r?.image || ''; ai.resultPrompt = r?.prompt || ''; ai.resultName = r?.name || ''; ai.resultId = ''; render(); return; }
+      if (a === 'ai-recent') { const r = ai.recent[+t.dataset.i]; ai.result = r?.image || ''; ai.resultOwn = !!r?.own; ai.resultPrompt = r?.prompt || ''; ai.resultName = r?.name || ''; ai.resultId = ''; render(); return; }
       if (a === 'ai-test') {
         if (!ai.custom && !ai.p && !ai.a) return ctx.toast('Bitte zuerst einen Porträtstil oder einen Kunststil wählen.');
         const item = aiDraft();
         if (aiEmptyText(item.prompt)) return ctx.toast('Bitte beschreibe zuerst, wie das Bild aussehen soll.');
-        const central = S.ai.connection === 'central';
-        if (central && !S.ai.enabled) return ctx.toast('Bitte zuerst KI-Porträts für dieses Event einschalten.');
+        const central = S.ai.connection === 'central'; // Test geht auch, wenn KI-Porträts für die Gäste noch aus sind
         if (central) {
           clearTimeout(saveT);
           const {error} = await ctx.sb.from('events').update({name: E.name, event_date: E.event_date || null, logo_url: E.logo_url || null, settings: S}).eq('id', ev.id);
@@ -813,12 +843,12 @@
         if (!$(main, '[data-ai-consent]')?.checked) return ctx.toast('Bitte bestätigen, dass das Testfoto an den KI-Dienst übertragen werden darf.');
         ai.busy = true; ai.result = ''; render();
         try {
-          const {data,error} = await ctx.sb.functions.invoke('ai-generate', {body: {image: ai.photo, prompt: item.prompt.trim(), consent: true, eventId: ev.id, requestId: crypto.randomUUID()}});
+          const {data,error} = await ctx.sb.functions.invoke('ai-generate', {body: {image: ai.photo, prompt: item.prompt.trim(), consent: true, eventId: ev.id, requestId: crypto.randomUUID(), test: true}});
           let result = data;
           if (error?.context?.json) { try { result = await error.context.json(); } catch {} }
           if (error || result?.error) throw new Error(result?.error || error.message);
           if (!result?.image) throw new Error('Der KI-Dienst hat kein Bild geliefert.');
-          ai.result = result.image; ai.resultPrompt = item.prompt.trim(); ai.resultName = item.name || ''; ai.recent.unshift({ image: result.image, name: item.name || 'Test', prompt: item.prompt.trim() }); ai.recent.length = Math.min(ai.recent.length, 8);
+          ai.result = result.image; ai.resultPrompt = item.prompt.trim(); ai.resultName = item.name || ''; ai.resultOwn = ai.own; ai.recent.unshift({ image: result.image, name: item.name || 'Test', prompt: item.prompt.trim(), own: ai.own }); ai.recent.length = Math.min(ai.recent.length, 8);
           ai.resultId = item.id; // beim Speichern dieses Entwurfs wird das Bild zum Kachelbild
         } catch (error) { ctx.toast(error instanceof TypeError ? 'KI-Dienst ist nicht erreichbar. Bitte Internet prüfen.' : error.message, 9000); }
         ai.busy = false; ai.consentOk = true; render();
@@ -1227,7 +1257,7 @@
             ? `<span>KI-Guthaben:</span><span class="bal" data-ai-bal>…</span><small>1 Credit pro Bild</small><span class="sp" style="flex:1"></span><button class="ghost" data-a="ai-status">Verbindung prüfen</button>`
             : `<span>Eigener API-Schlüssel auf der Fotobox · ${({ grok: 'Grok (xAI)', openai: 'OpenAI', gemini: 'Google Gemini' })[S.ai.provider]}</span>`}</div></div>`;
         const lib = ai.lib;
-        const libCard = `<div class="card"><b>Meine KI-Stile${Array.isArray(lib) ? ` (${lib.length})` : ''}</b><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Deine gesammelten Stile mit Bild – für jedes Event. Antippen übernimmt den Stil in dieses Event, ohne Credits. ✎ = Text ändern und neu generieren.</p>
+        const libCard = `<div class="card"><div class="between" style="gap:10px;flex-wrap:wrap"><b>Meine KI-Stile${Array.isArray(lib) ? ` (${lib.length})` : ''}</b>${Array.isArray(lib) && lib.length && central ? `<button class="ghost" data-a="ai-lib-pair" ${ai.busy ? 'disabled' : ''} title="Alle Bilder mit unserem Testpaar neu erzeugen (1 Credit je Stil)">🔄 Bilder mit Testpaar erneuern</button>` : ''}</div><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Deine gesammelten Stile mit Bild – für jedes Event. Antippen übernimmt den Stil in dieses Event, ohne Credits. ✎ = Text ändern und neu generieren. Die Bilder zeigen immer unser Testpaar.</p>
           ${!lib || lib === 'loading' ? '<p style="color:#6b6b78;font-size:13px">Lädt …</p>' : lib.error ? `<p style="color:#c98a00;font-size:13px">${lib.error === 'setup' ? 'Noch nicht eingerichtet (supabase/migrations/202610170004_ki_stile.sql im SQL Editor ausführen).' : esc(lib.error)}</p>`
             : lib.length ? `<div class="aitiles">${lib.map((x, n) => `<button data-a="ai-lib-use" data-i="${n}" class="${ai.libEdit === x.id ? 'on' : ''}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}${ctx.admin ? `<span class="fav ${x.shared ? 'on' : ''}" data-a="ai-lib-share" data-i="${n}" title="${x.shared ? 'Für alle Kunden freigegeben – antippen zum Zurücknehmen' : 'Für alle Kunden freigeben'}">👥</span>` : ''}<span class="del" data-a="ai-lib-del" data-i="${n}" title="Aus der Sammlung löschen">🗑</span><span class="edit" data-a="ai-lib-edit" data-i="${n}" title="Text ändern und neu generieren">✎</span><b>${esc(x.name)}</b></button>`).join('')}</div>`
             : '<p style="color:#6b6b78;font-size:13px">Noch leer. Speichere ein Testbild mit „In Meine KI-Stile speichern“ oder tippe oben bei einem Stil auf ★.</p>'}
