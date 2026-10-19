@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261019-7';</script>
+<script>window.I18N_V = '20261019-8';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -1290,7 +1290,40 @@ async function loadSoftware() {
     el.textContent = `Version ${swInfo.version} vom ${fmtDate(swInfo.date)}${swInfo.size ? ' · ' + Math.round(swInfo.size / 1048576) + ' MB' : ''}. Installieren: Datei öffnen, „Weiter“ klicken und die Windows-Abfrage mit „Ja“ bestätigen. Fotos und Einstellungen bleiben erhalten.`;
     $('#swDl').disabled = false;
     if (profile?.is_admin) $('#releaseInfo').textContent = `Aktuelle App-Version: ${swInfo.version} (${fmtDate(swInfo.date)})`;
+    showWhatsNew().catch(e => console.warn('Neuigkeiten:', e));
   } catch (e) { el.textContent = /Noch keine/.test(e.message) ? 'Noch keine Version hinterlegt.' : 'Gerade nicht abrufbar: ' + e.message; }
+}
+// Neue Fotobox-Version: einmal je Version ein Hinweis „Was ist neu“ (Texte: neuigkeiten.json, je Sprache) mit Download-Knopf
+// und Liste der eigenen Fotoboxen, die noch eine ältere Version haben. „Später“ zeigt ihn beim nächsten Öffnen wieder.
+const verCmp = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
+async function showWhatsNew() {
+  if (!swInfo?.version || DEMO || document.getElementById('pmNews')) return;
+  let seen = '', later = ''; try { seen = localStorage.getItem('pm-seen-version') || ''; later = sessionStorage.getItem('pm-news-later') || ''; } catch {}
+  if (seen === swInfo.version || later === swInfo.version) return;
+  const news = await fetch('neuigkeiten.json?v=' + encodeURIComponent(swInfo.version), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const lang = window.PM_LANG || 'de', all = news?.versions || {};
+  const vs = Object.keys(all).filter(v => verCmp(v, swInfo.version) <= 0 && (seen ? verCmp(v, seen) > 0 : v === swInfo.version)).sort((a, b) => verCmp(b, a)).slice(0, 3);
+  const old = (devices || []).filter(d => d.app_version && /^\d+\.\d+\.\d+$/.test(d.app_version) && verCmp(d.app_version, swInfo.version) < 0);
+  const mark = () => { try { localStorage.setItem('pm-seen-version', swInfo.version); } catch {} };
+  const o = document.createElement('div'); o.id = 'pmNews';
+  o.style.cssText = 'position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px';
+  o.innerHTML = `<div style="background:#fff;color:#1d1d24;border-radius:16px;padding:22px 22px 18px;width:min(480px,100%);max-height:88vh;overflow:auto;font:15px/1.5 system-ui,sans-serif">
+    <div style="font:700 21px Fredoka,system-ui,sans-serif;margin-bottom:2px">🎉 Neue Fotobox-Version ${esc(swInfo.version)}</div>
+    <div style="color:#6b6b78;font-size:13px;margin-bottom:12px">vom ${fmtDate(swInfo.date)} · zum Herunterladen bereit</div>
+    ${vs.length ? vs.map(v => `<div style="margin:10px 0 4px;font-weight:700">${vs.length > 1 ? 'Version ' + esc(v) : 'Was ist neu'}</div><ul style="margin:0;padding-left:20px">${(all[v].notes?.[lang] || all[v].notes?.de || []).map(n => `<li style="margin:3px 0">${esc(n)}</li>`).join('')}</ul>`).join('') : ''}
+    ${old.length ? `<div style="margin-top:14px;background:#FFFAEA;border-radius:10px;padding:10px 12px;font-size:14px"><b>Noch nicht aktuell:</b> ${old.map(d => `${esc(d.name || 'Fotobox')} (${esc(d.app_version)})`).join(', ')}</div>` : ''}
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px">
+      <button data-n="later" style="background:none;border:1px solid #ddd;border-radius:10px;padding:9px 14px;font:inherit;cursor:pointer">Später</button>
+      <button data-n="done" style="background:none;border:1px solid #ddd;border-radius:10px;padding:9px 14px;font:inherit;cursor:pointer">Schon installiert</button>
+      <button data-n="dl" style="background:#F7C838;color:#1D1D1B;border:0;border-radius:10px;padding:9px 16px;font:600 15px system-ui,sans-serif;cursor:pointer">⬇ Jetzt herunterladen</button></div></div>`;
+  o.addEventListener('click', e => {
+    const b = e.target.closest('[data-n]'); if (!b && e.target !== o) return;
+    const n = b?.dataset.n || 'later';
+    if (n === 'later') { try { sessionStorage.setItem('pm-news-later', swInfo.version); } catch {} }
+    else mark();
+    o.remove(); if (n === 'dl') $('#swDl').click();
+  });
+  document.body.appendChild(o);
 }
 $('#swDl').onclick = async () => {
   if (!swInfo || Date.now() - swAt > 45 * 60e3) await loadSoftware(); // Link nach einer Stunde ungültig – dann neu holen
