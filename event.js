@@ -204,6 +204,12 @@
   #wsLight{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px}
   #wsLight img,#wsLight video{max-width:94vw;max-height:78vh;border-radius:8px;background:#000}
   #wsLight .bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  #wsShow{position:fixed;inset:0;z-index:130;background:#000;cursor:pointer}
+  #wsShow img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1.2s}
+  #wsShow img.on{opacity:1}
+  #wsShow .hint{position:absolute;left:0;right:0;bottom:18px;text-align:center;color:#8a8a92;font:15px system-ui,sans-serif}
+  #wsShow .x{position:absolute;top:14px;right:14px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:18px;cursor:pointer;opacity:.55}
+  #wsShow .x:hover{opacity:1}
   #wsLight button{background:#fff;border:0;border-radius:999px;padding:10px 18px;font:600 14px system-ui,sans-serif;cursor:pointer}
   #wsLight .nav{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;padding:0;font-size:24px}
   #wsLight .nav.l{left:14px}#wsLight .nav.r{right:14px}
@@ -857,8 +863,7 @@
       if (a === 'delev') ctx.onDelete?.(ev, close);
       if (a === 'go') { page = t.dataset.pg; renderNav(); render(); return; }
       if (a === 'gal-embed') { sub.embed = !sub.embed; render(); return; }
-      if (a === 'gal-slide') { const link = shareLink(); if (!link) return ctx.toast('Der Freigabe-Link ist noch nicht eingerichtet.', 4000);
-        if (!S.x.gallery.link) return ctx.toast('Für die Slideshow bitte zuerst „Freigabe von Links“ einschalten.', 5000); window.open(link + '&show=1', '_blank', 'noopener'); return; }
+      if (a === 'gal-slide') return openSlideshow();
       if (a === 'gal-upload') return uploadToGallery();
       if (a === 'shares-csv') return sharesCsv();
       if (a === 'gal-open') return openLightbox(+t.dataset.i);
@@ -913,6 +918,33 @@
     const fetchBlob = async path => { const r = await fetch(galUrl(path)); if (!r.ok) throw new Error('Datei nicht abrufbar'); return r.blob(); };
     const saveBlob = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 20000); };
     const galName = x => (x.name || x.path.split('/').pop()).replace(/[^\w.\-äöüÄÖÜß ]/g, '_');
+    // Slideshow direkt im Dashboard (Vollbild, auch für Fernseher/Beamer): Fotos und GIFs des Ereignisses nacheinander,
+    // neue Fotos kommen von selbst dazu (alle 30 s, neueste zuerst). Braucht keinen öffentlichen Galerie-Link.
+    function openSlideshow() {
+      const o = document.createElement('div'); o.id = 'wsShow';
+      o.innerHTML = '<img alt=""><img alt=""><div class="hint"></div><button class="x" title="Schließen (Esc)">✕</button>';
+      document.body.appendChild(o);
+      const [A, B] = o.querySelectorAll('img'), hint = o.querySelector('.hint');
+      let i = 0, flip = false, seen = 0;
+      const pics = () => (gal.list || []).filter(x => x.kind !== 'video' && !isExtra(x));
+      const next = () => {
+        const L = pics();
+        hint.textContent = L.length ? '' : !gal.list || gal.loading ? 'Fotos werden geladen …' : 'Noch keine Fotos – neue Fotos erscheinen hier von selbst.';
+        if (!L.length) return;
+        if (seen && L.length > seen) i = 0; seen = L.length; // neue Fotos sofort zeigen
+        const x = L[i % L.length], el = flip ? A : B, other = flip ? B : A, im = new Image(); i++;
+        im.onload = () => { el.src = im.src; el.classList.add('on'); other.classList.remove('on'); flip = !flip; };
+        im.onerror = () => { const alt = G.FOTOBOX_PHOTOS?.altSrc?.(im.src); if (alt && alt !== im.src) im.src = alt; }; // Notfall-Kopie
+        im.src = galUrl(x.path);
+      };
+      const t1 = setInterval(next, 6000), t2 = setInterval(() => loadGallery(true), 30000);
+      const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowRight') next(); };
+      const close = () => { clearInterval(t1); clearInterval(t2); removeEventListener('keydown', key); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); o.remove(); };
+      addEventListener('keydown', key);
+      o.onclick = e => { if (e.target.closest('.x')) return close(); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else o.requestFullscreen?.().catch(() => {}); };
+      o.requestFullscreen?.().catch(() => {});
+      if (gal.list) next(); else loadGallery(true).then(next);
+    }
     function openLightbox(i) {
       const L = gal.list || []; let n = i;
       const o = document.createElement('div'); o.id = 'wsLight';
