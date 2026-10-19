@@ -9,7 +9,7 @@
       ...(typeof p?.thumb === 'string' && /^https:\/\/[^\s"'<>]{1,500}$/.test(p.thumb) ? { thumb: p.thumb } : {})
     })) : typeof value?.prompt === 'string' && value.prompt.trim() ? [{ id: 'legacy', name: 'Mein Stil', prompt: value.prompt.slice(0, 1200) }] : [];
     const selected = prompts.find(p => p.id === value?.selectedId) || prompts[0];
-    return { connection: value?.connection === 'central' ? 'central' : 'local', resolution: value?.resolution === '1k' ? '1k' : '2k', provider: value?.connection === 'central' ? 'grok' : ['openai','grok'].includes(value?.provider) ? value.provider : 'gemini', enabled: value?.enabled === true, prompts, guestChoice: value?.guestChoice !== false,
+    return { connection: value?.connection === 'local' ? 'local' : 'central', resolution: value?.resolution === '1k' ? '1k' : '2k', provider: value?.connection !== 'local' ? 'grok' : ['openai','grok'].includes(value?.provider) ? value.provider : 'gemini', enabled: value?.enabled === true, prompts, guestChoice: value?.guestChoice !== false,
       selectedId: selected?.id || '', prompt: selected?.prompt || '' };
   }
   const forBooth = (settings, enabled = true) => ({ ...normalize(settings), enabled: enabled !== false && normalize(settings).enabled });
