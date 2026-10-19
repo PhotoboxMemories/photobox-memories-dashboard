@@ -430,6 +430,12 @@
     S.x = deepMerge(X_DEF, ev.settings?.x);
     S.layouts = S.layouts || [];
     let E = { name: ev.name, event_date: ev.event_date, logo_url: ev.logo_url, share_token: ev.share_token }; // share_token = Kennung im Freigabe-Link der Galerie
+    // Fotomosaik und Live-Karikatur nur mit Freigabe des Betreibers (Verwaltung → Lizenzen → „Freigaben“); ohne Freigabe
+    // zeigt der Menüpunkt ein Schloss und die Seite nur einen Hinweis statt der Einstellungen
+    const allowed = k => !ctx.extra || ctx.extra(k), LOCKS = { mosaic: 'mosaic', cari: 'caricature' };
+    const lockedPage = (title, text) => `<h1>${title} 🔒</h1><div class="card" style="background:#FFFAEA;max-width:640px">
+      <b>Diese Funktion ist für Ihr Konto noch nicht freigeschaltet.</b><p style="margin:10px 0">${text}</p>
+      <p style="margin:0;color:#6b6b78">Zum Freischalten melden Sie sich bitte bei Photobox Memories.</p></div>`;
     let page = ctx.page || 'dash', sub = {};
     const root = document.createElement('div'); root.id = 'ws';
     root.innerHTML = `<div class="wtop"><button class="tb mnav" data-a="mnav" title="Menü" aria-label="Menü">☰</button><div class="logo">${LOGO(28)}</div><span class="en"></span><span class="sp"></span>
@@ -524,7 +530,7 @@
     }
     function renderNav() {
       side.innerHTML = `<span class="back" data-a="back">${ICON('chevronLeft', 14)} Zurück zu den Ereignissen</span>` + NAV.map(n => n[0] === 'h'
-        ? `<h6>${n[1]}</h6>` : `<a data-p="${n[0]}" class="${n[0] === page ? 'on' : ''}">${ICON(n[1], 18)}${n[2]}</a>`).join('');
+        ? `<h6>${n[1]}</h6>` : `<a data-p="${n[0]}" class="${n[0] === page ? 'on' : ''}">${ICON(n[1], 18)}${n[2]}${LOCKS[n[0]] && !allowed(LOCKS[n[0]]) ? ' 🔒' : ''}</a>`).join('');
       $(root, '.en').textContent = E.name;
     }
     side.addEventListener('click', e => {
@@ -1285,6 +1291,7 @@
       },
       // Fotomosaik: viele Gästefotos ergeben ein großes Bild (Bildschirm und/oder Klebewand mit nummerierter Tafel)
       cari() { // Live-Karikatur: Foto → KI-Karikatur → live gezeichnet an der Fotobox und auf dem zweiten Bildschirm
+        if (!allowed('caricature')) return lockedPage('Live-Karikatur', 'Jedes Foto wird zur Karikatur – live Strich für Strich gezeichnet, an der Fotobox und per Selfie vom Handy.');
         S.x ??= {}; const c0 = S.x.caricature ??= {}; c0.secs ??= 10; c0.phone ??= true; c0.needCode ??= true; c0.print ??= true; c0.approve ??= false;
         if (!/^[0-9a-f]{16,64}$/.test(c0.secret || '')) { c0.secret = Caricature.newSecret(); save(); } // für den wechselnden Code auf der Wand
         const c = Caricature.normalize(c0), link = (window.FOTOBOX_CONFIG?.dashboardUrl || location.origin + location.pathname.replace(/[^/]*$/, '')).replace(/\/?$/, '/') + 'karikatur.html?e=' + ev.id;
@@ -1323,6 +1330,7 @@
             ${c.on ? '' : '<p style="margin:8px 0 0;color:#c98a00;font-size:13px">Zum Ausprobieren oben die Live-Karikatur einschalten.</p>'}</div>`;
       },
       mosaic() {
+        if (!allowed('mosaic')) return lockedPage('Fotomosaik', 'Viele Gästefotos ergeben zusammen ein großes Bild – live auf dem Bildschirm und als Klebewand mit nummerierter Tafel.');
         const c = Mosaic.normalize(S.x.mosaic);
         const cmIn = (p, v, min, max, step) => `<input type="number" data-s="x.mosaic.${p}" data-num="1" min="${min}" max="${max}" step="${step}" value="${v}" style="width:110px">`;
         return `${titleSw('Fotomosaik', 'x.mosaic.on')}<div class="cols"><div class="left">
@@ -1614,12 +1622,13 @@
     ['VIDEO', 'slowmo', 'film', '360 / SLOW-MO', 'Zeitlupen-Videos mit Tempo-Rampen', null],
     ['VIDEO', 'video', 'video', 'VIDEO BOOTH', 'Videos mit Ton aufnehmen – für ein Video-Gästebuch', { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: true }, videoSecs: 15, videoAudio: true }]
   ];
-  function newEventDialog(events, onPick) {
+  function newEventDialog(events, onPick, opts = {}) {
+    const cariOk = !opts.extra || opts.extra('caricature');
     if (!document.getElementById('ws-css')) { const s = document.createElement('style'); s.id = 'ws-css'; s.textContent = CSS; document.head.appendChild(s); }
     const m = document.createElement('div'); m.id = 'wsModal';
     let sec = '';
     const rows = TYPES.map(([g, id, ic, t, d, preset]) => (g !== sec ? `<div class="sec">${sec = g}</div>` : '') +
-      `<button class="et${id === 'cari' ? ' hl' : ''}" data-type="${id}" ${preset ? '' : 'disabled'}><span class="ei">${ICON(ic, 24)}</span><span><b>${t}${preset ? '' : ' <span class="soon">bald</span>'}${id === 'cari' ? ' <span class="soon new">NEU</span>' : ''}</b><small>${d}</small></span></button>`).join('');
+      `<button class="et${id === 'cari' ? ' hl' : ''}" data-type="${id}" ${preset ? '' : 'disabled'}><span class="ei">${ICON(ic, 24)}</span><span><b>${t}${preset ? '' : ' <span class="soon">bald</span>'}${id === 'cari' ? (cariOk ? ' <span class="soon new">NEU</span>' : ' 🔒') : ''}</b><small>${d}</small></span></button>`).join('');
     m.innerHTML = `<div class="box" style="width:min(460px,94vw);height:auto;max-height:92vh"><div class="mh"><div style="flex:1"><h3>Erstellen Sie ein neues Ereignis</h3><small>Wählen Sie die Ereignisart für Ihre Fotobox</small></div><button class="x" data-x="1">${ICON('x', 20)}</button></div>
       <div style="overflow:auto;padding-bottom:16px">${rows}<div class="sec">KOPIEREN</div>
       <button class="et" data-type="dup" ${events.length ? '' : 'disabled'}><span class="ei">${ICON('copy', 24)}</span><span><b>VORHERIGES EREIGNIS DUPLIZIEREN</b><small>Einstellungen eines früheren Ereignisses übernehmen</small></span></button>
@@ -1629,7 +1638,9 @@
       const b = e.target.closest('[data-type],[data-dup]'); if (!b || b.disabled) return;
       if (b.dataset.type === 'dup') { const l = $(m, '.dupList'); l.style.display = l.style.display === 'none' ? 'block' : 'none'; return; }
       if (b.dataset.dup) { const src = events.find(x => x.id === b.dataset.dup); m.remove(); return onPick(structuredClone(src.settings || {}), src.logo_url, src.name + ' (Kopie)'); }
-      const t = TYPES.find(x => x[1] === b.dataset.type), set = structuredClone(t[5]); m.remove();
+      const t = TYPES.find(x => x[1] === b.dataset.type);
+      if (t[1] === 'cari' && !cariOk) return (opts.toast || alert)('Live-Karikatur ist für Ihr Konto noch nicht freigeschaltet – bitte bei Photobox Memories melden.', 6000);
+      const set = structuredClone(t[5]); m.remove();
       if (t[1] === 'cari') { set.x.caricature.secret = Caricature.newSecret(); return onPick(set, null, null, 'Live-Karikatur', 'cari'); } // gleich auf der Karikatur-Seite öffnen
       onPick(set, null, null, t[3]);
     });
