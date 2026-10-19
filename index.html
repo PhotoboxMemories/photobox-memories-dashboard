@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261018-12';</script>
+<script>window.I18N_V = '20261019-1';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -22,7 +22,7 @@
 <script src="sketch-draw.js?v=20261018-8"></script>
 <script src="caricature.js?v=20261018-10"></script>
 <script src="ai-test.js?v=20261018-3"></script>
-<script src="event.js?v=20261018-11"></script>
+<script src="event.js?v=20261019-1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -324,6 +324,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <div id="lUpdWrap" class="hidden"><label>Updates inklusive bis (leer = immer)</label><input id="lUpd" type="date"></div>
           <div><label>Anzahl Geräte</label><input id="lMax" type="number" min="1" value="1"></div>
           <div id="lCreditsWrap" class="hidden"><label>KI-Credits dazu (für KI-Porträts)</label><input id="lCredits" type="number" min="0" max="1000" value="20"></div>
+          <div><label>Freigaben</label><div class="row" style="margin-top:10px;gap:16px"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMosaic" style="width:auto"> Fotomosaik</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lCari" style="width:auto"> Live-Karikatur</label></div></div>
           <div style="grid-column:1/-1"><label>Notiz (z.B. Rechnungsnummer)</label><input id="lNotes"></div>
         </div>
         <div class="row" style="margin-top:14px"><button class="btn primary" id="lCreate">Lizenz erstellen</button><span class="small muted">Der Kunde registriert sich im Dashboard mit derselben E-Mail – die Lizenz wird automatisch zugeordnet.</span></div>
@@ -343,7 +344,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       </div>
       <div class="pagehead"><h2 style="margin:0">Alle Lizenzen</h2><input id="lSearch" placeholder="Suchen…" style="max-width:260px"></div>
       <div class="tablewrap"><table>
-        <thead><tr><th>Kunde</th><th>Schlüssel</th><th>Art</th><th>Gültig</th><th>Geräte</th><th>Aktionen</th></tr></thead>
+        <thead><tr><th>Kunde</th><th>Schlüssel</th><th>Art</th><th>Gültig</th><th>Geräte</th><th>Freigaben</th><th>Aktionen</th></tr></thead>
         <tbody id="licList"></tbody>
       </table></div>
     </div>
@@ -422,7 +423,7 @@ function demoClient() {
       { id: 'd3', name: 'Mietbox 1', event_id: null, photos_total: 1204, app_version: '1.4.0', last_seen: iso(-6), licenses: { customer_name: 'Studio Lichtblick', owner_id: 'k2' } }
     ],
     licenses: [
-      { id: 'l1', key: 'FBX-7KQM-2XRT-P9DW-HJ4N', customer_name: 'Fotoexakt', customer_email: 'demo@fotobox.de', owner_id: 'demo', kind: 'lifetime', updates_until: iso(365), max_devices: 3, active: true, devices: [{ id: 'd1' }, { id: 'd2' }] },
+      { id: 'l1', key: 'FBX-7KQM-2XRT-P9DW-HJ4N', customer_name: 'Fotoexakt', customer_email: 'demo@fotobox.de', owner_id: 'demo', kind: 'lifetime', extras: ['mosaic', 'caricature'], updates_until: iso(365), max_devices: 3, active: true, devices: [{ id: 'd1' }, { id: 'd2' }] },
       { id: 'l2', key: 'FBX-N4VB-8CEL-TT2Z-QW7S', customer_name: 'Studio Lichtblick', customer_email: 'info@lichtblick.de', owner_id: 'k2', kind: 'subscription', valid_until: iso(9), max_devices: 1, active: true, notes: 'RE-2026-041', devices: [{ id: 'd3' }] },
       { id: 'l3', key: 'FBX-ZP3R-6YHA-M2KD-UE8F', customer_name: 'Event Kids GmbH', customer_email: 'hallo@eventkids.de', owner_id: null, kind: 'subscription', valid_until: iso(-20), max_devices: 2, active: true, devices: [] }
     ],
@@ -615,7 +616,7 @@ async function uploadFile(file) {
 }
 function openEvent(ev, page) {
   EventWS.open(ev, {
-    sb, me, toast, uploadFile, devices, admin: !!profile?.is_admin, demo: DEMO, page,
+    sb, me, toast, uploadFile, devices, admin: !!profile?.is_admin, demo: DEMO, page, extra: hasExtra,
     leadsCount: id => (typeof leads !== 'undefined' && leads.length) ? leads.filter(l => l.event_id === id).length : '–',
     onClose: () => loadEvents(),
     onDelete: async (e, closeWs) => {
@@ -627,7 +628,7 @@ function openEvent(ev, page) {
   });
 }
 function newEvent() {
-  EventWS.newEventDialog(events, (settings, logo_url, name, typeName, page) => createEvent(settings, logo_url, name, typeName, page));
+  EventWS.newEventDialog(events, (settings, logo_url, name, typeName, page) => createEvent(settings, logo_url, name, typeName, page), { extra: hasExtra, toast });
 }
 async function createEvent(settings, logo_url, name, typeName, page) {
   const today = new Date().toISOString().slice(0, 10);
@@ -777,6 +778,9 @@ function licStatus(l) {
     : `<span class="badge ${days < 14 ? 'warn' : 'ok'}">bis ${fmtDate(l.valid_until)}</span>`;
 }
 const kindName = k => k === 'lifetime' ? 'Einmalkauf' : 'Abo';
+// Zusatzfunktionen, die der Betreiber je Lizenz freischaltet (Spalte licenses.extras); der Betreiber selbst hat immer alle
+const EXTRAS = [['mosaic', 'Fotomosaik'], ['caricature', 'Live-Karikatur']];
+const hasExtra = k => DEMO || !!profile?.is_admin || licenses.some(l => l.owner_id === me?.id && l.active && (l.extras || []).includes(k));
 const licKind = l => l.trial ? 'Testphase' : isTestLic(l) ? 'Testversion' : kindName(l.kind);
 async function loadLicenses() {
   const { data, error } = await sb.from('licenses').select('*, devices(id)').order('created_at', { ascending: false });
@@ -788,6 +792,7 @@ async function loadLicenses() {
       <div><code class="key" data-copy="${esc(l.key)}" title="Klicken zum Kopieren">${esc(l.key)}</code></div>
       <div>${licStatus(l)}</div>
       <div class="small muted">Geräte: ${l.devices.length} von ${l.max_devices}</div>
+      ${EXTRAS.filter(([k]) => (l.extras || []).includes(k)).map(([, n]) => `<div class="small">✓ ${n} freigeschaltet</div>`).join('')}
     </div>`).join('') : `<div class="card empty" style="grid-column:1/-1">${shop.plans.length ? 'Noch keine Lizenz. Teste 14 Tage kostenlos oder kaufe unten eine Lizenz.' : 'Keine Lizenz mit deiner E-Mail gefunden. Bitte melde dich beim Verkäufer.'}</div>`;
   renderShop();
   $('#adCard').classList.toggle('hidden', !(mine.length || profile.is_admin)); if (!adData && (mine.length || profile.is_admin)) loadAd();
@@ -1013,6 +1018,7 @@ $('#lCreate').onclick = async () => {
     updates_until: life && $('#lUpd').value ? new Date($('#lUpd').value + 'T23:59:59').toISOString() : null,
     max_devices: Math.max(1, +$('#lMax').value || 1), notes: $('#lNotes').value.trim() || (test ? 'Testversion' : null)
   };
+  const extras = [$('#lMosaic').checked && 'mosaic', $('#lCari').checked && 'caricature'].filter(Boolean); if (extras.length) row.extras = extras;
   const credits = test ? Math.max(0, Math.min(1000, Math.round(+$('#lCredits').value || 0))) : 0;
   const { data, error } = await sb.from('licenses').insert(row).select().single();
   if (error) return toast('Fehler: ' + error.message, 4000);
@@ -1023,7 +1029,7 @@ $('#lCreate').onclick = async () => {
     else { extra = ` · ${credits} KI-Credits werden gebucht, sobald sich der Tester registriert hat`; await sb.from('licenses').update({ notes: `${row.notes} · ${credits} KI-Credits offen` }).eq('id', data.id); }
   }
   toast('Lizenz erstellt – Schlüssel kopiert: ' + data.key + extra, 7000);
-  ['#lName', '#lEmail', '#lNotes'].forEach(s => $(s).value = '');
+  ['#lName', '#lEmail', '#lNotes'].forEach(s => $(s).value = ''); $('#lMosaic').checked = $('#lCari').checked = false;
   loadLicenses();
 };
 $('#lSearch').oninput = renderAdmin;
@@ -1036,6 +1042,7 @@ function renderAdmin() {
       <td>${licKind(l)}</td>
       <td>${licStatus(l)}</td>
       <td>${l.devices.length} / <input type="number" min="1" value="${l.max_devices}" data-lic="${l.id}" data-act="max" style="width:60px;padding:4px 6px"></td>
+      <td data-l="Freigaben"><div style="display:flex;flex-direction:column;gap:4px">${EXTRAS.map(([k, n]) => `<label class="small" style="display:flex;gap:6px;align-items:center;white-space:nowrap;cursor:pointer"><input type="checkbox" data-lic="${l.id}" data-act="extra" data-x="${k}" ${(l.extras || []).includes(k) ? 'checked' : ''}> ${n}</label>`).join('')}</div></td>
       <td><div class="row">
         ${isTestLic(l) ? ''
           : l.kind === 'subscription'
@@ -1043,14 +1050,14 @@ function renderAdmin() {
           : `<button class="btn small" data-lic="${l.id}" data-act="u1">+1 Jahr Updates</button>`}
         <button class="btn small ${l.active ? 'danger' : ''}" data-lic="${l.id}" data-act="toggle">${isTestLic(l) ? (l.active ? 'Test beenden' : 'Test wieder starten') : l.active ? 'Sperren' : 'Entsperren'}</button>
       </div></td>
-    </tr>`).join('') : '<tr><td colspan="6" class="empty">Keine Lizenzen</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="7" class="empty">Keine Lizenzen</td></tr>';
 }
 function extend(date, months) {
   const d = new Date(Math.max(Date.now(), date ? new Date(date).getTime() : 0));
   d.setMonth(d.getMonth() + months); return d.toISOString();
 }
 $('#licList').addEventListener('click', async e => {
-  const id = e.target.dataset.lic, act = e.target.dataset.act; if (!id || act === 'max') return;
+  const id = e.target.dataset.lic, act = e.target.dataset.act; if (!id || act === 'max' || act === 'extra') return;
   const l = licenses.find(x => x.id === id);
   const patch = act === 'm1' ? { valid_until: extend(l.valid_until, 1) }
     : act === 'y1' ? { valid_until: extend(l.valid_until, 12) }
@@ -1062,6 +1069,13 @@ $('#licList').addEventListener('click', async e => {
   toast('Lizenz aktualisiert'); loadLicenses();
 });
 $('#licList').addEventListener('change', async e => {
+  if (e.target.dataset.act === 'extra') { // Zusatzfunktion für diese Lizenz frei- oder wegschalten
+    const l = licenses.find(x => x.id === e.target.dataset.lic), k = e.target.dataset.x, name = EXTRAS.find(x => x[0] === k)?.[1] || k;
+    const extras = [...new Set((l.extras || []).filter(x => x !== k).concat(e.target.checked ? [k] : []))];
+    const { error } = await sb.from('licenses').update({ extras }).eq('id', l.id);
+    if (error) { e.target.checked = !e.target.checked; return toast('Fehler: ' + (/extras/.test(error.message) ? 'Bitte zuerst die Datenbank-Änderung „Fotomosaik-Freigabe“ ausführen.' : error.message), 6000); }
+    l.extras = extras; return toast(`${name} für ${l.customer_name || l.customer_email} ${e.target.checked ? 'freigeschaltet' : 'gesperrt'}`);
+  }
   if (e.target.dataset.act !== 'max') return;
   const { error } = await sb.from('licenses').update({ max_devices: Math.max(1, +e.target.value || 1) }).eq('id', e.target.dataset.lic);
   error ? toast('Fehler: ' + error.message) : toast('Geräteanzahl gespeichert');
