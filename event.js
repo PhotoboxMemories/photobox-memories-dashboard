@@ -470,9 +470,10 @@
     async function aiLibSave(item) {
       if (!Array.isArray(ai.lib)) return ctx.toast('„Meine KI-Stile“ ist noch nicht bereit.', 5000);
       if (aiInLib(item)) return ctx.toast('Dieser Stil ist schon in „Meine KI-Stile“.');
-      const { data, error } = await ctx.sb.from('ai_styles').insert({ name: String(item.name || 'Mein Stil').slice(0, 60), prompt: String(item.prompt).slice(0, 1200), thumb: item.thumb || null }).select('id,name,prompt,thumb').single();
+      // Stile des Betreibers sind sofort für alle Kunden freigegeben („Stile von Photobox Memories“, mit 👥 zurücknehmbar)
+      const { data, error } = await ctx.sb.from('ai_styles').insert({ name: String(item.name || 'Mein Stil').slice(0, 60), prompt: String(item.prompt).slice(0, 1200), thumb: item.thumb || null, ...(ctx.admin ? { shared: true } : {}) }).select('id,name,prompt,thumb,shared,owner').single();
       if (error) return ctx.toast('Speichern fehlgeschlagen: ' + error.message, 6000);
-      ai.lib = [data, ...ai.lib]; render(); ctx.toast('In „Meine KI-Stile“ gespeichert');
+      ai.lib = [data, ...ai.lib]; render(); ctx.toast(ctx.admin ? 'In „Meine KI-Stile“ gespeichert und für alle Kunden freigegeben' : 'In „Meine KI-Stile“ gespeichert');
     }
     try { ai.photo = localStorage.getItem('pm-ai-testphoto') || ''; } catch {}
     // Live-Karikatur: Testergebnis und Abspielen (Vollbild, Klick schließt)
@@ -756,6 +757,13 @@
         try { await aiLibSave({ name: ai.resultName || aiDraft().name, prompt, thumb: pair ? await aiPairThumb(prompt) : await ctx.uploadFile(await aiThumbFile(ai.result)) }); }
         catch (error) { ctx.toast('Vorschaubild konnte nicht erstellt werden: ' + error.message, 5000); }
         status(''); t.disabled = false; return;
+      }
+      if (a === 'ai-lib-share-all') { // nur Betreiber: alle eigenen Stile auf einmal für alle Kunden freigeben
+        const L = Array.isArray(ai.lib) ? ai.lib.filter(x => !x.shared) : []; if (!ctx.admin || !L.length) return;
+        if (!await (G.pmConfirm || (async x => confirm(x)))(`${L.length} Stil(e) für alle Kunden freigeben? Deine Kunden sehen sie dann unter „Stile von Photobox Memories“ – mit Bild. Tipp: vorher „Bilder mit Testpaar erneuern“, damit keine echten Personen zu sehen sind.`)) return;
+        const { error } = await ctx.sb.from('ai_styles').update({ shared: true }).in('id', L.map(x => x.id));
+        if (error) return ctx.toast(error.message, 6000);
+        L.forEach(x => { x.shared = true; }); render(); ctx.toast(`${L.length} Stil(e) für alle Kunden freigegeben`); return;
       }
       if (a === 'ai-lib-pair') { // alle Bilder in „Meine KI-Stile“ mit unserem Testpaar neu erzeugen (1 Credit je Stil)
         const L = Array.isArray(ai.lib) ? [...ai.lib] : []; if (!L.length || ai.busy) return;
@@ -1256,11 +1264,11 @@
             ? `<span>KI-Guthaben:</span><span class="bal" data-ai-bal>…</span><small>1 Credit pro Bild</small><span class="sp" style="flex:1"></span><button class="ghost" data-a="ai-status">Verbindung prüfen</button>`
             : `<span>Eigener API-Schlüssel auf der Fotobox · ${({ grok: 'Grok (xAI)', openai: 'OpenAI', gemini: 'Google Gemini' })[S.ai.provider]}</span>`}</div></div>`;
         const lib = ai.lib;
-        const libCard = `<div class="card"><div class="between" style="gap:10px;flex-wrap:wrap"><b>Meine KI-Stile${Array.isArray(lib) ? ` (${lib.length})` : ''}</b>${Array.isArray(lib) && lib.length && central ? `<button class="ghost" data-a="ai-lib-pair" ${ai.busy ? 'disabled' : ''} title="Alle Bilder mit unserem Testpaar neu erzeugen (1 Credit je Stil)">🔄 Bilder mit Testpaar erneuern</button>` : ''}</div><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Deine gesammelten Stile mit Bild – für jedes Event. Antippen übernimmt den Stil in dieses Event, ohne Credits. ✎ = Text ändern und neu generieren. Die Bilder zeigen immer unser Testpaar.</p>
+        const libCard = `<div class="card"><div class="between" style="gap:10px;flex-wrap:wrap"><b>Meine KI-Stile${Array.isArray(lib) ? ` (${lib.length})` : ''}</b><span class="row" style="gap:6px;flex-wrap:wrap">${Array.isArray(lib) && lib.length && central ? `<button class="ghost" data-a="ai-lib-pair" ${ai.busy ? 'disabled' : ''} title="Alle Bilder mit unserem Testpaar neu erzeugen (1 Credit je Stil)">🔄 Bilder mit Testpaar erneuern</button>` : ''}${ctx.admin && Array.isArray(lib) && lib.some(x => !x.shared) ? `<button class="ghost" data-a="ai-lib-share-all" title="Alle Stile in „Meine KI-Stile“ für alle Kunden freigeben">👥 Alle für Kunden freigeben</button>` : ''}</span></div><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Deine gesammelten Stile mit Bild – für jedes Event. Antippen übernimmt den Stil in dieses Event, ohne Credits. ✎ = Text ändern und neu generieren. Die Bilder zeigen immer unser Testpaar.</p>
           ${!lib || lib === 'loading' ? '<p style="color:#6b6b78;font-size:13px">Lädt …</p>' : lib.error ? `<p style="color:#c98a00;font-size:13px">${lib.error === 'setup' ? 'Noch nicht eingerichtet (supabase/migrations/202610170004_ki_stile.sql im SQL Editor ausführen).' : esc(lib.error)}</p>`
             : lib.length ? `<div class="aitiles">${lib.map((x, n) => `<button data-a="ai-lib-use" data-i="${n}" class="${ai.libEdit === x.id ? 'on' : ''}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}${ctx.admin ? `<span class="fav ${x.shared ? 'on' : ''}" data-a="ai-lib-share" data-i="${n}" title="${x.shared ? 'Für alle Kunden freigegeben – antippen zum Zurücknehmen' : 'Für alle Kunden freigeben'}">👥</span>` : ''}<span class="del" data-a="ai-lib-del" data-i="${n}" title="Aus der Sammlung löschen">🗑</span><span class="edit" data-a="ai-lib-edit" data-i="${n}" title="Text ändern und neu generieren">✎</span><b>${esc(x.name)}</b></button>`).join('')}</div>`
             : '<p style="color:#6b6b78;font-size:13px">Noch leer. Speichere ein Testbild mit „In Meine KI-Stile speichern“ oder tippe oben bei einem Stil auf ★.</p>'}
-          ${ctx.admin && Array.isArray(lib) && lib.length ? '<p style="color:#6b6b78;font-size:13px;margin-top:8px">👥 = für alle Software-Kunden freigeben. Freigegebene Stile sehen deine Kunden unter „Stile von Photobox Memories“.</p>' : ''}</div>
+          ${ctx.admin && Array.isArray(lib) && lib.length ? '<p style="color:#6b6b78;font-size:13px;margin-top:8px">👥 = für alle Software-Kunden freigegeben (gelb) – antippen zum Zurücknehmen. Neu gespeicherte Stile sind sofort freigegeben. Deine Kunden sehen sie unter „Stile von Photobox Memories“.</p>' : ''}</div>
           ${(ai.common || []).length ? `<div class="card"><b>Stile von Photobox Memories (${ai.common.length})</b><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Fertige Stile mit Beispielbild. Antippen übernimmt den Stil in dieses Event, ohne Credits. ✎ = als Vorlage für einen eigenen Stil nehmen.</p>
             <div class="aitiles">${ai.common.map((x, n) => `<button data-a="ai-lib-use" data-common="1" data-i="${n}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}<span class="edit" data-a="ai-common-edit" data-i="${n}" title="Als Vorlage für einen eigenen Stil nehmen">✎</span><b>${esc(x.name)}</b></button>`).join('')}</div></div>` : ''}`;
         return `${titleSw('KI-Porträts', 'ai.enabled')}<p class="sub" style="margin:-6px 0 14px;color:#6b6b78">Verwandle deine Gäste mit generativer KI</p><div class="aigrid"><div class="left">
