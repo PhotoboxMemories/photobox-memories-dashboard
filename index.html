@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261019-9';</script>
+<script>window.I18N_V = '20261019-10';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -491,15 +491,34 @@ $('#aGo').onclick = async () => {
     ? await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.href.split('#')[0] } })
     : await sb.auth.signInWithPassword({ email, password });
   $('#aGo').disabled = false;
-  if (error) return authMsg(error.message === 'Invalid login credentials' ? 'E-Mail oder Passwort falsch.' : error.message);
-  if (signup && !data.session) authMsg('Fast geschafft! Bitte bestätige deine E-Mail über den Link, den wir dir geschickt haben.', true);
+  if (error) {
+    if (/not confirmed/i.test(error.message)) return authUnconfirmed(email);
+    return authMsg(AUTH_ERR(error.message));
+  }
+  if (signup && !data.session) authMsg('Fast geschafft! Bitte bestätige deine E-Mail über den Link, den wir dir geschickt haben. Keine Mail da? Bitte auch im Spam-Ordner nachsehen.', true);
 };
+// Anmelde-Fehler von Supabase (englisch) verständlich auf Deutsch
+const AUTH_ERR = m => /Invalid login credentials/i.test(m) ? 'E-Mail oder Passwort falsch.'
+  : /already registered|already been registered/i.test(m) ? 'Für diese E-Mail-Adresse gibt es schon ein Konto – bitte anmelden.'
+  : /rate limit|too many/i.test(m) ? 'Gerade wurden zu viele Mails verschickt. Bitte in ein paar Minuten noch einmal versuchen.'
+  : /expired|invalid.*link/i.test(m) ? 'Der Link ist abgelaufen. Bitte noch einmal anfordern.'
+  : /password.*(short|least|weak)/i.test(m) ? 'Das Passwort ist zu kurz oder zu einfach.' : m;
+// E-Mail noch nicht bestätigt: Hinweis mit Knopf, der die Bestätigungs-Mail noch einmal schickt
+function authUnconfirmed(email) {
+  const m = $('#aMsg'); m.className = 'msg err';
+  m.innerHTML = 'Ihre E-Mail-Adresse ist noch nicht bestätigt. Bitte klicken Sie auf den Link in unserer Mail – auch im Spam-Ordner nachsehen. Der Link gilt nur eine begrenzte Zeit.<br><button type="button" class="btn" id="aResend" style="margin-top:10px">✉ Bestätigungs-Mail erneut senden</button>';
+  $('#aResend').onclick = async () => {
+    $('#aResend').disabled = true;
+    const { error } = await sb.auth.resend({ type: 'signup', email, options: { emailRedirectTo: location.href.split('#')[0] } });
+    error ? authMsg(AUTH_ERR(error.message)) : authMsg('Neue Bestätigungs-Mail an ' + email + ' gesendet. Bitte den Link darin anklicken (auch im Spam-Ordner nachsehen).', true);
+  };
+}
 $('#aForgot').onclick = async e => {
   e.preventDefault();
   const email = $('#aEmail').value.trim();
   if (!email) return authMsg('Bitte zuerst die E-Mail-Adresse eingeben.');
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0] });
-  error ? authMsg(error.message) : authMsg('Wir haben dir einen Link zum Zurücksetzen geschickt.', true);
+  error ? authMsg(AUTH_ERR(error.message)) : authMsg('Wir haben dir einen Link zum Zurücksetzen geschickt.', true);
 };
 $('#rGo').onclick = async () => {
   const { error } = await sb.auth.updateUser({ password: $('#rPw').value });
