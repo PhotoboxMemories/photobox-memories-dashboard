@@ -1,48 +1,143 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.63": {
+      "date": "2026-10-19",
+      "notes": {
+        "de": [
+          "Hintergrundentfernung: Das Livebild zeigt den neuen Hintergrund wieder flüssig; das fertige Foto bekommt die gründliche, saubere Freistellung.",
+          "Startet die KI-Hintergrundentfernung auf einem PC nicht, steht der Grund jetzt im Gerätestatus im Dashboard."
+        ],
+        "en": [
+          "Background removal: the live view shows the new background smoothly again; the final photo gets the thorough, clean cut-out.",
+          "If AI background removal cannot start on a PC, the reason now appears in the device status in the dashboard."
+        ],
+        "tr": [
+          "Arka plan kaldırma: Canlı görüntü yeni arka planı yeniden akıcı gösterir; son fotoğraf ayrıntılı ve temiz kesim alır.",
+          "Yapay zekâ arka plan kaldırma bir bilgisayarda başlamazsa, nedeni artık paneldeki cihaz durumunda görünür."
+        ],
+        "fr": [
+          "Détourage : l’aperçu en direct affiche à nouveau le nouveau fond de façon fluide ; la photo finale bénéficie du détourage soigné.",
+          "Si le détourage IA ne démarre pas sur un PC, la raison s’affiche désormais dans l’état de l’appareil du tableau de bord."
+        ],
+        "es": [
+          "Eliminación de fondo: la vista en directo vuelve a mostrar el nuevo fondo con fluidez; la foto final recibe el recorte cuidadoso y limpio.",
+          "Si la eliminación de fondo IA no arranca en un PC, el motivo aparece ahora en el estado del dispositivo en el panel."
+        ],
+        "it": [
+          "Rimozione dello sfondo: l’anteprima dal vivo mostra di nuovo il nuovo sfondo in modo fluido; la foto finale riceve il ritaglio accurato e pulito.",
+          "Se la rimozione dello sfondo IA non parte su un PC, il motivo ora compare nello stato del dispositivo nella dashboard."
+        ]
+      }
+    },
     "1.17.62": {
       "date": "2026-10-19",
       "notes": {
-        "de": ["Neues Start-Video: Ohne eigenes Video zeigt die Fotobox ein animiertes Start-Video von Photobox Memories – im Hoch- und Querformat.", "Bessere KI-Hintergrundentfernung: weichere Kanten an Haaren und Schultern, keine Reste des alten Hintergrunds mehr."],
-        "en": ["New start video: without your own video, the photo booth shows an animated start video by Photobox Memories – in portrait and landscape.", "Better AI background removal: softer edges at hair and shoulders, no more traces of the old background."],
-        "tr": ["Yeni başlangıç videosu: Kendi videon yoksa fotoğraf kabini Photobox Memories’in animasyonlu başlangıç videosunu gösterir – dikey ve yatay.", "Daha iyi yapay zekâ arka plan kaldırma: saç ve omuzlarda daha yumuşak kenarlar, eski arka plandan iz kalmaz."],
-        "fr": ["Nouvelle vidéo d’accueil : sans vidéo personnelle, le photobooth affiche une vidéo animée de Photobox Memories – en portrait et paysage.", "Meilleur détourage IA : bords plus doux aux cheveux et aux épaules, plus de restes de l’ancien fond."],
-        "es": ["Nuevo vídeo de inicio: sin vídeo propio, el fotomatón muestra un vídeo animado de Photobox Memories, en vertical y horizontal.", "Mejor eliminación de fondo con IA: bordes más suaves en pelo y hombros, sin restos del fondo anterior."],
-        "it": ["Nuovo video iniziale: senza un video proprio, il photo booth mostra un video animato di Photobox Memories – in verticale e orizzontale.", "Rimozione dello sfondo IA migliorata: bordi più morbidi su capelli e spalle, nessun residuo del vecchio sfondo."]
+        "de": [
+          "Neues Start-Video: Ohne eigenes Video zeigt die Fotobox ein animiertes Start-Video von Photobox Memories – im Hoch- und Querformat.",
+          "Bessere KI-Hintergrundentfernung: weichere Kanten an Haaren und Schultern, keine Reste des alten Hintergrunds mehr."
+        ],
+        "en": [
+          "New start video: without your own video, the photo booth shows an animated start video by Photobox Memories – in portrait and landscape.",
+          "Better AI background removal: softer edges at hair and shoulders, no more traces of the old background."
+        ],
+        "tr": [
+          "Yeni başlangıç videosu: Kendi videon yoksa fotoğraf kabini Photobox Memories’in animasyonlu başlangıç videosunu gösterir – dikey ve yatay.",
+          "Daha iyi yapay zekâ arka plan kaldırma: saç ve omuzlarda daha yumuşak kenarlar, eski arka plandan iz kalmaz."
+        ],
+        "fr": [
+          "Nouvelle vidéo d’accueil : sans vidéo personnelle, le photobooth affiche une vidéo animée de Photobox Memories – en portrait et paysage.",
+          "Meilleur détourage IA : bords plus doux aux cheveux et aux épaules, plus de restes de l’ancien fond."
+        ],
+        "es": [
+          "Nuevo vídeo de inicio: sin vídeo propio, el fotomatón muestra un vídeo animado de Photobox Memories, en vertical y horizontal.",
+          "Mejor eliminación de fondo con IA: bordes más suaves en pelo y hombros, sin restos del fondo anterior."
+        ],
+        "it": [
+          "Nuovo video iniziale: senza un video proprio, il photo booth mostra un video animato di Photobox Memories – in verticale e orizzontale.",
+          "Rimozione dello sfondo IA migliorata: bordi più morbidi su capelli e spalle, nessun residuo del vecchio sfondo."
+        ]
       }
     },
     "1.17.61": {
       "date": "2026-10-19",
       "notes": {
-        "de": ["Einstellungen, die Sie an der Fotobox speichern, erscheinen jetzt auch im Dashboard – und umgekehrt. Alle Fotoboxen eines Ereignisses bleiben gleich eingestellt.", "Canon: Die Kamera stellt erst in der letzten Countdown-Sekunde scharf; beim Auslösen leuchtet der Bildschirm weiß – für hellere Gesichter."],
-        "en": ["Settings you save on the photo booth now also appear in the dashboard – and vice versa. All photo booths of an event stay in sync.", "Canon: the camera focuses in the last second of the countdown; the screen lights up white while shooting – for brighter faces."],
-        "tr": ["Fotoğraf kabininde kaydettiğin ayarlar artık panelde de görünür – ve tersi. Bir etkinliğin tüm kabinleri aynı ayarda kalır.", "Canon: Kamera geri sayımın son saniyesinde odaklanır; çekim anında ekran beyaz parlar – daha aydınlık yüzler için."],
-        "fr": ["Les réglages enregistrés sur le photobooth apparaissent aussi dans le tableau de bord – et inversement. Tous les photobooths d’un événement restent identiques.", "Canon : la mise au point se fait dans la dernière seconde du compte à rebours ; l’écran s’illumine en blanc au déclenchement – pour des visages plus lumineux."],
-        "es": ["Los ajustes que guardas en el fotomatón aparecen también en el panel, y al revés. Todos los fotomatones de un evento quedan iguales.", "Canon: la cámara enfoca en el último segundo de la cuenta atrás; al disparar la pantalla se ilumina en blanco, para caras más luminosas."],
-        "it": ["Le impostazioni salvate sul photo booth ora compaiono anche nella dashboard – e viceversa. Tutti i photo booth di un evento restano allineati.", "Canon: la fotocamera mette a fuoco nell’ultimo secondo del conto alla rovescia; allo scatto lo schermo si illumina di bianco – per volti più luminosi."]
+        "de": [
+          "Einstellungen, die Sie an der Fotobox speichern, erscheinen jetzt auch im Dashboard – und umgekehrt. Alle Fotoboxen eines Ereignisses bleiben gleich eingestellt.",
+          "Canon: Die Kamera stellt erst in der letzten Countdown-Sekunde scharf; beim Auslösen leuchtet der Bildschirm weiß – für hellere Gesichter."
+        ],
+        "en": [
+          "Settings you save on the photo booth now also appear in the dashboard – and vice versa. All photo booths of an event stay in sync.",
+          "Canon: the camera focuses in the last second of the countdown; the screen lights up white while shooting – for brighter faces."
+        ],
+        "tr": [
+          "Fotoğraf kabininde kaydettiğin ayarlar artık panelde de görünür – ve tersi. Bir etkinliğin tüm kabinleri aynı ayarda kalır.",
+          "Canon: Kamera geri sayımın son saniyesinde odaklanır; çekim anında ekran beyaz parlar – daha aydınlık yüzler için."
+        ],
+        "fr": [
+          "Les réglages enregistrés sur le photobooth apparaissent aussi dans le tableau de bord – et inversement. Tous les photobooths d’un événement restent identiques.",
+          "Canon : la mise au point se fait dans la dernière seconde du compte à rebours ; l’écran s’illumine en blanc au déclenchement – pour des visages plus lumineux."
+        ],
+        "es": [
+          "Los ajustes que guardas en el fotomatón aparecen también en el panel, y al revés. Todos los fotomatones de un evento quedan iguales.",
+          "Canon: la cámara enfoca en el último segundo de la cuenta atrás; al disparar la pantalla se ilumina en blanco, para caras más luminosas."
+        ],
+        "it": [
+          "Le impostazioni salvate sul photo booth ora compaiono anche nella dashboard – e viceversa. Tutti i photo booth di un evento restano allineati.",
+          "Canon: la fotocamera mette a fuoco nell’ultimo secondo del conto alla rovescia; allo scatto lo schermo si illumina di bianco – per volti più luminosi."
+        ]
       }
     },
     "1.17.60": {
       "date": "2026-10-19",
       "notes": {
-        "de": ["KI-Porträts laufen komplett über Photobox Memories – kein eigener API-Schlüssel mehr nötig."],
-        "en": ["AI portraits run entirely via Photobox Memories – no own API key needed anymore."],
-        "tr": ["Yapay zekâ portreleri tamamen Photobox Memories üzerinden çalışır – artık kendi API anahtarına gerek yok."],
-        "fr": ["Les portraits IA passent entièrement par Photobox Memories – plus besoin de clé API personnelle."],
-        "es": ["Los retratos IA funcionan completamente a través de Photobox Memories: ya no hace falta clave API propia."],
-        "it": ["I ritratti IA funzionano interamente tramite Photobox Memories – non serve più una chiave API propria."]
+        "de": [
+          "KI-Porträts laufen komplett über Photobox Memories – kein eigener API-Schlüssel mehr nötig."
+        ],
+        "en": [
+          "AI portraits run entirely via Photobox Memories – no own API key needed anymore."
+        ],
+        "tr": [
+          "Yapay zekâ portreleri tamamen Photobox Memories üzerinden çalışır – artık kendi API anahtarına gerek yok."
+        ],
+        "fr": [
+          "Les portraits IA passent entièrement par Photobox Memories – plus besoin de clé API personnelle."
+        ],
+        "es": [
+          "Los retratos IA funcionan completamente a través de Photobox Memories: ya no hace falta clave API propia."
+        ],
+        "it": [
+          "I ritratti IA funzionano interamente tramite Photobox Memories – non serve più una chiave API propria."
+        ]
       }
     },
     "1.17.59": {
       "date": "2026-10-19",
       "notes": {
-        "de": ["Canon EOS R100 und andere spiegellose Kameras frieren nicht mehr ein.", "Im Testbild-Modus schaltet ein Antippen von „Testbild“ oben wieder auf die Kamera um."],
-        "en": ["Canon EOS R100 and other mirrorless cameras no longer freeze.", "In test image mode, tapping “Test image” at the top switches back to the camera."],
-        "tr": ["Canon EOS R100 ve diğer aynasız kameralar artık donmuyor.", "Test görüntüsü modunda üstteki „Test görüntüsü“ne dokunmak kameraya geri döner."],
-        "fr": ["La Canon EOS R100 et les autres hybrides ne se figent plus.", "En mode image test, toucher « Image test » en haut revient à l’appareil photo."],
-        "es": ["La Canon EOS R100 y otras cámaras sin espejo ya no se congelan.", "En el modo de imagen de prueba, tocar «Imagen de prueba» arriba vuelve a la cámara."],
-        "it": ["La Canon EOS R100 e le altre mirrorless non si bloccano più.", "In modalità immagine di prova, toccando «Immagine di prova» in alto si torna alla fotocamera."]
+        "de": [
+          "Canon EOS R100 und andere spiegellose Kameras frieren nicht mehr ein.",
+          "Im Testbild-Modus schaltet ein Antippen von „Testbild“ oben wieder auf die Kamera um."
+        ],
+        "en": [
+          "Canon EOS R100 and other mirrorless cameras no longer freeze.",
+          "In test image mode, tapping “Test image” at the top switches back to the camera."
+        ],
+        "tr": [
+          "Canon EOS R100 ve diğer aynasız kameralar artık donmuyor.",
+          "Test görüntüsü modunda üstteki „Test görüntüsü“ne dokunmak kameraya geri döner."
+        ],
+        "fr": [
+          "La Canon EOS R100 et les autres hybrides ne se figent plus.",
+          "En mode image test, toucher « Image test » en haut revient à l’appareil photo."
+        ],
+        "es": [
+          "La Canon EOS R100 y otras cámaras sin espejo ya no se congelan.",
+          "En el modo de imagen de prueba, tocar «Imagen de prueba» arriba vuelve a la cámara."
+        ],
+        "it": [
+          "La Canon EOS R100 e le altre mirrorless non si bloccano più.",
+          "In modalità immagine di prova, toccando «Immagine di prova» in alto si torna alla fotocamera."
+        ]
       }
     }
   }
