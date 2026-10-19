@@ -836,7 +836,6 @@
           if (error) return ctx.toast('Event konnte nicht gespeichert werden: ' + error.message);
           status('✓ Alle Änderungen gespeichert');
         }
-        if (!central) { AITest.open({ ...item, provider: S.ai.provider, resolution: S.ai.resolution, photo: ai.photo }); return; }
         // Zentrale KI: direkt mit dem Testfoto generieren, Ergebnis erscheint rechts neben dem Original.
         if (ai.busy) return;
         if (!ai.photo) return ctx.toast('Bitte zuerst rechts ein Testfoto hochladen.');
@@ -1289,11 +1288,8 @@
           <div class="card"><details class="adv"><summary>Texte für die Gäste anpassen ${NEWAPP}</summary><p style="color:#6b6b78;font-size:13px;margin:8px 0">Diese Texte sehen deine Gäste an der Fotobox, wenn sie ein KI-Porträt erstellen. Du kannst jede Formulierung ändern, zum Beispiel in eine andere Sprache oder in euren Ton.</p><div class="grid3x">
             ${text('x.ai.texts.choose', 'Überschrift der Stilauswahl')}${text('x.ai.texts.chooseBtn', 'Knopf: Stil auswählen')}${text('x.ai.texts.createBtn', 'Knopf: KI-Porträt erstellen')}${text('x.ai.texts.creating', 'Hinweis während der Erstellung')}
             ${text('x.ai.texts.retrying', 'Hinweis beim zweiten Versuch')}${text('x.ai.texts.retryBtn', 'Knopf: erneut versuchen')}${text('x.ai.texts.skipBtn', 'Knopf: ohne KI weiter')}${text('x.ai.texts.failed', 'Meldung, wenn es nicht geklappt hat')}</div></details></div>
-          <div class="card"><details class="adv"><summary>Erweitert: Verbindung und Bildqualität</summary>
-          <label class="l">KI-Verbindung</label><select data-s="ai.connection" data-rerender="1"><option value="local" ${!central ? 'selected' : ''}>Eigener API-Schlüssel auf der Fotobox</option><option value="central" ${central ? 'selected' : ''}>Photobox Memories · zentrale KI (Credits)</option></select>
-          <p>Zentrale KI nutzt das Guthaben des angemeldeten Kontos; auf der Fotobox ist kein eigener Schlüssel nötig.</p>
-          ${central ? '' : `<label class="l">Bildanbieter (eigener Zugang)</label><select data-s="ai.provider" data-rerender="1"><option value="grok" ${S.ai.provider === 'grok' ? 'selected' : ''}>Grok (xAI)</option><option value="openai" ${S.ai.provider === 'openai' ? 'selected' : ''}>OpenAI</option><option value="gemini" ${S.ai.provider === 'gemini' ? 'selected' : ''}>Google Gemini</option></select>
-          <p>Den passenden API-Schlüssel einmal pro Fotobox unter System hinterlegen. Schlüssel werden nie im Event gespeichert.</p>`}
+          <div class="card"><details class="adv"><summary>Erweitert: Bildqualität</summary>
+          <p>Die KI-Bilder entstehen über Photobox Memories (Grok) und nutzen das Guthaben des angemeldeten Kontos – auf der Fotobox ist kein eigener Schlüssel nötig.</p>
           <label class="l">Auflösung</label><select data-s="ai.resolution" data-rerender="1"><option value="1k" ${S.ai.resolution === '1k' ? 'selected' : ''}>1K · schneller${central ? ' · 1 Credit' : ''}</option><option value="2k" ${S.ai.resolution === '2k' ? 'selected' : ''}>2K · hohe Auflösung${central ? ' · 1 Credit' : ''}</option></select>
           <p><small>Pro Foto eine KI-Anfrage, Internet erforderlich. Schlägt die KI fehl, erhalten die Gäste einen Hinweis und ihre Originalfotos. Videos, GIFs und Boomerangs bleiben unverändert. Testfotos werden nicht gespeichert.</small></p></details></div></div><div class="right">${right}</div></div>${modal}`;
       },
