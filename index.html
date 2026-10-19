@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261019-8';</script>
+<script>window.I18N_V = '20261019-9';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -325,6 +325,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <div id="lCreditsWrap" class="hidden"><label>KI-Credits dazu (für KI-Porträts)</label><input id="lCredits" type="number" min="0" max="1000" value="20"></div>
           <div><label>Freigaben</label><div class="row" style="margin-top:10px;gap:16px"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMosaic" style="width:auto"> Fotomosaik</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lCari" style="width:auto"> Live-Karikatur</label></div></div>
           <div style="grid-column:1/-1"><label>Notiz (z.B. Rechnungsnummer)</label><input id="lNotes"></div>
+          <div style="grid-column:1/-1"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMail" checked style="width:auto"> Willkommens-Mail an den Kunden senden (Lizenzschlüssel, Dashboard-Link und Anleitung)</label></div>
         </div>
         <div class="row" style="margin-top:14px"><button class="btn primary" id="lCreate">Lizenz erstellen</button><span class="small muted">Der Kunde registriert sich im Dashboard mit derselben E-Mail – die Lizenz wird automatisch zugeordnet.</span></div>
       </div>
@@ -1027,11 +1028,21 @@ $('#lCreate').onclick = async () => {
     if (!DEMO && await grantTestCredits(data, credits)) { extra = ` · ${credits} KI-Credits gebucht`; await sb.from('licenses').update({ notes: `${row.notes} · ${credits} KI-Credits gebucht` }).eq('id', data.id); }
     else { extra = ` · ${credits} KI-Credits werden gebucht, sobald sich der Tester registriert hat`; await sb.from('licenses').update({ notes: `${row.notes} · ${credits} KI-Credits offen` }).eq('id', data.id); }
   }
-  toast('Lizenz erstellt – Schlüssel kopiert: ' + data.key + extra, 7000);
+  if ($('#lMail').checked && !DEMO) extra += ' · ' + await sendLicenseMail(data.id);
+  toast('Lizenz erstellt – Schlüssel kopiert: ' + data.key + extra, 9000);
   ['#lName', '#lEmail', '#lNotes'].forEach(s => $(s).value = ''); $('#lMosaic').checked = $('#lCari').checked = false;
   loadLicenses();
 };
 $('#lSearch').oninput = renderAdmin;
+// Willkommens-Mail über die Funktion license-mail (Brevo); liefert einen kurzen Text für die Meldung
+async function sendLicenseMail(id) {
+  try {
+    const { data, error } = await sb.functions.invoke('license-mail', { body: { license: id } });
+    let r = data; if (error?.context?.json) { try { r = await error.context.json(); } catch {} }
+    if (r?.ok) return 'Willkommens-Mail an ' + r.to + ' gesendet';
+    return '⚠️ Mail nicht gesendet: ' + (r?.error || error?.message || 'unbekannter Fehler');
+  } catch (e) { return '⚠️ Mail nicht gesendet: ' + e.message; }
+}
 function renderAdmin() {
   const q = $('#lSearch').value.toLowerCase();
   const list = licenses.filter(l => !q || [l.customer_name, l.customer_email, l.key, l.notes].some(v => (v || '').toLowerCase().includes(q)));
@@ -1047,6 +1058,7 @@ function renderAdmin() {
           : l.kind === 'subscription'
           ? `<button class="btn small" data-lic="${l.id}" data-act="m1">+1 Monat</button><button class="btn small" data-lic="${l.id}" data-act="y1">+1 Jahr</button>`
           : `<button class="btn small" data-lic="${l.id}" data-act="u1">+1 Jahr Updates</button>`}
+        <button class="btn small" data-lic="${l.id}" data-act="mail" title="Willkommens-Mail (noch einmal) an ${esc(l.customer_email)} senden">✉ Mail</button>
         <button class="btn small ${l.active ? 'danger' : ''}" data-lic="${l.id}" data-act="toggle">${isTestLic(l) ? (l.active ? 'Test beenden' : 'Test wieder starten') : l.active ? 'Sperren' : 'Entsperren'}</button>
       </div></td>
     </tr>`).join('') : '<tr><td colspan="7" class="empty">Keine Lizenzen</td></tr>';
@@ -1057,6 +1069,7 @@ function extend(date, months) {
 }
 $('#licList').addEventListener('click', async e => {
   const id = e.target.dataset.lic, act = e.target.dataset.act; if (!id || act === 'max' || act === 'extra') return;
+  if (act === 'mail') { e.target.disabled = true; toast(await sendLicenseMail(id), 6000); e.target.disabled = false; loadLicenses(); return; }
   const l = licenses.find(x => x.id === id);
   const patch = act === 'm1' ? { valid_until: extend(l.valid_until, 1) }
     : act === 'y1' ? { valid_until: extend(l.valid_until, 12) }
