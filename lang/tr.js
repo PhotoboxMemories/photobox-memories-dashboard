@@ -2515,6 +2515,7 @@ I18N.add('tr', {
 "{x}“ aus „Meine KI-Stile“ löschen? In Events bleibt der Stil erhalten.": "{x}” “KI stillerim” içinden silinsin mi? Stil etkinliklerde kalır.",
 "Ändert die Farbe der Hauptschaltflächen und ihrer Ränder.": "Ana düğmelerin ve kenarlarının rengini değiştirir.",
 "Änderung speichern": "Değişikliği kaydet",
+"Änderungen von der Fotobox übernommen": "Fotoğraf kabinindeki değişiklikler alındı",
 "Öffnen": "Aç",
 "öffnen und mit diesem Konto (gleiche E-Mail & Passwort) anmelden – oder den Schlüssel eintragen.": "ve bu hesapla giriş yap (aynı e-posta ve şifre) – veya anahtarı gir.",
 "Ölgemälde": "Yağlı boya",
