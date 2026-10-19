@@ -387,7 +387,7 @@
     ['warm', 'Warm', 'sepia(.18) saturate(1.3) brightness(1.04)'], ['cool', 'Kühl', 'saturate(.9) hue-rotate(12deg) brightness(1.05)'], ['glam', 'Glamour', 'brightness(1.12) contrast(1.08) saturate(1.1)']];
   const DEF = {
     ai: { enabled: false, prompt: '' },
-    title: '', subtitle: '', startText: 'Tippen zum Starten', startScreen: null, startScreen2: null, attractP: null, attractL: null, accent: '#F7C838', attractUrl: '', attractType: '', attractFit: 'cover', startDisplay: 'live', font: 'modern', frame: '#ffffff', textColor: '#222222', template: 'classic',
+    title: '', subtitle: '', startText: 'Tippen zum Starten', startScreen: null, startScreen2: null, attractP: null, attractL: null, accent: '#F7C838', attractUrl: '', attractType: '', attractFit: 'cover', startDisplay: 'media', font: 'modern', frame: '#ffffff', textColor: '#222222', template: 'classic',
     layouts: [], guestLayouts: false, gifFromPhotos: false,
     countdown: 3, countdownNext: 3, between: 2, autoReturn: 30, sound: true, mirror: true, mirrorPhoto: false, cropLive: true,
     modes: { single: true, strip: true, grid: true, gif: true, boomerang: true, video: true }, gifFrames: 4, boomerangLen: 'mittel', videoSecs: 10, videoAudio: true,
@@ -1241,7 +1241,8 @@
           <p style="color:#6b6b78;margin:0 0 6px">Läuft auf dem Startbildschirm in Endlosschleife – ein Tipp darauf startet die Fotobox. Die Fotobox erkennt selbst, ob ihr Bildschirm hoch oder quer steht, und nimmt das passende. Ist nur eins hochgeladen, gilt es für beide.</p>
           ${slot('portrait')}${slot('landscape')}
           <p style="color:#777;font-size:12.5px;margin:8px 0 0">MP4-Video oder JPG/PNG-Bild · höchstens 50 MB · Tipp: In Canva oder CapCut gibt es fertige Vorlagen für Hochzeit, Geburtstag und Firmenfeier.</p>
-          ${has ? `<label class="l">Auf dem Startbildschirm zeigen</label><select data-s="startDisplay"><option value="media" ${S.startDisplay === 'media' ? 'selected' : ''}>Mein Video bzw. Bild</option><option value="live" ${S.startDisplay !== 'media' ? 'selected' : ''}>Live-Bild der Kamera</option></select>` : ''}</div>
+          <label class="l">Auf dem Startbildschirm zeigen</label><select data-s="startDisplay"><option value="media" ${S.startDisplay !== 'live' ? 'selected' : ''}>${has ? 'Mein Video bzw. Bild' : 'Standard-Video von Photobox Memories'}</option><option value="live" ${S.startDisplay === 'live' ? 'selected' : ''}>Live-Bild der Kamera</option></select>
+          ${has ? '' : '<p style="color:#6b6b78;font-size:12.5px;margin:6px 0 0">Ohne eigenes Video zeigt die Fotobox unser Start-Video (Logo und schwebende Fotos, passend für Hoch- und Querformat).</p>'}</div>
           <h2>2 · Texte und Logo darüberlegen <span style="font-weight:400;color:#888;font-size:14px">(freiwillig)</span></h2><div class="card">
           <p style="color:#6b6b78;margin:0 0 12px">Name, Datum, Logo und Start-Knopf frei anordnen – wie beim Fotolayout. Gestaltest du nur eine Ausrichtung, passt die Fotobox sie für die andere automatisch an; du kannst beide aber auch einzeln gestalten.</p>
           <div class="row" style="flex-wrap:wrap"><button class="btn pri" data-a="editscreen" data-o="portrait">${ICON('pen', 16)} Hochformat gestalten</button><button class="btn pri" data-a="editscreen" data-o="landscape">${ICON('pen', 16)} Querformat gestalten</button>${S.startScreen ? `<button class="ghost" data-a="resetscreen">Zurücksetzen</button>` : ''}</div>
@@ -1516,7 +1517,7 @@
     function removeAttract(o) {
       const k = o === 'landscape' ? 'attractL' : 'attractP', other = S[o === 'landscape' ? 'attractP' : 'attractL'];
       if (!S[k]?.url || S[k].url === S.attractUrl) { S.attractUrl = other?.url || ''; S.attractType = other?.type || ''; }
-      S[k] = null; if (!S.attractUrl && !S.attractP?.url && !S.attractL?.url) S.startDisplay = 'live';
+      S[k] = null; // ohne eigenes Video läuft das Standard-Video von Photobox Memories (außer „Live-Bild der Kamera“)
       save();
     }
     // Gestaltung speichern: in den Platz der passenden Ausrichtung (die zuerst gestaltete bleibt startScreen)
