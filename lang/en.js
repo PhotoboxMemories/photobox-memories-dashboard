@@ -2515,6 +2515,7 @@ I18N.add('en', {
 "{x}“ aus „Meine KI-Stile“ löschen? In Events bleibt der Stil erhalten.": "{x}” – delete from “My AI styles”? The style stays in your events.",
 "Ändert die Farbe der Hauptschaltflächen und ihrer Ränder.": "Changes the colour of the main buttons and their borders.",
 "Änderung speichern": "Save change",
+"Änderungen von der Fotobox übernommen": "Changes from the photo booth applied",
 "Öffnen": "Open",
 "öffnen und mit diesem Konto (gleiche E-Mail & Passwort) anmelden – oder den Schlüssel eintragen.": "and sign in with this account (same e-mail & password) – or enter the key.",
 "Ölgemälde": "Oil painting",
