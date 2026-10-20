@@ -1,6 +1,35 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.69": {
+      "date": "2026-10-20",
+      "notes": {
+        "de": [
+          "Neue Warteanimation bei KI-Porträts: Ein goldener Lichtstrahl „verzaubert“ das Foto, dazu Funken, ein Fortschrittsbalken und die einzelnen Arbeitsschritte.",
+          "Startanimation: Im Dashboard unter „Startbildschirm“ wählst du, was in der weißen Scheibe steht – Firmenlogo, Logo des Ereignisses oder ein eigenes Bild – mit Größe, Darstellung und Live-Vorschau."
+        ],
+        "en": [
+          "New waiting animation for AI portraits: a golden beam of light “enchants” the photo, with sparkles, a progress bar and the individual steps.",
+          "Start animation: in the dashboard under “Start screen” you choose what appears in the white disc – company logo, event logo or your own image – with size, display and live preview."
+        ],
+        "tr": [
+          "Yapay zekâ portreleri için yeni bekleme animasyonu: Altın bir ışık huzmesi fotoğrafı „büyülüyor“, kıvılcımlar, ilerleme çubuğu ve tek tek adımlar da var.",
+          "Başlangıç animasyonu: Panelde „Başlangıç ekranı“ altında beyaz diskte ne olacağını seçersin – firma logosu, etkinlik logosu veya kendi görselin – boyut, görünüm ve canlı önizlemeyle."
+        ],
+        "fr": [
+          "Nouvelle animation d’attente pour les portraits IA : un rayon de lumière doré « enchante » la photo, avec des étincelles, une barre de progression et les différentes étapes.",
+          "Animation de démarrage : dans le tableau de bord, sous « Écran de démarrage », tu choisis ce qui apparaît dans le disque blanc – logo de l’entreprise, logo de l’événement ou ta propre image – avec taille, affichage et aperçu en direct."
+        ],
+        "es": [
+          "Nueva animación de espera para los retratos IA: un rayo de luz dorado «hechiza» la foto, con destellos, una barra de progreso y cada uno de los pasos.",
+          "Animación de inicio: en el panel, en «Pantalla de inicio», eliges qué aparece en el disco blanco (logo de la empresa, logo del evento o una imagen propia) con tamaño, visualización y vista previa en directo."
+        ],
+        "it": [
+          "Nuova animazione d’attesa per i ritratti IA: un raggio di luce dorato «incanta» la foto, con scintille, una barra di avanzamento e le singole fasi.",
+          "Animazione iniziale: nella dashboard, in «Schermata iniziale», scegli cosa compare nel disco bianco – logo dell’azienda, logo dell’evento o un’immagine tua – con dimensione, visualizzazione e anteprima dal vivo."
+        ]
+      }
+    },
     "1.17.68": {
       "date": "2026-10-20",
       "notes": {
