@@ -59,6 +59,12 @@
   body.solo main{max-width:560px;padding:14px 18px 8px}
   .polaroid{background:#fff;border-radius:18px;padding:10px;box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06);animation:pop .5s cubic-bezier(.2,.9,.3,1.2) both}
   .polaroid img,.polaroid video{display:block;width:100%;height:auto;max-height:68vh;object-fit:contain;border-radius:10px;background:#f2f2f2}
+  .polaroid .cap{margin-top:12px;text-align:center;font:600 16px Fredoka,system-ui,sans-serif;color:#1D1D1B;overflow-wrap:anywhere}
+  .polaroid .cap:empty{display:none}
+  .polaroid .cap img{display:inline-block;width:auto;height:44px;max-width:200px;max-height:none;object-fit:contain;vertical-align:middle;border-radius:0;background:none}
+  #brandTop:not(:empty){margin-bottom:6px}
+  #brandTop img{display:inline-block;height:64px;max-width:220px;object-fit:contain;border-radius:12px;background:#fff;padding:6px}
+  #brandTop b{font:600 20px Fredoka,system-ui,sans-serif;color:var(--y);overflow-wrap:anywhere}
   .ph{aspect-ratio:2/3;max-height:60vh;margin:0 auto;border-radius:10px;background:linear-gradient(100deg,#eee 30%,#f8f8f8 50%,#eee 70%) 0 0/300% 100%;animation:shim 1.4s linear infinite;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#555;padding:20px;text-align:center}
   .ph b{font:600 18px Fredoka,system-ui,sans-serif;color:#1D1D1B}
   .ph small{font-size:13px;color:#777;max-width:280px}
@@ -111,7 +117,7 @@
 </head>
 <body>
 <div id="pmad"></div>
-<header><h1 id="title">Fotogalerie</h1><p id="sub"></p></header>
+<header><div id="brandTop"></div><h1 id="title">Fotogalerie</h1><p id="sub"></p></header>
 <main id="main"><div class="box"><p>Lädt …</p></div></main>
 <div id="light"><div id="lightMedia"></div><div class="row"><button class="btn" id="lDl">Herunterladen</button><button class="btn ghost" id="lClose">Schließen</button></div><div id="lInfo" style="color:#aaa;font-size:13px"></div>
   <button class="nav l" id="lPrev" aria-label="Vorheriges">‹</button><button class="nav r" id="lNext" aria-label="Nächstes">›</button></div>
@@ -119,7 +125,7 @@
 
 <script src="config.js?v=20261018-9"></script>
 <script src="icons.js?v=20261017-2"></script>
-<script src="ad.js?v=20261017-2"></script>
+<script src="ad.js?v=20261020-1"></script>
 <script src="shop.js?v=20261017-7"></script>
 <script>
 (function () {
@@ -143,16 +149,23 @@
     const a = window.FOTOBOX_PHOTOS?.alt?.(path); if (!a) throw new Error('nicht erreichbar'); const r = await fetch(a); if (!r.ok) throw new Error('nicht erreichbar'); return r;
   };
   let photos = [], current = 0, info = null;
-  // Kein Photobox-Memories-Logo auf den Seiten der Gäste: Logo und Kontakt des Lizenz-Inhabers stehen im Werbeband oben,
-  // sein Firmenname (falls eingetragen) im Seitentitel und im Dateinamen
-  let brand = null;
+  // Kein Photobox-Memories-Logo auf den Seiten der Gäste (White Label): Über und unter dem Foto steht das Logo des
+  // Lizenz-Inhabers („Deine Werbung in der Galerie“), ohne Logo sein Firmenname, ohne Angaben bleibt die Stelle frei.
+  let brand = null, band = false; // band: Werbeband oben ist sichtbar (zeigt Logo und Namen schon) → oben kein zweites Logo
+  const capHtml = () => brand?.logo ? `<img src="${esc(brand.logo)}" alt="${esc(brand.name)}">` : brand?.name ? `<span translate="no">${esc(brand.name)}</span>` : '';
+  const topHtml = () => band ? '' : brand?.logo ? `<img src="${esc(brand.logo)}" alt="${esc(brand.name)}">` : brand?.name ? `<b translate="no">${esc(brand.name)}</b>` : '';
+  function applyBrand() {
+    if ($('#brandTop')) $('#brandTop').innerHTML = topHtml();
+    document.querySelectorAll('.polaroid .cap').forEach(c => { c.innerHTML = capHtml(); });
+  }
 
   const box = html => { $('#main').innerHTML = `<div class="box">${html}</div>`; };
   // Werbung des Vermieters oben (Logo, Text, Webseite, E-Mail, Telefon …) – gepflegt im Dashboard unter „Meine Lizenzen“
   async function showAd(owner) {
     const b = window.PM_AD && owner ? await PM_AD.load(owner, CFG) : null;
-    if (b?.name) { brand = b; if (single) document.title = document.title.replace(/ – .*$/, '') + ' – ' + b.name; }
-    if (show || !b || !PM_AD.has(b)) return;
+    band = !show && !!b && PM_AD.has(b);
+    if (b && (b.logo || b.name)) { brand = b; applyBrand(); if (single && b.name) document.title = document.title.replace(/ – .*$/, '') + ' – ' + b.name; }
+    if (!band) return;
     PM_AD.addCss(); $('#pmad').innerHTML = PM_AD.html(b);
   }
   async function fetchGallery(password) {
@@ -307,7 +320,7 @@
     const ext = single.split('.').pop().toLowerCase(), type = vid ? 'video/' + ext : ext === 'gif' ? 'image/gif' : ext === 'png' ? 'image/png' : 'image/jpeg';
     document.body.classList.add('solo');
     document.title = T(vid ? 'Dein Video' : 'Dein Foto');
-    document.querySelector('header').innerHTML = `<h1 id="title">${vid ? 'Dein Video' : 'Dein Foto'}</h1><p id="sub">Einen Moment bitte …</p>`;
+    document.querySelector('header').innerHTML = `<div id="brandTop"></div><h1 id="title">${vid ? 'Dein Video' : 'Dein Foto'}</h1><p id="sub">Einen Moment bitte …</p>`;
     showAd(window.PM_AD?.ownerOf(single));
     document.querySelector('footer').innerHTML = '<span>Danke, dass du dabei warst!</span>'; langSel();
     const I = (n, z = 20) => window.ICON ? ICON(n, z) : '';
@@ -325,7 +338,8 @@
     const show = src => {
       const shareOk = canShare(new File([new Blob([''], { type })], fileName(), { type }));
       $('#title').textContent = vid ? 'Dein Video ist da!' : 'Dein Foto ist da!'; $('#sub').textContent = 'Speichern, teilen, Erinnerung behalten.';
-      $('#main').innerHTML = `${orderNote()}<div class="polaroid">${vid ? `<video src="${esc(src)}" controls autoplay loop playsinline muted></video>` : `<img src="${esc(src)}" alt="Dein Foto">`}</div>
+      $('#main').innerHTML = `${orderNote()}<div class="polaroid">${vid ? `<video src="${esc(src)}" controls autoplay loop playsinline muted></video>` : `<img src="${esc(src)}" alt="Dein Foto">`}
+          <div class="cap">${capHtml()}</div></div>
         <div class="acts"><button class="btn" id="oneDl">${I('download')} ${vid ? 'Video speichern' : 'Foto speichern'}</button>${shareOk ? `<button class="btn ghost" id="oneSh">${I('share')} Teilen</button>` : ''}</div>
         <p class="tip">${vid ? 'Tipp: Nach dem Speichern findest du das Video in deinen Downloads bzw. in der Fotos-App.' : 'Tipp: Auf dem iPhone das Foto gedrückt halten → „Zu Fotos hinzufügen“.'}</p>
         <p class="keep">${vid ? '<span>Dein Video bleibt 1 Jahr online und wird danach automatisch gelöscht.</span> <span>Speichere es dir am besten gleich.</span>'
@@ -343,7 +357,8 @@
       const src = await ready() || (alt ? await ready(alt) : null); if (src) return show(src); // sonst die Notfall-Kopie
       $('#main').innerHTML = `<div class="polaroid"><div class="ph"><div class="spin"></div><b>${vid ? 'Dein Video ist gleich da …' : 'Dein Foto ist gleich da …'}</b><small>${n < 60
         ? 'Es wird gerade von der Fotobox hochgeladen. Die Seite zeigt es von selbst an.'
-        : 'Das dauert gerade etwas länger. Die Seite schaut weiter nach – du kannst diesen Link auch später noch einmal öffnen.'}</small></div></div>`;
+        : 'Das dauert gerade etwas länger. Die Seite schaut weiter nach – du kannst diesen Link auch später noch einmal öffnen.'}</small></div>
+        <div class="cap">${capHtml()}</div></div>`;
       setTimeout(() => wait(n + 1), n < 60 ? 3000 : 15000);
     };
     wait(0);
