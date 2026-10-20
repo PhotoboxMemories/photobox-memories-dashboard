@@ -6,14 +6,14 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261020-9';</script>
+<script>window.I18N_V = '20261020-10';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
   window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
 <script src="config.js?v=20261018-9"></script>
 <script src="icons.js?v=20261017-2"></script>
-<script src="ad.js?v=20261020-2"></script>
+<script src="ad.js?v=20261020-3"></script>
 <script src="shop.js?v=20261020-1"></script>
 <script src="render.js?v=20261018-6"></script>
 <script src="mosaic.js?v=20261017-2"></script>
@@ -128,7 +128,10 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
 .checks{display:flex;flex-wrap:wrap;gap:6px 16px}
 .checks label{display:flex;gap:6px;align-items:center;color:var(--fg);font-size:14px;margin:0}
 .evgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:18px}
-.evc{cursor:pointer}
+.evc{cursor:pointer;position:relative}
+.evc .evdel{position:absolute;top:8px;right:8px;z-index:1;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.95);color:#d23b3b;box-shadow:0 1px 5px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s}
+.evc:hover .evdel,.evc .evdel:focus-visible{opacity:1}
+@media (hover:none){.evc .evdel{opacity:.92}}
 .evc .cv{aspect-ratio:1;border-radius:16px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);transition:border-color .15s,transform .15s;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .evc .cv img{width:100%;height:100%;object-fit:contain}
 .evc .cv.photo img{object-fit:cover}
@@ -241,7 +244,9 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <div><label>Telefon</label><input id="ad_tel" placeholder="+49 …"></div>
           <div><label>WhatsApp-Nummer</label><input id="ad_wa" placeholder="+49 …"></div>
           <div><label>Instagram</label><input id="ad_insta" placeholder="@deinname"></div>
-          <div><label>Text auf dem gelben Knopf</label><input id="ad_cta" maxlength="40" placeholder="z. B. Jetzt Fotobox anfragen"></div>
+          <div><label>Text auf dem Knopf</label><input id="ad_cta" maxlength="40" placeholder="z. B. Jetzt Fotobox anfragen"></div>
+          <div><label>Farbe des Knopfs</label><div class="row" style="gap:10px"><input type="color" id="ad_color" value="#f9cb38" style="width:56px;height:40px;padding:2px;border-radius:8px;cursor:pointer">
+            <span class="small muted" id="adColorHex" translate="no">#f9cb38</span><button class="btn" id="adColorReset" type="button">Standard (Gelb)</button></div></div>
           <div style="grid-column:1/-1"><label>Link zu deiner Datenschutzerklärung</label><input id="ad_privacy" placeholder="www.deine-seite.de/datenschutz">
             <div class="small muted" style="margin-top:4px">Erscheint unten auf der Foto- und Galerieseite und beim Einverständnis der Live-Karikatur. Für den Datenschutz deiner Gäste bist du selbst verantwortlich.</div></div>
         </div>
@@ -607,13 +612,17 @@ function renderEvents() {
   const list = events.filter(e => !q || e.name.toLowerCase().includes(q));
   const card = e => {
     const n = devices.filter(d => d.event_id === e.id).length;
-    return `<div class="evc" data-id="${e.id}"><div class="cv ${photoCovers[e.id] ? 'photo' : ''}"><img src="${photoCovers[e.id] || eventCover(e)}" alt=""></div>
+    return `<div class="evc" data-id="${e.id}"><button class="evdel" data-del="${e.id}" title="Ereignis löschen" aria-label="Ereignis löschen">${ICON('trash', 16)}</button><div class="cv ${photoCovers[e.id] ? 'photo' : ''}"><img src="${photoCovers[e.id] || eventCover(e)}" alt=""></div>
       <b>${esc(e.name)}</b><small>${fmtDate(e.event_date)}${n ? ` · 📸 ${n}` : ''}</small></div>`;
   };
   const running = list.filter(e => !e.event_date || e.event_date >= today), done = list.filter(e => e.event_date && e.event_date < today);
   $('#eventList').innerHTML = `<div class="evc evnew" id="newEventCard"><div class="cv"><span>+</span>Erstellen Sie ein neues Ereignis</div></div>` + running.map(card).join('');
   $('#eventDone').innerHTML = done.map(card).join('') || '<div class="small muted">Noch keine abgeschlossenen Ereignisse.</div>';
-  $$('.evc[data-id]').forEach(c => c.onclick = () => openEvent(events.find(e => e.id === c.dataset.id)));
+  $$('.evc[data-id]').forEach(c => c.onclick = async ev => {
+    const e = events.find(x => x.id === c.dataset.id);
+    if (ev.target.closest('[data-del]')) { ev.stopPropagation(); if (await deleteEventFull(e)) loadEvents(); return; } // Mülleimer an der Kachel
+    openEvent(e);
+  });
   $('#newEventCard').onclick = newEvent;
 }
 $('#evSearch').oninput = renderEvents;
@@ -642,13 +651,39 @@ function openEvent(ev, page) {
     sb, me, toast, uploadFile, devices, admin: !!profile?.is_admin, demo: DEMO, page, extra: hasExtra,
     leadsCount: id => (typeof leads !== 'undefined' && leads.length) ? leads.filter(l => l.event_id === id).length : '–',
     onClose: () => loadEvents(),
-    onDelete: async (e, closeWs) => {
-      if (!await pmConfirm(`Ereignis „${e.name}“ wirklich löschen? Zugewiesene Fotoboxen behalten ihre letzten Einstellungen.`)) return;
-      const { error } = await sb.from('events').delete().eq('id', e.id);
-      if (error) return toast('Fehler: ' + error.message);
-      toast('Ereignis gelöscht'); closeWs();
-    }
+    onDelete: async (e, closeWs) => { if (await deleteEventFull(e)) closeWs(); }
   });
+}
+// Ereignis endgültig löschen – vorher seine Fotos und Videos aus dem Speicher (Hetzner und Supabase), dann den Eintrag
+// selbst (die Foto-Einträge hängen am Ereignis und verschwinden mit). Fotoboxen und Gäste-Daten bleiben ohne Ereignis erhalten.
+async function deleteEventFull(e) {
+  if (!e) return false;
+  const { count } = DEMO ? { count: 0 } : await sb.from('photos').select('id', { count: 'exact', head: true }).eq('event_id', e.id);
+  const n = count || 0;
+  const tr = window.I18N_UI || (x => x); // Satz für Satz übersetzen – zusammengesetzt findet ihn das Wörterbuch nicht
+  if (!await pmConfirm(tr('Ereignis „{x}“ endgültig löschen?').replace('{x}', e.name) + (n ? ' ' + tr('Dabei werden auch alle {x} Fotos und Videos aus der Online-Galerie gelöscht.').replace('{x}', n) : '')
+    + ' ' + tr('Das lässt sich nicht rückgängig machen. Fotoboxen und Gäste-Daten bleiben erhalten.'))) return false;
+  if (DEMO) { toast('Demo-Modus – es wird nichts gelöscht'); return false; }
+  if (n) {
+    const rows = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await sb.from('photos').select('path,thumb').eq('event_id', e.id).range(from, from + 999);
+      if (error) { toast('Fehler: ' + error.message, 5000); return false; }
+      rows.push(...data); if (data.length < 1000) break;
+    }
+    const P = window.FOTOBOX_PHOTOS, hz = rows.filter(r => String(r.path).startsWith(P.prefix)).map(r => r.path);
+    // Supabase: eigene Fotos und die Notfall-Kopien der Hetzner-Fotos (gleicher Pfad ohne „hz/“)
+    const local = rows.flatMap(r => [r.path, r.thumb]).filter(Boolean).map(f => String(f).startsWith(P.prefix) ? String(f).slice(P.prefix.length) : f);
+    const token = (await sb.auth.getSession()).data.session?.access_token || '';
+    let done = 0, failed = 0; const todo = hz.slice();
+    await Promise.all(Array.from({ length: 6 }, async () => { while (todo.length) { const f = todo.shift(); try { await P.del(f, token); } catch { failed++; }
+      if (++done % 20 === 0) toast(`Lösche Fotos … ${done} von ${hz.length}`, 2000); } }));
+    for (let i = 0; i < local.length; i += 100) await sb.storage.from('photos').remove(local.slice(i, i + 100)).catch(() => {});
+    if (failed) toast(`${failed} Dateien konnten nicht gelöscht werden – sie verschwinden spätestens nach einem Jahr von selbst.`, 6000);
+  }
+  const { error } = await sb.from('events').delete().eq('id', e.id);
+  if (error) { toast('Fehler: ' + error.message, 6000); return false; }
+  toast('Ereignis gelöscht'); return true;
 }
 function newEvent() {
   EventWS.newEventDialog(events, (settings, logo_url, name, typeName, page) => createEvent(settings, logo_url, name, typeName, page), { extra: hasExtra, toast });
@@ -836,13 +871,18 @@ async function loadAd() {
   adData = { on: true, ...(b || {}) };
   $('#adOn').checked = adData.on !== false;
   for (const f of AD_FIELDS) $('#ad_' + f).value = adData[f] || '';
+  $('#ad_color').value = /^#[0-9a-f]{6}$/i.test(adData.color || '') ? adData.color : AD_YELLOW; $('#adColorHex').textContent = $('#ad_color').value;
   adLogo(adData.logo || '');
 }
 function adLogo(url) {
   adData.logo = url; $('#adLogoImg').classList.toggle('hidden', !url); if (url) $('#adLogoImg').src = url;
   $('#adLogoDel').classList.toggle('hidden', !url); adPreview();
 }
-const adCollect = () => { const o = { on: $('#adOn').checked, logo: adData?.logo || '' }; for (const f of AD_FIELDS) o[f] = $('#ad_' + f).value.trim(); return o; };
+const AD_YELLOW = '#f9cb38'; // Standardfarbe des Knopfs – bleibt dann leer gespeichert
+const adCollect = () => { const o = { on: $('#adOn').checked, logo: adData?.logo || '' }; for (const f of AD_FIELDS) o[f] = $('#ad_' + f).value.trim();
+  const c = $('#ad_color').value.toLowerCase(); o.color = c === AD_YELLOW ? '' : c; return o; };
+$('#ad_color').addEventListener('input', () => { $('#adColorHex').textContent = $('#ad_color').value; });
+$('#adColorReset').onclick = () => { $('#ad_color').value = AD_YELLOW; $('#adColorHex').textContent = AD_YELLOW; adPreview(); };
 function adPreview() {
   PM_AD.addCss();
   const b = PM_AD.normalize(adCollect(), me.id, CFG);
