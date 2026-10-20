@@ -6,6 +6,9 @@
   'use strict';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const cut = (s, n) => String(s ?? '').trim().slice(0, n);
+  // Farbe des Knopfs (vom Vermieter gewählt): nur #rrggbb; Schrift darauf schwarz oder weiß – je nachdem, was besser lesbar ist
+  const hex = c => /^#[0-9a-f]{6}$/i.test(String(c || '').trim()) ? String(c).trim().toLowerCase() : '';
+  const onColor = c => { const n = parseInt(c.slice(1), 16), [r, g, b] = [n >> 16, n >> 8 & 255, n & 255]; return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? '#1D1D1B' : '#fff'; };
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const httpUrl = u => {
     u = cut(u, 300); if (!u) return '';
@@ -28,7 +31,8 @@
     return {
       on: o.on !== false, name: cut(o.name, 60), text: cut(o.text, 160), logo,
       web: httpUrl(o.web), mail: mail(o.mail), tel: phone(o.tel), wa: phone(o.wa), insta: insta(o.insta), cta: cut(o.cta, 40),
-      privacy: httpUrl(o.privacy) // eigene Datenschutzerklärung des Vermieters (für seine Gäste ist er selbst verantwortlich)
+      privacy: httpUrl(o.privacy), // eigene Datenschutzerklärung des Vermieters (für seine Gäste ist er selbst verantwortlich)
+      color: hex(o.color) // eigene Farbe für Knopf und Linie unter dem Werbeband (leer = Gelb)
     };
   }
   const has = b => !!(b && b.on && (b.name || b.logo || b.text || b.web || b.mail || b.tel || b.wa || b.insta));
@@ -66,14 +70,14 @@
     const link = (href, cls, ico, label, extra = '') => `<a href="${esc(href)}" class="${cls}" target="_blank" rel="noopener nofollow"${extra}>${ico}<span>${label}</span></a>`;
     const ctaHref = b.web || (b.mail ? 'mailto:' + b.mail : b.wa ? 'https://wa.me/' + digits(b.wa).replace('+', '') : b.tel ? 'tel:' + digits(b.tel) : '');
     const btn = [
-      b.cta && ctaHref ? link(ctaHref, 'pmad-cta', '', esc(b.cta), ' translate="no"') : '',
+      b.cta && ctaHref ? link(ctaHref, 'pmad-cta', '', esc(b.cta), ' translate="no"' + (b.color ? ` style="background:${b.color};border-color:${b.color};color:${onColor(b.color)}"` : '')) : '',
       b.web ? link(b.web, '', ICO.web, 'Webseite') : '',
       b.mail ? link('mailto:' + b.mail, '', ICO.mail, 'E-Mail') : '',
       b.tel ? link('tel:' + digits(b.tel), '', ICO.tel, 'Anrufen') : '',
       b.wa ? link('https://wa.me/' + digits(b.wa).replace('+', ''), '', ICO.wa, 'WhatsApp') : '',
       b.insta ? link('https://instagram.com/' + b.insta, '', ICO.insta, 'Instagram') : ''
     ].join('');
-    return `<aside class="pmad" aria-label="Anbieter">${b.logo ? `<img class="pmad-lg" src="${esc(b.logo)}" alt="">` : ''}`
+    return `<aside class="pmad" aria-label="Anbieter"${b.color ? ` style="border-bottom-color:${b.color}"` : ''}>${b.logo ? `<img class="pmad-lg" src="${esc(b.logo)}" alt="">` : ''}`
       + (b.name || b.text ? `<div class="pmad-tx" translate="no">${b.name ? `<b>${esc(b.name)}</b>` : ''}${b.text ? `<span>${esc(b.text)}</span>` : ''}</div>` : '')
       + (btn ? `<div class="pmad-bt">${btn}</div>` : '') + '</aside>';
   }
