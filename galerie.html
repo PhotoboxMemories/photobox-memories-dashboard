@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Fotogalerie</title>
-<script>window.I18N_V = '20261020-7';</script>
+<script>window.I18N_V = '20261020-8';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache: vom QR-Code der Fotobox (?l=…), sonst die des Handys
 (function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
@@ -94,6 +94,10 @@
   .sbox{position:relative;width:100%;max-width:460px;max-height:94vh;overflow:auto;background:#fff;color:#1D1D1B;border-radius:20px 20px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom))}
   @media(min-width:600px){.sdlg{align-items:center}.sbox{border-radius:20px}}
   .sbox .mk{max-width:280px;margin:0 auto}
+  .sreal{display:block;width:100%;max-width:300px;aspect-ratio:1;margin:0 auto;border-radius:14px;background:#efeae1;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+  .sreal:active{cursor:grabbing}
+  .pedlbl{text-align:center;margin-top:8px}
+  #sdMk .sreal + .pedlbl + .ped{margin-top:6px}
   .ped{position:relative;width:100%;overflow:hidden;background:#fff;border:1px solid #e3e0d8;border-radius:10px;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;margin-top:30px}
   .ped:active{cursor:grabbing}
   .ped img{position:absolute;max-width:none;pointer-events:none;-webkit-user-drag:none}
@@ -135,7 +139,7 @@
 <script src="config.js?v=20261018-9"></script>
 <script src="icons.js?v=20261017-2"></script>
 <script src="ad.js?v=20261020-2"></script>
-<script src="shop.js?v=20261017-7"></script>
+<script src="shop.js?v=20261020-1"></script>
 <script>
 (function () {
   'use strict';
@@ -269,7 +273,7 @@
     const thumbOf = k => k ? url(`${oBase}_o${k}t.jpg`) : src;
     const isLand = u => new Promise(r => { const i = new Image(); i.onload = () => r(i.naturalWidth > i.naturalHeight); i.onerror = () => r(true); i.src = u; });
     let pick = n ? 1 : 0, land = pick ? await isLand(thumbOf(1)) : im.naturalWidth > im.naturalHeight;
-    const mk = p => PM_SHOP.mockup(p.type, thumbOf(pick), land);
+    const mk = p => PM_SHOP.mockup(p.type, thumbOf(pick), land, { side: p.side, area: p.area });
     let names = s.countries.join(', ');
     try { const dn = new Intl.DisplayNames([LOC], { type: 'region' }); names = s.countries.map(c => dn.of(c)).join(', '); } catch {}
     const L = s.legal, link = (u, t) => u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${t}</a>` : '';
@@ -312,33 +316,46 @@
         let h = 1, w = ia / A(); if (w > .625) { w = .625; h = w * A() / ia; }
         const cx = cur.side === 'right' ? .75 : .25; return { x: Math.min(1 - w, Math.max(0, cx - w / 2)), y: (1 - h) / 2, w };
       }
-      const w = Math.max(1, ia / A()), h = w * A() / ia; return { x: (1 - w) / 2, y: (1 - h) / 2, w }; // füllt die Fläche, mittig
+      const w = Math.max(1, ia / A()), h = w * A() / ia; return { x: (1 - w) / 2, y: h > 1 ? 0 : (1 - h) / 2, w }; // füllt die Fläche; zu hohe Fotos oben ausgerichtet – keine abgeschnittenen Köpfe
     };
     const keepIn = () => { const cx = place.x + place.w / 2, cy = place.y + hRel() / 2; // Bildmitte bleibt auf der Fläche
       place.x += Math.min(1, Math.max(0, cx)) - cx; place.y += Math.min(1, Math.max(0, cy)) - cy; };
+    // Produktfoto über der Druckfläche zeigt die Platzierung live (höchstens alle 80 ms neu gezeichnet)
+    // Tasse: die Seite zeigen, auf der das Foto gerade liegt (Henkel rechts = linke Hälfte der Druckfläche)
+    let realT = 0, realBusy = false, realAgain = false;
+    const drawRealNow = async () => { const c = $('#sdReal'); if (!c || !place) return; if (realBusy) { realAgain = true; return; } realBusy = true;
+      try { await PM_SHOP.drawReal(c, cur.type, thumbOf(pick), { side: place.x + place.w / 2 < .5 ? 'left' : 'right', place: { ...place }, area: cur.area }); } catch {}
+      realBusy = false; if (realAgain) { realAgain = false; drawRealNow(); } };
     const drawPlace = () => { const im = $('#pedImg'); if (!im || !place) return;
       Object.assign(im.style, { left: place.x * 100 + '%', top: place.y * 100 + '%', width: place.w * 100 + '%', height: hRel() * 100 + '%' });
-      $('#pedZoom').value = sliderOf(place.w); };
+      $('#pedZoom').value = sliderOf(place.w);
+      clearTimeout(realT); realT = setTimeout(drawRealNow, 80); };
     const zoomTo = w => { const [a, z] = zoomRange(); w = Math.min(z, Math.max(a, w));
       const cx = place.x + place.w / 2, cy = place.y + hRel() / 2; place.w = w; place.x = cx - w / 2; place.y = cy - hRel() / 2; keepIn(); drawPlace(); };
     const showEditor = async () => {
       place = null;
       if (!cur.area) { $('#sdMk').innerHTML = mk(cur); return; }
-      $('#sdMk').innerHTML = `<div class="ped${cur.type === 'mug' ? ' mug' : ''}" id="ped" style="aspect-ratio:${+cur.area[0]} / ${+cur.area[1]}"><img id="pedImg" src="${esc(thumbOf(pick))}" alt="" draggable="false"></div>
+      const real = !!PM_SHOP.drawReal && ['mug', 'mousepad'].includes(cur.type);
+      $('#sdMk').innerHTML = (real ? '<canvas id="sdReal" class="sreal" width="640" height="640"></canvas><p class="fine pedlbl">Schieb und zoom dein Foto direkt auf der Vorschau – darunter siehst du die ganze Druckfläche.</p>' : '') + `<div class="ped${cur.type === 'mug' ? ' mug' : ''}" id="ped" style="aspect-ratio:${+cur.area[0]} / ${+cur.area[1]}"><img id="pedImg" src="${esc(thumbOf(pick))}" alt="" draggable="false"></div>
         <div class="pedbar"><span aria-hidden="true">−</span><input type="range" id="pedZoom" min="0" max="100" aria-label="Zoom"><span aria-hidden="true">+</span><button type="button" id="pedReset">Zurücksetzen</button></div>
         <p class="fine">Verschiebe dein Foto mit dem Finger und zoome mit zwei Fingern oder dem Regler – so wird es gedruckt.</p>${cur.type === 'mug' ? '<p class="fine">Die Fläche geht einmal rund um die Tasse – links und rechts ist der Henkel.</p>' : ''}`;
       const im = $('#pedImg'); await im.decode?.().catch(() => {});
       ia = im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : land ? 1.5 : 2 / 3;
       place = defPlace(); drawPlace();
-      const ped = $('#ped'), pts = new Map(); let span = 0;
-      ped.onpointerdown = e => { ped.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); span = 0; };
-      ped.onpointermove = e => {
-        const prev = pts.get(e.pointerId); if (!prev) return; pts.set(e.pointerId, [e.clientX, e.clientY]);
-        if (pts.size === 1) { const r = ped.getBoundingClientRect(); place.x += (e.clientX - prev[0]) / r.width; place.y += (e.clientY - prev[1]) / r.height; keepIn(); drawPlace(); }
-        else { const [p, q] = [...pts.values()], d = Math.hypot(p[0] - q[0], p[1] - q[1]); if (span) zoomTo(place.w * d / span); span = d; }
+      // Verschieben mit einem Finger, Zoomen mit zwei Fingern oder dem Mausrad – auf der Druckfläche und direkt auf dem
+      // Produktfoto (fx/fy: Bildschirm-Pixel → Anteil der Druckfläche; Tasse: sichtbar ist die halbe Fläche über 55 % der Breite)
+      const drag = (el, fx, fy) => { const pts = new Map(); let span = 0;
+        el.onpointerdown = e => { el.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); span = 0; };
+        el.onpointermove = e => {
+          const prev = pts.get(e.pointerId); if (!prev) return; pts.set(e.pointerId, [e.clientX, e.clientY]);
+          if (pts.size === 1) { const r = el.getBoundingClientRect(); place.x += (e.clientX - prev[0]) * fx(r); place.y += (e.clientY - prev[1]) * fy(r); keepIn(); drawPlace(); }
+          else { const [p, q] = [...pts.values()], d = Math.hypot(p[0] - q[0], p[1] - q[1]); if (span) zoomTo(place.w * d / span); span = d; }
+        };
+        el.onpointerup = el.onpointercancel = e => { pts.delete(e.pointerId); span = 0; };
+        el.onwheel = e => { e.preventDefault(); zoomTo(place.w * Math.exp(-e.deltaY / 400)); };
       };
-      ped.onpointerup = ped.onpointercancel = e => { pts.delete(e.pointerId); span = 0; };
-      ped.onwheel = e => { e.preventDefault(); zoomTo(place.w * Math.exp(-e.deltaY / 400)); };
+      drag($('#ped'), r => 1 / r.width, r => 1 / r.height);
+      if (real) drag($('#sdReal'), r => cur.type === 'mug' ? .5 / (.553 * r.width) : 1 / (.8 * r.width), r => 1 / ((cur.type === 'mug' ? .647 : .654) * r.height));
       $('#pedZoom').oninput = e => zoomTo(wOf(+e.target.value));
       $('#pedReset').onclick = () => { place = defPlace(); drawPlace(); };
     };
