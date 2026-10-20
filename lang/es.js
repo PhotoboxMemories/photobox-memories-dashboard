@@ -1982,6 +1982,7 @@ I18N.add('es', {
 "Schau mal – jetzt wirst du gezeichnet!": "¡Mira, ahora te están dibujando!",
 "Scheibe ausfüllen (rund zugeschnitten)": "Llenar el disco (recortado en círculo)",
 "Schichten": "Capas",
+"Schieb und zoom dein Foto direkt auf der Vorschau – darunter siehst du die ganze Druckfläche.": "Mueve y amplía tu foto directamente en la vista previa: debajo ves toda la zona de impresión.",
 "Schließen": "Cerrar",
 "Schließen (Esc)": "Cerrar (Esc)",
 "Schlüssel": "Clave",
