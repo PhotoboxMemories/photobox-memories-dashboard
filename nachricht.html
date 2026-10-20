@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Videonachricht</title>
+<script>window.I18N_V = '20261020-9';</script>
+<script src="i18n.js?v=20261017-2"></script>
+<script>// Sprache: vom QR-Code (?l=…), sonst die des Handys
+(function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
+  window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--y:#F9CB38;--k:#1D1D1B;--bg:#111110;--card:#1c1c1f;--line:#2e2e33;--muted:#a3a3ad}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:#fff;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{padding:22px 16px 16px;text-align:center;border-bottom:3px solid var(--y);background:var(--k)}
+  header h1{margin:10px 0 4px;font:700 clamp(26px,7vw,38px)/1.12 Fredoka,system-ui,sans-serif}
+  header p{margin:0;color:var(--muted)}
+  #logo img{display:inline-block;height:60px;max-width:220px;object-fit:contain;border-radius:12px;background:#fff;padding:6px}
+  #logo b{font:600 20px Fredoka,system-ui,sans-serif;color:var(--y);overflow-wrap:anywhere}
+  main{max-width:520px;margin:0 auto;padding:16px 16px 40px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:0 0 14px}
+  .muted{color:var(--muted);font-size:14px}
+  .btn{display:block;background:var(--y);color:var(--k);border:0;border-radius:999px;padding:15px 20px;font:700 17px system-ui,sans-serif;cursor:pointer;width:100%;text-align:center;text-decoration:none}
+  .btn.ghost{background:#2a2a2e;color:#fff}
+  .btn:disabled{opacity:.5;cursor:default}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  input[type=text]{width:100%;background:#111114;border:1px solid var(--line);color:#fff;border-radius:12px;padding:12px;font:16px system-ui,sans-serif}
+  label.l{display:block;margin:0 0 6px;font-weight:600}
+  .ok{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#d8d8de;margin:14px 0}
+  .ok input{width:22px;height:22px;flex:none;margin-top:1px}
+  .err{color:#ff8a8a;font-weight:600;min-height:1.4em;margin:6px 0}
+  .intro{display:flex;gap:14px;align-items:center;margin-bottom:14px}
+  .intro .ic{flex:none;width:58px;height:58px;border-radius:50%;background:var(--y);color:var(--k);display:flex;align-items:center;justify-content:center;font-size:30px}
+  /* Aufnahme */
+  .stage{position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:3/4;margin-bottom:12px}
+  .stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .stage video.mirror{transform:scaleX(-1)}
+  .stage .cd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 120px Fredoka,system-ui,sans-serif;color:#fff;text-shadow:0 4px 30px rgba(0,0,0,.6);pointer-events:none}
+  .stage .rec{position:absolute;left:12px;top:12px;display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.55);padding:6px 12px;border-radius:999px;font-weight:700;font-variant-numeric:tabular-nums}
+  .stage .rec i{width:12px;height:12px;border-radius:50%;background:#ff3b3b;animation:bl 1s steps(2) infinite}
+  @keyframes bl{50%{opacity:.25}}
+  .stage .bar{position:absolute;left:0;right:0;bottom:0;height:6px;background:rgba(255,255,255,.2)}
+  .stage .bar b{display:block;height:100%;width:0;background:var(--y)}
+  .stage .flip{position:absolute;right:12px;top:12px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:22px;cursor:pointer}
+  .recbtn{width:78px;height:78px;border-radius:50%;border:5px solid #fff;background:#ff3b3b;margin:4px auto 10px;display:block;cursor:pointer;box-shadow:0 0 0 4px rgba(255,59,59,.25)}
+  .recbtn.stop{background:#fff;border-color:#ff3b3b;border-radius:22px}
+  .prog{height:10px;border-radius:99px;background:#2a2a2e;overflow:hidden;margin:12px 0 6px}
+  .prog b{display:block;height:100%;width:0;background:linear-gradient(90deg,#d9a400,var(--y));transition:width .2s}
+  .state{text-align:center;padding:26px 10px}
+  .state .big{font-size:64px;line-height:1}
+  .state h2{font:700 26px Fredoka,system-ui,sans-serif;margin:14px 0 6px}
+  a{color:var(--y)}
+  footer{text-align:center;color:#77777f;font-size:12px;padding:10px 16px 30px}
+  .langSel{margin-top:10px;background:#1c1c1f;color:#ddd;border:1px solid var(--line);border-radius:8px;padding:6px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="pmad"></div>
+<header><div id="logo"></div><h1>Hinterlass eine Videonachricht!</h1><p id="sub">Einen Moment bitte …</p></header>
+<main id="main">
+  <!-- 1. Name und Einverständnis -->
+  <div id="start" class="card" hidden>
+    <div class="intro"><div class="ic">🎥</div><div><b>Bis zu 30 Sekunden</b><div class="muted">Sag etwas Schönes – Glückwünsche, Erinnerungen oder einfach Hallo.</div></div></div>
+    <label class="l" for="name">Dein Name (freiwillig)</label><input type="text" id="name" maxlength="30" autocomplete="name" placeholder="z. B. Lisa &amp; Tom">
+    <label class="ok"><input type="checkbox" id="agree"><span>Ich bin einverstanden, dass mein Video in der Online-Galerie dieses Events gezeigt wird. <a id="privLink" target="_blank" rel="noopener" hidden>Datenschutz</a></span></label>
+    <div class="err" id="err"></div>
+    <button type="button" class="btn" id="go">🎥 Kamera starten</button>
+    <input type="file" id="fVid" accept="video/*" capture="user" hidden>
+  </div>
+  <!-- 2. Aufnehmen -->
+  <div id="recCard" hidden>
+    <div class="stage"><video id="live" playsinline muted autoplay class="mirror"></video><div class="cd" id="cd"></div>
+      <div class="rec" id="recBadge" hidden><i></i><span id="recTime">0:00</span> / 0:30</div><button class="flip" id="flip" type="button" aria-label="Kamera wechseln">🔄</button><div class="bar"><b id="recBar"></b></div></div>
+    <button class="recbtn" id="recBtn" type="button" aria-label="Aufnahme starten"></button>
+    <p class="muted" id="recHint" style="text-align:center;margin:0">Tippe auf den roten Knopf – nach 3 Sekunden geht es los.</p>
+  </div>
+  <!-- 3. Ansehen und senden -->
+  <div id="revCard" hidden>
+    <div class="stage"><video id="rev" playsinline controls></video></div>
+    <div class="prog" id="prog" hidden><b id="progBar"></b></div>
+    <div class="err" id="err2"></div>
+    <div class="two"><button class="btn ghost" id="again" type="button">↺ Nochmal</button><button class="btn" id="send" type="button">✓ Abschicken</button></div>
+  </div>
+  <div id="state" class="card state" hidden></div>
+</main>
+<footer>Videonachricht</footer>
+
+<script src="config.js?v=20261018-9"></script>
+<script src="icons.js?v=20261017-2"></script>
+<script src="ad.js?v=20261020-2"></script>
+<script>
+(function () {
+  'use strict';
+  // Videonachricht vom Handy: Der Gast scannt den QR-Code auf dem Startbildschirm der Fotobox, nimmt hier mit der Kamera
+  // seines Handys bis zu 30 Sekunden auf und schickt das Video ab (Serverfunktion video-message). Es erscheint in der Galerie
+  // des Events. White Label: oben das Logo des Vermieters, sonst sein Firmenname, sonst nichts.
+  const CFG = window.FOTOBOX_CONFIG || {}, $ = s => document.querySelector(s);
+  const T = s => I18N.t(s, PM_LANG);
+  I18N.watch(document.body, () => PM_LANG);
+  document.title = T('Videonachricht');
+  const langSel = () => { const sel = document.createElement('select'); sel.className = 'langSel'; sel.setAttribute('translate', 'no'); sel.setAttribute('aria-label', 'Sprache');
+    sel.innerHTML = I18N.LANGS.map(l => `<option value="${l.code}" ${l.code === PM_LANG ? 'selected' : ''}>${l.name}</option>`).join('');
+    sel.onchange = () => { const u = new URL(location.href); u.searchParams.set('l', sel.value); location.replace(u.href); };
+    $('footer').appendChild(document.createElement('br')); $('footer').appendChild(sel); };
+  langSel();
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const event = new URLSearchParams(location.search).get('e') || '';
+  const call = async body => {
+    const r = await fetch(CFG.supabaseUrl + '/functions/v1/video-message', { method: 'POST', body: JSON.stringify({ event, ...body }), headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Gerade nicht erreichbar. Bitte noch einmal versuchen.');
+    return j;
+  };
+  const show = id => ['#start', '#recCard', '#revCard', '#state'].forEach(s => { $(s).hidden = s !== id; });
+  const fail = msg => { $('#sub').textContent = ''; show('#state'); $('#state').innerHTML = `<div class="big">🙈</div><h2>Das geht gerade nicht</h2><p class="muted">${esc(msg)}</p>`; };
+  let info = null, SECS = 30, stream = null, rec = null, chunks = [], blob = null, facing = 'user', timer = 0, t0 = 0, cdT = 0;
+
+  // Aufnahmeformat: MP4 (H.264) läuft überall – Safari und neue Chrome-Versionen können es; sonst WebM
+  const MIME = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
+    .find(m => window.MediaRecorder && MediaRecorder.isTypeSupported?.(m));
+  const canRecord = !!(navigator.mediaDevices?.getUserMedia && window.MediaRecorder && MIME);
+  const fmt = s => '0:' + String(Math.min(SECS, Math.floor(s))).padStart(2, '0');
+  const stopStream = () => { stream?.getTracks().forEach(t => t.stop()); stream = null; };
+
+  async function openCamera() {
+    stopStream();
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: { echoCancellation: true, noiseSuppression: true } });
+    const v = $('#live'); v.srcObject = stream; v.classList.toggle('mirror', facing === 'user'); await v.play().catch(() => {});
+  }
+  $('#go').onclick = async () => {
+    $('#err').textContent = '';
+    if (!$('#agree').checked) { $('#err').textContent = T('Bitte bestätige das Einverständnis.'); return; }
+    if (!canRecord) return $('#fVid').click(); // ältere Handys: die Kamera-App des Handys nimmt auf
+    try { await openCamera(); show('#recCard'); resetRec(); }
+    catch { $('#err').textContent = T('Bitte erlaube den Zugriff auf Kamera und Mikrofon – oder nimm mit der Kamera-App auf.'); $('#go').textContent = T('🎥 Mit der Kamera-App aufnehmen'); $('#go').onclick = () => $('#agree').checked ? $('#fVid').click() : ($('#err').textContent = T('Bitte bestätige das Einverständnis.')); }
+  };
+  $('#flip').onclick = async () => { if (rec) return; facing = facing === 'user' ? 'environment' : 'user'; try { await openCamera(); } catch {} };
+  function resetRec() { clearInterval(timer); clearTimeout(cdT); rec = null; $('#cd').textContent = ''; $('#recBadge').hidden = true; $('#recBar').style.width = '0'; $('#recBtn').classList.remove('stop'); $('#recHint').hidden = false; $('#flip').hidden = false; }
+  $('#recBtn').onclick = () => {
+    if (rec) return rec.state === 'recording' && rec.stop();
+    if (cdT) return;
+    let n = 3; $('#cd').textContent = n; $('#recHint').hidden = true; $('#flip').hidden = true;
+    const step = () => { n--; if (n > 0) { $('#cd').textContent = n; cdT = setTimeout(step, 1000); } else { $('#cd').textContent = ''; cdT = 0; startRec(); } };
+    cdT = setTimeout(step, 1000);
+  };
+  function startRec() {
+    chunks = []; rec = new MediaRecorder(stream, { mimeType: MIME, videoBitsPerSecond: 2500000, audioBitsPerSecond: 128000 });
+    rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+    rec.onstop = () => { clearInterval(timer); blob = new Blob(chunks, { type: MIME.split(';')[0] }); stopStream(); review(); };
+    rec.start(1000); t0 = Date.now(); $('#recBadge').hidden = false; $('#recBtn').classList.add('stop'); $('#recBtn').setAttribute('aria-label', T('Aufnahme beenden'));
+    timer = setInterval(() => { const s = (Date.now() - t0) / 1000; $('#recTime').textContent = fmt(s); $('#recBar').style.width = Math.min(100, s / SECS * 100) + '%'; if (s >= SECS && rec.state === 'recording') rec.stop(); }, 200);
+  }
+  function review() {
+    rec = null; const v = $('#rev'); v.src = URL.createObjectURL(blob); v.currentTime = 0;
+    $('#err2').textContent = ''; $('#prog').hidden = true; $('#send').disabled = false; $('#again').disabled = false; show('#revCard');
+  }
+  // Kamera-App des Handys (wenn die Seite selbst nicht aufnehmen kann)
+  $('#fVid').onchange = async e => {
+    const f = e.target.files?.[0]; e.target.value = ''; if (!f) return;
+    if (!/^video\/(mp4|quicktime|webm)$/.test(f.type)) { $('#err').textContent = T('Dieses Videoformat geht leider nicht.'); return; }
+    const secs = await new Promise(r => { const v = document.createElement('video'); v.preload = 'metadata'; v.onloadedmetadata = () => r(v.duration); v.onerror = () => r(0); v.src = URL.createObjectURL(f); });
+    if (secs > SECS + 1.5) { $('#err').textContent = T('Das Video ist länger als 30 Sekunden. Bitte kürzer aufnehmen.'); return; }
+    blob = f; review();
+  };
+  $('#again').onclick = async () => { blob = null; if (!canRecord) { show('#start'); return $('#fVid').click(); } try { await openCamera(); show('#recCard'); resetRec(); } catch { show('#start'); } };
+
+  // Vorschaubild für die Galerie: ein Bild nach einer halben Sekunde
+  const thumbOf = () => new Promise(res => {
+    const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = URL.createObjectURL(blob);
+    const done = b => { URL.revokeObjectURL(v.src); res(b); };
+    v.onloadeddata = () => { v.currentTime = Math.min(.5, (v.duration || 1) / 2); };
+    v.onseeked = () => { try { const k = Math.min(1, 640 / Math.max(v.videoWidth, v.videoHeight)), c = document.createElement('canvas'); c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
+      c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); c.toBlob(b => done(b), 'image/jpeg', .82); } catch { done(null); } };
+    v.onerror = () => done(null); setTimeout(() => done(null), 6000);
+  });
+  const put = (url, body, type, onProgress) => new Promise((res, rej) => {
+    const x = new XMLHttpRequest(); x.open('PUT', url); x.setRequestHeader('Content-Type', type);
+    x.upload.onprogress = e => e.lengthComputable && onProgress?.(e.loaded / e.total);
+    x.onload = () => x.status >= 200 && x.status < 300 ? res() : rej(new Error('upload ' + x.status)); x.onerror = () => rej(new Error('Netz')); x.send(body);
+  });
+  $('#send').onclick = async () => {
+    if (!blob) return;
+    $('#send').disabled = true; $('#again').disabled = true; $('#err2').textContent = ''; $('#prog').hidden = false; $('#progBar').style.width = '2%';
+    try {
+      const type = (blob.type || 'video/mp4').split(';')[0];
+      const up = await call({ action: 'put', type, size: blob.size });
+      await put(up.url, blob, type, p => { $('#progBar').style.width = Math.max(2, p * 92) + '%'; });
+      const th = await thumbOf(); if (th) await put(up.thumb, th, 'image/jpeg').catch(() => {});
+      $('#progBar').style.width = '96%';
+      await call({ action: 'done', path: up.path, ticket: up.ticket, name: $('#name').value });
+      $('#progBar').style.width = '100%';
+      show('#state'); $('#state').innerHTML = `<div class="big">💛</div><h2>Danke!</h2><p class="muted">Deine Videonachricht ist angekommen.</p><p><button class="btn ghost" id="more" type="button">🎥 Noch eine Nachricht</button></p>`;
+      $('#more').onclick = () => { blob = null; $('#go').disabled = false; show('#start'); };
+    } catch (er) { $('#err2').textContent = /^upload|^Netz/.test(er.message) ? T('Das Senden hat nicht geklappt. Bitte prüfe die Internetverbindung und versuch es noch einmal.') : er.message; $('#send').disabled = false; $('#again').disabled = false; $('#prog').hidden = true; }
+  };
+
+  (async () => {
+    if (!/^[0-9a-f-]{36}$/i.test(event) || !CFG.supabaseUrl) return fail(T('Der Link ist unvollständig. Bitte den QR-Code noch einmal scannen.'));
+    try { info = await call({ action: 'info' }); } catch (er) { return fail(er.message); }
+    SECS = info.secs || 30; $('#sub').textContent = info.title || '';
+    if (info.owner && window.PM_AD) { try {
+      const b = await PM_AD.load(info.owner, CFG), band = PM_AD.has(b); // Werbeband oben zeigt Logo und Namen schon → im Kopf kein zweites Logo
+      if (!band && b?.logo) $('#logo').innerHTML = `<img src="${esc(b.logo)}" alt="${esc(b.name)}">`; else if (!band && b?.name) $('#logo').innerHTML = `<b translate="no">${esc(b.name)}</b>`;
+      if (b?.name) document.title = T('Videonachricht') + ' – ' + b.name;
+      if (b?.privacy) { $('#privLink').href = b.privacy; $('#privLink').hidden = false; } // Datenschutzerklärung des Vermieters
+      if (band) { PM_AD.addCss(); $('#pmad').innerHTML = PM_AD.html(b); }
+    } catch {} }
+    show('#start');
+  })();
+})();
+</script>
+</body>
+</html>
