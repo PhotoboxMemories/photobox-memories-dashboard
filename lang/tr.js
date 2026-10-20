@@ -1982,6 +1982,7 @@ I18N.add('tr', {
 "Schau mal – jetzt wirst du gezeichnet!": "Bak – şimdi çiziliyorsun!",
 "Scheibe ausfüllen (rund zugeschnitten)": "Diski doldur (yuvarlak kırpılmış)",
 "Schichten": "Katmanlar",
+"Schieb und zoom dein Foto direkt auf der Vorschau – darunter siehst du die ganze Druckfläche.": "Fotoğrafını doğrudan önizlemede kaydır ve yakınlaştır – aşağıda tüm baskı alanını görürsün.",
 "Schließen": "Kapat",
 "Schließen (Esc)": "Kapat (Esc)",
 "Schlüssel": "Anahtar",
