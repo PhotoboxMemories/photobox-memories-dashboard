@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Fotogalerie</title>
-<script>window.I18N_V = '20261020-8';</script>
+<script>window.I18N_V = '20261020-9';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache: vom QR-Code der Fotobox (?l=…), sonst die des Handys
 (function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
@@ -29,6 +29,10 @@
   .grid figure{margin:0;position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--card);cursor:zoom-in}
   .grid img{width:100%;height:100%;object-fit:cover;display:block}
   .grid .tag{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.65);font-size:11px;border-radius:6px;padding:2px 6px}
+  .grid figure video{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
+  .grid .tag.msg{left:50%;top:50%;bottom:auto;translate:-50% -50%;width:44px;height:44px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(0,0,0,.55);border:2px solid #fff}
+  .grid figcaption{position:absolute;left:0;right:0;bottom:0;padding:16px 8px 6px;font-size:12.5px;font-weight:600;background:linear-gradient(transparent,rgba(0,0,0,.75));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ghd{font:600 19px Fredoka,system-ui,sans-serif;margin:18px 0 10px}.ghd small{color:var(--muted,#a3a3ad);font:500 14px system-ui,sans-serif}
   .box{max-width:440px;margin:8vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;text-align:center}
   .box h2{margin:0 0 8px}
   .box p{color:var(--muted);margin:0 0 16px}
@@ -205,6 +209,8 @@
         : '<h2>Galerie nicht gefunden</h2><p>Diesen Link gibt es nicht (mehr).</p>');
     }
     info = r; photos = r.photos || [];
+    // Videonachrichten der Gäste (vom Handy, Zusatzfunktion) stehen als eigener Bereich oben
+    const msgs = photos.filter(isMsg); photos = [...msgs, ...photos.filter(p => !isMsg(p))];
     if (show) return slideshow(password);
     showAd(window.PM_AD?.ownerOf(photos[0]?.path));
     $('#sub').setAttribute('translate', 'no');
@@ -212,17 +218,21 @@
     if (!photos.length) return box('<h2>Noch keine Fotos</h2><p>Sobald Fotos gemacht wurden, erscheinen sie hier. Einfach später noch einmal öffnen.</p>');
     $('#main').innerHTML = `<div class="bar"><span>${photos.length} ${photos.length === 1 ? 'Aufnahme' : 'Aufnahmen'}</span>${r.download_all ? '<button class="btn" id="zip">Alle herunterladen</button>' : ''}</div>
       <p class="keep" style="margin:-4px 0 12px"><span>Die Fotos bleiben 1 Jahr online und werden danach automatisch gelöscht.</span> <span>Speichere dir deine Lieblingsfotos rechtzeitig.</span></p>
-      <div class="grid">${photos.map((p, i) => `<figure data-i="${i}"><img loading="lazy" src="${esc(url(p.thumb || p.path))}" alt="Foto ${i + 1}">${p.kind !== 'photo' ? `<span class="tag">${p.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}</figure>`).join('')}</div>`;
-    $('.grid').onclick = e => { const f = e.target.closest('figure'); if (f) open(+f.dataset.i); };
+      ${msgs.length ? `<h2 class="ghd">🎥 <span>Videonachrichten</span> <small>(${msgs.length})</small></h2>` : ''}
+      <div class="grid">${photos.map((p, i) => (msgs.length && i === msgs.length ? `</div><h2 class="ghd">📸 <span>Fotos</span> <small>(${photos.length - msgs.length})</small></h2><div class="grid">` : '')
+        + `<figure data-i="${i}">${p.thumb || p.kind !== 'video' ? `<img loading="lazy" src="${esc(url(p.thumb || p.path))}" alt="Foto ${i + 1}">` : `<video src="${esc(url(p.path))}#t=0.5" preload="metadata" muted playsinline></video>`}${isMsg(p)
+          ? `<span class="tag msg">▶</span>${msgName(p) ? `<figcaption translate="no">${esc(msgName(p))}</figcaption>` : ''}` : p.kind !== 'photo' ? `<span class="tag">${p.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}</figure>`).join('')}</div>`;
+    document.querySelectorAll('.grid').forEach(g => { g.onclick = e => { const f = e.target.closest('figure'); if (f) open(+f.dataset.i); }; });
     if ($('#zip')) $('#zip').onclick = zipAll;
   }
 
+  const isMsg = p => p.kind === 'video' && /^Videonachricht/.test(p.name || ''), msgName = p => String(p.name || '').replace(/^Videonachricht( von )?/, '').trim();
   const fileName = (p, i) => 'Foto-' + String(i + 1).padStart(3, '0') + '.' + (String(p.path).split('.').pop() || 'jpg');
   const save = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 20000); };
   function open(i) {
     current = (i + photos.length) % photos.length; const p = photos[current];
     $('#lightMedia').innerHTML = p.kind === 'video' ? `<video src="${esc(url(p.path))}" controls autoplay loop playsinline></video>` : `<img src="${esc(url(p.path))}" alt="">`;
-    $('#lInfo').textContent = (current + 1) + ' von ' + photos.length;
+    $('#lInfo').innerHTML = (isMsg(p) ? `<span>Videonachricht</span>${msgName(p) ? ` <span translate="no">· ${esc(msgName(p))}</span>` : ''} · ` : '') + `<span>${current + 1} von ${photos.length}</span>`;
     $('#lPrev').style.display = $('#lNext').style.display = photos.length > 1 ? '' : 'none';
     $('#light').classList.add('on');
   }
