@@ -27,7 +27,8 @@
     const logo = typeof o.logo === 'string' && logoBase && o.logo.startsWith(logoBase) && !/["'<>\s]/.test(o.logo) ? o.logo : '';
     return {
       on: o.on !== false, name: cut(o.name, 60), text: cut(o.text, 160), logo,
-      web: httpUrl(o.web), mail: mail(o.mail), tel: phone(o.tel), wa: phone(o.wa), insta: insta(o.insta), cta: cut(o.cta, 40)
+      web: httpUrl(o.web), mail: mail(o.mail), tel: phone(o.tel), wa: phone(o.wa), insta: insta(o.insta), cta: cut(o.cta, 40),
+      privacy: httpUrl(o.privacy) // eigene Datenschutzerklärung des Vermieters (für seine Gäste ist er selbst verantwortlich)
     };
   }
   const has = b => !!(b && b.on && (b.name || b.logo || b.text || b.web || b.mail || b.tel || b.wa || b.insta));
