@@ -1,6 +1,35 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.64": {
+      "date": "2026-10-20",
+      "notes": {
+        "de": [
+          "Ihre Marke statt unserer: Die Fotobox zeigt kein Photobox-Memories-Logo mehr. Oben im Betreiber-Bereich, bei der Anmeldung und in der Mitte des Standard-Start-Videos erscheint Ihr Logo (Dashboard → Meine Lizenzen → „Deine Werbung in der Galerie“). Ohne Logo bleibt die Stelle frei.",
+          "Auch die Foto- und Karikatur-Seiten Ihrer Gäste zeigen nur noch Ihr Logo und Ihre Kontaktdaten – auf dem Handy übersichtlicher gestaltet."
+        ],
+        "en": [
+          "Your brand instead of ours: the photo booth no longer shows the Photobox Memories logo. Your logo now appears at the top of the operator area, on the sign-in screen and in the centre of the standard start video (Dashboard → My licences → “Your advertising in the gallery”). Without a logo, the space stays empty.",
+          "Your guests’ photo and caricature pages also show only your logo and contact details – with a tidier layout on phones."
+        ],
+        "tr": [
+          "Bizim değil, senin markan: Fotoğraf kabini artık Photobox Memories logosunu göstermiyor. Operatör alanının üstünde, girişte ve standart başlangıç videosunun ortasında senin logon görünür (Panel → Lisanslarım → „Galerideki reklamın“). Logo yoksa alan boş kalır.",
+          "Misafirlerinin fotoğraf ve karikatür sayfaları da artık yalnızca senin logonu ve iletişim bilgilerini gösterir – telefonda daha düzenli."
+        ],
+        "fr": [
+          "Votre marque à la place de la nôtre : le photobooth n’affiche plus le logo Photobox Memories. Votre logo apparaît en haut de l’espace opérateur, à la connexion et au centre de la vidéo d’accueil standard (Tableau de bord → Mes licences → « Ta publicité dans la galerie »). Sans logo, l’emplacement reste vide.",
+          "Les pages photo et caricature de vos invités n’affichent plus que votre logo et vos coordonnées – avec une mise en page plus claire sur mobile."
+        ],
+        "es": [
+          "Tu marca en lugar de la nuestra: el fotomatón ya no muestra el logo de Photobox Memories. Tu logo aparece arriba en el área del operador, al iniciar sesión y en el centro del vídeo de inicio estándar (Panel → Mis licencias → «Tu publicidad en la galería»). Sin logo, el espacio queda libre.",
+          "Las páginas de foto y caricatura de tus invitados también muestran solo tu logo y tus datos de contacto, con un diseño más ordenado en el móvil."
+        ],
+        "it": [
+          "Il tuo marchio al posto del nostro: il photo booth non mostra più il logo Photobox Memories. Il tuo logo compare in alto nell’area operatore, all’accesso e al centro del video iniziale standard (Dashboard → Le mie licenze → «La tua pubblicità nella galleria»). Senza logo lo spazio resta libero.",
+          "Anche le pagine foto e caricatura dei tuoi ospiti mostrano solo il tuo logo e i tuoi contatti – con un layout più ordinato sullo smartphone."
+        ]
+      }
+    },
     "1.17.63": {
       "date": "2026-10-19",
       "notes": {
