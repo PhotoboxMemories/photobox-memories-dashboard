@@ -1,6 +1,41 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.68": {
+      "date": "2026-10-20",
+      "notes": {
+        "de": [
+          "Hochformat: Beim Verzieren stehen die Aufkleber jetzt kompakt in zwei Reihen zum Wischen – das Foto ist deutlich größer.",
+          "Kamera: Lehnt die Canon einen Wert ab (z. B. weil das Modus-Rad nicht auf M steht), zeigt die Software das jetzt an. Unter „Live-Ansicht“ steht, wie das Livebild heller wird.",
+          "Wie lange ein KI-Bild gebraucht hat, steht jetzt im Gerätestatus und beim KI-Test im Dashboard."
+        ],
+        "en": [
+          "Portrait screens: when decorating, the stickers now sit compactly in two swipeable rows – the photo is much larger.",
+          "Camera: if the Canon rejects a value (e.g. because the mode dial is not on M), the software now shows it. Under “Live view” you’ll find how to make the live image brighter.",
+          "How long an AI image took now appears in the device status and in the AI test in the dashboard."
+        ],
+        "tr": [
+          "Dikey ekran: Süslerken çıkartmalar artık iki kaydırılabilir satırda – fotoğraf çok daha büyük.",
+          "Kamera: Canon bir değeri reddederse (ör. mod çarkı M’de değilse) yazılım bunu artık gösterir. „Canlı görüntü“ altında canlı görüntünün nasıl aydınlatılacağı yazıyor.",
+          "Bir yapay zekâ görselinin ne kadar sürdüğü artık cihaz durumunda ve paneldeki yapay zekâ testinde görünür."
+        ],
+        "fr": [
+          "Écran portrait : en décorant, les autocollants sont désormais regroupés sur deux rangées défilantes – la photo est bien plus grande.",
+          "Appareil photo : si le Canon refuse une valeur (p. ex. molette pas sur M), le logiciel l’indique désormais. Sous « Vue en direct », tu trouves comment éclaircir l’image.",
+          "La durée d’une image IA s’affiche désormais dans l’état de l’appareil et lors du test IA dans le tableau de bord."
+        ],
+        "es": [
+          "Pantalla vertical: al decorar, las pegatinas quedan ahora en dos filas deslizables y la foto es mucho más grande.",
+          "Cámara: si la Canon rechaza un valor (p. ej. porque el dial no está en M), el software ahora lo muestra. En «Vista en directo» se explica cómo aclarar la imagen.",
+          "Cuánto tardó una imagen IA aparece ahora en el estado del dispositivo y en la prueba IA del panel."
+        ],
+        "it": [
+          "Schermo verticale: decorando, gli adesivi stanno ora su due righe scorrevoli – la foto è molto più grande.",
+          "Fotocamera: se la Canon rifiuta un valore (es. ghiera non su M), il software ora lo segnala. In «Visione dal vivo» trovi come rendere più luminosa l’immagine.",
+          "Il tempo impiegato da un’immagine IA compare ora nello stato del dispositivo e nel test IA della dashboard."
+        ]
+      }
+    },
     "1.17.67": {
       "date": "2026-10-20",
       "notes": {
