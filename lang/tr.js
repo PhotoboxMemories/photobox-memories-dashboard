@@ -551,6 +551,7 @@ I18N.add('tr', {
 "Dein Guthaben": "Bakiyen",
 "Dein KI-Guthaben": "Yapay zekâ bakiyen",
 "Dein KI-Porträt ist fertig. Du kannst es jetzt speichern oder drucken.": "Yapay zekâ portren hazır. Şimdi kaydedebilir veya yazdırabilirsin.",
+"Dein Logo (ohne Logo dein Firmenname) steht außerdem über und unter dem Foto – statt Photobox Memories.": "Logon (logo yoksa firma adın) ayrıca fotoğrafın üstünde ve altında görünür – Photobox Memories yerine.",
 "Dein Name (als Unterschrift)": "Adın (imza olarak)",
 "Dein Prompt / zusätzliche Wünsche": "İstemin / ek istekler",
 "Dein Server verwaltet den Grok-Zugang. Auflösung und Freigabe kommen aus dem gewählten Event. Kein lokaler API-Schlüssel nötig.": "Grok erişimini sunucun yönetir. Çözünürlük ve onay seçilen etkinlikten gelir. Yerel API anahtarı gerekmez.",
