@@ -1302,7 +1302,7 @@
           ${ai.result && !ai.busy && !libEditing ? '<button class="ghost" style="width:100%;margin-top:8px" data-a="ai-lib-result">☆ In „Meine KI-Stile“ speichern</button>' : ''}
           ${ai.recent.length ? `<small style="display:block;margin-top:10px">Letzte Generierungen</small><div class="airecent">${ai.recent.map((r, n) => `<img src="${r.image}" title="${esc(r.name)}" data-a="ai-recent" data-i="${n}">`).join('')}</div>` : ''}</div>
           <div class="card"><div class="aibar">${central
-            ? `<span>KI-Guthaben:</span><span class="bal" data-ai-bal>…</span><small>1 Credit pro Bild</small><span class="sp" style="flex:1"></span><button class="ghost" data-a="ai-status">Verbindung prüfen</button>`
+            ? `<span>KI-Guthaben:</span><span class="bal" data-ai-bal>…</span><small>${S.ai.resolution === '1k' ? '1 Credit pro Bild' : '2 Credits pro Bild (2K)'}</small><span class="sp" style="flex:1"></span><button class="ghost" data-a="ai-status">Verbindung prüfen</button>`
             : `<span>Eigener API-Schlüssel auf der Fotobox · ${({ grok: 'Grok (xAI)', openai: 'OpenAI', gemini: 'Google Gemini' })[S.ai.provider]}</span>`}</div></div>`;
         const lib = ai.lib;
         const libCard = `<div class="card"><div class="between" style="gap:10px;flex-wrap:wrap"><b>Meine KI-Stile${Array.isArray(lib) ? ` (${lib.length})` : ''}</b><span class="row" style="gap:6px;flex-wrap:wrap">${Array.isArray(lib) && lib.length && central ? `<button class="ghost" data-a="ai-lib-pair" ${ai.busy ? 'disabled' : ''} title="Alle Bilder mit unserem Testpaar neu erzeugen (1 Credit je Stil)">🔄 Bilder mit Testpaar erneuern</button>` : ''}${ctx.admin && Array.isArray(lib) && lib.some(x => !x.shared) ? `<button class="ghost" data-a="ai-lib-share-all" title="Alle Stile in „Meine KI-Stile“ für alle Kunden freigeben">👥 Alle für Kunden freigeben</button>` : ''}</span></div><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Deine gesammelten Stile mit Bild – für jedes Event. Antippen übernimmt den Stil in dieses Event, ohne Credits. ✎ = Text ändern und neu generieren. Die Bilder zeigen immer unser Testpaar.</p>
@@ -1332,14 +1332,14 @@
           <div class="card"><b>An der Fotobox</b>
           ${sw('ai.guestChoice', 'Gäste wählen ihren Stil', 'Aus = alle Fotos bekommen automatisch den Standard-Stil.')}
           <label class="l">Standard-Stil</label><select data-s="ai.selectedId"><option value="">Erster Stil</option>${S.ai.prompts.map(p => `<option value="${esc(p.id)}" ${p.id === S.ai.selectedId ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>
+          <label class="l">Bildqualität (Grok)</label><select data-s="ai.resolution" data-rerender="1"><option value="1k" ${S.ai.resolution === '1k' ? 'selected' : ''}>1K · schneller${central ? ' · 1 Credit' : ''}</option><option value="2k" ${S.ai.resolution === '2k' ? 'selected' : ''}>2K · hohe Auflösung${central ? ' · 2 Credits' : ''}</option></select>
           <div class="card">${sw('x.ai.skip', 'Option zum Überspringen der KI-Porträts hinzufügen ' + NEWAPP, 'Gäste können ihr Foto auch ohne KI-Stil behalten')}
           ${sw('x.ai.consent', 'Gäste vor dem KI-Porträt um Zustimmung bitten ' + NEWAPP, 'Aus = keine Abfrage an der Fotobox. Das Foto wird trotzdem an den KI-Dienst (xAI, USA) übertragen – die Einwilligung regelst du dann selbst, zum Beispiel im Vertrag mit deinem Kunden oder per Aushang an der Fotobox.')}</div>
           <div class="card"><details class="adv"><summary>Texte für die Gäste anpassen ${NEWAPP}</summary><p style="color:#6b6b78;font-size:13px;margin:8px 0">Diese Texte sehen deine Gäste an der Fotobox, wenn sie ein KI-Porträt erstellen. Du kannst jede Formulierung ändern, zum Beispiel in eine andere Sprache oder in euren Ton.</p><div class="grid3x">
             ${text('x.ai.texts.choose', 'Überschrift der Stilauswahl')}${text('x.ai.texts.chooseBtn', 'Knopf: Stil auswählen')}${text('x.ai.texts.createBtn', 'Knopf: KI-Porträt erstellen')}${text('x.ai.texts.creating', 'Hinweis während der Erstellung')}
             ${text('x.ai.texts.retrying', 'Hinweis beim zweiten Versuch')}${text('x.ai.texts.retryBtn', 'Knopf: erneut versuchen')}${text('x.ai.texts.skipBtn', 'Knopf: ohne KI weiter')}${text('x.ai.texts.failed', 'Meldung, wenn es nicht geklappt hat')}</div></details></div>
-          <div class="card"><details class="adv"><summary>Erweitert: Bildqualität</summary>
+          <div class="card"><details class="adv"><summary>Mehr zu den KI-Bildern</summary>
           <p>Die KI-Bilder entstehen über Photobox Memories (Grok) und nutzen das Guthaben des angemeldeten Kontos – auf der Fotobox ist kein eigener Schlüssel nötig.</p>
-          <label class="l">Auflösung</label><select data-s="ai.resolution" data-rerender="1"><option value="1k" ${S.ai.resolution === '1k' ? 'selected' : ''}>1K · schneller${central ? ' · 1 Credit' : ''}</option><option value="2k" ${S.ai.resolution === '2k' ? 'selected' : ''}>2K · hohe Auflösung${central ? ' · 1 Credit' : ''}</option></select>
           <p><small>Pro Foto eine KI-Anfrage, Internet erforderlich. Schlägt die KI fehl, erhalten die Gäste einen Hinweis und ihre Originalfotos. Videos, GIFs und Boomerangs bleiben unverändert. Testfotos werden nicht gespeichert.</small></p></details></div></div><div class="right">${right}</div></div>${modal}`;
       },
       survey() {
@@ -1748,6 +1748,7 @@
       const t = TYPES.find(x => x[1] === b.dataset.type);
       if (t[1] === 'cari' && !cariOk) return (opts.toast || alert)('Live-Karikatur ist für Ihr Konto noch nicht freigeschaltet – bitte bei Photobox Memories melden.', 6000);
       const set = structuredClone(t[5]); m.remove();
+      if (!set.modes) set.modes = { single: true, strip: false, grid: false, gif: false, boomerang: false, video: false }; // neues Ereignis: nur „Foto“ an, alles andere schaltet der Betreiber selbst ein
       if (t[1] === 'cari') { set.x.caricature.secret = Caricature.newSecret(); return onPick(set, null, null, 'Live-Karikatur', 'cari'); } // gleich auf der Karikatur-Seite öffnen
       onPick(set, null, null, t[3]);
     });
