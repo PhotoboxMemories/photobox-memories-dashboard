@@ -825,7 +825,7 @@ async function loadLicenses() {
     </div>`).join('') : `<div class="card empty" style="grid-column:1/-1">${shop.plans.length ? 'Noch keine Lizenz. Teste 14 Tage kostenlos oder kaufe unten eine Lizenz.' : 'Keine Lizenz mit deiner E-Mail gefunden. Bitte melde dich beim Verkäufer.'}</div>`;
   renderShop();
   $('#adCard').classList.toggle('hidden', !(mine.length || profile.is_admin)); if (!adData && (mine.length || profile.is_admin)) loadAd();
-  if (profile.is_admin) { renderAdmin(); renderOverview(); grantPendingCredits(); }
+  if (profile.is_admin) { renderAdmin(); renderOverview(); }
 }
 /* ---------- Werbung in der Galerie (Logo, Text, Kontakt) – je Konto, gespeichert als photos/<Konto>/werbung.json ---------- */
 let adData = null;
@@ -1016,25 +1016,8 @@ $('#lKind').onchange = () => {
   $('#lValidWrap').classList.toggle('hidden', k !== 'subscription'); $('#lUpdWrap').classList.toggle('hidden', !life);
   $('#lCreditsWrap').classList.toggle('hidden', k !== 'test');
 };
-// KI-Credits einer Testversion: sofort buchen, wenn der Tester schon ein Konto hat – sonst in der Notiz vormerken
-// („20 KI-Credits offen“) und beim nächsten Öffnen der Verwaltung buchen, sobald er sich registriert hat.
-const CREDIT_MARK = /(\d+) KI-Credits offen/;
-async function grantTestCredits(l, n) {
-  const { error } = await sb.rpc('ai_grant', { p_email: l.customer_email, p_amount: n, p_note: 'Testversion' });
-  return !error;
-}
-async function grantPendingCredits() {
-  if (!profile?.is_admin || DEMO || grantPendingCredits.busy) return; // nie zweimal gleichzeitig (sonst doppelt gebucht)
-  grantPendingCredits.busy = true;
-  try { for (const l of licenses.filter(x => x.owner_id && x.active && CREDIT_MARK.test(x.notes || ''))) {
-    const n = +CREDIT_MARK.exec(l.notes)[1];
-    if (n > 0 && await grantTestCredits(l, n)) {
-      await sb.from('licenses').update({ notes: l.notes.replace(CREDIT_MARK, `${n} KI-Credits gebucht`) }).eq('id', l.id);
-      l.notes = l.notes.replace(CREDIT_MARK, `${n} KI-Credits gebucht`);
-      toast(`${l.customer_name || l.customer_email}: ${n} KI-Credits gebucht`, 4000);
-    }
-  } } finally { grantPendingCredits.busy = false; }
-}
+// KI-Credits einer Testversion bucht der Server (Trigger licenses_start_credits): Die Notiz „20 KI-Credits offen“ wird
+// sofort gebucht, wenn der Tester schon ein Konto hat – sonst automatisch bei seiner Registrierung („… gebucht“).
 const inDays = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
 $('#lValid').value = inDays(30); $('#lUpd').value = inDays(365);
 $('#lCreate').onclick = async () => {
@@ -1053,9 +1036,9 @@ $('#lCreate').onclick = async () => {
   if (error) return toast('Fehler: ' + error.message, 4000);
   navigator.clipboard?.writeText(data.key).catch(() => {});
   let extra = '';
-  if (credits) {
-    if (!DEMO && await grantTestCredits(data, credits)) { extra = ` · ${credits} KI-Credits gebucht`; await sb.from('licenses').update({ notes: `${row.notes} · ${credits} KI-Credits gebucht` }).eq('id', data.id); }
-    else { extra = ` · ${credits} KI-Credits werden gebucht, sobald sich der Tester registriert hat`; await sb.from('licenses').update({ notes: `${row.notes} · ${credits} KI-Credits offen` }).eq('id', data.id); }
+  if (credits && !DEMO) { // der Server bucht (siehe oben) – die zurückgegebene Notiz sagt, ob schon gebucht
+    const { data: upd } = await sb.from('licenses').update({ notes: `${row.notes} · ${credits} KI-Credits offen` }).eq('id', data.id).select('notes').single();
+    extra = /KI-Credits gebucht/.test(upd?.notes || '') ? ` · ${credits} KI-Credits gebucht` : ` · ${credits} KI-Credits werden gebucht, sobald sich der Tester registriert hat`;
   }
   if ($('#lMail').checked && !DEMO) extra += ' · ' + await sendLicenseMail(data.id);
   toast('Lizenz erstellt – Schlüssel kopiert: ' + data.key + extra, 9000);
