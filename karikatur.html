@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Live-Karikatur – Photobox Memories</title>
+<title>Live-Karikatur</title>
 <script>window.I18N_V = '20261020-2';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache: vom QR-Code (?l=…), sonst die des Handys
@@ -19,6 +19,8 @@
   header{padding:22px 16px 16px;text-align:center;border-bottom:3px solid var(--y);background:var(--k)}
   header h1{margin:10px 0 4px;font:700 clamp(26px,7vw,38px)/1.12 Fredoka,system-ui,sans-serif}
   header p{margin:0;color:var(--muted)}
+  #logo img{display:inline-block;height:60px;max-width:220px;object-fit:contain;border-radius:12px;background:#fff;padding:6px}
+  #logo b{font:600 20px Fredoka,system-ui,sans-serif;color:var(--y);overflow-wrap:anywhere}
   main{max-width:520px;margin:0 auto;padding:16px 16px 40px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:0 0 14px}
   .card h2{margin:0 0 10px;font:600 19px Fredoka,system-ui,sans-serif;display:flex;gap:10px;align-items:center}
@@ -71,19 +73,19 @@
   </form>
   <div id="state" class="card state" hidden></div>
 </main>
-<footer>Photobox Memories · Live-Karikatur</footer>
+<footer>Live-Karikatur</footer>
 
 <script src="config.js?v=20261018-9"></script>
 <script src="icons.js?v=20261017-2"></script>
-<script src="ad.js?v=20261017-2"></script>
+<script src="ad.js?v=20261020-1"></script>
 <script>
 (function () {
   'use strict';
   const CFG = window.FOTOBOX_CONFIG || {}, $ = s => document.querySelector(s);
   const T = s => I18N.t(s, PM_LANG);
   I18N.watch(document.body, () => PM_LANG);
-  document.title = T('Live-Karikatur') + ' – Photobox Memories';
-  if (window.LOGO) $('#logo').innerHTML = LOGO(40);
+  // White Label: kein Photobox-Memories-Logo – oben steht das Logo des Lizenz-Inhabers (sonst sein Firmenname, sonst nichts)
+  document.title = T('Live-Karikatur');
   const langSel = () => { const sel = document.createElement('select'); sel.className = 'langSel'; sel.setAttribute('translate', 'no'); sel.setAttribute('aria-label', 'Sprache');
     sel.innerHTML = I18N.LANGS.map(l => `<option value="${l.code}" ${l.code === PM_LANG ? 'selected' : ''}>${l.name}</option>`).join('');
     sel.onchange = () => { const u = new URL(location.href); u.searchParams.set('l', sel.value); location.replace(u.href); };
@@ -155,7 +157,13 @@
     if (!/^[0-9a-f-]{36}$/i.test(event) || !CFG.supabaseUrl) return fail(T('Der Link ist unvollständig. Bitte den QR-Code noch einmal scannen.'));
     try { info = await call({ action: 'info', event }); } catch (er) { return fail(er.message); }
     $('#sub').textContent = info.title || '';
-    if (info.owner && window.PM_AD) { try { const b = await PM_AD.load(info.owner, CFG); if (PM_AD.has(b)) { PM_AD.addCss(); $('#pmad').innerHTML = PM_AD.html(b); } } catch {} }
+    if (info.owner && window.PM_AD) { try {
+      const b = await PM_AD.load(info.owner, CFG);
+      const band = PM_AD.has(b); // Werbeband oben zeigt Logo und Namen schon → im Kopf kein zweites Logo
+      if (!band && b?.logo) $('#logo').innerHTML = `<img src="${esc(b.logo)}" alt="${esc(b.name)}">`; else if (!band && b?.name) $('#logo').innerHTML = `<b translate="no">${esc(b.name)}</b>`;
+      if (b?.name) document.title = T('Live-Karikatur') + ' – ' + b.name;
+      if (band) { PM_AD.addCss(); $('#pmad').innerHTML = PM_AD.html(b); }
+    } catch {} }
     let saved = null; try { saved = JSON.parse(localStorage.getItem(store) || 'null'); } catch {}
     if (saved?.id && Date.now() - saved.at < 6 * 3600e3) return watch(saved.id, saved.key);
     if (!info.needCode) { $('#codeCard').hidden = true; $('#n2').textContent = '1'; $('#n3').textContent = '2'; }
