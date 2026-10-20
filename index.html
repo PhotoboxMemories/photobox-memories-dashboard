@@ -575,7 +575,8 @@ let photoCovers = {};
 async function loadPhotoCovers() {
   if (DEMO) return;
   try {
-    const { data, error } = await sb.from('photos').select('event_id,thumb,path,kind').order('created_at', { ascending: false }).limit(800);
+    if (!events.length) return;
+    const { data, error } = await sb.from('photos').select('event_id,thumb,path,kind').in('event_id', events.map(e => e.id)).order('created_at', { ascending: false }).limit(800);
     if (error || !data) return;
     const next = {};
     for (const x of data) if (!next[x.event_id] && x.kind !== 'video') next[x.event_id] = window.FOTOBOX_PHOTOS ? FOTOBOX_PHOTOS.url(x.thumb || x.path) : sb.storage.from('photos').getPublicUrl(x.thumb || x.path).data.publicUrl;
@@ -661,7 +662,8 @@ async function createEvent(settings, logo_url, name, typeName, page) {
 /* ---------- Geräte ---------- */
 $('#reloadDevices').onclick = loadDevices;
 async function loadDevices() {
-  const { data, error } = await sb.from('devices').select('*, licenses(customer_name, customer_email, owner_id)').order('last_seen', { ascending: false, nullsFirst: false });
+  // nur Fotoboxen der eigenen Lizenzen – auch der Admin sieht hier keine Geräte seiner Kunden
+  const { data, error } = await sb.from('devices').select('*, licenses!inner(customer_name, customer_email, owner_id)').eq('licenses.owner_id', me.id).order('last_seen', { ascending: false, nullsFirst: false });
   if (error) return toast('Fehler: ' + error.message);
   devices = data; renderDevices(); renderEvents();
 }
@@ -745,7 +747,8 @@ $('#deviceList').addEventListener('click', async e => {
 /* ---------- Gäste-Daten ---------- */
 let leads = [];
 async function loadLeads() {
-  const { data, error } = await sb.from('leads').select('*, events(name)').order('captured_at', { ascending: false }).limit(5000);
+  // nur Gäste-Daten der eigenen Fotoboxen – auch der Admin sieht keine Gäste-Daten seiner Kunden
+  const { data, error } = await sb.from('leads').select('*, events(name), licenses!inner(owner_id)').eq('licenses.owner_id', me.id).order('captured_at', { ascending: false }).limit(5000);
   if (error) return toast('Fehler: ' + error.message);
   leads = data;
   const names = [...new Set(leads.map(l => l.events?.name || l.event_name || '–'))];
@@ -933,7 +936,7 @@ async function shServer() {
 // Link zur Fotoseite mit einem eigenen Foto (im Testmodus mit &shop=test)
 async function shSampleLink() {
   if (!shSample && !DEMO) {
-    const { data } = await sb.from('photos').select('path,kind').eq('kind', 'photo').order('created_at', { ascending: false }).limit(60);
+    const { data } = await sb.from('photos').select('path,kind').eq('kind', 'photo').in('event_id', events.map(e => e.id)).order('created_at', { ascending: false }).limit(60);
     shSample = (data || []).map(x => x.path).find(x => PM_AD.ownerOf(x) === me.id && /\.(jpe?g|png)$/i.test(x)) || '';
   }
   const a = $('#shTest'); a.classList.toggle('hidden', !shSample);
@@ -1291,7 +1294,7 @@ function renderOverview() {
   $('#ovStats').innerHTML =
     tile(ov.profiles.length, 'Registrierte Kunden', `${ov.profiles.filter(x => new Date(x.created_at) > d30).length} neu in 30 Tagen`) +
     tile(live.length, 'Aktive Lizenzen', ending.length ? `${ending.length === 1 ? '1 läuft' : ending.length + ' laufen'} in 14 Tagen ab` : 'keine läuft bald ab') +
-    tile(`${online} / ${devices.length}`, 'Fotoboxen online', 'gerade verbunden / gesamt') +
+    tile(`${online} / ${devices.length}`, 'Eigene Fotoboxen online', 'gerade verbunden / gesamt') +
     tile(sum(lm, x => x.amount), 'Credits vergeben', `diesen Monat · gesamt ${sum(ov.ledger.filter(x => x.amount > 0), x => x.amount)}`) +
     tile(jm.length, 'KI-Bilder', `diesen Monat · ${sum(jm, x => x.cost)} Credits verbraucht`) +
     tile(sum(ov.wallets, x => x.balance), 'Offenes Guthaben', 'Credits aller Kunden zusammen') +
