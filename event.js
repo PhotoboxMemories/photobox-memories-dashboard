@@ -413,6 +413,7 @@
     print: { btnText: 'Drucken', printingText: 'Drucken...', copiesText: 'Wie viele Kopien?' },
     gallery: { link: false, guests: false, downloadAll: false, password: '' },
     lang: { guest: '', pick: false, list: [] }, // Gästesprache: '' = wie das Menü der Fotobox
+    startLogo: { src: 'own', url: '', size: 72, fit: 'contain' }, // Logo in der weißen Scheibe der Standard-Startanimation
     mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false, preview: true, source: 'original' },
     ai: { skip: false, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Porträt erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
   };
@@ -925,6 +926,7 @@
       if (a === 'x-up') {
         const f = await pick(t.dataset.accept || '*/*'); if (!f) return;
         if (f.size > 50 * 1024 * 1024) return ctx.toast('Die Datei ist größer als 50 MB.');
+        if (t.dataset.p === 'x.startLogo.url' && f.size > 3 * 1024 * 1024) return ctx.toast('Das Bild ist größer als 3 MB – bitte kleiner speichern (ein Logo braucht höchstens 1000 × 1000 Pixel).', 5000);
         status('Lädt Datei hoch …');
         try { const url = await ctx.uploadFile(f); if (t.dataset.list) setP(S, t.dataset.p, [...(getP(S, t.dataset.p) || []), url]); else setP(S, t.dataset.p, url); save(); render(); }
         catch (error) { ctx.toast('Hochladen fehlgeschlagen: ' + error.message, 6000); status('⚠️ Hochladen fehlgeschlagen'); }
@@ -1219,6 +1221,19 @@
             </div>`; // eigene Ansage-Dateien je Schritt (x.voice.files) kann die Fotobox noch nicht abspielen – deshalb ausgeblendet
       },
       start() {
+        // Logo in der weißen Scheibe der Standard-Startanimation – mit Live-Vorschau (start-anim.js), genau wie auf der Fotobox
+        const stdLogoCard = () => {
+          const L = S.x.startLogo, opt = [['own', 'Mein Firmenlogo (aus „Meine Lizenzen“ → Werbung)'], ['event', 'Logo dieses Ereignisses'], ['image', 'Eigenes Bild'], ['none', 'Nichts – nur das Kamera-Symbol']];
+          return `<h2>Logo in der Startanimation</h2><div class="card">
+            <p style="color:#6b6b78;margin:0 0 10px">In der Mitte der Startanimation ist eine weiße Scheibe – dort steht Ihr Logo. Die Vorschau zeigt es genau so wie auf der Fotobox.</p>
+            <div class="row" style="align-items:flex-end;gap:12px;margin-bottom:4px"><canvas id="wsAnimP" width="288" height="512" style="width:144px;border-radius:8px;background:#111"></canvas><canvas id="wsAnimL" width="512" height="288" style="width:256px;max-width:calc(100% - 156px);border-radius:8px;background:#111"></canvas></div>
+            <label class="l">Was steht in der Scheibe?</label><select data-s="x.startLogo.src" data-rerender="1">${opt.map(([k, n]) => `<option value="${k}" ${L.src === k ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
+            ${L.src === 'image' ? up('x.startLogo.url', 'Bild für die Scheibe', 'image/*', 'Am schönsten: PNG mit durchsichtigem Hintergrund') : ''}
+            ${L.src === 'event' && !E.logo_url ? '<p style="color:#b26b00;font-size:13px;margin:6px 0 0">Dieses Ereignis hat noch kein Logo – unten bei „Angaben zum Ereignis“ hochladen. Bis dahin steht Ihr Firmenlogo in der Scheibe.</p>' : ''}
+            ${L.src === 'own' ? '<p id="wsOwnNote" style="color:#888;font-size:13px;margin:6px 0 0"></p>' : ''}
+            ${L.src !== 'none' ? slider('x.startLogo.size', 'Größe in der Scheibe', 40, 100, 2, '%') + sel('x.startLogo.fit', 'Darstellung', [['contain', 'Ganz zeigen'], ['cover', 'Scheibe ausfüllen (rund zugeschnitten)']]) : ''}
+          </div>`;
+        };
         // Je Ausrichtung ein eigenes Video oder Bild; ein älterer einzelner Upload (attractUrl) gilt für beide
         const slot = o => {
           const m = o === 'landscape' ? S.attractL : S.attractP, legacy = !m?.url && !!S.attractUrl, cur = m?.url ? m : legacy ? { url: S.attractUrl, type: S.attractType } : null, F = FBR.SCREEN_SIZES[o];
@@ -1234,7 +1249,8 @@
           ${slot('portrait')}${slot('landscape')}
           <p style="color:#777;font-size:12.5px;margin:8px 0 0">MP4-Video oder JPG/PNG-Bild · höchstens 50 MB · Tipp: In Canva oder CapCut gibt es fertige Vorlagen für Hochzeit, Geburtstag und Firmenfeier.</p>
           <label class="l">Auf dem Startbildschirm zeigen</label><select data-s="startDisplay"><option value="media" ${S.startDisplay !== 'live' ? 'selected' : ''}>${has ? 'Mein Video bzw. Bild' : 'Standard-Video von Photobox Memories'}</option><option value="live" ${S.startDisplay === 'live' ? 'selected' : ''}>Live-Bild der Kamera</option></select>
-          ${has ? '' : '<p style="color:#6b6b78;font-size:12.5px;margin:6px 0 0">Ohne eigenes Video zeigt die Fotobox unser Start-Video (Logo und schwebende Fotos, passend für Hoch- und Querformat).</p>'}</div>
+          ${has ? '' : '<p style="color:#6b6b78;font-size:12.5px;margin:6px 0 0">Ohne eigenes Video zeigt die Fotobox unsere Startanimation (schwebende Fotos, in der Mitte Ihr Logo – passend für Hoch- und Querformat).</p>'}</div>
+          ${!has && S.startDisplay !== 'live' ? stdLogoCard() : ''}
           <h2>2 · Texte und Logo darüberlegen <span style="font-weight:400;color:#888;font-size:14px">(freiwillig)</span></h2><div class="card">
           <p style="color:#6b6b78;margin:0 0 12px">Name, Datum, Logo und Start-Knopf frei anordnen – wie beim Fotolayout. Gestaltest du nur eine Ausrichtung, passt die Fotobox sie für die andere automatisch an; du kannst beide aber auch einzeln gestalten.</p>
           <div class="row" style="flex-wrap:wrap"><button class="btn pri" data-a="editscreen" data-o="portrait">${ICON('pen', 16)} Hochformat gestalten</button><button class="btn pri" data-a="editscreen" data-o="landscape">${ICON('pen', 16)} Querformat gestalten</button>${S.startScreen ? `<button class="ghost" data-a="resetscreen">Zurücksetzen</button>` : ''}</div>
@@ -1492,6 +1508,27 @@
         FBR.preloadLayout(L).then(() => { const big = FBR.renderLayout(L, { values: vals(), placeholders: true }); c.width = Math.round(big.width / 4); c.height = Math.round(big.height / 4); c.getContext('2d').drawImage(big, 0, 0, c.width, c.height); });
       }
     }
+    // Live-Vorschau der Startanimation mit dem Logo, das die Fotobox in die Scheibe legt (gleiche Reihenfolge wie dort:
+    // Eigenes Bild bzw. Ereignis-Logo, sonst Firmenlogo, sonst Firmenname, sonst Kamera-Symbol)
+    const sbImgs = {}, sbImg = url => { if (!url) return null; if (!sbImgs[url]) { const i = new Image(); i.src = url; sbImgs[url] = i; } return sbImgs[url]; };
+    let ownBrand = null, ownLoading = null;
+    function stdBrand() {
+      const L = S.x.startLogo || {}; if (L.src === 'none') return null;
+      const size = Math.max(.3, Math.min(1, (+L.size || 72) / 100)), fit = L.fit === 'cover' ? 'cover' : 'contain';
+      const pic = L.src === 'image' && L.url ? L.url : L.src === 'event' && E.logo_url ? E.logo_url : ownBrand?.logo || '';
+      if (pic) return { img: sbImg(pic), size, fit };
+      return ownBrand?.name ? { text: ownBrand.name, size, fit } : null;
+    }
+    function startAnimPreview() {
+      if (!window.StartAnim) return;
+      for (const id of ['#wsAnimP', '#wsAnimL']) { const c = $(root, id); if (c) StartAnim.play(c, stdBrand); }
+      if (!ownLoading && !ctx.demo && window.PM_AD) ownLoading = PM_AD.load(ctx.me?.id, window.FOTOBOX_CONFIG).then(b => { ownBrand = b || {}; ownNote(); });
+      ownNote();
+    }
+    function ownNote() {
+      const n = $(root, '#wsOwnNote'); if (!n || !ownBrand) return;
+      n.textContent = ownBrand.logo ? 'Ihr Firmenlogo aus „Meine Lizenzen“ → „Deine Werbung in der Galerie“.' : ownBrand.name ? 'Noch kein Firmenlogo hinterlegt – es steht Ihr Firmenname da. Logo unter „Meine Lizenzen“ → „Deine Werbung in der Galerie“ hochladen.' : 'Noch kein Firmenlogo hinterlegt – unter „Meine Lizenzen“ → „Deine Werbung in der Galerie“ hochladen.';
+    }
     async function uploadAttract(o) {
       const f = await pick('video/mp4,video/*,image/*'); if (!f) return;
       if (f.size > 50 * 1024 * 1024) { ctx.toast('Datei ist zu groß (max. 50 MB). Bitte das Video kürzer oder kleiner exportieren.', 5000); return; }
@@ -1611,6 +1648,7 @@
     function render() {
       main.innerHTML = '<div class="wpage">' + PAGES[page]() + '</div>';
       drawPreview(true);
+      if (page === 'start') startAnimPreview();
       if (page === 'layout') S.layouts.forEach(L => FBR.preloadLayout(L).then(() => { const img = main.querySelector(`.lay[data-id="${L.id}"] img`); if (img) img.src = layoutThumb(L);
         const big = L.id === sub.laySel && main.querySelector('#wsLayImg'); if (big) big.src = layoutThumb(L, 760); }));
     }
