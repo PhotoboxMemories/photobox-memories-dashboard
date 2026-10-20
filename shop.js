@@ -55,9 +55,76 @@
   const price = (cents, locale) => (cents / 100).toLocaleString(locale || 'de-DE', { style: 'currency', currency: 'EUR' });
   const path = owner => `${owner}/shop.json`;
 
-  // Vorschau des Produkts mit dem Foto des Gastes (nur CSS, das Foto wird nicht verändert). land = Querformat
-  function mockup(type, src, land) {
+  // ---------- Echte Produktfotos: leere Tasse / leeres Mauspad (Printful-Katalog) mit dem Foto des Gastes darauf ----------
+  // Maße in den Fotos (Pixel): Tasse 700 × 1000, Henkel links, Körper x 213–600 (Mitte 406,5, Radius 193,5), Druckband
+  // (3,5" der 3,8" hohen Tasse) oben 288 / unten 741 in der Mitte, Wölbung der Linien oben −13 / unten +22.
+  // Mauspad 875 × 1000, Fläche x 42–833, y 176–823, Ecken-Radius 48. Das Gästefoto wird nur gezeichnet, nie ausgelesen –
+  // so geht es auch mit Fotos von anderen Servern (keine CORS-Freigabe nötig).
+  const REAL = { mug: { src: 'bilder/produkt-tasse.jpg', A: 9 / 3.5 }, mousepad: { src: 'bilder/produkt-mauspad.jpg', A: 8.7 / 7.1 } };
+  const IMGS = {};
+  const loadImg = src => IMGS[src] || (IMGS[src] = new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => { delete IMGS[src]; rej(new Error('Bild nicht geladen')); }; i.src = src; }));
+  // Wo das Foto ohne eigene Platzierung sitzt (wie im Bestellfenster): Tasse volle Höhe auf einer Hälfte, Mauspad füllend
+  function defaultPlace(type, ia, A, side) {
+    if (type === 'mug') { let h = 1, w = ia / A; if (w > .625) { w = .625; h = w * A / ia; } const cx = side === 'right' ? .75 : .25; return { x: Math.min(1 - w, Math.max(0, cx - w / 2)), y: (1 - h) / 2, w }; }
+    const w = Math.max(1, ia / A), h = w * A / ia; return { x: (1 - w) / 2, y: h > 1 ? 0 : (1 - h) / 2, w }; // zu hohe Fotos oben ausgerichtet – Köpfe bleiben drauf
+  }
+  function roundRect(x, X, Y, w, h, r) { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); }
+  // Zeichnet das Produktfoto in die Leinwand cv (quadratisch). opts: side (Tasse: linke/rechte Hälfte), place {x,y,w}, area [B,H]
+  async function drawReal(cv, type, src, { side = 'left', place = null, area = null } = {}) {
+    const R = REAL[type]; if (!R) return;
+    const [base, ph] = await Promise.all([loadImg(R.src), loadImg(src)]);
+    const A = area && area[0] > 0 && area[1] > 0 ? area[0] / area[1] : R.A, iw = ph.naturalWidth, ih = ph.naturalHeight, ia = iw / ih;
+    const P = place || defaultPlace(type, ia, A, side), pH = P.w * A / ia, S = cv.width, x = cv.getContext('2d');
+    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'source-over';
+    const g = x.createRadialGradient(S * .5, S * .36, S * .05, S * .5, S * .55, S * .8); g.addColorStop(0, '#fdfcf9'); g.addColorStop(1, '#e6e0d4');
+    x.fillStyle = g; x.fillRect(0, 0, S, S);
+    if (type === 'mug') {
+      // Henkel rechts = linke Hälfte der Druckfläche zeigt nach vorn (wie im Bestellfenster); das Foto selbst wird nie gespiegelt
+      const flip = side !== 'right', k = S / 700, oy = 150, cx = (flip ? 700 - 406.5 : 406.5), r = 193.5, yT = 288 - oy, H = 741 - 288, kT = -13, kB = 22, u0 = side === 'right' ? .5 : 0;
+      x.globalCompositeOperation = 'multiply';
+      x.save(); if (flip) { x.translate(S, 0); x.scale(-1, 1); } x.drawImage(base, 0, oy, 700, 700, 0, 0, S, S); x.restore();
+      const v0 = Math.max(0, P.y), v1 = Math.min(1, P.y + pH);
+      if (v1 > v0) for (let X = Math.ceil((cx - r) * k); X < (cx + r) * k; X++) {
+        const s = Math.max(-.999, Math.min(.999, (X / k - cx) / r)), th = Math.asin(s), c = Math.cos(th), u = u0 + .5 * (th / Math.PI + .5);
+        if (u < P.x || u > P.x + P.w) continue;
+        const sx = (u - P.x) / P.w * iw, sw = Math.max(1, .5 / Math.PI / (r * k * Math.max(.05, c)) / P.w * iw);
+        const top = (yT + kT * c) * k, span = (H + (kB - kT) * c) * k;
+        x.drawImage(ph, Math.min(iw - sw, sx), (v0 - P.y) / pH * ih, sw, (v1 - v0) / pH * ih, X, top + v0 * span, 1.5, (v1 - v0) * span);
+      }
+      // Glanz der Keramik (Licht kommt im Foto von der Henkel-Seite): schmaler heller Streifen über dem Druck
+      x.globalCompositeOperation = 'screen';
+      const gx = (cx + (flip ? .55 : -.55) * r) * k, gw = r * .16 * k, gl = x.createLinearGradient(gx - gw, 0, gx + gw, 0);
+      gl.addColorStop(0, 'rgba(255,255,255,0)'); gl.addColorStop(.5, 'rgba(255,255,255,.32)'); gl.addColorStop(1, 'rgba(255,255,255,0)');
+      x.fillStyle = gl; x.fillRect(gx - gw, (yT - 10) * k, gw * 2, (H + 40) * k);
+      const g2x = (cx + (flip ? -.2 : .2) * r) * k, g2 = x.createLinearGradient(g2x - gw * 2, 0, g2x + gw * 2, 0);
+      g2.addColorStop(0, 'rgba(255,255,255,0)'); g2.addColorStop(.5, 'rgba(255,255,255,.1)'); g2.addColorStop(1, 'rgba(255,255,255,0)');
+      x.fillStyle = g2; x.fillRect(g2x - gw * 2, (yT - 10) * k, gw * 4, (H + 40) * k);
+    } else {
+      // Mauspad: leicht gedreht auf dem Tisch, weicher Schatten, Stoffstruktur aus dem Produktfoto, darauf das Foto
+      const w = S * .8, h = w * 647 / 791, rad = w * 48 / 791;
+      x.translate(S / 2, S * .5); x.rotate(-.07);
+      x.save(); x.shadowColor = 'rgba(40,30,15,.32)'; x.shadowBlur = S * .045; x.shadowOffsetY = S * .022; x.fillStyle = '#f2f2f2'; roundRect(x, -w / 2, -h / 2, w, h, rad); x.fill(); x.restore();
+      x.save(); roundRect(x, -w / 2, -h / 2, w, h, rad); x.clip();
+      x.drawImage(base, 42, 176, 791, 647, -w / 2, -h / 2, w, h);
+      x.globalCompositeOperation = 'multiply'; x.drawImage(ph, -w / 2 + P.x * w, -h / 2 + P.y * h, P.w * w, pH * h);
+      x.globalCompositeOperation = 'soft-light'; const sh = x.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
+      sh.addColorStop(0, 'rgba(255,255,255,.35)'); sh.addColorStop(.6, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(0,0,0,.18)');
+      x.fillStyle = sh; x.fillRect(-w / 2, -h / 2, w, h); x.restore();
+      x.strokeStyle = 'rgba(0,0,0,.22)'; x.lineWidth = Math.max(1, S * .004); roundRect(x, -w / 2, -h / 2, w, h, rad); x.stroke();
+    }
+    x.restore();
+  }
+  let mkId = 0;
+  // Vorschau des Produkts mit dem Foto des Gastes. Tasse/Mauspad: echtes Produktfoto (wird gleich danach gezeichnet),
+  // sonst nur CSS. land = Querformat; opts wie bei drawReal
+  function mockup(type, src, land, opts = {}) {
     const u = esc(src), o = land ? 'l' : 'p';
+    if (REAL[type]) {
+      const id = 'pmk' + (++mkId);
+      const paint = (n = 0) => { const c = document.getElementById(id); if (c) drawReal(c, type, src, opts).catch(() => {}); else if (n < 20) requestAnimationFrame(() => paint(n + 1)); };
+      requestAnimationFrame(() => paint());
+      return `<div class="mk mk-real"><canvas id="${id}" width="640" height="640"></canvas></div>`;
+    }
     if (type === 'mug') return `<div class="mk mk-mug"><div class="mug"><i class="hd"></i><div class="mp" style="background-image:url('${u}')"></div></div></div>`;
     if (type === 'canvas') return `<div class="mk mk-canvas"><div class="cv ${o}"><img src="${u}" alt=""></div></div>`;
     if (type === 'print') return `<div class="mk mk-print"><div class="pc ${o} back"></div><div class="pc ${o}"><img src="${u}" alt=""></div></div>`;
@@ -67,6 +134,7 @@
   }
   const CSS = `.mk{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:12px;background:linear-gradient(180deg,#f3efe7 0%,#e8e2d6 78%,#d9d1c2 78%,#cfc6b5 100%)}
 .mk img{display:block;width:100%;object-fit:cover}
+.mk-real{background:#efeae1}.mk-real canvas{display:block;width:100%;height:100%}
 .mk .p img{aspect-ratio:2/3}.mk .l img{aspect-ratio:3/2}
 .mk-poster .fr{background:#fff;padding:4%;box-shadow:0 6px 14px rgba(0,0,0,.28)}
 .mk-poster .fr.p{width:50%}.mk-poster .fr.l{width:74%}
@@ -90,5 +158,5 @@
   let cssDone = false;
   function addCss(doc = document) { if (cssDone && doc === document) return; const s = doc.createElement('style'); s.textContent = CSS; doc.head.appendChild(s); if (doc === document) cssDone = true; }
 
-  G.PM_SHOP = { TYPES, MODES, VATS, PROVIDERS, SIDES, DEFAULTS, normalize, legalOk, active, price, path, mockup, addCss, esc };
+  G.PM_SHOP = { TYPES, MODES, VATS, PROVIDERS, SIDES, DEFAULTS, normalize, legalOk, active, price, path, mockup, drawReal, addCss, esc };
 })(typeof window !== 'undefined' ? window : globalThis);
