@@ -1982,6 +1982,7 @@ I18N.add('en', {
 "Schau mal – jetzt wirst du gezeichnet!": "Look – now you are being drawn!",
 "Scheibe ausfüllen (rund zugeschnitten)": "Fill the disc (cropped round)",
 "Schichten": "Layers",
+"Schieb und zoom dein Foto direkt auf der Vorschau – darunter siehst du die ganze Druckfläche.": "Move and zoom your photo right on the preview – below you can see the whole print area.",
 "Schließen": "Close",
 "Schließen (Esc)": "Close (Esc)",
 "Schlüssel": "Key",
