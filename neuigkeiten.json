@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.65": {
+      "date": "2026-10-20",
+      "notes": {
+        "de": [
+          "Neu unter Einstellungen → Allgemein: „Beim Start direkt das letzte Ereignis starten“. Die Fotobox überspringt dann den Betreiber-Bildschirm – zusammen mit dem Windows-Autostart läuft sie nach dem Einschalten ohne einen Klick. „Anwendung im Vollbildmodus starten“ finden Sie gleich darunter."
+        ],
+        "en": [
+          "New under Settings → General: “Start the last event directly on launch”. The photo booth then skips the operator screen – together with Windows autostart it runs after switching on without a single click. “Start app in full-screen mode” is right below."
+        ],
+        "tr": [
+          "Ayarlar → Genel altında yeni: „Açılışta doğrudan son etkinliği başlat“. Fotoğraf kabini operatör ekranını atlar – Windows otomatik başlatma ile birlikte açıldıktan sonra tek tıklama olmadan çalışır. „Uygulamayı tam ekran başlat“ hemen altında."
+        ],
+        "fr": [
+          "Nouveau dans Réglages → Général : « Démarrer directement le dernier événement au lancement ». Le photobooth saute alors l’écran opérateur – avec le démarrage automatique de Windows, il fonctionne après la mise sous tension sans aucun clic. « Lancer l'application en plein écran » se trouve juste en dessous."
+        ],
+        "es": [
+          "Nuevo en Ajustes → General: «Iniciar directamente el último evento al abrir». El fotomatón omite la pantalla del operador; junto con el inicio automático de Windows funciona al encenderlo sin ningún clic. «Iniciar la aplicación en pantalla completa» está justo debajo."
+        ],
+        "it": [
+          "Novità in Impostazioni → Generale: «Avvia direttamente l’ultimo evento all’apertura». Il photo booth salta la schermata operatore – insieme all’avvio automatico di Windows funziona all’accensione senza alcun clic. «Avvia l'applicazione a schermo intero» è subito sotto."
+        ]
+      }
+    },
     "1.17.64": {
       "date": "2026-10-20",
       "notes": {
