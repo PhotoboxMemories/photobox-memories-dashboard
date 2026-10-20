@@ -1982,6 +1982,7 @@ I18N.add('it', {
 "Schau mal – jetzt wirst du gezeichnet!": "Guarda – ora ti stanno disegnando!",
 "Scheibe ausfüllen (rund zugeschnitten)": "Riempi il disco (ritaglio rotondo)",
 "Schichten": "Livelli",
+"Schieb und zoom dein Foto direkt auf der Vorschau – darunter siehst du die ganze Druckfläche.": "Sposta e ingrandisci la tua foto direttamente sull’anteprima – sotto vedi tutta l’area di stampa.",
 "Schließen": "Chiudi",
 "Schließen (Esc)": "Chiudi (Esc)",
 "Schlüssel": "Chiave",
