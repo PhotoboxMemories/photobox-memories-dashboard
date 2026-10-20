@@ -1,6 +1,41 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.66": {
+      "date": "2026-10-20",
+      "notes": {
+        "de": [
+          "Canon-Kameras werden jetzt von selbst erkannt – auch wenn die Kamera erst nach dem Programmstart eingeschaltet wird oder am PC noch eine Webcam hängt.",
+          "Im Dashboard unter Geräte → Details sehen Sie jetzt, ob eine Fotobox ihre Änderungen ins Dashboard übertragen kann.",
+          "KI-Porträts in 2K kosten jetzt 2 Credits pro Bild, in 1K weiterhin 1 Credit (einstellbar beim Event unter KI-Porträts → Bildqualität). Die Live-Karikatur bleibt bei 1 Credit."
+        ],
+        "en": [
+          "Canon cameras are now detected automatically – even if the camera is switched on after the program starts or a webcam is also connected.",
+          "In the dashboard under Devices → Details you can now see whether a photo booth can send its changes to the dashboard.",
+          "AI portraits in 2K now cost 2 credits per image, in 1K still 1 credit (set per event under AI portraits → Image quality). The live caricature stays at 1 credit."
+        ],
+        "tr": [
+          "Canon kameralar artık kendiliğinden tanınıyor – kamera program açıldıktan sonra açılsa ya da bilgisayarda ayrıca bir web kamerası olsa bile.",
+          "Panelde Cihazlar → Ayrıntılar altında bir fotoğraf kabininin değişikliklerini panele aktarıp aktaramadığını artık görebilirsin.",
+          "2K yapay zekâ portreleri artık görsel başına 2 kredi, 1K ise hâlâ 1 kredi (etkinlikte Yapay zekâ portreleri → Görüntü kalitesi altında ayarlanır). Canlı karikatür 1 kredide kalıyor."
+        ],
+        "fr": [
+          "Les appareils Canon sont désormais détectés automatiquement – même si l’appareil est allumé après le démarrage du programme ou si une webcam est aussi branchée.",
+          "Dans le tableau de bord, sous Appareils → Détails, tu vois maintenant si un photobooth peut transférer ses modifications.",
+          "Les portraits IA en 2K coûtent désormais 2 crédits par image, en 1K toujours 1 crédit (réglable par événement sous Portraits IA → Qualité d’image). La caricature en direct reste à 1 crédit."
+        ],
+        "es": [
+          "Las cámaras Canon ahora se detectan solas, aunque la cámara se encienda después de iniciar el programa o haya también una webcam conectada.",
+          "En el panel, en Dispositivos → Detalles, ahora ves si un fotomatón puede transferir sus cambios al panel.",
+          "Los retratos IA en 2K cuestan ahora 2 créditos por imagen; en 1K, 1 crédito (se ajusta en cada evento en Retratos IA → Calidad de imagen). La caricatura en directo sigue costando 1 crédito."
+        ],
+        "it": [
+          "Le fotocamere Canon vengono ora riconosciute da sole – anche se la fotocamera viene accesa dopo l’avvio del programma o se è collegata anche una webcam.",
+          "Nella dashboard, in Dispositivi → Dettagli, ora vedi se un photo booth può trasferire le sue modifiche alla dashboard.",
+          "I ritratti IA in 2K costano ora 2 crediti per immagine, in 1K sempre 1 credito (impostabile per evento in Ritratti IA → Qualità immagine). La caricatura dal vivo resta a 1 credito."
+        ]
+      }
+    },
     "1.17.65": {
       "date": "2026-10-20",
       "notes": {
