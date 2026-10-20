@@ -47,7 +47,15 @@
 .pmad .pmad-bt{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .pmad .pmad-bt a{display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);color:#fff;text-decoration:none;font-weight:600;font-size:14px;white-space:nowrap}
 .pmad .pmad-bt a.pmad-cta{background:#F9CB38;border-color:#F9CB38;color:#1D1D1B}
-@media(max-width:520px){.pmad{justify-content:flex-start}.pmad .pmad-tx{flex-basis:calc(100% - 80px)}.pmad .pmad-bt{justify-content:flex-start;width:100%}}`;
+@media(max-width:600px){
+.pmad{flex-direction:column;gap:10px;text-align:center;padding:18px 16px 16px}
+.pmad .pmad-lg{height:64px;max-width:200px;padding:6px;border-radius:12px}
+.pmad .pmad-tx{flex:none;width:100%;max-width:none}
+.pmad .pmad-tx b{font-size:21px}
+.pmad .pmad-bt{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:12px 6px;width:100%;max-width:380px;margin-top:2px}
+.pmad .pmad-bt a.pmad-cta{grid-column:1/-1;justify-content:center;padding:13px 16px;font-size:16px;margin-bottom:2px}
+.pmad .pmad-bt a:not(.pmad-cta){flex-direction:column;gap:5px;padding:0;background:none;border:0;font-size:12px;font-weight:600;color:#e4e4e7;white-space:normal}
+.pmad .pmad-bt a:not(.pmad-cta) svg{width:20px;height:20px;padding:12px;box-sizing:content-box;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);color:#fff}}`;
   let cssDone = false;
   function addCss(doc = document) { if (cssDone && doc === document) return; const s = doc.createElement('style'); s.textContent = CSS; doc.head.appendChild(s); if (doc === document) cssDone = true; }
 
