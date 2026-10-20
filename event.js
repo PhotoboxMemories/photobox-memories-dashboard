@@ -417,7 +417,6 @@
     ai: { skip: false, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Porträt erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
   };
   const deepMerge = (def, val) => { const out = structuredClone(def); if (val && typeof val === 'object' && !Array.isArray(val)) for (const [k, v] of Object.entries(val)) out[k] = out[k] && typeof out[k] === 'object' && !Array.isArray(out[k]) ? deepMerge(out[k], v) : v; return out; };
-  const NEWAPP = '<span class="soon" title="Die Einstellung wird gespeichert. Die Fotobox setzt sie ab der nächsten Version um.">ab nächster Fotobox-Version</span>';
   const NEEDSRV_S = '<span class="soon" title="Braucht zusätzlich einen Online-Dienst, der noch nicht eingerichtet ist.">Dienst folgt</span>';
   const NEEDSRV = '<p style="background:#FFF3C4;color:#8a6400;border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:8px">Die Einstellungen werden gespeichert. Damit es an der Fotobox funktioniert, muss noch ein Online-Dienst angebunden und die Fotobox aktualisiert werden.</p>';
   const NAV = [
@@ -1182,7 +1181,7 @@
       },
       capture() {
         sub.mode ||= 'photo';
-        const M = [['photo', 'camera', 'Foto', 'single'], ['gif', 'film', 'GIF', 'gif'], ['boom', 'repeat', 'Boomerang', 'boomerang'], ['slowmo', 'repeat', '360/Video in Zeitlupe', ''], ['video', 'video', 'Video', 'video']];
+        const M = [['photo', 'camera', 'Foto', 'single'], ['gif', 'film', 'GIF', 'gif'], ['boom', 'repeat', 'Boomerang', 'boomerang'], ['video', 'video', 'Video', 'video']];
         const photoOn = S.modes.single || S.modes.strip || S.modes.grid || S.layouts.length;
         const isOn = (k, key) => k === 'photo' ? photoOn : k === 'slowmo' ? S.x.slowmo.enabled : S.modes[key];
         const sizes = [['720p-16:9', 'Rechteck 720p 16:9'], ['1080p-16:9', 'Rechteck 1080p 16:9'], ['720p-9:16', 'Hochformat 720p 9:16'], ['1080p-9:16', 'Hochformat 1080p 9:16'], ['square-720', 'Quadrat 720 1:1'], ['square-1080', 'Quadrat 1080 1:1']];
@@ -1191,12 +1190,10 @@
               ${!S.layouts.length ? `${sw('modes.strip', 'Standard-Fotostreifen anbieten')}${sw('modes.grid', 'Standard-Collage anbieten')}` : ''}</div>
             <h2>Countdown</h2><div class="card">${slider('countdown', 'Countdown vor Foto 1', 0, 30)}${slider('countdownNext', 'Countdown vor weiteren Fotos', 0, 30)}${slider('between', 'Anzeigedauer des Fotos', 0, 30)}</div>`
           : sub.mode === 'gif' ? `<div class="card">${sw('modes.gif', 'GIF-Modus aktivieren', 'Nehmen Sie Fotos auf, um ein GIF zu erstellen')}</div>
-            <h2>Allgemein ${NEWAPP}</h2><div class="card">${sel('x.gif.size', 'Ausgabegröße', sizes)}${sw('x.gif.reverse', 'Umgekehrt', 'GIF in einer Schleife vorwärts und rückwärts abspielen')}</div>
-            <h2>Bilder zum Überlagern ${NEWAPP}</h2><div class="card">${upList('x.gif.overlays', 'image/png', 'Overlay hinzufügen (PNG mit Transparenz)')}</div>
-            <h2>Anzahl der Fotos</h2><div class="card">${slider('gifFrames', 'Anzahl der aufzunehmenden Fotos', 2, 20, 1, 'Fotos')}${slider('x.gif.delay', 'Abstand zwischen den Aufnahmen', 50, 500, 10, 'ms')} ${NEWAPP}
+            <h2>Anzahl der Fotos</h2><div class="card">${slider('gifFrames', 'Anzahl der aufzunehmenden Fotos', 2, 20, 1, 'Fotos')}${slider('x.gif.delay', 'Abstand zwischen den Aufnahmen', 50, 500, 10, 'ms')}
               <p style="color:#777;font-size:13px">Startet ein Gast eine Fotosession, entspricht die Anzahl der Fotos stattdessen dem Drucklayout.</p></div>`
           : sub.mode === 'boom' ? `<div class="card">${sw('modes.boomerang', 'Boomerang aktivieren', 'Kurzer Clip, der vor und zurück läuft')}<label class="l">Länge</label><select data-s="boomerangLen">${['kurz', 'mittel', 'lang'].map(n => `<option ${S.boomerangLen === n ? 'selected' : ''}>${n}</option>`).join('')}</select></div>`
-          : sub.mode === 'slowmo' ? `<div class="card">${sw('x.slowmo.enabled', '360/Slow-mo-Modus aktivieren', 'Nehmen Sie 360-Grad- oder Zeitlupenaufnahmen auf')} ${NEWAPP}</div>
+          : sub.mode === 'slowmo' ? `<div class="card">${sw('x.slowmo.enabled', '360/Slow-mo-Modus aktivieren', 'Nehmen Sie 360-Grad- oder Zeitlupenaufnahmen auf')}</div>
             <h2>Allgemein</h2><div class="card">${slider('x.slowmo.countdown', 'Countdown', 0, 30)}${slider('x.slowmo.quality', 'Ausgabequalität', 1, 8, 1, 'mbps')}
               ${sw('x.slowmo.motion', 'Bei Bewegungserkennung aufnehmen', 'Aufnahme starten, wenn sich das Gerät bewegt')}${sw('x.slowmo.flash', 'Blitz während der Aufnahme blinken lassen')}${sw('x.slowmo.saveOriginal', 'Originalvideo speichern')}
               ${sw('x.slowmo.preTextOn', 'Text vor der Aufnahme anzeigen')}${text('x.slowmo.preText', 'Text', 'Bereit machen')}</div>
@@ -1207,9 +1204,7 @@
             <h2>Intro/Outro</h2><div class="card">${up('x.slowmo.intro', 'Intro-Video', 'video/mp4', 'MP4, max. 15 MB, 1280×720')}${up('x.slowmo.outro', 'Outro-Video', 'video/mp4', 'MP4, max. 15 MB, 1280×720')}</div>`
           : `<div class="card">${sw('modes.video', 'Videomodus aktivieren', 'Nehmen Sie ein Video mit Ton auf')}</div>
             <h2>Allgemein</h2><div class="card">${slider('x.video.countdown', 'Countdown', 0, 30)}${slider('x.video.quality', 'Ausgabequalität', 1, 8, 1, 'mbps')}${slider('videoSecs', 'Aufnahmedauer', 1, 60, 1)}
-              ${sw('videoAudio', 'Ton aufnehmen')}${sw('x.video.saveOriginal', 'Originalvideo speichern')}${sw('x.video.preTextOn', 'Text vor der Aufnahme anzeigen')}${text('x.video.preText', 'Text', 'Bereit machen')}</div>
-            <h2>Bild zum Überlagern ${NEWAPP}</h2><div class="card">${sel('x.video.size', 'Ausgabegröße', sizes)}${upList('x.video.overlays', 'image/png', 'Overlay hinzufügen (PNG)')}</div>
-            <h2>Intro/Outro ${NEWAPP}</h2><div class="card">${up('x.video.intro', 'Intro-Video', 'video/mp4', 'MP4, max. 15 MB, 1280×720')}${up('x.video.outro', 'Outro-Video', 'video/mp4', 'MP4, max. 15 MB, 1280×720')}</div>`;
+              ${sw('videoAudio', 'Ton aufnehmen')}${sw('x.video.saveOriginal', 'Originalvideo speichern')}${sw('x.video.preTextOn', 'Text vor der Aufnahme anzeigen')}${text('x.video.preText', 'Text', 'Bereit machen')}</div>`;
         return `<h1>Aufnahmeeinstellungen</h1><div class="cols"><div class="left">
           <div class="modes">${M.map(([k, ic, n, key]) => `<div class="mode ${sub.mode === k ? 'on' : ''}" data-mode="${k}"><span class="ic">${ICON(ic, 22)}</span>${n}<span class="dot ${isOn(k, key) ? 'a' : ''}"></span></div>`).join('')}</div>
           ${body}
@@ -1217,14 +1212,9 @@
         </div>${previewBox()}</div>`;
       },
       voice() {
-        const step = (k, label, accept, hint, list) => `<h2>${label}</h2><div class="card">${list ? `${sw('x.voice.random' + k, 'Randomisieren', 'Bei mehreren Dateien zufällig eine abspielen')}${upList('x.voice.files.' + k, accept, 'Datei hinzufügen (' + hint + ')')}` : up('x.voice.files.' + k, '', accept, hint)}</div>`;
         return `${titleSw('Virtueller Berater', 'voice')}<p style="margin:-6px 0 14px;color:#6b6b78">Leiten Sie Ihre Gäste mit Videoanimationen und Audioansagen an</p>
-          <div class="card">${sel('x.voice.style', 'Stil', [['de-frau', 'Audio – Deutsche Stimme (Frau)'], ['de-mann', 'Audio – Deutsche Stimme (Mann)'], ['en-frau', 'Audio – Englische Stimme (Frau)'], ['custom', 'Eigene Dateien']])}
-            <p style="color:#777;font-size:13px">Eigene Dateien pro Schritt ersetzen die Standardansage. ${NEWAPP}</p></div>
-          ${step('start', 'Startbildschirm', 'video/mp4', 'nur MP4, max. 50 MB')}${step('effect', 'Wählen Sie einen Effekt aus', 'video/mp4,audio/mpeg', 'MP4 oder MP3, max. 50 MB')}
-          ${step('countdown', 'Countdown', 'video/mp4', 'nur MP4, max. 50 MB')}${step('before', 'Vor dem Countdown', 'video/mp4,audio/mpeg', 'MP4 oder MP3', true)}
-          ${step('after', 'Nach der Aufnahme', 'video/mp4,audio/mpeg', 'MP4 oder MP3', true)}${step('signature', 'Vor der Unterschrift', 'video/mp4,audio/mpeg', 'MP4 oder MP3')}
-          ${step('processing', 'Während der Verarbeitung', 'video/mp4,audio/mpeg', 'MP4 oder MP3')}${step('done', 'Nach der Verarbeitung', 'video/mp4,audio/mpeg', 'MP4 oder MP3')}`;
+          <div class="card">${sel('x.voice.style', 'Stil', [['de-frau', 'Audio – Deutsche Stimme (Frau)'], ['de-mann', 'Audio – Deutsche Stimme (Mann)'], ['en-frau', 'Audio – Englische Stimme (Frau)']])}
+            </div>`; // eigene Ansage-Dateien je Schritt (x.voice.files) kann die Fotobox noch nicht abspielen – deshalb ausgeblendet
       },
       start() {
         // Je Ausrichtung ein eigenes Video oder Bild; ein älterer einzelner Upload (attractUrl) gilt für beide
@@ -1247,7 +1237,7 @@
           <p style="color:#6b6b78;margin:0 0 12px">Name, Datum, Logo und Start-Knopf frei anordnen – wie beim Fotolayout. Gestaltest du nur eine Ausrichtung, passt die Fotobox sie für die andere automatisch an; du kannst beide aber auch einzeln gestalten.</p>
           <div class="row" style="flex-wrap:wrap"><button class="btn pri" data-a="editscreen" data-o="portrait">${ICON('pen', 16)} Hochformat gestalten</button><button class="btn pri" data-a="editscreen" data-o="landscape">${ICON('pen', 16)} Querformat gestalten</button>${S.startScreen ? `<button class="ghost" data-a="resetscreen">Zurücksetzen</button>` : ''}</div>
           ${S.startScreen ? '' : '<p style="color:#6b6b78;font-size:13px;margin-top:10px">Noch nicht gestaltet – die Fotobox zeigt bis dahin den einfachen Standard-Startbildschirm.</p>'}
-          <p style="font-size:13px;margin-top:10px">${NEWAPP}</p></div>
+          </div>
           <h2>Angaben zum Ereignis</h2><div class="card"><p style="color:#6b6b78;font-size:13px;margin-bottom:6px">Diese Angaben erscheinen überall, wo {titel} und {untertitel} stehen – auf dem Startbildschirm und auf den Ausdrucken.</p>
           ${text('title', 'Titel', E.name)}${text('subtitle', 'Untertitel / Datum')}
           <label class="l">Logo</label><div class="row">${E.logo_url ? `<img src="${esc(E.logo_url)}" style="height:50px;border-radius:6px"><button class="ghost" data-a="dellogo">Entfernen</button>` : ''}<button class="ghost" data-a="uplogo">${ICON('upload', 15)} Logo hochladen</button></div></div>
@@ -1259,16 +1249,14 @@
           : sub.fx === 'color' ? `${titleSw('Farbfilter', 'filtersOn')}<div class="card">Wenden Sie einen Farbfilter an, um Töne zu verändern und Farben anzupassen.
               <label class="l">Filter</label><div class="row">${[['auto', 'Automatisch durchwechseln'], ['guest', 'Gäste wählen den Filter']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="fxm" data-s="x.fx.mode" value="${k}" ${S.x.fx.mode === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
               <div class="filters" style="margin-top:12px">${FILTERS.map(([id, n, css]) => `<div class="flt ${S.filters.includes(id) ? 'on' : ''}" data-flt="${id}"><img src="${filterThumb(css)}"><span>${n}</span></div>`).join('')}</div>
-              <div class="between" style="margin-top:8px"><small style="color:#6b6b78">${ai.own ? 'Vorschau mit deinem eigenen Testfoto' : 'Vorschau mit dem Standard-Testfoto'}</small><span>${ai.own ? '<a href="#" data-a="ai-photo-reset">Standardbild</a> · ' : ''}<a href="#" data-a="ai-photo">Bild ändern</a></span></div>
-              <div style="margin-top:14px">${up('x.fx.lut', 'Eigener Farb-Look (LUT) ' + NEWAPP, '.cube', 'nur .cube-Dateien')}</div></div>`
+              <div class="between" style="margin-top:8px"><small style="color:#6b6b78">${ai.own ? 'Vorschau mit deinem eigenen Testfoto' : 'Vorschau mit dem Standard-Testfoto'}</small><span>${ai.own ? '<a href="#" data-a="ai-photo-reset">Standardbild</a> · ' : ''}<a href="#" data-a="ai-photo">Bild ändern</a></span></div></div>`
           : `${titleSw('Aufkleber', 'stickers')}<div class="card">Lassen Sie Ihre Gäste ihre Fotos mit lustigen Aufklebern verzieren.
-              <label class="l">Aufkleberstil</label><div class="row">${[['standard', 'Standard'], ['custom', 'Benutzerdefinierte']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="stm" data-s="x.fx.stickerStyle" value="${k}" ${S.x.fx.stickerStyle === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
-              ${S.x.fx.stickerStyle === 'custom' ? upList('x.fx.stickers', 'image/png', 'Aufkleber hinzufügen (PNG mit Transparenz)') + ' ' + NEWAPP : ''}</div>`)}`;
+</div>`)}`; // eigene Aufkleber (x.fx.stickers) kann die Fotobox noch nicht – nur der Standard-Stil
       },
       bg() {
         return `<h1>Hintergrundentfernung <label class="sw"><input type="checkbox" data-a="bgon" ${S.bgMode !== 'off' ? 'checked' : ''}><i></i></label><span class="swl">${S.bgMode !== 'off' ? 'Ein' : 'Aus'}</span></h1><div class="card"><b>Ersetzen Sie den Hintergrund Ihrer Fotos</b>
           <label class="l">Modus</label><div class="row">${[['ai', 'KI-Hintergrundentfernung'], ['green', 'Greenscreen']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="bgm" data-rerender="1" data-s="bgMode" value="${k}" ${S.bgMode === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
-          ${S.bgMode === 'green' ? slider('x.bg.smooth', 'Glättung ' + NEWAPP, 1, 15, 1, '') + slider('keyStrength', 'Empfindlichkeit', 0, 100, 1, '') : ''}
+          ${S.bgMode === 'green' ? slider('keyStrength', 'Empfindlichkeit', 0, 100, 1, '') : ''}
           <label class="l">Hintergründe</label><div class="row">${[[false, 'Automatisch durchwechseln'], [true, 'Gäste wählen das Hintergrundbild']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="bgc" data-a="bgchoice" data-v="${k ? 1 : 0}" ${!!S.bgGuestChoice === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
           <div class="thumbs">${(S.bgUrls || []).map((u, i) => `<div><img src="${esc(u)}"><button data-a="delbg" data-i="${i}">✕</button></div>`).join('')}</div>
           <button class="ghost" data-a="upbg" style="margin-top:10px">${ICON('upload', 15)} Bild hochladen (JPG/PNG, max. 10 MB, empfohlen 1800×1200)</button></div>`;
@@ -1333,9 +1321,9 @@
           ${sw('ai.guestChoice', 'Gäste wählen ihren Stil', 'Aus = alle Fotos bekommen automatisch den Standard-Stil.')}
           <label class="l">Standard-Stil</label><select data-s="ai.selectedId"><option value="">Erster Stil</option>${S.ai.prompts.map(p => `<option value="${esc(p.id)}" ${p.id === S.ai.selectedId ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>
           <label class="l">Bildqualität (Grok)</label><select data-s="ai.resolution" data-rerender="1"><option value="1k" ${S.ai.resolution === '1k' ? 'selected' : ''}>1K · schneller${central ? ' · 1 Credit' : ''}</option><option value="2k" ${S.ai.resolution === '2k' ? 'selected' : ''}>2K · hohe Auflösung${central ? ' · 2 Credits' : ''}</option></select>
-          <div class="card">${sw('x.ai.skip', 'Option zum Überspringen der KI-Porträts hinzufügen ' + NEWAPP, 'Gäste können ihr Foto auch ohne KI-Stil behalten')}
-          ${sw('x.ai.consent', 'Gäste vor dem KI-Porträt um Zustimmung bitten ' + NEWAPP, 'Aus = keine Abfrage an der Fotobox. Das Foto wird trotzdem an den KI-Dienst (xAI, USA) übertragen – die Einwilligung regelst du dann selbst, zum Beispiel im Vertrag mit deinem Kunden oder per Aushang an der Fotobox.')}</div>
-          <div class="card"><details class="adv"><summary>Texte für die Gäste anpassen ${NEWAPP}</summary><p style="color:#6b6b78;font-size:13px;margin:8px 0">Diese Texte sehen deine Gäste an der Fotobox, wenn sie ein KI-Porträt erstellen. Du kannst jede Formulierung ändern, zum Beispiel in eine andere Sprache oder in euren Ton.</p><div class="grid3x">
+          <div class="card">${sw('x.ai.skip', 'Option zum Überspringen der KI-Porträts hinzufügen', 'Gäste können ihr Foto auch ohne KI-Stil behalten')}
+          ${sw('x.ai.consent', 'Gäste vor dem KI-Porträt um Zustimmung bitten', 'Aus = keine Abfrage an der Fotobox. Das Foto wird trotzdem an den KI-Dienst (xAI, USA) übertragen – die Einwilligung regelst du dann selbst, zum Beispiel im Vertrag mit deinem Kunden oder per Aushang an der Fotobox.')}</div>
+          <div class="card"><details class="adv"><summary>Texte für die Gäste anpassen</summary><p style="color:#6b6b78;font-size:13px;margin:8px 0">Diese Texte sehen deine Gäste an der Fotobox, wenn sie ein KI-Porträt erstellen. Du kannst jede Formulierung ändern, zum Beispiel in eine andere Sprache oder in euren Ton.</p><div class="grid3x">
             ${text('x.ai.texts.choose', 'Überschrift der Stilauswahl')}${text('x.ai.texts.chooseBtn', 'Knopf: Stil auswählen')}${text('x.ai.texts.createBtn', 'Knopf: KI-Porträt erstellen')}${text('x.ai.texts.creating', 'Hinweis während der Erstellung')}
             ${text('x.ai.texts.retrying', 'Hinweis beim zweiten Versuch')}${text('x.ai.texts.retryBtn', 'Knopf: erneut versuchen')}${text('x.ai.texts.skipBtn', 'Knopf: ohne KI weiter')}${text('x.ai.texts.failed', 'Meldung, wenn es nicht geklappt hat')}</div></details></div>
           <div class="card"><details class="adv"><summary>Mehr zu den KI-Bildern</summary>
@@ -1348,7 +1336,7 @@
           ${allTabs('sv', () => sub.sv === 'survey' ? `${titleSw('Umfrage', 'form.enabled')}<div class="card"><b>Stellen Sie Ihren Gästen Fragen, die diese beantworten sollen</b>
               <p style="color:#777;font-size:13px">Umfrageantworten können auf dem Ausdruck angezeigt werden. Die Antworten findest du unter „Gäste-Daten“.</p>
               <p style="font-weight:600;margin-top:10px">Feste Felder</p>${sw('form.name', 'Name abfragen')}${sw('form.email', 'E-Mail abfragen')}${sw('form.phone', 'Telefon abfragen')}${sw('form.newsletter', 'Newsletter-Einwilligung anbieten')}
-              <p style="font-weight:600;margin-top:14px">Eigene Fragen ${NEWAPP}</p>
+              <p style="font-weight:600;margin-top:14px">Eigene Fragen</p>
               ${Q.length ? '' : '<p style="color:#777">Noch keine Fragen hinzugefügt. Klicken Sie auf „Frage hinzufügen“, um zu beginnen.</p>'}
               ${Q.map((q, i) => `<div style="border:1px solid #e3e3ea;border-radius:10px;padding:12px;margin-top:10px">
                 <div class="between"><b>Frage ${i + 1}</b><div class="row"><label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-s="x.survey.questions.${i}.required" ${q.required ? 'checked' : ''}> Erforderlich</label>
@@ -1357,13 +1345,13 @@
                 <label class="l">Antwort</label><select data-s="x.survey.questions.${i}.type" data-rerender="1">${types.map(([k, n]) => `<option value="${k}" ${q.type === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
                 ${q.type === 'choice' ? `<label class="l">Antwortmöglichkeiten (eine pro Zeile)</label><textarea rows="3" data-s="x.survey.questions.${i}.options">${esc(q.options || '')}</textarea>` : ''}</div>`).join('')}
               <p style="margin-top:12px"><button class="ghost" data-a="q-add">+ Frage hinzufügen</button></p></div>
-            <h2>Schaltflächenbeschriftungen ${NEWAPP}</h2><div class="card">Passen Sie den Text der Navigationsschaltflächen in Ihrer Umfrage an
-              <div class="grid3x">${text('x.survey.prev', 'Vorherige')}${text('x.survey.next', 'Weiter')}${text('x.survey.done', 'Fertig')}</div></div>`
+            <h2>Schaltflächenbeschriftungen</h2><div class="card">Passen Sie den Text der Navigationsschaltflächen in Ihrer Umfrage an
+              <div class="grid3x">${text('x.survey.done', 'Fertig')}</div></div>`
           : `${titleSw('Haftungsausschluss', 'form.enabled')}<div class="card">Bitten Sie Ihre Gäste, einen Haftungsausschluss zu akzeptieren
-              ${text('x.disc.title', 'Titel für Haftungsausschluss ' + NEWAPP)}
+              ${text('x.disc.title', 'Titel für Haftungsausschluss')}
               <label class="l">Text des Haftungsausschlusses</label><textarea rows="5" data-s="form.text">${esc(S.form.text)}</textarea>
               <p style="color:#777;font-size:13px">Wenn der Gast den Haftungsausschluss nicht akzeptiert, wird seine Sitzung abgebrochen und seine Fotos werden gelöscht.</p>
-              <div class="grid3x">${text('x.disc.warn', 'Warnung ' + NEWAPP)}${text('x.disc.agree', 'Vereinbarung')}${text('x.disc.cancel', 'Abbrechen')}</div></div>`)}`;
+              <div class="grid3x">${text('x.disc.agree', 'Vereinbarung')}${text('x.disc.cancel', 'Abbrechen')}</div></div>`)}`;
       },
       share() {
         const X = S.x.share;
@@ -1380,21 +1368,20 @@
               <label class="l">Nachricht (max. 128 Zeichen)</label><textarea rows="2" maxlength="128" data-s="x.share.wa.message">${esc(X.wa.message)}</textarea>
               <div class="grid3x">${text('x.share.wa.cc', 'Ländercode (+)')}${text('x.share.wa.inputText', 'Text für die Eingabe der Telefonnummer')}${text('x.share.wa.scanText', 'Text für „Mit dem Handy scannen“')}</div></div>`
           : sub.sh === 'screen' ? `<h2>Bildschirm zum Teilen</h2><div class="card">${slider('autoReturn', 'Anzeigedauer des Bildschirms zum Teilen', 0, 120, 5)}
-              ${sw('x.share.originals', 'Originalfotos anzeigen ' + NEWAPP, 'Gäste können die einzelnen Originalfotos ansehen und teilen')}
               ${sw('x.share.deleteBtn', 'Schaltfläche „Löschen“ anzeigen', 'Gäste können die Aufnahme verwerfen und wiederholen')}${text('x.share.deleteText', 'Text für die Schaltfläche „Löschen“')}</div>`
-          : `<h2>Weitere Optionen</h2><div class="card">${sw('x.share.cloud', 'Cloud-Freigabe ' + NEWAPP, 'Fotos werden in die Online-Galerie hochgeladen und sind über einen Link abrufbar')}
-              ${sw('x.share.origUp', 'Originalfotos hochladen ' + NEWAPP, 'Zusätzlich zum fertigen Ausdruck werden die einzelnen Aufnahmen in die Online-Galerie hochgeladen (braucht mehr Speicher)')}
+          : `<h2>Weitere Optionen</h2><div class="card">${sw('x.share.cloud', 'Cloud-Freigabe', 'Fotos werden in die Online-Galerie hochgeladen und sind über einen Link abrufbar')}
+              ${sw('x.share.origUp', 'Originalfotos hochladen', 'Zusätzlich zum fertigen Ausdruck werden die einzelnen Aufnahmen in die Online-Galerie hochgeladen (braucht mehr Speicher)')}
               ${sw('share', 'QR Code', 'Teilen Sie Fotos über einen QR-Code, den Gäste scannen können. Aktuell muss das Handy im selben WLAN wie die Fotobox sein.')}</div>`)}`;
       },
       print() {
         return `<h1>Druckeinstellungen</h1>${tabs('pr', [['gen', 'Allgemein'], ['lim', 'Drucklimits']])}
           ${allTabs('pr', () => sub.pr === 'gen' ? `<div class="card">${sw('autoPrint', 'Automatisch drucken', 'Automatisches Drucken jeder Session')}${sw('printButton', 'Schaltfläche „Drucken“ anzeigen', 'Fügt dem Freigabebildschirm eine Schaltfläche zum Drucken einer oder mehrerer zusätzlicher Kopien hinzu')}
               ${sw('askCopies', '„Wie viele Kopien?“ fragen')}<label class="l">Kopien pro Druck (Standard)</label><input type="number" min="1" max="10" data-s="copies" data-num="1" value="${S.copies}">
-              <p style="font-weight:600;margin-top:14px">Texte ${NEWAPP}</p><div class="grid3x">${text('x.print.btnText', 'Drucken')}${text('x.print.printingText', 'Drucken...')}${text('x.print.copiesText', 'Wie viele Kopien?')}</div></div>`
+              <p style="font-weight:600;margin-top:14px">Texte</p><div class="grid3x">${text('x.print.btnText', 'Drucken')}${text('x.print.printingText', 'Drucken...')}${text('x.print.copiesText', 'Wie viele Kopien?')}</div></div>`
           : `${titleSw('Drucklimits', '')}<div class="card">Ein Limit für die erlaubten Ausdrucke festlegen.
               <div class="row"><div style="flex:1"><label class="l">Maximale Anzahl an Ausdrucken pro Ereignis (0 = kein Limit)</label><input type="number" min="0" data-s="printLimit" data-num="1" value="${S.printLimit}"></div>
               <div style="flex:1"><label class="l">Maximale Anzahl an Kopien pro Gast</label><input type="number" min="1" max="20" data-s="maxCopies" data-num="1" value="${S.maxCopies}"></div></div>
-              ${sw('showPrintsLeft', 'Restlimit an der Fotobox anzeigen ' + NEWAPP, 'Unter dem Drucken-Symbol steht, wie viele Ausdrucke noch übrig sind, zum Beispiel „Noch 37 Drucke“. Nur wenn oben ein Limit eingetragen ist.')}</div>`)}`;
+              ${sw('showPrintsLeft', 'Restlimit an der Fotobox anzeigen', 'Unter dem Drucken-Symbol steht, wie viele Ausdrucke noch übrig sind, zum Beispiel „Noch 37 Drucke“. Nur wenn oben ein Limit eingetragen ist.')}</div>`)}`;
       },
       // Fotomosaik: viele Gästefotos ergeben ein großes Bild (Bildschirm und/oder Klebewand mit nummerierter Tafel)
       cari() { // Live-Karikatur: Foto → KI-Karikatur → live gezeichnet an der Fotobox und auf dem zweiten Bildschirm
@@ -1411,11 +1398,11 @@
             <div class="row" style="gap:6px;flex:none">${r.status === 'review' ? `<button class="btn pri" data-a="cari-ok" data-id="${r.id}">Freigeben</button><button class="ghost" data-a="cari-no" data-id="${r.id}">Ablehnen</button>` : ''}
               <button class="ghost" data-a="cari-del" data-id="${r.id}" title="Einsendung und Selfie löschen">🗑</button></div></div>`).join('');
         return `${titleSw('Live-Karikatur', 'x.caricature.on')}<p class="sub" style="margin:-6px 0 14px;color:#6b6b78">Jedes Foto wird zur Karikatur – live gezeichnet vor allen Gästen</p>
-          <div class="card"><b>So funktioniert es</b> ${NEWAPP}
+          <div class="card"><b>So funktioniert es</b>
             <ol style="margin:8px 0 6px;padding-left:20px;line-height:1.6"><li>Der Gast macht an der Fotobox ein Foto.</li><li>Die KI macht daraus eine Karikatur – 1 Credit pro Foto (zentrale KI).</li>
             <li>Auf dem Bildschirm der Fotobox und auf dem zweiten Bildschirm (Fernseher/Beamer) wird sie Strich für Strich gezeichnet und eingefärbt.</li><li>Danach wie gewohnt: Drucken, QR-Code, Galerie.</li></ol>
             <p style="margin:0;color:#6b6b78;font-size:13px">Ist die Live-Karikatur an, entfällt die Stilauswahl der KI-Porträts. Den zweiten Bildschirm öffnest du an der Fotobox unter Menü → Live-Karikatur.</p></div>
-          <div class="card"><b>Selfies vom Handy</b> ${NEWAPP}
+          <div class="card"><b>Selfies vom Handy</b>
             <p style="margin:4px 0 10px;color:#6b6b78;font-size:13px">Auf der Karikaturen-Wand (zweiter Bildschirm der Fotobox) stehen ein QR-Code und ein Code. Gäste schicken damit vom eigenen Handy ein Selfie mit Gruß und Namen – ohne App. Die Fotobox zeichnet, zeigt und druckt jede Karikatur.</p>
             ${sw('x.caricature.phone', 'Gäste schicken Selfies vom Handy', 'Aus = nur Fotos direkt an der Fotobox.')}
             ${sw('x.caricature.needCode', 'Code vom Bildschirm verlangen', 'Zwei Ziffern, wechseln alle 2 Minuten – so machen nur Gäste im Saal mit.')}
@@ -1441,7 +1428,7 @@
         const c = Mosaic.normalize(S.x.mosaic);
         const cmIn = (p, v, min, max, step) => `<input type="number" data-s="x.mosaic.${p}" data-num="1" min="${min}" max="${max}" step="${step}" value="${v}" style="width:110px">`;
         return `${titleSw('Fotomosaik', 'x.mosaic.on')}<div class="cols"><div class="left">
-          <div class="card"><p style="margin-top:0">Aus vielen kleinen Gästefotos entsteht ein großes Bild – live auf einem Fernseher oder Beamer und/oder als Klebewand: Jede Kachel wird mit ihrer Feldnummer (z. B. „C7“) gedruckt und auf die vorher gedruckte Tafel geklebt. ${NEWAPP}</p>
+          <div class="card"><p style="margin-top:0">Aus vielen kleinen Gästefotos entsteht ein großes Bild – live auf einem Fernseher oder Beamer und/oder als Klebewand: Jede Kachel wird mit ihrer Feldnummer (z. B. „C7“) gedruckt und auf die vorher gedruckte Tafel geklebt.</p>
             ${sel('x.mosaic.mode', 'Art', Mosaic.MODES)}${sel('x.mosaic.who', 'Wann kommt ein Foto ins Mosaik?', Mosaic.WHO)}${sel('x.mosaic.shots', 'Fotos pro Sitzung', Mosaic.SHOTS)}${sel('x.mosaic.source', 'Foto fürs Mosaik', Mosaic.SOURCES)}
             <p style="color:#777;font-size:13px">„Gast entscheidet“: Neben QR-Code und Drucken erscheint an der Fotobox das grüne Mosaik-Symbol – nur wer darauf tippt, kommt ins Mosaik.</p>
             ${sw('x.mosaic.preview', 'Mosaik-Vorschau auf dem Startbildschirm', 'Kleines Mosaik mit Fortschritt unten links. Gäste können darauf tippen und das ganze Mosaik ansehen.')}</div>
@@ -1473,7 +1460,7 @@
       lang() {
         const L = S.x.lang, list = L.list?.length ? L.list : I18N.CODES;
         const opt = (v, n, nt) => `<option value="${v}" ${(L.guest || '') === v ? 'selected' : ''}${nt ? ' translate="no"' : ''}>${n}</option>`;
-        return `<h1>Sprache ${NEWAPP}</h1><p style="margin:-6px 0 14px;color:#6b6b78">In welcher Sprache Ihre Gäste die Fotobox und die Seite zum Herunterladen sehen</p>
+        return `<h1>Sprache</h1><p style="margin:-6px 0 14px;color:#6b6b78">In welcher Sprache Ihre Gäste die Fotobox und die Seite zum Herunterladen sehen</p>
           <div class="card"><label class="l">Standardsprache für die Gäste</label><select data-s="x.lang.guest" data-rerender="1">${opt('', 'Wie das Menü der Fotobox')}${I18N.LANGS.map(l => opt(l.code, l.name, 1)).join('')}</select>
             <small style="color:#777;display:block;margin-top:8px">Gilt für alles, was Gäste sehen: Startbildschirm, Auswahl, Countdown, Teilen, Drucken, Formular und die Seite zum Herunterladen hinter dem QR-Code. Texte, die Sie selbst geändert haben, bleiben so, wie Sie sie geschrieben haben.</small></div>
           <div class="card">${sw('x.lang.pick', 'Flaggen auf dem Startbildschirm', 'Gäste tippen auf eine Flagge und sehen alles in ihrer Sprache. Nach jeder Sitzung springt die Fotobox zurück zur Standardsprache.')}
