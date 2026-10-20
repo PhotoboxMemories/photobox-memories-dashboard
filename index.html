@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261020-4';</script>
+<script>window.I18N_V = '20261020-5';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -21,7 +21,7 @@
 <script src="ai-event.js?v=20261019-3"></script>
 <script src="sketch-draw.js?v=20261018-8"></script>
 <script src="caricature.js?v=20261018-10"></script>
-<script src="event.js?v=20261019-7"></script>
+<script src="event.js?v=20261020-1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -250,7 +250,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       </div>
       <div class="card hidden" id="creditCard" style="margin-top:20px">
         <h2>KI-Guthaben</h2>
-        <p style="margin:6px 0 14px">Dein Guthaben: <b id="myCredits">–</b> Credits <span class="small muted">· 1 Credit = 1 KI-Bild (1K oder 2K)</span></p>
+        <p style="margin:6px 0 14px">Dein Guthaben: <b id="myCredits">–</b> Credits <span class="small muted">· 1 KI-Bild in 1K = 1 Credit, in 2K = 2 Credits</span></p>
         <div class="cards" id="creditPacks"></div>
         <p class="small muted" id="creditHint" style="margin-top:10px"></p>
       </div>
@@ -338,7 +338,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <div><label>Credits (Minus zieht ab)</label><input id="cAmount" type="number" step="1" value="100"></div>
           <div><label>Notiz (z.B. Rechnungsnummer)</label><input id="cNote" maxlength="200"></div>
         </div>
-        <div class="row" style="margin-top:14px"><button class="btn primary" id="cGrant">Guthaben buchen</button><span class="small muted">1 Credit = 1 KI-Bild (1K oder 2K). Der Kunde muss im Dashboard registriert sein.</span></div>
+        <div class="row" style="margin-top:14px"><button class="btn primary" id="cGrant">Guthaben buchen</button><span class="small muted">1 KI-Bild in 1K = 1 Credit, in 2K = 2 Credits. Der Kunde muss im Dashboard registriert sein.</span></div>
         <div class="tablewrap" style="margin-top:16px"><table>
           <thead><tr><th>Kunde</th><th>Guthaben</th><th>Letzte Buchung</th></tr></thead>
           <tbody id="creditList"><tr><td colspan="3" class="empty">Lädt …</td></tr></tbody>
@@ -686,6 +686,8 @@ function deviceDetails(d, online, mine) {
       <div class="card"><b style="font-size:17px">${esc(st.printer?.name || '–')}</b><span>Drucker</span><span class="small">${ok(st.printer?.ok)}${st.printer?.code ? ' · Windows-Statuscode ' + st.printer.code : ''}</span></div>
       <div class="card"><b style="font-size:17px">${esc(scr)}</b><span>Bildschirm</span><span class="small muted">${esc(st.event || 'kein Ereignis')} · gemeldet vor ${age < 120 ? age + ' s' : Math.round(age / 60) + ' min'}</span></div>
     </div>
+    ${st.sync && !(st.sync.account && st.sync.event) ? `<p class="small" style="margin:-6px 0 12px;color:#b8860b">⚠️ ${!st.sync.account ? 'Diese Fotobox ist nur mit dem Lizenzschlüssel angemeldet – Änderungen an der Fotobox kommen nicht ins Dashboard. An der Fotobox unter Einstellungen → Allgemein mit E-Mail und Passwort anmelden.' : 'An dieser Fotobox ist kein Ereignis gewählt – Änderungen kommen nicht ins Dashboard.'}</p>`
+      : st.sync?.pending ? `<p class="small muted" style="margin:-6px 0 12px">${st.sync.pending} Änderung(en) der Fotobox warten noch auf die Übertragung ins Dashboard.</p>` : ''}
     ${mine ? `<div class="card" style="margin-bottom:10px"><h2>Fernsteuerung</h2>
       ${fresh ? '' : '<p class="small muted" style="margin-bottom:8px">Die Fotobox ist gerade nicht verbunden. Befehle werden ausgeführt, sobald sie sich wieder meldet (höchstens 10 Minuten lang).</p>'}
       <div class="row" style="margin-bottom:12px"><button class="btn primary" data-dev="${d.id}" data-act="testprint">🖨 Testdruck auslösen</button><button class="btn" data-dev="${d.id}" data-act="pinreset" title="Entfernt den Sicherheitspin an der Fotobox, falls er vergessen wurde">🔓 Sicherheitspin zurücksetzen${st.locked ? ' (gesperrt)' : ''}</button>${cmd}</div>
