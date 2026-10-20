@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Fotogalerie</title>
-<script>window.I18N_V = '20261020-2';</script>
+<script>window.I18N_V = '20261020-3';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache: vom QR-Code der Fotobox (?l=…), sonst die des Handys
 (function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
@@ -41,6 +41,7 @@
   #light .nav{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;padding:0;font-size:26px;background:rgba(255,255,255,.9);color:var(--k);border:0;cursor:pointer}
   #light .nav.l{left:10px}#light .nav.r{right:10px}
   footer{text-align:center;color:#6f6f78;font-size:12px;padding:26px 16px 34px}
+  footer .privLink{display:block;margin-bottom:8px;color:inherit;text-decoration:underline}
   .langSel{display:block;margin:12px auto 0;background:transparent;color:#8a8a92;border:1px solid #3a3a40;border-radius:8px;padding:5px 8px;font:inherit;font-size:13px}
   .langSel option{color:#111}
   .one{text-align:center}.one img,.one video{max-width:100%;max-height:70vh;border-radius:10px;background:#000}
@@ -125,7 +126,7 @@
 
 <script src="config.js?v=20261018-9"></script>
 <script src="icons.js?v=20261017-2"></script>
-<script src="ad.js?v=20261020-1"></script>
+<script src="ad.js?v=20261020-2"></script>
 <script src="shop.js?v=20261017-7"></script>
 <script>
 (function () {
@@ -164,6 +165,7 @@
   async function showAd(owner) {
     const b = window.PM_AD && owner ? await PM_AD.load(owner, CFG) : null;
     band = !show && !!b && PM_AD.has(b);
+    if (!show && b?.privacy) { const a = document.createElement('a'); a.href = b.privacy; a.target = '_blank'; a.rel = 'noopener'; a.textContent = T('Datenschutz'); a.className = 'privLink'; $('footer').prepend(a); } // Datenschutzerklärung des Vermieters
     if (b && (b.logo || b.name)) { brand = b; applyBrand(); if (single && b.name) document.title = document.title.replace(/ – .*$/, '') + ' – ' + b.name; }
     if (!band) return;
     PM_AD.addCss(); $('#pmad').innerHTML = PM_AD.html(b);
