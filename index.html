@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261020-1';</script>
+<script>window.I18N_V = '20261020-2';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -230,7 +230,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       </div>
       <div class="card hidden" id="adCard" style="margin-top:20px">
         <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Deine Werbung in der Galerie</h2><label class="row" style="gap:8px;margin:0;font-size:14px"><input type="checkbox" id="adOn" checked> anzeigen</label></div>
-        <p class="small muted" style="margin-bottom:14px"><span>Erscheint oben auf jeder Foto- und Galerieseite deiner Gäste (QR-Code an der Fotobox und Freigabe-Link der Galerie). Leere Felder werden nicht gezeigt.</span> <span>Dein Logo (ohne Logo dein Firmenname) steht außerdem über und unter dem Foto – statt Photobox Memories.</span></p>
+        <p class="small muted" style="margin-bottom:14px">Erscheint oben auf jeder Foto- und Galerieseite deiner Gäste (QR-Code an der Fotobox und Freigabe-Link der Galerie). Leere Felder werden nicht gezeigt.</p>
         <div class="grid2">
           <div><label>Firmenname</label><input id="ad_name" maxlength="60" placeholder="z. B. Photobox Memories"></div>
           <div><label>Logo</label><div class="row"><img id="adLogoImg" alt="" class="hidden" style="height:40px;max-width:120px;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:#fff;padding:3px"><button class="btn" id="adLogoPick" type="button">Logo wählen</button><button class="btn hidden" id="adLogoDel" type="button">Entfernen</button><input type="file" id="adLogoFile" accept="image/*" class="hidden"></div></div>
