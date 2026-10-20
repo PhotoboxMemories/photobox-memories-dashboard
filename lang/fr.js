@@ -551,6 +551,7 @@ I18N.add('fr', {
 "Dein Guthaben": "Ton crédit",
 "Dein KI-Guthaben": "Ton crédit IA",
 "Dein KI-Porträt ist fertig. Du kannst es jetzt speichern oder drucken.": "Ton portrait IA est prêt. Tu peux maintenant l'enregistrer ou l'imprimer.",
+"Dein Logo (ohne Logo dein Firmenname) steht außerdem über und unter dem Foto – statt Photobox Memories.": "Votre logo (sans logo, le nom de votre entreprise) apparaît aussi au-dessus et en dessous de la photo – à la place de Photobox Memories.",
 "Dein Name (als Unterschrift)": "Ton prénom (en signature)",
 "Dein Prompt / zusätzliche Wünsche": "Ton prompt / souhaits supplémentaires",
 "Dein Server verwaltet den Grok-Zugang. Auflösung und Freigabe kommen aus dem gewählten Event. Kein lokaler API-Schlüssel nötig.": "Ton serveur gère l'accès Grok. La résolution et l'autorisation viennent de l'événement choisi. Aucune clé API locale nécessaire.",
