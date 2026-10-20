@@ -1,6 +1,35 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.71": {
+      "date": "2026-10-20",
+      "notes": {
+        "de": [
+          "Ereignisse löschen geht jetzt auch direkt in der Fotobox (Ereignis-Auswahl) und im Dashboard über das Mülleimer-Symbol an jedem Ereignis – die Fotos und Videos in der Online-Galerie werden dabei mitgelöscht.",
+          "Deine Werbung in der Galerie: Die Farbe des Knopfs ist jetzt frei wählbar."
+        ],
+        "en": [
+          "You can now delete events directly on the photo booth (event selection) and in the dashboard via the bin icon on each event – the photos and videos in the online gallery are deleted as well.",
+          "Your advertising in the gallery: the button colour can now be chosen freely."
+        ],
+        "tr": [
+          "Etkinlikler artık doğrudan fotoğraf kabininde (etkinlik seçimi) ve panelde her etkinlikteki çöp kutusu simgesiyle silinebilir – çevrim içi galerideki fotoğraflar ve videolar da silinir.",
+          "Galerideki reklamın: Düğme rengi artık serbestçe seçilebilir."
+        ],
+        "fr": [
+          "Les événements peuvent maintenant être supprimés directement sur le photobooth (choix de l’événement) et dans le tableau de bord via l’icône corbeille de chaque événement – les photos et vidéos de la galerie en ligne sont supprimées en même temps.",
+          "Ta publicité dans la galerie : la couleur du bouton peut désormais être choisie librement."
+        ],
+        "es": [
+          "Ahora puedes eliminar eventos directamente en el fotomatón (selección de evento) y en el panel con el icono de papelera de cada evento; también se eliminan las fotos y vídeos de la galería en línea.",
+          "Tu publicidad en la galería: ahora puedes elegir libremente el color del botón."
+        ],
+        "it": [
+          "Ora puoi eliminare gli eventi direttamente sul photo booth (scelta dell’evento) e nella dashboard con l’icona del cestino su ogni evento – vengono eliminati anche foto e video della galleria online.",
+          "La tua pubblicità nella galleria: il colore del pulsante ora è liberamente selezionabile."
+        ]
+      }
+    },
     "1.17.70": {
       "date": "2026-10-20",
       "notes": {
