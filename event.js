@@ -414,6 +414,7 @@
     gallery: { link: false, guests: false, downloadAll: false, password: '' },
     lang: { guest: '', pick: false, list: [] }, // Gästesprache: '' = wie das Menü der Fotobox
     startLogo: { src: 'own', url: '', size: 72, fit: 'contain' }, // Logo in der weißen Scheibe der Standard-Startanimation
+    videomsg: { on: false, title: 'Videonachricht hinterlassen', sub: 'Scanne den Code mit deinem Handy', pos: 'br', size: 'm' }, // Zusatzfunktion: Videonachricht per QR-Code
     mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false, preview: true, source: 'original' },
     ai: { skip: false, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Porträt erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
   };
@@ -425,7 +426,7 @@
     ['h', 'Grundlagen'], ['layout', 'aperture', 'Photo booth experience'], ['capture', 'sliders', 'Aufnahmeeinstellungen'], ['voice', 'mic', 'Virtueller Berater'], ['lang', 'globe', 'Sprache'],
     ['h', 'Erweiterte Einstellungen'], ['start', 'monitor', 'Startbildschirm'], ['fx', 'sparkles', 'Filter & Effekte'], ['bg', 'wand', 'Hintergrundentfernung'],
     ['ai', 'user', 'KI-Porträts'], ['survey', 'clipboard', 'Umfrage & Haftungsausschluss'],
-    ['h', 'Drucken & Teilen'], ['share', 'share', 'Einstellungen für Teilen'], ['print', 'printer', 'Druckeinstellungen'], ['mosaic', 'mosaic', 'Fotomosaik'], ['cari', 'pen', 'Live-Karikatur']
+    ['h', 'Drucken & Teilen'], ['share', 'share', 'Einstellungen für Teilen'], ['print', 'printer', 'Druckeinstellungen'], ['mosaic', 'mosaic', 'Fotomosaik'], ['cari', 'pen', 'Live-Karikatur'], ['videomsg', 'video', 'Videonachricht']
   ];
 
   function open(ev, ctx) {
@@ -478,7 +479,7 @@
     let E = { name: ev.name, event_date: ev.event_date, logo_url: ev.logo_url, share_token: ev.share_token }; // share_token = Kennung im Freigabe-Link der Galerie
     // Fotomosaik und Live-Karikatur nur mit Freigabe des Betreibers (Verwaltung → Lizenzen → „Freigaben“); ohne Freigabe
     // zeigt der Menüpunkt ein Schloss und die Seite nur einen Hinweis statt der Einstellungen
-    const allowed = k => !ctx.extra || ctx.extra(k), LOCKS = { mosaic: 'mosaic', cari: 'caricature' };
+    const allowed = k => !ctx.extra || ctx.extra(k), LOCKS = { mosaic: 'mosaic', cari: 'caricature', videomsg: 'videomsg' };
     const lockedPage = (title, text) => `<h1>${title} 🔒</h1><div class="card" style="background:#FFFAEA;max-width:640px">
       <b>Diese Funktion ist für Ihr Konto noch nicht freigeschaltet.</b><p style="margin:10px 0">${text}</p>
       <p style="margin:0;color:#6b6b78">Zum Freischalten melden Sie sich bitte bei Photobox Memories.</p></div>`;
@@ -646,7 +647,7 @@
       if (t.type === 'checkbox') { const l = t.closest('.row,h1')?.querySelector('.swl'); if (l) l.textContent = v ? 'Ein' : 'Aus'; }
       if (t.dataset.num) $$(main, `[data-s="${p}"]`).forEach(x => { if (x !== t) x.value = v; });
       save(); drawPreview();
-      if (t.type === 'radio' || p === 'startDisplay' || p === 'x.caricature.on' || t.dataset.rerender) render();
+      if (t.type === 'radio' || p === 'startDisplay' || p === 'x.caricature.on' || t.dataset.rerender || (p.startsWith('x.videomsg.') && t.tagName === 'SELECT')) render();
     });
     main.addEventListener('change', e => {
       const t = e.target;
@@ -1440,6 +1441,26 @@
             <label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0;font-size:13px"><input type="checkbox" data-cari-consent ${cariT.consent ? 'checked' : ''} style="margin-top:3px"> Dieses Foto darf zum Testen an den KI-Dienst (xAI) übertragen werden.</label>
             <div class="row" style="gap:8px"><button class="btn pri" data-a="cari-test" ${cariT.busy || !c.on ? 'disabled' : ''}>${cariT.busy ? 'KI zeichnet … (10–40 Sekunden)' : '✨ Karikatur erstellen und zeichnen <small>(1 Credit)</small>'}</button>${cariT.result && !cariT.busy ? '<button class="ghost" data-a="cari-play">▶ Zeichnung nochmal ansehen</button>' : ''}</div>
             ${c.on ? '' : '<p style="margin:8px 0 0;color:#c98a00;font-size:13px">Zum Ausprobieren oben die Live-Karikatur einschalten.</p>'}</div>`;
+      },
+      videomsg() { // Zusatzfunktion: Gäste scannen den QR-Code auf dem Startbildschirm und nehmen mit dem eigenen Handy eine Videonachricht auf
+        if (!allowed('videomsg')) return lockedPage('Videonachricht', 'Gäste scannen einen QR-Code auf dem Startbildschirm der Fotobox und hinterlassen mit ihrem eigenen Handy eine Videonachricht (bis 30 Sekunden). Die Videos erscheinen in der Galerie des Events.');
+        const V = S.x.videomsg, link = (location.origin + location.pathname).replace(/[^/]*$/, '') + 'nachricht.html?e=' + ev.id + '&l=' + (S.x.lang?.guest || window.PM_LANG || 'de');
+        const pos = { br: 'right:4%;bottom:6%', bl: 'left:4%;bottom:6%', tr: 'right:4%;top:6%', tl: 'left:4%;top:6%' }[V.pos] || 'right:4%;bottom:6%', k = { s: .8, m: 1, l: 1.25 }[V.size] || 1;
+        const card = `<div style="position:absolute;${pos};width:${17 * k}%;display:flex;flex-direction:column;align-items:center;gap:3px;background:#fff;color:#1D1D1B;border:${2.5 * k}px solid ${esc(S.accent || '#F7C838')};border-radius:${9 * k}px;padding:${5 * k}px;box-shadow:0 6px 20px rgba(0,0,0,.45);text-align:center">
+          <div style="font:700 ${8.5 * k}px/1.1 Fredoka,system-ui,sans-serif">🎥 ${esc(V.title || 'Videonachricht hinterlassen')}</div>
+          <div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center">${ICON('qr', Math.round(46 * k))}</div>
+          <div style="font-size:${6.5 * k}px;color:#555;line-height:1.2">${esc(V.sub || '')}</div></div>`;
+        return `${titleSw('Videonachricht', 'x.videomsg.on')}<div class="cols"><div class="left">
+          <div class="card"><p style="margin-top:0">Auf dem Startbildschirm der Fotobox erscheint eine gut sichtbare Karte mit QR-Code. Gäste scannen sie, nehmen mit ihrem eigenen Handy eine Videonachricht auf (bis 30 Sekunden) und schicken sie ab – die Fotobox bleibt dabei frei für die nächsten Gäste.</p>
+            <p style="color:#6b6b78;font-size:13px;margin-bottom:0">Die Videos erscheinen in der Galerie dieses Events – sichtbar nur für Gäste mit dem Galerie-Link, den Sie bzw. die Gastgeber teilen. Der QR-Code selbst führt nie zur Galerie.</p></div>
+          <h2>Karte auf dem Startbildschirm</h2><div class="card">
+            ${text('x.videomsg.title', 'Überschrift', 'Videonachricht hinterlassen')}${text('x.videomsg.sub', 'Hinweis darunter', 'Scanne den Code mit deinem Handy')}
+            ${sel('x.videomsg.pos', 'Position', [['br', 'Unten rechts'], ['bl', 'Unten links'], ['tr', 'Oben rechts'], ['tl', 'Oben links']])}${sel('x.videomsg.size', 'Größe', [['s', 'Klein'], ['m', 'Mittel'], ['l', 'Groß']])}</div>
+          <h2>Ausprobieren</h2><div class="card"><p style="margin-top:0">So sieht die Seite auf dem Handy aus – sie funktioniert, sobald die Videonachricht oben eingeschaltet ist:</p>
+            <a class="btn pri" href="${esc(link)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;gap:6px;align-items:center">${ICON('smartphone', 16)} Handy-Seite öffnen</a></div>
+          </div><div class="pv"><div class="frame"><small style="color:#555">Vorschau Startbildschirm</small><div style="position:relative;aspect-ratio:16/9;margin-top:4px;border-radius:10px;overflow:hidden;background:radial-gradient(circle at 50% 35%,#3a3424,#1d1d1b 60%,#0b0b0a)">
+            <div style="position:absolute;left:50%;top:30%;width:22%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;background:#fff;border:3px solid #F7C838"></div>
+            <div style="position:absolute;left:50%;bottom:16%;translate:-50% 0;background:#F7C838;color:#1D1D1B;border-radius:999px;padding:4px 14px;font:600 11px Fredoka,system-ui,sans-serif">${esc(S.startText || 'Tippen zum Starten')}</div>${card}</div></div></div></div>`;
       },
       mosaic() {
         if (!allowed('mosaic')) return lockedPage('Fotomosaik', 'Viele Gästefotos ergeben zusammen ein großes Bild – live auf dem Bildschirm und als Klebewand mit nummerierter Tafel.');
