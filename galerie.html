@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Fotogalerie – Photobox Memories</title>
-<script>window.I18N_V = '20261019-10';</script>
+<script>window.I18N_V = '20261020-1';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache: vom QR-Code der Fotobox (?l=…), sonst die des Handys
 (function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
@@ -62,6 +62,8 @@
   .polaroid img,.polaroid video{display:block;width:100%;height:auto;max-height:68vh;object-fit:contain;border-radius:10px;background:#f2f2f2}
   .polaroid .cap{margin-top:12px;text-align:center;font:600 15px Fredoka,system-ui,sans-serif;color:#1D1D1B;letter-spacing:.02em}
   .polaroid .cap b{color:#E2A800}
+  .polaroid .cap img{display:inline-block;width:auto;height:44px;max-width:200px;max-height:none;object-fit:contain;vertical-align:middle;border-radius:0;background:none}
+  header .ownlg{display:inline-block;height:64px;max-width:220px;object-fit:contain;border-radius:12px;background:#fff;padding:6px}
   .ph{aspect-ratio:2/3;max-height:60vh;margin:0 auto;border-radius:10px;background:linear-gradient(100deg,#eee 30%,#f8f8f8 50%,#eee 70%) 0 0/300% 100%;animation:shim 1.4s linear infinite;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#555;padding:20px;text-align:center}
   .ph b{font:600 18px Fredoka,system-ui,sans-serif;color:#1D1D1B}
   .ph small{font-size:13px;color:#777;max-width:280px}
@@ -114,7 +116,7 @@
 </head>
 <body>
 <div id="pmad"></div>
-<header><div class="brand">Photobox Memories</div><h1 id="title">Fotogalerie</h1><p id="sub"></p></header>
+<header><div id="brandTop"></div><h1 id="title">Fotogalerie</h1><p id="sub"></p></header>
 <main id="main"><div class="box"><p>Lädt …</p></div></main>
 <div id="light"><div id="lightMedia"></div><div class="row"><button class="btn" id="lDl">Herunterladen</button><button class="btn ghost" id="lClose">Schließen</button></div><div id="lInfo" style="color:#aaa;font-size:13px"></div>
   <button class="nav l" id="lPrev" aria-label="Vorheriges">‹</button><button class="nav r" id="lNext" aria-label="Nächstes">›</button></div>
@@ -146,12 +148,25 @@
     const a = window.FOTOBOX_PHOTOS?.alt?.(path); if (!a) throw new Error('nicht erreichbar'); const r = await fetch(a); if (!r.ok) throw new Error('nicht erreichbar'); return r;
   };
   let photos = [], current = 0, info = null;
+  // Logo bzw. Firmenname des Lizenz-Inhabers (aus „Deine Werbung in der Galerie“) über und unter dem Foto – ohne Angaben Photobox Memories
+  let brand = null;
+  const capHtml = () => brand?.logo ? `<img src="${esc(brand.logo)}" alt="${esc(brand.name)}">` : brand?.name ? `<span translate="no">${esc(brand.name)}</span>` : 'Photobox <b>Memories</b>';
+  const topHtml = () => brand?.logo ? `<img class="ownlg" src="${esc(brand.logo)}" alt="${esc(brand.name)}">` : brand?.name ? `<div class="brand" translate="no">${esc(brand.name)}</div>`
+    : document.body.classList.contains('solo') && window.LOGO ? LOGO(44) : '<div class="brand">Photobox Memories</div>';
+  function applyBrand() {
+    if ($('#brandTop')) $('#brandTop').innerHTML = topHtml();
+    document.querySelectorAll('.polaroid .cap').forEach(c => { c.innerHTML = capHtml(); });
+    if (single && brand?.name) document.title = document.title.replace(/ – .*$/, ' – ' + brand.name);
+  }
+  setTimeout(() => { if ($('#brandTop') && !$('#brandTop').innerHTML) applyBrand(); }, 2500); // Angaben laden nicht → Photobox Memories
 
   const box = html => { $('#main').innerHTML = `<div class="box">${html}</div>`; };
   // Werbung des Vermieters oben (Logo, Text, Webseite, E-Mail, Telefon …) – gepflegt im Dashboard unter „Meine Lizenzen“
   async function showAd(owner) {
-    if (show || !window.PM_AD || !owner) return;
-    const b = await PM_AD.load(owner, CFG); if (!PM_AD.has(b)) return;
+    const b = window.PM_AD && owner ? await PM_AD.load(owner, CFG) : null;
+    if (b && (b.logo || b.name)) brand = b;
+    applyBrand();
+    if (show || !b || !PM_AD.has(b)) return;
     PM_AD.addCss(); $('#pmad').innerHTML = PM_AD.html(b);
   }
   async function fetchGallery(password) {
@@ -305,9 +320,9 @@
     const vid = /\.(mp4|webm)$/i.test(single), u = url(single), what = vid ? 'Video' : 'Foto';
     const ext = single.split('.').pop().toLowerCase(), type = vid ? 'video/' + ext : ext === 'gif' ? 'image/gif' : ext === 'png' ? 'image/png' : 'image/jpeg';
     document.body.classList.add('solo');
-    showAd(window.PM_AD?.ownerOf(single));
     document.title = T(vid ? 'Dein Video' : 'Dein Foto') + ' – Photobox Memories';
-    document.querySelector('header').innerHTML = `${window.LOGO ? LOGO(44) : '<div class="brand">Photobox Memories</div>'}<h1 id="title">${vid ? 'Dein Video' : 'Dein Foto'}</h1><p id="sub">Einen Moment bitte …</p>`;
+    document.querySelector('header').innerHTML = `<div id="brandTop"></div><h1 id="title">${vid ? 'Dein Video' : 'Dein Foto'}</h1><p id="sub">Einen Moment bitte …</p>`;
+    showAd(window.PM_AD?.ownerOf(single));
     document.querySelector('footer').innerHTML = '<span>Danke, dass du dabei warst!</span>'; langSel();
     const I = (n, z = 20) => window.ICON ? ICON(n, z) : '';
     // Probe mit eigener Adresse je Versuch (?t=…), damit kein zwischengespeichertes „nicht gefunden“ hängen bleibt
@@ -319,22 +334,22 @@
       el.onerror = () => done(false); setTimeout(() => done(false), 20000); el.src = t;
     });
     let blob = null; const getBlob = async src => blob || (blob = await fetch(src).then(r => { if (!r.ok) throw 0; return r.blob(); }));
-    const fileName = 'Photobox-Memories-' + what + '.' + ext;
+    const fileName = () => (String(brand?.name || '').replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || 'Photobox-Memories') + '-' + what + '.' + ext;
     const canShare = f => { try { return !!(navigator.canShare && navigator.canShare({ files: [f] })); } catch { return false; } };
     const show = src => {
-      const shareOk = canShare(new File([new Blob([''], { type })], fileName, { type }));
+      const shareOk = canShare(new File([new Blob([''], { type })], fileName(), { type }));
       $('#title').textContent = vid ? 'Dein Video ist da!' : 'Dein Foto ist da!'; $('#sub').textContent = 'Speichern, teilen, Erinnerung behalten.';
       $('#main').innerHTML = `${orderNote()}<div class="polaroid">${vid ? `<video src="${esc(src)}" controls autoplay loop playsinline muted></video>` : `<img src="${esc(src)}" alt="Dein Foto">`}
-          <div class="cap">Photobox <b>Memories</b></div></div>
+          <div class="cap">${capHtml()}</div></div>
         <div class="acts"><button class="btn" id="oneDl">${I('download')} ${vid ? 'Video speichern' : 'Foto speichern'}</button>${shareOk ? `<button class="btn ghost" id="oneSh">${I('share')} Teilen</button>` : ''}</div>
         <p class="tip">${vid ? 'Tipp: Nach dem Speichern findest du das Video in deinen Downloads bzw. in der Fotos-App.' : 'Tipp: Auf dem iPhone das Foto gedrückt halten → „Zu Fotos hinzufügen“.'}</p>
         <p class="keep">${vid ? '<span>Dein Video bleibt 1 Jahr online und wird danach automatisch gelöscht.</span> <span>Speichere es dir am besten gleich.</span>'
           : '<span>Dein Foto bleibt 1 Jahr online und wird danach automatisch gelöscht.</span> <span>Speichere es dir am besten gleich.</span>'}</p>`;
       $('#oneDl').onclick = async () => { const b = $('#oneDl'); b.disabled = true;
-        try { save(await getBlob(src), fileName); } catch { window.open(src, '_blank'); }
+        try { save(await getBlob(src), fileName()); } catch { window.open(src, '_blank'); }
         b.disabled = false; };
       if (shareOk) $('#oneSh').onclick = async () => {
-        try { const f = new File([await getBlob(src)], fileName, { type }); await navigator.share({ files: [f], title: 'Photobox Memories' }); }
+        try { const f = new File([await getBlob(src)], fileName(), { type }); await navigator.share({ files: [f], title: brand?.name || 'Photobox Memories' }); }
         catch (e) { if (e?.name !== 'AbortError') window.open(src, '_blank'); }
       };
       if (!vid) showShop(src);
@@ -344,7 +359,7 @@
       $('#main').innerHTML = `<div class="polaroid"><div class="ph"><div class="spin"></div><b>${vid ? 'Dein Video ist gleich da …' : 'Dein Foto ist gleich da …'}</b><small>${n < 60
         ? 'Es wird gerade von der Fotobox hochgeladen. Die Seite zeigt es von selbst an.'
         : 'Das dauert gerade etwas länger. Die Seite schaut weiter nach – du kannst diesen Link auch später noch einmal öffnen.'}</small></div>
-        <div class="cap">Photobox <b>Memories</b></div></div>`;
+        <div class="cap">${capHtml()}</div></div>`;
       setTimeout(() => wait(n + 1), n < 60 ? 3000 : 15000);
     };
     wait(0);
