@@ -1,6 +1,41 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.67": {
+      "date": "2026-10-20",
+      "notes": {
+        "de": [
+          "Neu in den Kameraeinstellungen: „Livebild-Helligkeit“. Damit wird das Livebild auf dem Bildschirm heller (z. B. wenn die Kamera auf Blitz eingestellt ist) – das Foto bleibt unverändert. Eigene Livebild-Werte der Canon werden außerdem zuverlässiger übernommen.",
+          "Hochformat-Bildschirm (z. B. Fotospiegel): Aufkleber und Werkzeuge zum Verzieren stehen jetzt oben, das Foto darunter – gut erreichbar für Ihre Gäste.",
+          "KI-Porträts in 1K: Das Foto wird kleiner an die KI geschickt und ist dadurch schneller hochgeladen."
+        ],
+        "en": [
+          "New in camera settings: “Live view brightness”. It makes the live view on screen brighter (e.g. when the camera is set up for flash) – the photo stays unchanged. Custom Canon live view values are also applied more reliably.",
+          "Portrait screens (e.g. mirror booth): stickers and decorating tools are now at the top, the photo below – easy for your guests to reach.",
+          "AI portraits in 1K: the photo is sent to the AI in a smaller size and uploads faster."
+        ],
+        "tr": [
+          "Kamera ayarlarında yeni: „Canlı görüntü parlaklığı“. Ekrandaki canlı görüntüyü aydınlatır (örneğin kamera flaşa göre ayarlıysa) – fotoğraf değişmez. Canon’un canlı görüntü değerleri de daha güvenilir şekilde uygulanır.",
+          "Dikey ekran (örneğin ayna kabini): Süsleme çıkartmaları ve araçları artık üstte, fotoğraf altta – misafirlerin kolayca ulaşabilir.",
+          "1K yapay zekâ portreleri: Fotoğraf yapay zekâya daha küçük gönderilir ve daha hızlı yüklenir."
+        ],
+        "fr": [
+          "Nouveau dans les réglages de l’appareil : « Luminosité de l’aperçu en direct ». L’aperçu à l’écran devient plus clair (par ex. si l’appareil est réglé pour le flash) – la photo ne change pas. Les valeurs d’aperçu personnalisées de la Canon sont aussi appliquées plus fiablement.",
+          "Écran en portrait (par ex. miroir photo) : les autocollants et outils de décoration sont maintenant en haut, la photo en dessous – faciles à atteindre pour vos invités.",
+          "Portraits IA en 1K : la photo est envoyée plus petite à l’IA et se télécharge plus vite."
+        ],
+        "es": [
+          "Nuevo en los ajustes de la cámara: «Brillo de la vista en directo». Aclara la vista en directo en la pantalla (p. ej. si la cámara está ajustada para flash); la foto no cambia. Los valores propios de vista en directo de la Canon también se aplican con más fiabilidad.",
+          "Pantalla vertical (p. ej. espejo mágico): las pegatinas y herramientas para decorar están ahora arriba y la foto debajo, al alcance de tus invitados.",
+          "Retratos IA en 1K: la foto se envía más pequeña a la IA y se sube más rápido."
+        ],
+        "it": [
+          "Novità nelle impostazioni della fotocamera: «Luminosità dell’anteprima dal vivo». Rende più chiara l’anteprima sullo schermo (ad es. se la fotocamera è impostata per il flash) – la foto non cambia. Anche i valori personalizzati dell’anteprima della Canon vengono applicati in modo più affidabile.",
+          "Schermo verticale (ad es. specchio fotografico): adesivi e strumenti per decorare sono ora in alto, la foto sotto – facili da raggiungere per i tuoi ospiti.",
+          "Ritratti IA in 1K: la foto viene inviata all’IA più piccola e si carica più velocemente."
+        ]
+      }
+    },
     "1.17.66": {
       "date": "2026-10-20",
       "notes": {
