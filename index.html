@@ -6,14 +6,14 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261020-2';</script>
+<script>window.I18N_V = '20261020-3';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
   window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
 <script src="config.js?v=20261018-9"></script>
 <script src="icons.js?v=20261017-2"></script>
-<script src="ad.js?v=20261020-1"></script>
+<script src="ad.js?v=20261020-2"></script>
 <script src="shop.js?v=20261017-7"></script>
 <script src="render.js?v=20261018-6"></script>
 <script src="mosaic.js?v=20261017-2"></script>
@@ -241,6 +241,8 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <div><label>WhatsApp-Nummer</label><input id="ad_wa" placeholder="+49 …"></div>
           <div><label>Instagram</label><input id="ad_insta" placeholder="@deinname"></div>
           <div><label>Text auf dem gelben Knopf</label><input id="ad_cta" maxlength="40" placeholder="z. B. Jetzt Fotobox anfragen"></div>
+          <div style="grid-column:1/-1"><label>Link zu deiner Datenschutzerklärung</label><input id="ad_privacy" placeholder="www.deine-seite.de/datenschutz">
+            <div class="small muted" style="margin-top:4px">Erscheint unten auf der Foto- und Galerieseite und beim Einverständnis der Live-Karikatur. Für den Datenschutz deiner Gäste bist du selbst verantwortlich.</div></div>
         </div>
         <label style="margin-top:16px">Vorschau</label>
         <div id="adPreview" style="border-radius:12px;overflow:hidden;border:1px solid var(--line)"></div>
@@ -807,13 +809,16 @@ const licKind = l => l.trial ? 'Testphase' : isTestLic(l) ? 'Testversion' : kind
 async function loadLicenses() {
   const { data, error } = await sb.from('licenses').select('*, devices(id)').order('created_at', { ascending: false });
   if (error) return toast('Fehler: ' + error.message);
+  // Geräte von Kunden sind auch für den Admin nicht lesbar – die Anzahl je Lizenz kommt aus license_device_counts()
+  const cnt = await sb.rpc('license_device_counts'), byLic = Object.fromEntries((cnt.data || []).map(x => [x.license_id, x.devices]));
+  for (const l of data) l.dev_count = cnt.error ? (l.devices || []).length : byLic[l.id] || 0;
   licenses = data;
   const mine = licenses.filter(l => l.owner_id === me.id);
   $('#myLicenses').innerHTML = mine.length ? mine.map(l => `<div class="card" style="display:flex;flex-direction:column;gap:8px">
       <b>${licKind(l)}${l.plan && !l.trial ? ` <span class="small muted">· ${esc(l.plan)}</span>` : ''}</b>
       <div><code class="key" data-copy="${esc(l.key)}" title="Klicken zum Kopieren">${esc(l.key)}</code></div>
       <div>${licStatus(l)}</div>
-      <div class="small muted">Geräte: ${l.devices.length} von ${l.max_devices}</div>
+      <div class="small muted">Geräte: ${l.dev_count} von ${l.max_devices}</div>
       ${EXTRAS.filter(([k]) => (l.extras || []).includes(k)).map(([, n]) => `<div class="small">✓ ${n} freigeschaltet</div>`).join('')}
     </div>`).join('') : `<div class="card empty" style="grid-column:1/-1">${shop.plans.length ? 'Noch keine Lizenz. Teste 14 Tage kostenlos oder kaufe unten eine Lizenz.' : 'Keine Lizenz mit deiner E-Mail gefunden. Bitte melde dich beim Verkäufer.'}</div>`;
   renderShop();
@@ -822,7 +827,7 @@ async function loadLicenses() {
 }
 /* ---------- Werbung in der Galerie (Logo, Text, Kontakt) – je Konto, gespeichert als photos/<Konto>/werbung.json ---------- */
 let adData = null;
-const AD_FIELDS = ['name', 'text', 'web', 'mail', 'tel', 'wa', 'insta', 'cta'];
+const AD_FIELDS = ['name', 'text', 'web', 'mail', 'tel', 'wa', 'insta', 'cta', 'privacy'];
 async function loadAd() {
   const b = DEMO ? null : await fetch(PM_AD.publicUrl(me.id, CFG) + '?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
   adData = { on: true, ...(b || {}) };
@@ -851,7 +856,7 @@ $('#adLogoDel').onclick = () => adLogo('');
 $('#adSave').onclick = async () => {
   if (DEMO) return toast('Demo-Modus – es wird nichts gespeichert');
   const clean = PM_AD.normalize(adCollect(), me.id, CFG);
-  for (const [f, label] of [['web', 'Webseite'], ['mail', 'E-Mail'], ['tel', 'Telefon'], ['wa', 'WhatsApp-Nummer'], ['insta', 'Instagram']])
+  for (const [f, label] of [['web', 'Webseite'], ['mail', 'E-Mail'], ['tel', 'Telefon'], ['wa', 'WhatsApp-Nummer'], ['insta', 'Instagram'], ['privacy', 'Link zu deiner Datenschutzerklärung']])
     if ($('#ad_' + f).value.trim() && !clean[f]) return toast(`Bitte „${label}“ prüfen – so kann die Galerie den Eintrag nicht verlinken.`, 5000);
   const blob = new Blob([JSON.stringify({ ...clean, at: new Date().toISOString() })], { type: 'application/json' });
   const { error } = await sb.storage.from('photos').upload(PM_AD.path(me.id), blob, { upsert: true, contentType: 'application/json', cacheControl: '60' });
@@ -1073,7 +1078,7 @@ function renderAdmin() {
       <td><code class="key" data-copy="${esc(l.key)}" title="Klicken zum Kopieren">${esc(l.key)}</code></td>
       <td>${licKind(l)}</td>
       <td>${licStatus(l)}</td>
-      <td>${l.devices.length} / <input type="number" min="1" value="${l.max_devices}" data-lic="${l.id}" data-act="max" style="width:60px;padding:4px 6px"></td>
+      <td>${l.dev_count} / <input type="number" min="1" value="${l.max_devices}" data-lic="${l.id}" data-act="max" style="width:60px;padding:4px 6px"></td>
       <td data-l="Freigaben"><div style="display:flex;flex-direction:column;gap:4px">${EXTRAS.map(([k, n]) => `<label class="small" style="display:flex;gap:6px;align-items:center;white-space:nowrap;cursor:pointer"><input type="checkbox" data-lic="${l.id}" data-act="extra" data-x="${k}" ${(l.extras || []).includes(k) ? 'checked' : ''}> ${n}</label>`).join('')}</div></td>
       <td><div class="row">
         ${isTestLic(l) ? ''
@@ -1285,7 +1290,7 @@ function renderOverview() {
   const bal = Object.fromEntries(ov.wallets.map(x => [x.owner_id, x.balance])), got = {}, pics = {}, used = {};
   for (const x of ov.ledger) if (x.amount > 0) got[x.owner_id] = (got[x.owner_id] || 0) + x.amount;
   for (const x of ov.jobs) { pics[x.owner_id] = (pics[x.owner_id] || 0) + 1; used[x.owner_id] = (used[x.owner_id] || 0) + x.cost; }
-  const lic = o => licenses.filter(x => x.owner_id === o), boxes = o => sum(lic(o), x => x.devices?.length || 0);
+  const lic = o => licenses.filter(x => x.owner_id === o), boxes = o => sum(lic(o), x => x.dev_count || 0);
   const live = licenses.filter(x => x.active && (x.kind === 'lifetime' || !x.valid_until || new Date(x.valid_until) > Date.now()));
   const ending = live.filter(x => x.kind === 'subscription' && x.valid_until && new Date(x.valid_until) < soon);
   const online = devices.filter(d => d.last_seen && Date.now() - new Date(d.last_seen) < 3 * 60 * 1000).length;
