@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.70": {
+      "date": "2026-10-20",
+      "notes": {
+        "de": [
+          "Neue Zusatzfunktion „Videonachricht“: Auf dem Startbildschirm erscheint ein gut sichtbarer QR-Code. Gäste nehmen damit auf ihrem eigenen Handy eine Videonachricht (bis 30 Sekunden) auf – sie erscheint oben in der Event-Galerie. Freischaltung über Photobox Memories."
+        ],
+        "en": [
+          "New add-on “Video message”: a clearly visible QR code appears on the start screen. Guests use it to record a video message (up to 30 seconds) on their own phone – it appears at the top of the event gallery. Activation via Photobox Memories."
+        ],
+        "tr": [
+          "Yeni ek özellik „Video mesaj“: Başlangıç ekranında iyi görünen bir QR kod çıkar. Misafirler onunla kendi telefonlarında bir video mesaj (en fazla 30 saniye) kaydeder – mesaj etkinlik galerisinin en üstünde görünür. Etkinleştirme Photobox Memories üzerinden."
+        ],
+        "fr": [
+          "Nouvelle option « Message vidéo » : un code QR bien visible apparaît sur l’écran de démarrage. Les invités enregistrent avec leur propre téléphone un message vidéo (30 secondes max.) – il apparaît en haut de la galerie de l’événement. Activation via Photobox Memories."
+        ],
+        "es": [
+          "Nueva función adicional «Mensaje de vídeo»: en la pantalla de inicio aparece un código QR bien visible. Con él, los invitados graban un mensaje de vídeo (hasta 30 segundos) en su propio móvil, que aparece arriba en la galería del evento. Activación a través de Photobox Memories."
+        ],
+        "it": [
+          "Nuova funzione aggiuntiva «Videomessaggio»: sulla schermata iniziale compare un codice QR ben visibile. Gli ospiti registrano con il proprio telefono un videomessaggio (fino a 30 secondi), che compare in cima alla galleria dell’evento. Attivazione tramite Photobox Memories."
+        ]
+      }
+    },
     "1.17.69": {
       "date": "2026-10-20",
       "notes": {
