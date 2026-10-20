@@ -889,6 +889,7 @@
         if (!$(main, '[data-ai-consent]')?.checked) return ctx.toast('Bitte bestätigen, dass das Testfoto an den KI-Dienst übertragen werden darf.');
         ai.busy = true; ai.result = ''; render();
         try {
+          const t0 = performance.now(); // Dauer anzeigen – so sieht man, ob die KI gerade langsam ist
           const {data,error} = await ctx.sb.functions.invoke('ai-generate', {body: {image: ai.photo, prompt: item.prompt.trim(), consent: true, eventId: ev.id, requestId: crypto.randomUUID(), test: true}});
           let result = data;
           if (error?.context?.json) { try { result = await error.context.json(); } catch {} }
@@ -896,6 +897,7 @@
           if (!result?.image) throw new Error('Der KI-Dienst hat kein Bild geliefert.');
           ai.result = result.image; ai.resultPrompt = item.prompt.trim(); ai.resultName = item.name || ''; ai.resultOwn = ai.own; ai.recent.unshift({ image: result.image, name: item.name || 'Test', prompt: item.prompt.trim(), own: ai.own }); ai.recent.length = Math.min(ai.recent.length, 8);
           ai.resultId = item.id; // beim Speichern dieses Entwurfs wird das Bild zum Kachelbild
+          ctx.toast(`KI-Bild fertig nach ${Math.round((performance.now() - t0) / 1000)} Sekunden`, 4000);
         } catch (error) { ctx.toast(error instanceof TypeError ? 'KI-Dienst ist nicht erreichbar. Bitte Internet prüfen.' : error.message, 9000); }
         ai.busy = false; ai.consentOk = true; render();
         return;
