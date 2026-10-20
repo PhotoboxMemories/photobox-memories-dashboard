@@ -1982,6 +1982,7 @@ I18N.add('fr', {
 "Schau mal – jetzt wirst du gezeichnet!": "Regarde – maintenant on te dessine !",
 "Scheibe ausfüllen (rund zugeschnitten)": "Remplir le disque (recadré en rond)",
 "Schichten": "Calques",
+"Schieb und zoom dein Foto direkt auf der Vorschau – darunter siehst du die ganze Druckfläche.": "Déplace et zoome ta photo directement sur l’aperçu – en dessous, tu vois toute la zone d’impression.",
 "Schließen": "Fermer",
 "Schließen (Esc)": "Fermer (Échap)",
 "Schlüssel": "Clé",
