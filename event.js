@@ -414,7 +414,7 @@
     gallery: { link: false, guests: false, downloadAll: false, password: '' },
     lang: { guest: '', pick: false, list: [] }, // Gästesprache: '' = wie das Menü der Fotobox
     startLogo: { src: 'own', url: '', size: 72, fit: 'contain' }, // Logo in der weißen Scheibe der Standard-Startanimation
-    videomsg: { on: false, title: 'Videonachricht hinterlassen', sub: 'Scanne den Code mit deinem Handy', pos: 'br', size: 'm' }, // Zusatzfunktion: Videonachricht per QR-Code
+    videomsg: { on: false, title: 'Videonachricht hinterlassen', sub: 'Scanne den Code mit deinem Handy', pos: 'tl', size: 'm' }, // Zusatzfunktion: Videonachricht per QR-Code
     mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false, preview: true, source: 'original' },
     ai: { skip: false, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Porträt erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
   };
@@ -1447,7 +1447,7 @@
       videomsg() { // Zusatzfunktion: Gäste scannen den QR-Code auf dem Startbildschirm und nehmen mit dem eigenen Handy eine Videonachricht auf
         if (!allowed('videomsg')) return lockedPage('Videonachricht', 'Gäste scannen einen QR-Code auf dem Startbildschirm der Fotobox und hinterlassen mit ihrem eigenen Handy eine Videonachricht (bis 30 Sekunden). Die Videos erscheinen in der Galerie des Events.');
         const V = S.x.videomsg, link = (location.origin + location.pathname).replace(/[^/]*$/, '') + 'nachricht.html?e=' + ev.id + '&l=' + (S.x.lang?.guest || window.PM_LANG || 'de');
-        const pos = { br: 'right:4%;bottom:6%', bl: 'left:4%;bottom:6%', tr: 'right:4%;top:6%', tl: 'left:4%;top:6%' }[V.pos] || 'right:4%;bottom:6%', k = { s: .8, m: 1, l: 1.25 }[V.size] || 1;
+        const pos = { br: 'right:4%;bottom:6%', bl: 'left:4%;bottom:6%', tr: 'right:4%;top:6%', tl: 'left:2.2%;top:31%' }[V.pos] || 'left:2.2%;top:31%', k = { s: .8, m: 1, l: 1.25 }[V.size] || 1;
         const card = `<div style="position:absolute;${pos};width:${17 * k}%;display:flex;flex-direction:column;align-items:center;gap:3px;background:#fff;color:#1D1D1B;border:${2.5 * k}px solid ${esc(S.accent || '#F7C838')};border-radius:${9 * k}px;padding:${5 * k}px;box-shadow:0 6px 20px rgba(0,0,0,.45);text-align:center">
           <div style="font:700 ${8.5 * k}px/1.1 Fredoka,system-ui,sans-serif">🎥 ${esc(V.title || 'Videonachricht hinterlassen')}</div>
           <div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center">${ICON('qr', Math.round(46 * k))}</div>
@@ -1457,10 +1457,11 @@
             <p style="color:#6b6b78;font-size:13px;margin-bottom:0">Die Videos erscheinen in der Galerie dieses Events – sichtbar nur für Gäste mit dem Galerie-Link, den Sie bzw. die Gastgeber teilen. Der QR-Code selbst führt nie zur Galerie.</p></div>
           <h2>Karte auf dem Startbildschirm</h2><div class="card">
             ${text('x.videomsg.title', 'Überschrift', 'Videonachricht hinterlassen')}${text('x.videomsg.sub', 'Hinweis darunter', 'Scanne den Code mit deinem Handy')}
-            ${sel('x.videomsg.pos', 'Position', [['br', 'Unten rechts'], ['bl', 'Unten links'], ['tr', 'Oben rechts'], ['tl', 'Oben links']])}${sel('x.videomsg.size', 'Größe', [['s', 'Klein'], ['m', 'Mittel'], ['l', 'Groß']])}</div>
+            ${sel('x.videomsg.pos', 'Position', [['tl', 'Oben links (unter der Galerie)'], ['tr', 'Oben rechts'], ['bl', 'Unten links'], ['br', 'Unten rechts']])}${sel('x.videomsg.size', 'Größe', [['s', 'Klein'], ['m', 'Mittel'], ['l', 'Groß']])}</div>
           <h2>Ausprobieren</h2><div class="card"><p style="margin-top:0">So sieht die Seite auf dem Handy aus – sie funktioniert, sobald die Videonachricht oben eingeschaltet ist:</p>
             <a class="btn pri" href="${esc(link)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;gap:6px;align-items:center">${ICON('smartphone', 16)} Handy-Seite öffnen</a></div>
           </div><div class="pv"><div class="frame"><small style="color:#555">Vorschau Startbildschirm</small><div style="position:relative;aspect-ratio:16/9;margin-top:4px;border-radius:10px;overflow:hidden;background:radial-gradient(circle at 50% 35%,#3a3424,#1d1d1b 60%,#0b0b0a)">
+            <div style="position:absolute;left:2.2%;top:4%;width:13%;aspect-ratio:1"><div style="position:absolute;inset:8%;background:#fff;border-radius:3px;rotate:-8deg;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div><div style="position:absolute;inset:8%;background:#fff;border-radius:3px;rotate:4deg;display:flex;align-items:center;justify-content:center;color:#888">${ICON('gallery', 16)}</div></div>
             <div style="position:absolute;left:50%;top:30%;width:22%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;background:#fff;border:3px solid #F7C838"></div>
             <div style="position:absolute;left:50%;bottom:16%;translate:-50% 0;background:#F7C838;color:#1D1D1B;border-radius:999px;padding:4px 14px;font:600 11px Fredoka,system-ui,sans-serif">${esc(S.startText || 'Tippen zum Starten')}</div>${card}</div></div></div></div>`;
       },
