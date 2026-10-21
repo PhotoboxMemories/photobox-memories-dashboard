@@ -184,7 +184,7 @@
     if (!L || !Array.isArray(L.elements) || lang === 'de' || !D[lang]) return L;
     let changed = false;
     const els = L.elements.map(e => {
-      if ((e.type !== 'text' && e.type !== 'button') || !e.text || ONLY_PH.test(e.text)) return e;
+      if ((e.type !== 'text' && e.type !== 'button' && e.type !== 'sbtn') || !e.text || ONLY_PH.test(e.text)) return e;
       const t = String(e.text).split('\n').map(l => tr(l, lang)).join('\n');
       if (t === e.text) return e; changed = true; return { ...e, text: t };
     });
