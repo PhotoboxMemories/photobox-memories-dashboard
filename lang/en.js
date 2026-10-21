@@ -1061,6 +1061,7 @@ I18N.add('en', {
 "Erst vorwärts, dann rückwärts abspielen": "Play forwards, then backwards",
 "Erst vorwärts, dann rückwärts abspielen.": "Play forwards, then backwards.",
 "Erstelle auch ein GIF": "Also create a GIF",
+"Erstelle ein kostenloses Konto oder melde dich an – danach geht es direkt weiter zu deinem Tarif.": "Create a free account or sign in – then you go straight on to your plan.",
 "Erstellen Sie ein neues Ereignis": "Create a new event",
 "erstellt dein Porträt": "is creating your portrait",
 "Erstelltes KI-Porträt": "Created AI portrait",
