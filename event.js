@@ -923,6 +923,7 @@
         ai.lib = ai.lib.filter(y => y.id !== x.id); if (ai.libEdit === x.id) { ai.libEdit = ''; ai.custom = false; ai.seed = null; ai.cname = ai.ctext = undefined; } render(); return;
       }
       if (a === 'ai-delete') { S.ai.prompts.splice(+t.dataset.i, 1); ai.edit = -1; ai.libEdit = ''; ai.custom = false; ai.p = ai.a = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = undefined; S.ai = AIEvent.normalize(S.ai); save(); render(); return; }
+      if (a === 'ai-buy') { await closeEditor(); G.showCredits?.(); return; } // Dashboard → Meine Lizenzen → KI-Guthaben
       if (a === 'ai-status') {
         t.disabled = true;
         try {
@@ -1386,6 +1387,9 @@
         if (central) Promise.resolve(ctx.sb.from('ai_wallets').select('balance').eq('owner_id', ctx.me.id).maybeSingle()).then(({ data, error }) => {
           const el = main.querySelector('[data-ai-bal]'); if (el) el.textContent = error ? 'Guthaben nicht abrufbar' : (data?.balance || 0) + ' Credits';
         });
+        if (central) Promise.resolve(ctx.sb.from('ai_jobs').select('cost').eq('event_id', ev.id).eq('status', 'succeeded').limit(10000)).then(({ data, error }) => { // Verbrauch in diesem Ereignis
+          const el = main.querySelector('[data-ai-used]'); if (el && !error) el.textContent = `${(data || []).reduce((a, j) => a + (j.cost || 0), 0)} Credits · ${(data || []).length} Bilder`;
+        });
         const pp = aiFind(AI_MOTIFS, ai.p), aa = aiFind(AI_ARTS, ai.a), editing = ai.edit >= 0 ? S.ai.prompts[ai.edit] : null;
         const libEditing = ai.libEdit && Array.isArray(ai.lib) ? ai.lib.find(x => x.id === ai.libEdit) || null : null; // Stil aus „Meine KI-Stile“ wird bearbeitet
         // Eigener Text: bei zentraler KI erst speichern, wenn dafür ein Bild erzeugt wurde – so hat jede eigene Kachel ein Bild.
@@ -1409,7 +1413,7 @@
           ${ai.result && !ai.busy && !libEditing ? '<button class="ghost" style="width:100%;margin-top:8px" data-a="ai-lib-result">☆ In „Meine KI-Stile“ speichern</button>' : ''}
           ${ai.recent.length ? `<small style="display:block;margin-top:10px">Letzte Generierungen</small><div class="airecent">${ai.recent.map((r, n) => `<img src="${r.image}" title="${esc(r.name)}" data-a="ai-recent" data-i="${n}">`).join('')}</div>` : ''}</div>
           <div class="card"><div class="aibar">${central
-            ? `<span>KI-Guthaben:</span><span class="bal" data-ai-bal>…</span><small>${S.ai.resolution === '1k' ? '1 Credit pro Bild' : '2 Credits pro Bild (2K)'}</small><span class="sp" style="flex:1"></span><button class="ghost" data-a="ai-status">Verbindung prüfen</button>`
+            ? `<span>KI-Guthaben:</span><span class="bal" data-ai-bal>…</span><small>${S.ai.resolution === '1k' ? '1 Credit pro Bild' : '2 Credits pro Bild (2K)'}</small><small><span>In diesem Ereignis verbraucht:</span> <b data-ai-used>…</b></small><span class="sp" style="flex:1"></span><button class="btn pri" data-a="ai-buy">Credits kaufen</button><button class="ghost" data-a="ai-status">Verbindung prüfen</button>`
             : `<span>Eigener API-Schlüssel auf der Fotobox · ${({ grok: 'Grok (xAI)', openai: 'OpenAI', gemini: 'Google Gemini' })[S.ai.provider]}</span>`}</div></div>`;
         const lib = ai.lib;
         const libCard = `<div class="card"><div class="between" style="gap:10px;flex-wrap:wrap"><b>Meine KI-Stile${Array.isArray(lib) ? ` (${lib.length})` : ''}</b><span class="row" style="gap:6px;flex-wrap:wrap">${Array.isArray(lib) && lib.length && central ? `<button class="ghost" data-a="ai-lib-pair" ${ai.busy ? 'disabled' : ''} title="Alle Bilder mit unserem Testpaar neu erzeugen (1 Credit je Stil)">🔄 Bilder mit Testpaar erneuern</button>` : ''}${ctx.admin && Array.isArray(lib) && lib.some(x => !x.shared) ? `<button class="ghost" data-a="ai-lib-share-all" title="Alle Stile in „Meine KI-Stile“ für alle Kunden freigeben">👥 Alle für Kunden freigeben</button>` : ''}</span></div><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Deine gesammelten Stile mit Bild – für jedes Event. Antippen übernimmt den Stil in dieses Event, ohne Credits. ✎ = Text ändern und neu generieren. Die Bilder zeigen immer unser Testpaar.</p>
