@@ -647,7 +647,7 @@
       if (t.type === 'checkbox') { const l = t.closest('.row,h1')?.querySelector('.swl'); if (l) l.textContent = v ? 'Ein' : 'Aus'; }
       if (t.dataset.num) $$(main, `[data-s="${p}"]`).forEach(x => { if (x !== t) x.value = v; });
       save(); drawPreview();
-      if (t.type === 'radio' || p === 'startDisplay' || p === 'x.caricature.on' || t.dataset.rerender || (p.startsWith('x.videomsg.') && t.tagName === 'SELECT')) render();
+      if (t.type === 'radio' || p === 'startDisplay' || p === 'askCopies' || p === 'x.caricature.on' || t.dataset.rerender || (p.startsWith('x.videomsg.') && t.tagName === 'SELECT')) render();
     });
     main.addEventListener('change', e => {
       const t = e.target;
@@ -1395,7 +1395,9 @@
       print() {
         return `<h1>Druckeinstellungen</h1>${tabs('pr', [['gen', 'Allgemein'], ['lim', 'Drucklimits']])}
           ${allTabs('pr', () => sub.pr === 'gen' ? `<div class="card">${sw('autoPrint', 'Automatisch drucken', 'Automatisches Drucken jeder Session')}${sw('printButton', 'Schaltfläche „Drucken“ anzeigen', 'Fügt dem Freigabebildschirm eine Schaltfläche zum Drucken einer oder mehrerer zusätzlicher Kopien hinzu')}
-              ${sw('askCopies', '„Wie viele Kopien?“ fragen')}<label class="l">Kopien pro Druck (Standard)</label><input type="number" min="1" max="10" data-s="copies" data-num="1" value="${S.copies}">
+              ${sw('askCopies', '„Wie viele Kopien?“ fragen', 'Der Gast wählt selbst – die Auswahl startet bei 1 und geht bis „Kopien pro Gast“ (Reiter Drucklimits).')}
+              ${S.askCopies ? '' : `<label class="l">Kopien pro Ausdruck</label><input type="number" min="1" max="10" data-s="copies" data-num="1" value="${S.copies}">
+              <p style="color:#6b6b78;font-size:13px;margin:6px 0 0">So oft wird jedes Foto gedruckt – auch beim automatischen Drucken. Höchstens so viele wie „Kopien pro Gast“ (Reiter Drucklimits)${(+S.copies || 1) > (+S.maxCopies || 3) ? ` – <b style="color:#b26b00">zurzeit ${+S.maxCopies || 3}</b>` : ''}.</p>`}
               <p style="font-weight:600;margin-top:14px">Texte</p><div class="grid3x">${text('x.print.btnText', 'Drucken')}${text('x.print.printingText', 'Drucken...')}${text('x.print.copiesText', 'Wie viele Kopien?')}</div></div>`
           : `${titleSw('Drucklimits', '')}<div class="card">Ein Limit für die erlaubten Ausdrucke festlegen.
               <div class="row"><div style="flex:1"><label class="l">Maximale Anzahl an Ausdrucken pro Ereignis (0 = kein Limit)</label><input type="number" min="0" data-s="printLimit" data-num="1" value="${S.printLimit}"></div>
