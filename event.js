@@ -308,6 +308,8 @@
   #ws .airecent img{height:64px;border-radius:6px;cursor:pointer}
   #ws .aiwait{padding:40px 16px;font-weight:600}
   #ws .aibar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  #ws .prolock{position:relative;opacity:.5;pointer-events:none;filter:grayscale(.5)}
+  #ws .prolock::after{content:attr(data-label);position:absolute;top:6px;right:6px;background:#F7C838;color:#1D1D1B;font:700 11px system-ui,sans-serif;padding:3px 8px;border-radius:999px}
   #ws .aibar .bal{font-weight:700;font-size:16px}
   #ws details.adv summary{cursor:pointer;font-weight:600}
   #ws .thumbs div{position:relative}#ws .thumbs img{height:70px;border-radius:6px;display:block}
@@ -503,6 +505,14 @@
     const lockedPage = (title, text) => `<h1>${title} 🔒</h1><div class="card" style="background:#FFFAEA;max-width:640px">
       <b>Diese Funktion ist für Ihr Konto noch nicht freigeschaltet.</b><p style="margin:10px 0">${text}</p>
       <p style="margin:0;color:#6b6b78">Zum Freischalten melden Sie sich bitte bei Photobox Memories.</p></div>`;
+    // Tarif (ctx.tier aus my_tier: 'free' | 'basis' | 'pro'; ohne Angabe wie Pro): diese Seiten und Teile gibt es erst ab Pro
+    const pro = () => !ctx.tier || ctx.tier() === 'pro', freeTier = () => !!ctx.tier && ctx.tier() === 'free';
+    const PRO_PAGES = { fx: 'Filter & Effekte', bg: 'Hintergrundentfernung', voice: 'Virtueller Berater', survey: 'Umfrage & Haftungsausschluss' };
+    const proPage = title => `<h1>${title} 🔒</h1><div class="card" style="background:#FFFAEA;max-width:640px">
+      <b>Diese Funktion gibt es ab dem Tarif Pro.</b><p style="margin:10px 0">Im Tarif Pro sind alle Funktionen dabei: GIF, Boomerang und Video, Filter und Schönheitsfilter, Hintergrund entfernen, Virtueller Berater, eigene Vorlagen und Bildschirme, Umfrage und mehr.</p>
+      <button class="btn pri" data-a="tarife">Tarife ansehen</button></div>`;
+    const proOnly = (html, label = 'Ab Pro', locked = !pro()) => locked ? `<div class="prolock" data-label="${label}">${html}</div>` : html;
+    const PRO_ACTIONS = ['editlay', 'edit1', 'upattract', 'editscreen', 'editshare'];
     let page = ctx.page || 'dash', sub = {};
     const root = document.createElement('div'); root.id = 'ws';
     root.innerHTML = `<div class="wtop"><button class="tb mnav" data-a="mnav" title="Menü" aria-label="Menü">☰</button><div class="logo">${LOGO(28)}</div><span class="en"></span><span class="sp"></span>
@@ -610,7 +620,7 @@
     }
     function renderNav() {
       side.innerHTML = `<span class="back" data-a="back">${ICON('chevronLeft', 14)} Zurück zu den Ereignissen</span>` + NAV.map(n => n[0] === 'h'
-        ? `<h6>${n[1]}</h6>` : `<a data-p="${n[0]}" class="${n[0] === page ? 'on' : ''}">${ICON(n[1], 18)}${n[2]}${LOCKS[n[0]] && !allowed(LOCKS[n[0]]) ? ' 🔒' : ''}</a>`).join('');
+        ? `<h6>${n[1]}</h6>` : `<a data-p="${n[0]}" class="${n[0] === page ? 'on' : ''}">${ICON(n[1], 18)}${n[2]}${(LOCKS[n[0]] && !allowed(LOCKS[n[0]])) || (PRO_PAGES[n[0]] && !pro()) ? ' 🔒' : ''}</a>`).join('');
       $(root, '.en').textContent = E.name;
     }
     side.addEventListener('click', e => {
@@ -619,7 +629,7 @@
     });
     $(root, '.navshade').addEventListener('click', () => root.classList.remove('navopen'));
     // Hilfe-Suche (hilfe.js, dieselbe wie in der Fotobox): Stichwort eintippen → wie man es einstellt, „Hingehen“ öffnet die Seite
-    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261021-1'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261022-1'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     const closeEditor = () => close(); // Editor schließen (für Themen auf den Hauptseiten, z. B. „Meine Lizenzen“)
     async function openHelp() {
       try { await helpLib(); } catch { return ctx.toast('Die Hilfe konnte nicht geladen werden.'); }
@@ -728,6 +738,9 @@
     });
     main.addEventListener('dragend', () => { dragLay = ''; main.querySelectorAll('.lay.drop').forEach(n => n.classList.remove('drop')); });
     main.addEventListener('click', async e => {
+      if (e.target.closest('[data-a="tarife"]')) { await closeEditor(); G.showTarife?.(); return; } // Meine Lizenzen → Tarife und Preise
+      const pa = e.target.closest('[data-a]')?.dataset.a;
+      if (PRO_ACTIONS.includes(pa) && !pro()) { ctx.toast('Eigene Vorlagen, Bildschirme und Startvideos gibt es ab dem Tarif Pro.', 5000); return; }
       // Virtueller Berater: Animationen wählen/entfernen, eigene Dateien hochladen/entfernen
       const va = e.target.closest('[data-vapick],[data-vadel],[data-vadelm],[data-vaup]');
       if (va) {
@@ -1053,7 +1066,7 @@
     const pick = accept => new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => res(i.files[0] || null); i.click(); });
 
     // ---------- Seiten ----------
-    const addLayout = L => { S.layouts.push(L); sub.laySel = L.id; save(); render(); editLayout(L.id); };
+    const addLayout = L => { S.layouts.push(L); sub.laySel = L.id; save(); render(); if (pro()) editLayout(L.id); }; // Vorlage wählen geht in jedem Tarif, Bearbeiten ab Pro
     const layoutThumb = (L, px = 300) => thumbOf(L, px, vals());
     const vals = () => ({ titel: S.title || E.name, untertitel: S.subtitle || (E.event_date ? new Date(E.event_date).toLocaleDateString('de-DE') : ''), datum: new Date().toLocaleDateString('de-DE'), uhrzeit: '20:15', event: E.name, name: 'Lisa' });
     function layoutCards() {
@@ -1243,7 +1256,7 @@
               ${sw('x.share.cloud', 'Fotos hochladen', 'Die Fotobox lädt jedes fertige Foto in diese Galerie')}
               ${sw('x.gallery.downloadAll', 'Alle herunterladen', 'Ermöglichen Sie Besuchern, alle Inhalte des Ereignisses herunterzuladen')}
               ${sw('x.gallery.guests', 'Gastzugriff ' + NEEDSRV_S, 'Erlauben Sie Gästen, Bilder und Videos anderer Gäste zu sehen')}
-              <div class="pw">${text('x.gallery.password', 'Passwort', 'leer = kein Passwort')}<small>Gäste müssen dieses Passwort eingeben, um das Ereignis anzusehen. Lassen Sie das Feld leer, um das Passwort zu deaktivieren.</small></div></div>
+              <div class="pw">${proOnly(text('x.gallery.password', 'Passwort', 'leer = kein Passwort'))}<small>Gäste müssen dieses Passwort eingeben, um das Ereignis anzusehen. Lassen Sie das Feld leer, um das Passwort zu deaktivieren.</small></div></div>
           </div>
           <div class="dacts">
             ${act('gal-zip', 'download', 'Alle herunterladen', P.length ? '' : 'disabled')}${act('gal-upload', 'upload', 'Hochladen')}${act('gal-embed', 'copy', 'Einbetten', link ? '' : 'disabled')}
@@ -1296,8 +1309,8 @@
             <h2>Allgemein</h2><div class="card">${slider('x.video.countdown', 'Countdown', 0, 30)}${slider('x.video.quality', 'Ausgabequalität', 1, 8, 1, 'mbps')}${slider('videoSecs', 'Aufnahmedauer', 1, 60, 1)}
               ${sw('videoAudio', 'Ton aufnehmen')}${sw('x.video.saveOriginal', 'Originalvideo speichern')}${sw('x.video.preTextOn', 'Text vor der Aufnahme anzeigen')}${text('x.video.preText', 'Text', 'Bereit machen')}</div>`;
         return `<h1>Aufnahmeeinstellungen</h1><div class="cols"><div class="left">
-          <div class="modes">${M.map(([k, ic, n, key]) => `<div class="mode ${sub.mode === k ? 'on' : ''}" data-mode="${k}"><span class="ic">${ICON(ic, 22)}</span>${n}<span class="dot ${isOn(k, key) ? 'a' : ''}"></span></div>`).join('')}</div>
-          ${body}
+          <div class="modes">${M.map(([k, ic, n, key]) => `<div class="mode ${sub.mode === k ? 'on' : ''}" data-mode="${k}"><span class="ic">${ICON(ic, 22)}</span>${n}${k !== 'photo' && !pro() ? ' 🔒' : ''}<span class="dot ${isOn(k, key) ? 'a' : ''}"></span></div>`).join('')}</div>
+          ${sub.mode !== 'photo' && !pro() ? '<div class="card" style="background:#FFFAEA"><b>GIF, Boomerang und Video gibt es ab dem Tarif Pro.</b><p style="margin:8px 0 0"><button class="btn pri" data-a="tarife">Tarife ansehen</button></p></div>' : body}
           <h2>Live-Ansicht</h2><div class="card"><div class="between"><div><b>Live-Ansicht in der Vorlage</b><br><small style="color:#6b6b78">Gäste sehen sich beim Countdown im Fotolayout – so wie das fertige Foto. Aus: nur das Kamerabild.</small></div>
             <div class="row"><label class="sw"><input type="checkbox" data-livetpl ${S.liveView !== 'plain' ? 'checked' : ''}><i></i></label><span class="swl">${S.liveView !== 'plain' ? 'Ein' : 'Aus'}</span></div></div></div>
           <h2>Spiegeln</h2><div class="card">${sw('mirror', 'Gespiegelte Live-Ansicht')}${sw('mirrorPhoto', 'Aufgenommene Fotos und Videos spiegeln', 'Spiegelt das gespeicherte und gedruckte Ergebnis')}${sw('cropLive', 'Live-Ansicht auf das Fotofeld zuschneiden')}</div>
@@ -1350,11 +1363,11 @@
         return `<h1>Startbildschirm</h1><div class="cols"><div class="left">
           <h2>1 · Eigenes Video oder Bild</h2><div class="card">
           <p style="color:#6b6b78;margin:0 0 6px">Läuft auf dem Startbildschirm in Endlosschleife – ein Tipp darauf startet die Fotobox. Die Fotobox erkennt selbst, ob ihr Bildschirm hoch oder quer steht, und nimmt das passende. Ist nur eins hochgeladen, gilt es für beide.</p>
-          ${slot('portrait')}${slot('landscape')}
+          ${proOnly(slot('portrait') + slot('landscape'))}
           <p style="color:#777;font-size:12.5px;margin:8px 0 0">MP4-Video oder JPG/PNG-Bild · höchstens 50 MB · Tipp: In Canva oder CapCut gibt es fertige Vorlagen für Hochzeit, Geburtstag und Firmenfeier.</p>
           <label class="l">Auf dem Startbildschirm zeigen</label><select data-s="startDisplay"><option value="media" ${S.startDisplay !== 'live' ? 'selected' : ''}>${has ? 'Mein Video bzw. Bild' : 'Standard-Video von Photobox Memories'}</option><option value="live" ${S.startDisplay === 'live' ? 'selected' : ''}>Live-Bild der Kamera</option></select>
           ${has ? '' : '<p style="color:#6b6b78;font-size:12.5px;margin:6px 0 0">Ohne eigenes Video zeigt die Fotobox unsere Startanimation (schwebende Fotos, in der Mitte Ihr Logo – passend für Hoch- und Querformat).</p>'}</div>
-          ${stdLogoCard(has)}
+          ${proOnly(stdLogoCard(has), 'Ab Basis', freeTier())}
           <h2>2 · Texte und Logo darüberlegen <span style="font-weight:400;color:#888;font-size:14px">(freiwillig)</span></h2><div class="card">
           <p style="color:#6b6b78;margin:0 0 12px">Name, Datum, Logo und Start-Knopf frei anordnen – wie beim Fotolayout. Gestaltest du nur eine Ausrichtung, passt die Fotobox sie für die andere automatisch an; du kannst beide aber auch einzeln gestalten.</p>
           <div class="row" style="flex-wrap:wrap"><button class="btn pri" data-a="editscreen" data-o="portrait">${ICON('pen', 16)} Hochformat gestalten</button><button class="btn pri" data-a="editscreen" data-o="landscape">${ICON('pen', 16)} Querformat gestalten</button>${S.startScreen ? `<button class="ghost" data-a="resetscreen">Zurücksetzen</button>` : ''}</div>
@@ -1495,7 +1508,7 @@
           : sub.sh === 'screen' ? `<h2>Bildschirm zum Teilen</h2>${sharePreview()}<div class="card">${slider('autoReturn', 'Anzeigedauer des Bildschirms zum Teilen', 0, 120, 5)}
               ${sw('x.share.deleteBtn', 'Schaltfläche „Löschen“ anzeigen', 'Gäste können die Aufnahme verwerfen und wiederholen')}${text('x.share.deleteText', 'Text für die Schaltfläche „Löschen“')}</div>`
           : `<h2>Weitere Optionen</h2><div class="card">${sw('x.share.cloud', 'Cloud-Freigabe', 'Fotos werden in die Online-Galerie hochgeladen und sind über einen Link abrufbar')}
-              ${sw('x.share.origUp', 'Originalfotos hochladen', 'Zusätzlich zum fertigen Ausdruck werden die einzelnen Aufnahmen in die Online-Galerie hochgeladen (braucht mehr Speicher)')}
+              ${proOnly(sw('x.share.origUp', 'Originalfotos hochladen', 'Zusätzlich zum fertigen Ausdruck werden die einzelnen Aufnahmen in die Online-Galerie hochgeladen (braucht mehr Speicher)'))}
               ${sw('share', 'QR Code', 'Teilen Sie Fotos über einen QR-Code, den Gäste scannen können. Aktuell muss das Handy im selben WLAN wie die Fotobox sein.')}</div>`)}`;
       },
       print() {
@@ -1832,7 +1845,7 @@
     }
     const vaStops = [];
     function render() {
-      main.innerHTML = '<div class="wpage">' + PAGES[page]() + '</div>';
+      main.innerHTML = '<div class="wpage">' + (PRO_PAGES[page] && !pro() ? proPage(PRO_PAGES[page]) : PAGES[page]()) + '</div>';
       drawPreview(true);
       if (page === 'start') startAnimPreview();
       vaStops.splice(0).forEach(f => f()); // Animations-Kacheln des Virtuellen Beraters
