@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.86": {
+      "date": "2026-10-22",
+      "notes": {
+        "de": [
+          "Vorbereitung für neue Tarife im Hintergrund – für deine Lizenz ändert sich nichts, alle Funktionen bleiben wie gewohnt."
+        ],
+        "en": [
+          "Preparation for new plans in the background – nothing changes for your license, all features stay as usual."
+        ],
+        "tr": [
+          "Arka planda yeni planlar için hazırlık – lisansın için hiçbir şey değişmez, tüm özellikler her zamanki gibi kalır."
+        ],
+        "fr": [
+          "Préparation de nouvelles offres en arrière-plan – rien ne change pour ta licence, toutes les fonctions restent comme d’habitude."
+        ],
+        "es": [
+          "Preparación de nuevos planes en segundo plano: nada cambia en tu licencia, todas las funciones siguen como siempre."
+        ],
+        "it": [
+          "Preparazione di nuovi piani in background – per la tua licenza non cambia nulla, tutte le funzioni restano come sempre."
+        ]
+      }
+    },
     "1.17.85": {
       "date": "2026-10-21",
       "notes": {
