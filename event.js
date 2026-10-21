@@ -640,6 +640,7 @@
       if (!p) return;
       const v = t.type === 'checkbox' ? t.checked : t.dataset.num ? +t.value : t.value;
       setP(S, p, v);
+      if (p === 'x.videomsg.pos' || p === 'x.videomsg.size') dropVmsgPlace(); // Auswahl hier gilt wieder statt der freien Stelle aus dem Editor
       if (p.startsWith('ai.prompts.')) {
         const select = main.querySelector('[data-s="ai.selectedId"]');
         if (select) { const selected = select.value; select.innerHTML = '<option value="">Erster Stil</option>' + S.ai.prompts.map(item => `<option value="${esc(item.id)}">${esc(item.name)}</option>`).join(''); select.value = selected; }
@@ -1457,7 +1458,8 @@
             <p style="color:#6b6b78;font-size:13px;margin-bottom:0">Die Videos erscheinen in der Galerie dieses Events – sichtbar nur für Gäste mit dem Galerie-Link, den Sie bzw. die Gastgeber teilen. Der QR-Code selbst führt nie zur Galerie.</p></div>
           <h2>Karte auf dem Startbildschirm</h2><div class="card">
             ${text('x.videomsg.title', 'Überschrift', 'Videonachricht hinterlassen')}${text('x.videomsg.sub', 'Hinweis darunter', 'Scanne den Code mit deinem Handy')}
-            ${sel('x.videomsg.pos', 'Position', [['tl', 'Oben links (unter der Galerie)'], ['tr', 'Oben rechts'], ['bl', 'Unten links'], ['br', 'Unten rechts']])}${sel('x.videomsg.size', 'Größe', [['s', 'Klein'], ['m', 'Mittel'], ['l', 'Groß']])}</div>
+            ${sel('x.videomsg.pos', 'Position', [['tl', 'Oben links (unter der Galerie)'], ['tr', 'Oben rechts'], ['bl', 'Unten links'], ['br', 'Unten rechts']])}${sel('x.videomsg.size', 'Größe', [['s', 'Klein'], ['m', 'Mittel'], ['l', 'Groß']])}
+            <p style="color:#6b6b78;font-size:13px;margin-bottom:0">${vmsgPlaced() ? 'Die Karte ist im Startbildschirm-Editor frei platziert. Eine Auswahl hier setzt sie wieder an die gewählte Stelle.' : 'Tipp: Im Startbildschirm-Editor kannst du die Karte auch frei verschieben und in der Größe ändern.'}</p></div>
           <h2>Ausprobieren</h2><div class="card"><p style="margin-top:0">So sieht die Seite auf dem Handy aus – sie funktioniert, sobald die Videonachricht oben eingeschaltet ist:</p>
             <a class="btn pri" href="${esc(link)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;gap:6px;align-items:center">${ICON('smartphone', 16)} Handy-Seite öffnen</a></div>
           </div><div class="pv"><div class="frame"><small style="color:#555">Vorschau Startbildschirm</small><div style="position:relative;aspect-ratio:16/9;margin-top:4px;border-radius:10px;overflow:hidden;background:radial-gradient(circle at 50% 35%,#3a3424,#1d1d1b 60%,#0b0b0a)">
@@ -1529,7 +1531,8 @@
         const gl = S.x.lang?.guest || window.PM_LANG || 'de', L = I18N.layout(screenFor(o), gl); // Vorschau in der Sprache der Gäste
         if (!I18N.has(gl)) { I18N.load(gl).then(() => I18N.has(gl) && drawStart()); }
         if (note) note.textContent = screenOf(o) ? 'gestaltet' : S.startScreen ? 'automatisch angepasst' : 'Standard-Vorschlag';
-        FBR.preloadLayout(L).then(() => { const big = FBR.renderLayout(L, { values: vals(), placeholders: true }); c.width = Math.round(big.width / 4); c.height = Math.round(big.height / 4); c.getContext('2d').drawImage(big, 0, 0, c.width, c.height); });
+        const sy = screenSysOpts(), Ls = FBR.screenSys ? FBR.screenSys(L, sy) : L;
+        FBR.preloadLayout(Ls).then(() => { const big = FBR.renderLayout(Ls, { values: vals(), placeholders: true, vmsg: sy.vmsg ? { accent: sy.accent, ...sy.vmsg } : null }); c.width = Math.round(big.width / 4); c.height = Math.round(big.height / 4); c.getContext('2d').drawImage(big, 0, 0, c.width, c.height); });
       }
     }
     // Live-Vorschau der Startanimation mit dem Logo, das die Fotobox in die Scheibe legt (gleiche Reihenfolge wie dort:
@@ -1575,13 +1578,23 @@
       if (!S.startScreen || S.startScreen.orient === nl.orient) S.startScreen = nl; else S.startScreen2 = nl;
       const b = nl.elements.find(e => e.type === 'button'); S.startText = b && !b.hidden ? String(b.text || '') : ''; save();
     }
+    // Galerie-Stapel und Videonachricht-Karte der Fotobox als Ebenen im Editor (FBR.screenSys)
+    const screenSysOpts = () => ({ gallery: true, vmsg: allowed('videomsg') && S.x.videomsg?.on ? S.x.videomsg : null, accent: S.accent || '#F7C838' });
+    const vmsgPlaced = () => [S.startScreen, S.startScreen2].some(L => L && L.screen && L.elements.some(e => e.type === 'vmsg'));
+    function dropVmsgPlace() { for (const k of ['startScreen', 'startScreen2']) if (S[k]?.screen) S[k] = { ...S[k], elements: S[k].elements.filter(e => e.type !== 'vmsg') }; }
+    // Zurücksetzen im Editor: nur diese Ausrichtung, wenn die andere eine eigene Gestaltung hat – sonst ganz zurück zum Standard
+    async function dropScreen(o) {
+      if (!S.startScreen) return false;
+      const own = screenOf(o), other = screenOf(o === 'portrait' ? 'landscape' : 'portrait'), part = !!(own && other);
+      if (!await (G.pmConfirm || (async t => confirm(t)))(part ? 'Gestaltung für diese Ausrichtung verwerfen? Sie wird dann aus der anderen Ausrichtung umgerechnet.' : 'Gestaltung des Startbildschirms (Hoch- und Querformat) verwerfen?', 'Zurücksetzen')) return false;
+      if (part) { S.startScreen = other; S.startScreen2 = null; } else { S.startScreen = null; S.startScreen2 = null; }
+      save(); return true;
+    }
     function editScreen(o) {
-      const L = structuredClone(screenFor(o)); delete L.adapted;
       LayoutEditor.open({
-        layout: L, values: vals(), uploadImage: ctx.uploadFile,
-        video: () => mediaFor(L.orient) || { url: '', type: '' }, uploadVideo: () => uploadAttract(L.orient),
-        removeVideo: () => removeAttract(L.orient),
-        onSave: async nl => storeScreen(nl),
+        layout: screenFor(o), layoutFor: o2 => structuredClone(screenFor(o2)), values: vals(), uploadImage: ctx.uploadFile, sys: screenSysOpts(),
+        video: o2 => mediaFor(o2) || { url: '', type: '' }, uploadVideo: o2 => uploadAttract(o2), removeVideo: o2 => removeAttract(o2),
+        onSave: async nl => storeScreen(nl), onReset: dropScreen,
         onClose: () => render()
       });
     }
