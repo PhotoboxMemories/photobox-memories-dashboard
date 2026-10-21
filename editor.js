@@ -10,7 +10,7 @@
 // Videonachricht-Karte der Fotobox als verschiebbare Ebenen (FBR.screenSys).
 (function (G) {
   'use strict';
-  const P = ':is(#le,#leS,#leP)';
+  const P = ':is(#le,#leS,#leP,#leL,#leB)';
   const CSS = `
   ${P}{--bg:#f1f1f4;--pn:#fff;--fg:#1d1d24;--mu:#6b6b78;--ln:#e3e3ea;--in:#fff;--inl:#d9d9e2;--hi:#FFF3C4;--hit:#8a6400;font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--fg)}
   ${P}.dark{--bg:#232326;--pn:#2b2b2f;--fg:#f2f2f2;--mu:#a9a9b0;--ln:#3d3d44;--in:#1c1c1f;--inl:#5a5a62;--hi:rgba(249,203,56,.16);--hit:#F9CB38}
@@ -40,10 +40,16 @@
   ${P} .tool{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;background:none;border:0;font:inherit;color:var(--fg);font-size:11.5px;line-height:1.2;padding:2px 0;text-align:center}
   ${P} .tool i{width:42px;height:42px;border-radius:50%;background:#F7C838;color:#1D1D1B;display:flex;align-items:center;justify-content:center;font-style:normal;box-shadow:0 4px 12px rgba(247,200,56,.4);transition:transform .12s}
   ${P} .tool:hover i{transform:scale(1.07)}
+  /* Fotolayout: „Hinzufügen“ als Liste wie bei LumaBooth */
+  ${P} .add.list{display:flex;flex-direction:column;gap:2px}
+  ${P} .add.list .tool{flex-direction:row;justify-content:flex-start;gap:10px;font-size:13px;padding:5px 6px;border-radius:8px;text-align:left}
+  ${P} .add.list .tool:hover{background:rgba(127,127,127,.12)}
+  ${P} .add.list .tool i{width:30px;height:30px;flex:none;box-shadow:none}
+  ${P} .add.list .tool i svg{width:17px;height:17px}
   ${P} label.l{display:block;font-size:11.5px;color:var(--mu);margin:9px 0 4px;text-transform:none;letter-spacing:0}
   ${P} .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   ${P} .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  ${P} .g6{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+  ${P} .g6{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px} ${P} .g6 .bt{padding:6px 0;min-width:0}
   ${P} input[type=text],${P} input[type=number],${P} select,${P} textarea{width:100%;border:1px solid var(--inl);border-radius:8px;padding:6px 8px;font:inherit;font-size:13.5px;background:var(--in);color:var(--fg);margin:0}
   ${P} input[type=color]{width:100%;height:32px;border:1px solid var(--inl);border-radius:8px;padding:2px;background:var(--in);margin:0}
   ${P} input[type=range]{width:100%;accent-color:#F7C838;margin:6px 0 0}
@@ -86,6 +92,27 @@
   ${P} .h.r{background:#fff;border-color:#1976d2;cursor:grab}
   ${P} .guide{position:absolute;background:#F7C838;pointer-events:none}
   #le .hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:12px;color:#888;white-space:nowrap}
+  #leL .side{height:100%;overflow:auto} #leL .sec{padding:12px 14px 14px}
+  /* Vorlagen-Leiste (Fotolayout wie LumaBooth): Auswahl, Hinzufügen, Speichern unter, Import/Export, Rückgängig, Testdruck, Löschen */
+  #le .lib{display:flex;align-items:center;gap:6px;flex:none;padding:7px 14px;background:#2a2a2e;border-top:1px solid rgba(255,255,255,.08);overflow-x:auto}
+  #le .lib .tb{padding:6px 10px;font-size:13px}
+  #le .lib select{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:6px 8px;font:inherit;width:auto;min-width:180px;max-width:260px;margin-right:6px}
+  #le .lib select option{color:#1d1d24}
+  #leB .lbar{display:flex;align-items:flex-end;gap:4px 14px;flex-wrap:wrap;padding:8px 12px}
+  #leB .lbar select{width:auto;min-width:180px;max-width:260px;align-self:center}
+  #leB .lbar .lb2{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;color:var(--fg);font:inherit;font-size:11.5px;cursor:pointer;padding:2px 2px;min-width:54px}
+  #leB .lbar .lb2:disabled{opacity:.35;cursor:default} #leB .lbar .lb2:hover:not(:disabled){color:#F7C838}
+  #leB .lbar .st{font-size:12px;color:var(--mu);align-self:center;margin-left:auto}
+  ${P} .subm{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;padding:8px;border:1px solid var(--ln);border-radius:10px;background:var(--in)}
+  ${P} .subm b{grid-column:1/-1;font-size:12px;color:var(--mu);font-weight:600}
+  ${P} .tool.on i{box-shadow:0 0 0 3px var(--pn),0 0 0 5px #F7C838}
+  ${P} .lay .th{width:22px;height:22px;object-fit:contain;border-radius:3px;background:rgba(127,127,127,.18);flex:none}
+  ${P} .lay .nb{width:22px;height:22px;border-radius:3px;background:#F7C838;color:#1D1D1B;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+  .le-ask{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .le-ask>div{background:#fff;color:#1d1d24;border-radius:14px;padding:18px;width:min(420px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .le-ask b{display:block;margin-bottom:10px;font-size:16px} .le-ask input{width:100%;box-sizing:border-box;border:1px solid #d9d9e2;border-radius:8px;padding:8px 10px;font:inherit}
+  .le-ask .r{display:flex;justify-content:flex-end;gap:8px;margin-top:14px} .le-ask button{border:1px solid #d9d9e2;background:#fff;border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer}
+  .le-ask button.p{background:#F7C838;border-color:#F7C838;font-weight:700}
   /* Handy: Leinwand oben, darunter „Ausgewähltes Objekt“/Ebenen, ganz unten die Werkzeuge zum Wischen */
   @media(max-width:820px){
     #le .top{height:52px;padding:0 8px;gap:6px}
@@ -101,7 +128,8 @@
     #le .side .sec{border:0;padding:8px 10px}
     #le .side .sec:not(.addsec){display:none}
     #le .side .sec>h4{display:none}
-    #le .side .add{display:flex;gap:12px}
+    #le .side .add,#le .side .add.list{display:flex;flex-direction:row;gap:12px}
+    #le .side .add.list .tool{flex-direction:column;text-align:center;font-size:11.5px}
     #le .side .tool{flex:none;min-width:62px}
     #le .hint{display:none}
     ${P} .h{width:22px;height:22px;margin:-11px 0 0 -11px}
@@ -111,9 +139,13 @@
   const clone = o => JSON.parse(JSON.stringify(o));
   const tr = s => (G.I18N_UI ? G.I18N_UI(s) : s);
   const PH = ['titel', 'untertitel', 'datum', 'uhrzeit', 'event', 'name'];
-  const TYPE_NAME = { photo: 'Fotobox-Foto', image: 'Bild', text: 'Text', shape: 'Form', deco: 'Vorlagen-Deko', button: 'Schaltfläche „Foto“', signature: 'Unterschrift', answer: 'Umfrage-Antwort', gallery: 'Galerie-Stapel', vmsg: 'Videonachricht (QR-Code)' };
-  const TYPE_ICON = { photo: 'camera', image: 'image', text: 'type', shape: 'shapes', deco: 'sparkles', button: 'camera', signature: 'pen', answer: 'clipboard', gallery: 'gallery', vmsg: 'qr' };
-  const FIXED = new Set(['button', 'gallery', 'vmsg']); // gibt es genau einmal: ausblenden statt löschen, nicht duplizieren
+  const TYPE_NAME = { photo: 'Fotobox-Foto', image: 'Bild', text: 'Text', shape: 'Form', deco: 'Vorlagen-Deko', button: 'Schaltfläche „Foto“', signature: 'Unterschrift', answer: 'Umfrage-Antwort', gallery: 'Galerie-Stapel', vmsg: 'Videonachricht (QR-Code)',
+    spic: 'Foto der Gäste', sfil: 'Filter-Leiste', qr: 'QR-Code' };
+  const TYPE_ICON = { photo: 'camera', image: 'image', text: 'type', shape: 'shapes', deco: 'sparkles', button: 'camera', signature: 'pen', answer: 'clipboard', gallery: 'gallery', vmsg: 'qr', spic: 'image', sfil: 'sliders', qr: 'qr' };
+  // Schaltflächen des Bildschirms zum Teilen (Schlüssel = Schaltfläche in der Fotobox)
+  const SBTN_NAME = { bRetake: 'Schaltfläche „Löschen und wiederholen“', bDeco: 'Schaltfläche „Verzieren“', bPrint: 'Schaltfläche „Drucken“', bQR: 'Schaltfläche „QR-Code“', bMosaic: 'Schaltfläche „Mosaik“', bDone: 'Schaltfläche „Fertig“' };
+  const SBTN_ICON = { bRetake: 'refresh', bDeco: 'sparkles', bPrint: 'printer', bQR: 'qr', bMosaic: 'mosaic', bDone: 'check' };
+  const FIXED = new Set(['button', 'gallery', 'vmsg', 'sbtn', 'spic', 'sfil']); // gibt es genau einmal: ausblenden statt löschen, nicht duplizieren
   const SHADOW = new Set(['photo', 'image', 'text', 'shape']);
 
   function css() { if (!document.getElementById('le-css')) { const st = document.createElement('style'); st.id = 'le-css'; st.textContent = CSS; document.head.appendChild(st); } }
@@ -123,10 +155,14 @@
   function core(opts, inline) {
     css();
     let L = null, sel = null, hist = [], hi = 0, scale = 1, lastSaved = '', dirty = false;
-    let root = null, side = null, stage, page, cv, ov, props;
+    let root = null, side = null, bar = null, stage, page, cv, ov, props;
+    const lib = opts.lib || null; // Fotolayouts verwalten: { list, get, add, pick, remove, print }
     if (inline) {
-      opts.stageEl.innerHTML = `<div id="leS" class="${opts.dark ? 'dark' : ''}"><div class="stage"><div class="page"><canvas></canvas><div class="ov"></div></div></div></div>`;
-      opts.propsEl.innerHTML = `<div id="leP" class="${opts.dark ? 'dark' : ''}"><div class="props"></div></div>`;
+      const dk = opts.dark ? 'dark' : '';
+      opts.stageEl.innerHTML = `<div id="leS" class="${dk}"><div class="stage"><div class="page"><canvas></canvas><div class="ov"></div></div></div></div>`;
+      opts.propsEl.innerHTML = `<div id="leP" class="${dk}"><div class="props"></div></div>`;
+      if (opts.sideEl) { opts.sideEl.innerHTML = `<div id="leL" class="${dk}" style="height:100%"><div class="side"></div></div>`; side = $(opts.sideEl, '.side'); }
+      if (opts.barEl) { opts.barEl.innerHTML = `<div id="leB" class="${dk}"><div class="lbar"></div></div>`; bar = $(opts.barEl, '.lbar'); }
       stage = $(opts.stageEl, '.stage'); props = $(opts.propsEl, '.props');
     } else {
       root = document.createElement('div'); root.id = 'le';
@@ -143,6 +179,7 @@
           ${opts.onReset ? `<button class="tb" data-a="reset" title="Gestaltung verwerfen">${ICON('refresh', 15)} <span class="lb">Zurücksetzen</span></button>` : ''}
           <button class="tb pri" data-a="done">${ICON('check', 16)} <span class="lb">Fertig</span></button>
         </div>
+        ${lib ? '<div class="lib" data-a="lib"></div>' : ''}
         <div class="body">
           <div class="side"></div>
           <div class="stage"><div class="page"><canvas></canvas><div class="ov"></div></div>
@@ -153,18 +190,24 @@
       side = $(root, '.side'); stage = $(root, '.stage'); props = $(root, '.props');
     }
     page = $(stage, '.page'); cv = $(stage, 'canvas'); ov = $(stage, '.ov');
-    const q = s => root ? $(root, s) : null;
+    const q = s => root ? $(root, s) : bar ? $(bar, s) : null;
     const setStatus = t => { const n = q('[data-a=status]'); if (n) n.textContent = t; opts.onStatus?.(t); };
 
     // ---------- Laden ----------
     // Startbildschirm: Galerie-Stapel und Videonachricht-Karte als Ebenen dazu (unverändert werden sie nicht gespeichert)
-    function prep(lay) { const x = clone(lay); delete x.adapted; return x.screen && FBR.screenSys ? FBR.screenSys(x, opts.sys || {}) : x; }
+    function prep(lay) {
+      const x = clone(lay); delete x.adapted;
+      if (x.kind === 'share') return FBR.shareSys ? FBR.shareSys(x) : x;
+      return x.screen && FBR.screenSys ? FBR.screenSys(x, opts.sys || {}) : x;
+    }
+    const isShare = () => L && L.kind === 'share';
+    const icon = e => e.type === 'sbtn' ? SBTN_ICON[e.key] || 'camera' : TYPE_ICON[e.type];
     const out = () => { const c = clone(L); return c.screen && FBR.screenStrip ? FBR.screenStrip(c) : c; };
     function load(lay) {
       L = prep(lay); sel = null; hist = [JSON.stringify(L)]; hi = 0; lastSaved = JSON.stringify(out()); dirty = false;
       const nm = q('[data-a=name]'); if (nm) { nm.value = L.name || ''; nm.style.display = L.screen ? 'none' : ''; }
       root?.querySelectorAll('[data-a=seg] button').forEach(b => b.classList.toggle('on', b.dataset.o === L.orient));
-      fmtLabel(); updUndo(); renderSide(); renderProps(); fit(); draw();
+      fmtLabel(); renderLib(); updUndo(); renderSide(); renderProps(); fit(); draw();
       FBR.preloadLayout(L).then(draw);
       opts.onLayout?.(L); opts.onSelect?.(null);
     }
@@ -176,14 +219,14 @@
     function draw() {
       if (!raf) raf = requestAnimationFrame(() => {
         raf = 0; if (!L) return;
-        FBR.renderLayout(L, { values: opts.values, placeholders: true, vmsg: vmsgOn() ? { accent: opts.sys.accent, ...opts.sys.vmsg } : null }, cv); drawSel();
+        FBR.renderLayout(L, { values: opts.values, placeholders: true, redraw: draw, photoAr: opts.photoAr, faded: new Set(opts.sys?.off || []), vmsg: vmsgOn() ? { accent: opts.sys.accent, ...opts.sys.vmsg } : null }, cv); drawSel();
       });
     }
     function fit() {
       if (!L) return;
       const r = stage.getBoundingClientRect(); if (!r.width || !r.height) return;
-      const m = inline ? 0 : r.width < 600 ? 24 : 60; // auf dem Handy weniger Rand, damit die Leinwand möglichst groß ist
-      scale = Math.min((r.width - m) / L.w, (r.height - m - (inline ? 0 : 10)) / L.h);
+      const m = inline ? (L.screen ? 0 : 32) : r.width < 600 ? 24 : 60; // auf dem Handy weniger Rand, damit die Leinwand möglichst groß ist
+      scale = Math.min((r.width - m) / L.w, (r.height - m - (inline && L.screen ? 0 : 10)) / L.h);
       page.style.width = L.w * scale + 'px'; page.style.height = L.h * scale + 'px';
       drawSel();
     }
@@ -231,7 +274,7 @@
 
     // ---------- Elemente ----------
     const selEl = () => L && L.elements.find(x => x.id === sel);
-    const keepRatio = e => e.type === 'gallery' || e.type === 'vmsg' || (e.ratio ?? e.type === 'image');
+    const keepRatio = e => e.type === 'gallery' || e.type === 'vmsg' || e.type === 'qr' || (e.type === 'sbtn' && e.shape !== 'pill') || (e.ratio ?? e.type === 'image');
     const center = (w, h) => ({ x: Math.round((L.w - w) / 2), y: Math.round((L.h - h) / 2) });
     function select(id) { sel = id; renderProps(true); draw(); opts.onSelect?.(selEl() || null); }
     function add(e) {
@@ -254,6 +297,18 @@
       const n = Math.max(0, ...L.elements.filter(x => x.type === 'answer').map(x => x.q || 1)) + 1, w = Math.round(L.w * .7), h = Math.round(Math.min(L.w, L.h) * .07);
       add({ type: 'answer', q: n, font: 'arial', size: 'auto', color: '#000000', weight: 400, align: 'center', ...center(w, h), w, h });
     }
+    function addShapeKind(k) {
+      const u = Math.min(L.w, L.h) / 100;
+      if (k === 'line') { const w = Math.round(L.w * .6), h = Math.max(4, Math.round(u * .8)); return add({ type: 'shape', shape: 'rect', fill: '#1D1D1B', stroke: '', strokeW: 0, radius: 0, opacity: 1, ...center(w, h), w, h }); }
+      if (k === 'frame') { const w = Math.round(L.w * .8), h = Math.round(L.h * .8); return add({ type: 'shape', shape: 'rect', fill: '', stroke: '#1D1D1B', strokeW: Math.max(4, Math.round(u)), radius: 0, opacity: 1, ...center(w, h), w, h }); }
+      const w = Math.round(L.w * .4), h = k === 'ellipse' ? w : Math.round(L.h * .12);
+      add({ type: 'shape', shape: k === 'ellipse' ? 'ellipse' : 'rect', fill: '#F7C838', stroke: '', strokeW: 0, radius: 0, opacity: 1, ...center(w, h), w, h });
+    }
+    function addSession(k) { // Text mit Platzhalter, den die Fotobox beim Drucken füllt
+      const w = Math.round(L.w * .6), h = Math.round(Math.min(L.w, L.h) * .06);
+      add({ type: 'text', text: `{${k}}`, font: 'modern', size: 'auto', color: L.screen ? '#ffffff' : '#222222', weight: 600, align: 'center', ...center(w, h), w, h });
+    }
+    function addQr() { const s = Math.round(Math.min(L.w, L.h) * .24); add({ type: 'qr', fill: '#ffffff', ...center(s, s), w: s, h: s }); }
     function addShape() { const w = Math.round(L.w * .4), h = Math.round(L.h * .12); add({ type: 'shape', shape: 'rect', fill: '#F7C838', stroke: '', strokeW: 0, radius: 0, opacity: 1, ...center(w, h), w, h }); }
     function pickFile(accept) {
       return new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => res(i.files[0] || null); i.click(); });
@@ -275,7 +330,7 @@
     }
     function addKind(k) {
       if (k === 'photo') addPhoto(); else if (k === 'signature') addSignature(); else if (k === 'answer') addAnswer();
-      else if (k === 'text') addText(); else if (k === 'shape') addShape(); else if (k === 'image') addImage();
+      else if (k === 'text') addText(); else if (k === 'shape') addShape(); else if (k === 'image') addImage(); else if (k === 'qr') addQr();
     }
     function remove() {
       const e = selEl(); if (!e || e.locked) return;
@@ -304,7 +359,7 @@
     }
     // Themenfarben: Primärfarbe = Start-Schaltfläche, Text = alle Texte, Hintergrund = einfarbig
     function themeColor(k, v) {
-      if (k === 'btn') L.elements.forEach(e => { if (e.type === 'button') e.fill = v; });
+      if (k === 'btn') L.elements.forEach(e => { if (e.type === 'button') e.fill = v; if (e.type === 'sbtn' && e.shape === 'pill') { if (e.fill) e.fill = v; else e.color = v; } });
       if (k === 'text') L.elements.forEach(e => { if (e.type === 'text' || e.type === 'button') e.color = v; });
       if (k === 'bg') { L.bg = v; L.bgGrad = null; L.theme = ''; }
     }
@@ -384,13 +439,70 @@
     }
     document.addEventListener('keydown', onKey);
 
+    // ---------- Vorlagen-Leiste (Fotolayout) ----------
+    function renderLib() {
+      if (!lib || !L) return;
+      const sel = `<select data-lib="sel" title="Fotolayout wählen">${lib.list().map(l => `<option value="${esc(l.id)}" ${l.id === L.id ? 'selected' : ''}>${esc(l.name || 'Layout')}</option>`).join('')}</select>`;
+      const B = (k, ic, n, a) => inline ? `<button class="lb2" ${a ? `data-a="${k}"` : `data-lib="${k}"`} title="${n}">${ICON(ic, 20)}<span>${n}</span></button>`
+        : `<button class="tb" ${a ? `data-a="${k}"` : `data-lib="${k}"`} title="${n}">${ICON(ic, 15)}<span class="lb">${n}</span></button>`;
+      const btns = B('new', 'plus', 'Vorlage hinzufügen') + B('saveas', 'copy', 'Speichern unter') + B('import', 'upload', 'Importieren') + B('export', 'download', 'Exportieren');
+      const tail = B('print', 'printer', 'Testdruck') + B('del', 'trash', 'Vorlage löschen');
+      if (inline && bar) { bar.innerHTML = sel + btns + B('undo', 'undo', 'Rückgängig', 1) + B('redo', 'redo', 'Wiederholen', 1) + tail + '<span class="st" data-a="status"></span>'; updUndo(); }
+      else { const n = q('[data-a=lib]'); if (n) n.innerHTML = sel + btns + tail; }
+    }
+    // Eingabefeld als kleines Fenster (prompt() gibt es in der Fotobox nicht)
+    function ask(title, value) {
+      return new Promise(res => {
+        const d = document.createElement('div'); d.className = 'le-ask';
+        d.innerHTML = `<div><b>${esc(tr(title))}</b><input value="${esc(value)}"><div class="r"><button data-x>${esc(tr('Abbrechen'))}</button><button class="p" data-ok>${esc(tr('Speichern'))}</button></div></div>`;
+        document.body.appendChild(d); const i = d.querySelector('input'); i.focus(); i.select();
+        const done = v => { d.remove(); res(v); };
+        d.onclick = e => { if (e.target === d || e.target.closest('[data-x]')) done(null); else if (e.target.closest('[data-ok]')) done(i.value); };
+        i.onkeydown = e => { if (e.key === 'Enter') done(i.value); if (e.key === 'Escape') done(null); };
+      });
+    }
+    async function libAct(k) {
+      if (!lib) return;
+      if (k === 'new') { const l = await lib.pick(); if (!l) return; await flush(); await lib.add(l); load(l); return; }
+      if (k === 'saveas') {
+        const name = await ask('Name der neuen Vorlage', (L.name || 'Layout') + ' (Kopie)'); if (name == null) return;
+        await flush(); const c = out(); c.id = FBR.uid(); c.name = name.trim() || c.name; await lib.add(c); load(c); return;
+      }
+      if (k === 'import') {
+        const f = await pickFile('.json,application/json,image/png,image/*'); if (!f) return;
+        let l;
+        try {
+          if (/json/.test(f.type) || /\.json$/i.test(f.name)) { l = JSON.parse(await f.text()); if (!l || !Array.isArray(l.elements) || !l.w || l.screen) throw new Error(tr('Das ist keine Fotolayout-Datei.')); l.id = FBR.uid(); }
+          else { setStatus('Analysiere Design …'); l = await layoutFromImage(f, opts.uploadImage); delete l.found; }
+        } catch (e) { setStatus(''); alert(tr('Import fehlgeschlagen:') + ' ' + e.message); return; }
+        await flush(); await lib.add(l); load(l); return;
+      }
+      if (k === 'export') {
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(out(), null, 1)], { type: 'application/json' }));
+        a.download = String(L.name || 'Fotolayout').replace(/[\\/:*?"<>|]+/g, '_') + '.fotolayout.json'; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 10000); return;
+      }
+      if (k === 'print') { await flush(); setStatus('Testdruck …'); try { await lib.print(out()); setStatus('Testdruck gesendet'); } catch (e) { setStatus('⚠️ ' + e.message); } return; }
+      if (k === 'del') {
+        const id = L.id; if (!await lib.remove(id)) return;
+        clearTimeout(saveT); dirty = false; const rest = lib.list();
+        if (rest.length) load(lib.get(rest[0].id)); else { opts.onEmpty?.(); if (!inline) { destroy(); opts.onClose?.(null, false); } }
+      }
+    }
+    async function libSel(id) { if (!lib || id === L.id) return; await flush(); const l = lib.get(id); if (l) load(l); }
+
     // ---------- Linke Spalte: Hinzufügen + Layout (Fotolayout) bzw. Startbildschirm-Video ----------
+    let subm = ''; // geöffnetes Untermenü in „Hinzufügen“: 'shape' oder 'session'
     function renderSide() {
       if (!side || !L) return;
-      const T = (k, ic, n) => `<button class="tool" data-t="${k}"><i>${ICON(ic)}</i>${n}</button>`;
-      const tools = L.screen ? T('text', 'type', 'Text') + T('image', 'image', 'Bild') + T('shape', 'shapes', 'Form')
-        : T('photo', 'camera', 'Foto von der Fotobox') + T('image', 'image', 'Bild') + T('text', 'type', 'Text') + T('signature', 'pen', 'Unterschrift') + T('answer', 'clipboard', 'Umfrage-Antwort') + T('shape', 'shapes', 'Form');
-      side.innerHTML = `<div class="sec addsec"><h4>Hinzufügen</h4><div class="add">${tools}</div></div>` + sideSecs();
+      const T = (k, ic, n) => `<button class="tool ${subm === k ? 'on' : ''}" data-t="${k}"><i>${ICON(ic)}</i>${n}</button>`;
+      const tools = L.screen ? T('text', 'type', 'Text') + T('image', 'image', 'Bild') + (isShare() ? T('qr', 'qr', 'QR-Code') : '') + T('shape', 'shapes', 'Form')
+        : T('photo', 'camera', 'Foto von der Fotobox') + T('image', 'image', 'Bild') + T('text', 'type', 'Text') + T('shapes', 'shapes', 'Form ▸') + T('bgcolor', 'palette', 'Hintergrundfarbe')
+          + T('qr', 'qr', 'QR-Code') + T('session', 'calendar', 'Sessiondaten ▸') + T('signature', 'pen', 'Unterschrift') + T('answer', 'clipboard', 'Umfrage-Antwort');
+      const S2 = (k, v, n) => `<button class="bt" data-${k}="${v}">${n}</button>`;
+      const sub = subm === 'shapes' ? `<div class="subm"><b>Form</b>${S2('form', 'rect', '▭ Rechteck')}${S2('form', 'ellipse', '◯ Ellipse')}${S2('form', 'line', '— Linie')}${S2('form', 'frame', '▢ Rahmen')}</div>`
+        : subm === 'session' ? `<div class="subm"><b>Sessiondaten</b>${S2('sess', 'datum', 'Datum')}${S2('sess', 'uhrzeit', 'Uhrzeit')}${S2('sess', 'event', 'Ereignisname')}${S2('sess', 'name', 'Name des Gastes')}${S2('sess', 'titel', 'Titel')}${S2('sess', 'untertitel', 'Untertitel')}</div>` : '';
+      side.innerHTML = `<div class="sec addsec"><h4>Hinzufügen</h4><div class="add ${L.screen ? '' : 'list'}">${tools}</div>${sub}</div>` + sideSecs();
     }
     const sideSecs = () => L.screen ? (opts.video ? videoSec() : '') : printSec();
     function videoSec() {
@@ -401,12 +513,18 @@
         <button class="bt" data-a="upvideo" style="width:100%;margin-top:8px">${ICON('upload', 15)} Video zum Hochladen auswählen</button>
         <p class="muted">Nur MP4-Dateien · max. 50 MB · empfohlen ${L.orient === 'landscape' ? '1463 × 914' : '914 × 1463'} px</p></div>`;
     }
+    // Maßeinheit für X/Y/B/H beim Fotolayout (Druck mit 300 dpi); Bildschirme immer in Pixeln
+    let unit = 'px'; try { unit = localStorage.getItem('le-unit') || 'px'; } catch {}
+    const U = () => L && !L.screen ? unit : 'px';
+    const toU = v => U() === 'mm' ? +(v / 300 * 25.4).toFixed(1) : U() === 'in' ? +(v / 300).toFixed(2) : Math.round(v);
+    const fromU = v => U() === 'mm' ? Math.round(v / 25.4 * 300) : U() === 'in' ? Math.round(v * 300) : Math.round(v);
     // Layout-Bereich wie bei LumaBooth: Papierformat (klein → groß), Ausrichtung, 2 pro Seite, Zweitdrucker, Maße
     function printSec() {
       const F = FBR.FORMATS[L.format] || {}, inch = n => String(n).replace('.', ',');
       const opt = FBR.SIZE_LIST.map(s => `<option value="${s.size}" ${F.size === s.size ? 'selected' : ''}>${s.label}${s.square && !/Quadrat/.test(s.label) ? ' (quadratisch)' : ''}</option>`).join('');
       const sheet = FBR.sheetOf({ ...L, twoPerPage: true }), sIn = [sheet.w / 300, sheet.h / 300].sort((a, b) => a - b).map(inch).join('×');
       return `<div class="sec"><h4>Layout</h4>
+        <label class="l">Abmessung anzeigen in</label><select data-unit="1"><option value="px" ${unit === 'px' ? 'selected' : ''}>Pixel</option><option value="mm" ${unit === 'mm' ? 'selected' : ''}>Millimeter</option><option value="in" ${unit === 'in' ? 'selected' : ''}>Zoll</option></select>
         <label class="l">Papierformat</label><select data-L="paperSize">${opt}</select>
         <label class="l">Ausrichtung</label><select data-L="paperOrient" ${F.orient ? '' : 'disabled'}>
           <option value="p" ${F.orient !== 'l' ? 'selected' : ''}>Hochformat</option><option value="l" ${F.orient === 'l' ? 'selected' : ''}>Querformat</option></select>
@@ -431,33 +549,33 @@
     }
     function nonePanel(lays) { // Reihenfolge: Hinweis, Themenfarben, Ebenen, Thema und Hintergrund (Ebenen ohne langes Scrollen)
       const [colors, rest] = L.screen ? themeSecs() : ['', ''];
-      return `<div class="sec"><p class="muted" style="margin:0">${L.screen ? 'Tippe auf ein Element, um es zu bearbeiten – oder ziehe es direkt an eine neue Stelle.' : 'Klicke ein Element an, um es zu bearbeiten.'}</p></div>`
+      return `<div class="sec"><p class="muted" style="margin:0">${L.screen ? 'Tippe auf ein Element, um es zu bearbeiten – oder ziehe es direkt an eine neue Stelle.' : 'Klicke ein Element an, um es zu bearbeiten.'}</p>${isShare() && opts.sys?.note ? `<p class="note" style="margin:8px 0 0">${ICON('info', 13)} ${esc(opts.sys.note)}</p>` : ''}</div>`
         + colors + lays + rest + (inline ? '' : `<div class="nar">${sideSecs()}</div>`); // Handy: Layout bzw. Video hier, links stehen dort nur die Werkzeuge
     }
     const hex = (v, d) => /^#[0-9a-f]{6}$/i.test(v || '') ? v : d;
     function themeSecs() {
-      const btn = L.elements.find(x => x.type === 'button'), txt = L.elements.find(x => x.type === 'text');
+      const btn = L.elements.find(x => x.type === 'button') || L.elements.find(x => x.type === 'sbtn' && x.shape === 'pill' && x.fill), txt = L.elements.find(x => x.type === 'text');
       const th = FBR.SCREEN_THEMES.map(t => `<button data-theme="${t.id}" class="${L.theme === t.id && !L.bgImage ? 'on' : ''}" title="${t.cat}"><i style="background:linear-gradient(${t.grad[2]}deg,${t.grad[0]},${t.grad[1]})"></i>${t.name}</button>`).join('');
       return [`<div class="sec"><h4>Themenfarben</h4><div class="g3">
           <div><label class="l">Primärfarbe</label><input type="color" data-tc="btn" value="${hex(btn?.fill, '#F7C838')}"></div>
           <div><label class="l">Text</label><input type="color" data-tc="text" value="${hex(txt?.color, '#ffffff')}"></div>
           <div><label class="l">Hintergrund</label><input type="color" data-tc="bg" value="${hex(L.bgGrad ? L.bgGrad[0] : L.bg, '#1d1d1b')}"></div></div>
-          <p class="muted">Primärfarbe = Farbe der Start-Schaltfläche. Ein Thema setzt alle Farben auf einmal.</p></div>`,
+          <p class="muted">${isShare() ? 'Primärfarbe = Farbe der Schaltflächen „Fertig“ und „Löschen und wiederholen“.' : 'Primärfarbe = Farbe der Start-Schaltfläche. Ein Thema setzt alle Farben auf einmal.'}</p></div>`,
         `<div class="sec"><h4>Thema</h4><div class="themes">${th}</div></div>
         <div class="sec"><h4>Hintergrund</h4>
           ${L.bgImage ? `<div class="row" style="margin-bottom:8px"><img src="${esc(L.bgImage)}" style="height:54px;border-radius:6px"><button class="bt" data-a="delbg">${ICON('trash', 14)} Entfernen</button></div>` : ''}
           <button class="bt" data-a="upbg" style="width:100%">${ICON('upload', 15)} Hintergrundbild hochladen</button>
           <label class="l">Füllen/Anpassen</label><select data-L="bgFit"><option value="cover" ${L.bgFit !== 'contain' ? 'selected' : ''}>Füllen mit Zuschnitt</option><option value="contain" ${L.bgFit === 'contain' ? 'selected' : ''}>In den Bildschirm passen</option></select>
-          <label class="chk"><input type="checkbox" data-L="live" ${L.live ? 'checked' : ''}> Live-Kamerabild als Hintergrund</label>
+          ${isShare() ? '' : `<label class="chk"><input type="checkbox" data-L="live" ${L.live ? 'checked' : ''}> Live-Kamerabild als Hintergrund</label>`}
           ${opts.layoutFor ? '' : `<label class="l">Bildschirm</label><select data-L="orient">${Object.entries(FBR.SCREEN_SIZES).map(([k, f]) => `<option value="${k}" ${L.orient === k ? 'selected' : ''}>${f.label} (${f.w} × ${f.h})</option>`).join('')}</select>`}</div>`];
     }
-    const nameOf = e => e.type === 'photo' ? `Fotobox-Foto ${e.n}` : TYPE_NAME[e.type];
+    const nameOf = e => e.type === 'photo' ? `Fotobox-Foto ${e.n}` : e.type === 'sbtn' ? SBTN_NAME[e.key] || TYPE_NAME.button : TYPE_NAME[e.type];
     function selPanel(e) {
       const fixed = FIXED.has(e.type), deco = e.type === 'deco', forced = e.type === 'gallery' || e.type === 'vmsg';
-      const num = (k, lab) => `<label><b>${lab}</b><input type="number" data-p="${k}" value="${Math.round(e[k] || 0)}"></label>`;
+      const num = (k, lab) => `<label><b>${lab}</b><input type="number" data-p="${k}" step="${U() === 'mm' ? .1 : U() === 'in' ? .01 : 1}" value="${toU(e[k] || 0)}"></label>`;
       const A = (k, ic, t) => `<button class="bt" data-align="${k}" title="${t}" ${e.locked ? 'disabled' : ''}>${ICON(ic, 17)}</button>`;
       const style = stylePanel(e);
-      return `<div class="sec"><h4 class="big"><span>${ICON(TYPE_ICON[e.type], 16)} ${nameOf(e)}</span><button class="x" data-a="desel" title="Auswahl aufheben">×</button></h4>
+      return `<div class="sec"><h4 class="big"><span>${ICON(icon(e), 16)} ${nameOf(e)}</span><button class="x" data-a="desel" title="Auswahl aufheben">×</button></h4>
           ${e.locked ? `<p class="note">${ICON('lock', 13)} Gesperrt – auf der Seite nicht verschiebbar. In den Ebenen entsperren.</p>` : ''}
           ${deco ? '' : `<div class="xy">${num('x', 'X')}${num('y', 'Y')}${num('w', 'B')}${num('h', 'H')}</div>
           <div class="row" style="margin-top:8px"><button class="bt ${keepRatio(e) ? 'on' : ''}" data-a="ratio" ${forced ? 'disabled' : ''} title="Seitenverhältnis beibehalten" style="flex:1">${ICON('link', 15)} Seitenverhältnis</button>
@@ -494,6 +612,25 @@
           <button class="bt" data-a="replace" style="width:100%">${ICON('upload', 15)} Bild auswählen</button>
           <p class="muted">PNG · empfohlen 150 × 150 px. Auch ohne Schaltfläche startet ein Tipp auf den Bildschirm.</p>`;
       }
+      if (e.type === 'sbtn') {
+        const off = (opts.sys?.off || []).includes(e.key);
+        return `<label class="chk sw"><span>Schaltflächen anzeigen</span><input type="checkbox" data-p="show" ${e.hidden ? '' : 'checked'}></label>
+          ${off ? `<p class="note">${ICON('info', 13)} In den Einstellungen ausgeschaltet – erscheint erst, wenn du es dort einschaltest.</p>` : ''}
+          <label class="l">Schaltflächentext</label><input type="text" maxlength="40" data-p="text" value="${esc(e.text || '')}" placeholder="leer = ohne Beschriftung">
+          <label class="l">Form</label><div class="row"><button class="bt ${e.shape !== 'pill' ? 'on' : ''}" data-set="shape" data-v="round" style="flex:1">◯ Rund</button><button class="bt ${e.shape === 'pill' ? 'on' : ''}" data-set="shape" data-v="pill" style="flex:1">▭ Länglich</button></div>
+          <label class="l">Symbol (eigenes Bild)</label>
+          ${e.src ? `<div class="row" style="margin-bottom:8px"><img src="${esc(e.src)}" style="height:54px"><button class="bt" data-a="delbtnimg">${ICON('refresh', 14)} Zurücksetzen</button></div>` : ''}
+          <button class="bt" data-a="replace" style="width:100%">${ICON('upload', 15)} Bild auswählen</button>
+          <label class="l">Schriftart</label>${fontSel(e)}
+          <div class="g2"><div><label class="l">Primärfarbe</label><input type="color" data-p="fill" value="${hex(e.fill || e._fill, '#3a3a40')}"></div><div><label class="l">Text-/Symbolfarbe</label><input type="color" data-p="color" value="${hex(e.color, '#ffffff')}"></div></div>
+          <label class="chk"><input type="checkbox" data-p="outline" ${e.fill ? '' : 'checked'}> Ohne Füllung (nur Rahmen)</label>`;
+      }
+      if (e.type === 'spic') return `<label class="chk sw"><span>Foto anzeigen</span><input type="checkbox" data-p="show" ${e.hidden ? '' : 'checked'}></label>
+          <p class="muted">Hier erscheint das Foto der Gäste – passend in diesen Rahmen eingefügt.</p>`;
+      if (e.type === 'sfil') return `<label class="chk sw"><span>Filter-Leiste anzeigen</span><input type="checkbox" data-p="show" ${e.hidden ? '' : 'checked'}></label>
+          <p class="muted">Filter und – falls eingeschaltet – die Vorlagen-Auswahl der Gäste. Welche Filter es gibt, stellst du unter „Filter & Effekte“ ein.</p>`;
+      if (e.type === 'qr') return `<p class="muted" style="margin-top:0">${isShare() ? 'Zeigt den QR-Code zum Foto direkt auf dem Bildschirm – Gäste müssen nicht erst auf „QR-Code“ tippen.' : 'Druckt den QR-Code zum Foto mit aus – Gäste scannen ihn später und laden das Foto herunter.'}</p>
+          <label class="l">Hintergrund</label><input type="color" data-p="fill" value="${hex(e.fill, '#ffffff')}">`;
       if (e.type === 'gallery') {
         return `<label class="chk sw"><span>Schaltfläche „Galerie“ anzeigen</span><input type="checkbox" data-p="show" ${e.hidden ? '' : 'checked'}></label>
           <p class="muted">Der Fotostapel zeigt das neueste Foto. Gäste tippen darauf und sehen die Fotos dieses Ereignisses.</p>
@@ -554,18 +691,18 @@
     }
     function syncPos() {
       const e = selEl(); if (!e) return;
-      for (const k of ['x', 'y', 'w', 'h', 'rot']) { const i = props.querySelector(`[data-p="${k}"]`); if (i && document.activeElement !== i) i.value = Math.round(e[k] || 0); }
+      for (const k of ['x', 'y', 'w', 'h', 'rot']) { const i = props.querySelector(`[data-p="${k}"]`); if (i && document.activeElement !== i) i.value = k === 'rot' ? Math.round(e[k] || 0) : toU(e[k] || 0); }
     }
     function layName(e) {
       if (e.type === 'photo') return 'Fotobox-Foto ' + e.n;
       if (e.type === 'text') return FBR.fillText(e.text, opts.values).slice(0, 26) || TYPE_NAME.text;
       if (e.type === 'answer') return 'Umfrageantwort ' + (e.q || 1);
       if (e.type === 'deco') return 'Deko ' + FBR.templateById(e.tpl).name + (e.layer === 'over' ? ' (oben)' : ' (unten)');
-      return TYPE_NAME[e.type];
+      return nameOf(e);
     }
     function layersList() {
       return [...L.elements].reverse().filter(listed).map(e => `<div class="lay ${e.id === sel ? 'on' : ''} ${e.hidden ? 'off' : ''}" data-id="${e.id}">
-        <span class="grip" data-grip title="Ziehen = Reihenfolge ändern">${ICON('grip', 15)}</span>${ICON(TYPE_ICON[e.type], 15)}<span class="n">${esc(layName(e))}</span>
+        <span class="grip" data-grip title="Ziehen = Reihenfolge ändern">${ICON('grip', 15)}</span>${e.type === 'image' && e.src ? `<img class="th" src="${esc(e.src)}" alt="">` : e.type === 'photo' ? `<span class="nb">${e.n || 1}</span>` : ICON(icon(e), 15)}<span class="n">${esc(layName(e))}</span>
         ${e.type === 'deco' ? '' : `<button data-lock="${e.id}" class="${e.locked ? 'act' : ''}" title="${e.locked ? 'Entsperren' : 'Sperren'}">${ICON(e.locked ? 'lock' : 'unlock', 14)}</button>`}
         <button data-hide="${e.id}" title="${e.hidden ? 'Einblenden' : 'Ausblenden'}">${ICON(e.hidden ? 'eyeOff' : 'eye', 14)}</button></div>`).join('');
     }
@@ -595,7 +732,11 @@
     async function onClick(ev) {
       const t = ev.target.closest('button,.lay,.chip'); if (!t || t.disabled) return;
       const a = t.dataset.a;
+      if (t.dataset.t === 'shapes' || t.dataset.t === 'session') { subm = subm === t.dataset.t ? '' : t.dataset.t; renderSide(); return; }
+      if (t.dataset.t === 'bgcolor') { const i = (side || props).querySelector('[data-L=bg]'); if (i) { i.scrollIntoView({ block: 'center' }); i.click(); } return; }
       if (t.dataset.t) { addKind(t.dataset.t); return; }
+      if (t.dataset.form) { subm = ''; renderSide(); addShapeKind(t.dataset.form); return; }
+      if (t.dataset.sess) { subm = ''; renderSide(); addSession(t.dataset.sess); return; }
       if (t.dataset.theme) { FBR.applyTheme(L, t.dataset.theme); commit(); renderProps(); draw(); return; }
       if (a === 'upvideo') { await opts.uploadVideo?.(L.orient); renderSide(); renderProps(); return; }
       if (a === 'delvideo') { await opts.removeVideo?.(L.orient); renderSide(); renderProps(); return; }
@@ -618,6 +759,12 @@
       if (a === 'ratio') { e.ratio = !keepRatio(e); commit(); renderProps(); drawSel(); return; }
       if (t.dataset.tog === 'weight') { e.weight = e.weight >= 700 ? 400 : 700; }
       else if (t.dataset.tog === 'italic') { e.italic = !e.italic; }
+      else if (t.dataset.set === 'shape' && e.type === 'sbtn' && e.shape !== t.dataset.v) { // rund ↔ länglich: Größe passend umrechnen, Mitte bleibt
+        const cx = e.x + e.w / 2, cy = e.y + e.h / 2, u = Math.min(L.w, L.h) / 100;
+        e.shape = t.dataset.v;
+        if (e.shape === 'pill') { e.w = Math.round(Math.max(e.w * 2.4, 22 * u)); e.h = Math.round(6 * u); } else { e.w = Math.round(9 * u); e.h = Math.round(e.text ? e.w * 1.32 : e.w); }
+        e.x = Math.round(cx - e.w / 2); e.y = Math.round(cy - e.h / 2); drawSel(); syncPos();
+      }
       else if (t.dataset.set) { e[t.dataset.set] = t.dataset.v; }
       else if (a === 'dup') return duplicate();
       else if (a === 'remove') return remove();
@@ -635,20 +782,27 @@
       const k = t.dataset.p, num = ['x', 'y', 'w', 'h', 'rot', 'radius', 'strokeW', 'opacity', 'n', 'q', 'shOpacity', 'shAngle', 'shDist', 'shBlur'];
       if (k === 'show') { e.hidden = !t.checked; draw(); commit(); renderProps(); return; }
       if (k === 'shadow') { e.shadow = t.checked; if (e.shadow) shadowDefaults(e); draw(); commit(); renderProps(); return; }
+      if (k === 'outline') { if (t.checked) { e._fill = e.fill || e._fill; e.fill = ''; } else e.fill = e._fill || '#3a3a40'; draw(); commit(); renderProps(); return; }
       if (k === 'nofill') { e.fill = t.value ? '' : (e._fill || '#ffffff'); }
       else if (k === 'fill') { e.fill = t.value; e._fill = t.value; }
       else if (k === 'size') e.size = /^\d+$/.test(t.value.trim()) ? +t.value : 'auto';
       else if ((k === 'w' || k === 'h') && keepRatio(e)) {
-        const r = e.w / e.h, v = Math.max(10, +t.value || 10);
+        const r = e.w / e.h, v = Math.max(10, fromU(+t.value) || 10);
         if (k === 'w') { e.w = v; e.h = Math.max(10, Math.round(v / r)); } else { e.h = v; e.w = Math.max(10, Math.round(v * r)); }
         syncPos();
       }
+      else if (['x', 'y', 'w', 'h'].includes(k)) e[k] = fromU(+t.value);
       else e[k] = num.includes(k) ? +t.value : t.value;
+      if (k === 'text' && e.type === 'sbtn' && e.shape !== 'pill') { // runde Schaltfläche: Platz für die Beschriftung darunter
+        const want = Math.round(e.w * (t.value.trim() ? 1.32 : 1)); if (Math.abs(e.h - want) > 2) { e.h = want; drawSel(); syncPos(); }
+      }
       if (k === 'w' || k === 'h') e[k] = Math.max(10, e[k]);
       draw(); clearTimeout(onInput.t); onInput.t = setTimeout(commit, 350);
     }
     function onChange(ev) {
-      const t = ev.target; if (!t.dataset.l) return;
+      const t = ev.target;
+      if (t.dataset.unit) { unit = t.value; try { localStorage.setItem('le-unit', unit); } catch {} renderProps(); return; }
+      if (!t.dataset.l) return;
       const k = t.dataset.l;
       if (k === 'format') changeFormat(t.value);
       else if (k === 'paperSize' || k === 'paperOrient') {
@@ -662,6 +816,9 @@
       commit(); renderSide(); renderProps(); draw();
     }
     for (const box of [side, props].filter(Boolean)) { box.addEventListener('click', onClick); box.addEventListener('input', onInput); box.addEventListener('change', onChange); }
+    const libClick = ev => { const b = ev.target.closest('button'); if (!b || b.disabled) return; if (b.dataset.lib) { ev.stopPropagation(); libAct(b.dataset.lib); } else if (bar && b.dataset.a === 'undo') jump(-1); else if (bar && b.dataset.a === 'redo') jump(1); };
+    const libChange = ev => { if (ev.target.dataset.lib === 'sel') libSel(ev.target.value); };
+    for (const box of [bar, q('[data-a=lib]')].filter(Boolean)) { box.addEventListener('click', libClick); box.addEventListener('change', libChange); }
     function changeOrient(o) { // ohne Umschalter (layoutFor): den Bildschirm selbst drehen
       const F = FBR.SCREEN_SIZES[o]; if (!F || o === L.orient) return;
       const sx = F.w / L.w, sy = F.h / L.h, s = Math.min(sx, sy);
@@ -670,7 +827,7 @@
     }
     function fmtLabel() {
       const n = q('[data-a=fmt]'); if (!n || !L) return;
-      n.textContent = L.screen ? `${tr('Startbildschirm')} · ${L.w}×${L.h}px` : `${FBR.FORMATS[L.format]?.label || ''} · ${L.w}×${L.h}px`;
+      n.textContent = L.screen ? `${tr(isShare() ? 'Bildschirm zum Teilen' : 'Startbildschirm')} · ${L.w}×${L.h}px` : `${FBR.FORMATS[L.format]?.label || ''} · ${L.w}×${L.h}px`;
     }
     function changeFormat(f, newSize = true) {
       const F = FBR.FORMATS[f], sx = F.w / L.w, sy = F.h / L.h, s = Math.min(sx, sy);
@@ -706,12 +863,12 @@
       if (a === 'undo') jump(-1); else if (a === 'redo') jump(1); else if (a === 'reset') reset();
       else if (a === 'close' || a === 'done') close();
     });
-    q('[data-a=name]')?.addEventListener('input', ev => { L.name = ev.target.value; clearTimeout(onInput.n); onInput.n = setTimeout(commit, 500); });
+    q('[data-a=name]')?.addEventListener('input', ev => { L.name = ev.target.value; clearTimeout(onInput.n); onInput.n = setTimeout(() => { commit(); flush().then(renderLib); }, 500); });
     let closed = false;
     function destroy() {
       if (closed) return; closed = true;
       clearTimeout(saveT); document.removeEventListener('keydown', onKey); ro.disconnect();
-      if (inline) { opts.stageEl.innerHTML = ''; opts.propsEl.innerHTML = ''; } else root.remove();
+      if (inline) { opts.stageEl.innerHTML = ''; opts.propsEl.innerHTML = ''; if (opts.sideEl) opts.sideEl.innerHTML = ''; if (opts.barEl) opts.barEl.innerHTML = ''; } else root.remove();
     }
     async function close() {
       if (closed) return;
@@ -725,7 +882,7 @@
     return {
       close, destroy, flush, reset, setOrient, select,
       add: addKind, undo: () => jump(-1), redo: () => jump(1),
-      load: lay => load(lay), orient: () => L && L.orient, layout: () => out(),
+      load: lay => load(lay), orient: () => L && L.orient, layout: () => out(), pending: () => dirty || !!drag, refreshLib: renderLib,
       // Platzhalter-Texte oder feste Schaltflächen (Galerie, Videonachricht) haben sich außerhalb geändert: neu zeichnen
       update(o = {}) {
         if (o.values) opts.values = o.values;
