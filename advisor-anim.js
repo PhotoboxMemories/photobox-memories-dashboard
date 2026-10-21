@@ -205,20 +205,26 @@
   // Abspielen auf einer Leinwand (passt sich ihrer Größe an). preview: endlos wiederholen (Kacheln im Editor)
   function play(cv, id, o = {}) {
     const it = byId(id); if (!it || !cv) return { done: Promise.resolve(false), stop() {} };
-    const x = cv.getContext('2d'), dpr = Math.min(2, G.devicePixelRatio || 1), loop = o.loop ?? !!it.loop, D = o.duration || 2.6;
-    let raf = 0, t0 = 0, stopped = false, resolve;
+    const x = cv.getContext('2d'), loop = o.loop ?? !!it.loop, D = o.duration || 2.6;
+    // Sparsam zeichnen: höchstens 30 Bilder pro Sekunde und höchstens 1440 Pixel an der langen Seite (die Leinwand wird per CSS
+    // auf Bildschirmgröße gezogen). Sonst bremst die Schleife auf dem Startbildschirm einen schwachen Fotobox-PC aus, wenn
+    // darunter noch Video oder Livebild laufen (Leuchteffekte mit shadowBlur sind teuer).
+    const FPS = o.fps || 30, MAXPX = o.maxPx || 1440;
+    let raf = 0, t0 = 0, last = 0, stopped = false, resolve;
     const done = new Promise(r => { resolve = r; });
     const finish = ok => { if (stopped) return; stopped = true; cancelAnimationFrame(raf); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, cv.width, cv.height); resolve(ok); };
     const tick = ts => {
       if (stopped) return;
-      if (!t0) t0 = ts;
+      raf = requestAnimationFrame(tick);
+      if (last && ts - last < 1000 / FPS - 2) return;
+      last = ts; if (!t0) t0 = ts;
       const sec = (ts - t0) / 1000, W = cv.clientWidth || cv.width, H = cv.clientHeight || cv.height;
-      if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
-      x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+      const k = Math.min(Math.min(2, G.devicePixelRatio || 1), MAXPX / Math.max(W, H, 1)), cw = Math.round(W * k), ch = Math.round(H * k);
+      if (cv.width !== cw || cv.height !== ch) { cv.width = cw; cv.height = ch; }
+      x.setTransform(k, 0, 0, k, 0, 0); x.clearRect(0, 0, W, H);
       if (o.preview && !loop) frame(x, W, H, sec % (D + .7), id, o.style, o.text, D);
       else frame(x, W, H, sec, id, o.style, o.text, loop ? Infinity : D);
-      if (!loop && !o.preview && sec >= D) { finish(true); return; }
-      raf = requestAnimationFrame(tick);
+      if (!loop && !o.preview && sec >= D) finish(true);
     };
     raf = requestAnimationFrame(tick);
     return { done, stop: () => finish(false) };
