@@ -320,6 +320,19 @@
   .vamedia{position:relative;border:1px solid #e3e3ea;border-radius:8px;padding:8px 32px 8px 10px;font-size:13px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   @media(max-width:700px){.vagrid{grid-template-columns:1fr}}
   #wsModal{position:fixed;inset:0;background:rgba(20,16,40,.55);z-index:150;display:flex;align-items:center;justify-content:center;font:14px system-ui,sans-serif;color:#1d1d24}
+  #wsHelp{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:160;display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+  #wsHelp .hcard{width:min(760px,100%);max-height:86vh;display:flex;flex-direction:column;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden}
+  #wsHelp .htop{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #eee;color:#1D1D1B}
+  #wsHelp .htop input{flex:1;min-width:0;font-size:17px;padding:10px 12px;border:2px solid #F7C838;border-radius:10px;outline:none}
+  #wsHelp .hhint{padding:10px 18px 0;color:#6b6b78;font-size:13px}
+  #wsHelp .hlist{overflow:auto;padding:6px 16px 16px}
+  #wsHelp .hitem{border:1px solid #ececf1;border-radius:12px;padding:12px 14px;margin:10px 0}
+  #wsHelp .hitem b{display:block;font-size:16px;margin-bottom:3px}
+  #wsHelp .hpath{color:#b07d00;font-size:13px;font-weight:600;margin-bottom:4px}
+  #wsHelp .hitem p{margin:0 0 8px;color:#4a4a52;line-height:1.45;font-size:14.5px}
+  #wsHelp .hitem small{display:block;margin-top:8px;color:#888;font-size:12.5px}
+  .helpHit{outline:3px solid #F7C838!important;outline-offset:4px;border-radius:8px;animation:helpHit .7s ease 4}
+  @keyframes helpHit{50%{outline-color:transparent}}
   #wsModal .box{background:#fff;border-radius:16px;width:min(1000px,94vw);height:min(720px,92vh);display:flex;flex-direction:column;overflow:hidden}
   #wsModal .mh{padding:16px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:12px}
   #wsModal .mh h3{margin:0;font-size:20px;flex:1}
@@ -493,7 +506,7 @@
     let page = ctx.page || 'dash', sub = {};
     const root = document.createElement('div'); root.id = 'ws';
     root.innerHTML = `<div class="wtop"><button class="tb mnav" data-a="mnav" title="Menü" aria-label="Menü">☰</button><div class="logo">${LOGO(28)}</div><span class="en"></span><span class="sp"></span>
-      <span class="st"></span><button class="tb" data-a="sharelink" title="Teilen">${ICON('share', 16)}<span class="tl"> Teilen</span></button><button class="tb" data-a="preview" title="Vorschau">${ICON('eye', 16)}<span class="tl"> Vorschau</span></button></div>
+      <span class="st"></span><button class="tb" data-a="help" title="Einstellung suchen">${ICON('search', 16)}<span class="tl"> Suchen</span></button><button class="tb" data-a="sharelink" title="Teilen">${ICON('share', 16)}<span class="tl"> Teilen</span></button><button class="tb" data-a="preview" title="Vorschau">${ICON('eye', 16)}<span class="tl"> Vorschau</span></button></div>
       <div class="wbody"><nav class="side"></nav><div class="navshade"></div><main class="wm"></main></div>`;
     document.body.appendChild(root);
     const side = $(root, 'nav.side'), main = $(root, 'main.wm');
@@ -605,9 +618,47 @@
       if (e.target.closest('[data-a="back"]')) close();
     });
     $(root, '.navshade').addEventListener('click', () => root.classList.remove('navopen'));
+    // Hilfe-Suche (hilfe.js, dieselbe wie in der Fotobox): Stichwort eintippen → wie man es einstellt, „Hingehen“ öffnet die Seite
+    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261021-1'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    const closeEditor = () => close(); // Editor schließen (für Themen auf den Hauptseiten, z. B. „Meine Lizenzen“)
+    async function openHelp() {
+      try { await helpLib(); } catch { return ctx.toast('Die Hilfe konnte nicht geladen werden.'); }
+      const H = G.FotoboxHelp, tr = s => I18N.t(s, G.PM_LANG || 'de'), spans = l => l.map(s => `<span>${esc(s)}</span>`).join(' › ');
+      const o = document.createElement('div'); o.id = 'wsHelp';
+      o.innerHTML = `<div class="hcard"><div class="htop">${ICON('search', 20)}<input type="text" placeholder="Wonach suchst du? z. B. Logo, Drucker, Kopien" autocomplete="off" spellcheck="false"><button class="ghost" data-x title="Schließen">✕</button></div><div class="hhint"></div><div class="hlist"></div></div>`;
+      document.body.appendChild(o);
+      const inp = $(o, 'input'), list = $(o, '.hlist'), hint = $(o, '.hhint');
+      const draw = () => {
+        const q = inp.value.trim(), L = q ? H.search(q, tr) : H.popular();
+        hint.textContent = q ? (L.length ? '' : 'Dazu habe ich nichts gefunden – versuch ein anderes Wort, z. B. „Drucker“, „Logo“ oder „Kamera“.') : 'Häufig gesucht:';
+        list.innerHTML = L.map(t => {
+          const i = H.TOPICS.indexOf(t), dp = H.dashPath(t.d), ap = H.appPath(t.a);
+          return `<div class="hitem"><b>${esc(t.t)}</b>${dp.length ? `<div class="hpath">${spans(dp)}</div>` : ''}<p>${esc(t.x)}</p>`
+            + (t.d ? `<button class="btn pri" data-go="${i}">Hingehen ›</button>` : '')
+            + (ap.length ? `<small><span>${t.d ? 'Auch an der Fotobox:' : 'Nur an der Fotobox:'}</span> ${spans(ap)}</small>` : '') + '</div>';
+        }).join('');
+      };
+      const key = e => { if (e.key === 'Escape') close(); };
+      const close = () => { o.remove(); document.removeEventListener('keydown', key); };
+      document.addEventListener('keydown', key);
+      inp.oninput = draw; inp.onkeydown = e => { if (e.key === 'Enter') $(o, '[data-go]')?.click(); };
+      o.onclick = e => {
+        if (e.target === o || e.target.closest('[data-x]')) return close();
+        const b = e.target.closest('[data-go]'); if (!b) return;
+        const g = H.dashTarget(H.TOPICS[+b.dataset.go].d); close();
+        if (g.tab) { closeEditor(); document.querySelector(`#nav [data-tab="${g.tab}"]`)?.click(); return; }
+        page = g.page; root.classList.remove('navopen'); renderNav(); render(); main.scrollTop = 0;
+        if (g.focus) setTimeout(() => { // Einstellung zeigen und kurz gelb blinken lassen
+          const el = main.querySelector(`[data-s="${g.focus}"]`), box = el?.closest('.between') || el?.closest('.row,.slider,.card') || el; if (!box) return;
+          box.scrollIntoView({ block: 'center', behavior: 'smooth' }); box.classList.add('helpHit'); setTimeout(() => box.classList.remove('helpHit'), 3000);
+        }, 200);
+      };
+      draw(); setTimeout(() => inp.focus(), 50);
+    }
     $(root, '.wtop').addEventListener('click', async e => {
       if (e.target.closest('[data-a="mnav"]')) return root.classList.toggle('navopen'); // Handy: Menü ein-/ausklappen
       if (e.target.closest('[data-a="preview"]')) previewAll();
+      if (e.target.closest('[data-a="help"]')) openHelp();
       if (e.target.closest('[data-a="sharelink"]')) { // Link zur Online-Galerie kopieren
         const link = shareLink();
         if (!link) return ctx.toast('Der Freigabe-Link ist noch nicht eingerichtet.', 4000);
@@ -1270,10 +1321,12 @@
       },
       start() {
         // Logo in der weißen Scheibe der Standard-Startanimation – mit Live-Vorschau (start-anim.js), genau wie auf der Fotobox
-        const stdLogoCard = () => {
+        // Immer sichtbar (auch wenn gerade ein eigenes Video oder das Livebild läuft) – mit Hinweis, warum sie dann nicht zu sehen ist
+        const stdLogoCard = has => {
           const L = S.x.startLogo, opt = [['own', 'Mein Firmenlogo (aus „Meine Lizenzen“ → Werbung)'], ['event', 'Logo dieses Ereignisses'], ['image', 'Eigenes Bild'], ['none', 'Nichts – nur das Kamera-Symbol']];
           return `<h2>Logo in der Startanimation</h2><div class="card">
             <p style="color:#6b6b78;margin:0 0 10px">In der Mitte der Startanimation ist eine weiße Scheibe – dort steht Ihr Logo. Die Vorschau zeigt es genau so wie auf der Fotobox.</p>
+            ${has || S.startDisplay === 'live' ? `<p style="background:#FFF3C4;color:#8a6400;border-radius:8px;padding:8px 10px;font-size:13px;margin:0 0 10px">${has ? 'Die Startanimation ist gerade nicht zu sehen, weil oben ein eigenes Video bzw. Bild hochgeladen ist. Zum Verwenden dort auf den Mülleimer klicken.' : 'Die Startanimation ist gerade nicht zu sehen, weil „Live-Bild der Kamera“ gewählt ist. Zum Verwenden oben „Standard-Video von Photobox Memories“ wählen.'}</p>` : ''}
             <div class="row" style="align-items:flex-end;gap:12px;margin-bottom:4px"><canvas id="wsAnimP" width="288" height="512" style="width:144px;border-radius:8px;background:#111"></canvas><canvas id="wsAnimL" width="512" height="288" style="width:256px;max-width:calc(100% - 156px);border-radius:8px;background:#111"></canvas></div>
             <label class="l">Was steht in der Scheibe?</label><select data-s="x.startLogo.src" data-rerender="1">${opt.map(([k, n]) => `<option value="${k}" ${L.src === k ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
             ${L.src === 'image' ? up('x.startLogo.url', 'Bild für die Scheibe', 'image/*', 'Am schönsten: PNG mit durchsichtigem Hintergrund') : ''}
@@ -1298,7 +1351,7 @@
           <p style="color:#777;font-size:12.5px;margin:8px 0 0">MP4-Video oder JPG/PNG-Bild · höchstens 50 MB · Tipp: In Canva oder CapCut gibt es fertige Vorlagen für Hochzeit, Geburtstag und Firmenfeier.</p>
           <label class="l">Auf dem Startbildschirm zeigen</label><select data-s="startDisplay"><option value="media" ${S.startDisplay !== 'live' ? 'selected' : ''}>${has ? 'Mein Video bzw. Bild' : 'Standard-Video von Photobox Memories'}</option><option value="live" ${S.startDisplay === 'live' ? 'selected' : ''}>Live-Bild der Kamera</option></select>
           ${has ? '' : '<p style="color:#6b6b78;font-size:12.5px;margin:6px 0 0">Ohne eigenes Video zeigt die Fotobox unsere Startanimation (schwebende Fotos, in der Mitte Ihr Logo – passend für Hoch- und Querformat).</p>'}</div>
-          ${!has && S.startDisplay !== 'live' ? stdLogoCard() : ''}
+          ${stdLogoCard(has)}
           <h2>2 · Texte und Logo darüberlegen <span style="font-weight:400;color:#888;font-size:14px">(freiwillig)</span></h2><div class="card">
           <p style="color:#6b6b78;margin:0 0 12px">Name, Datum, Logo und Start-Knopf frei anordnen – wie beim Fotolayout. Gestaltest du nur eine Ausrichtung, passt die Fotobox sie für die andere automatisch an; du kannst beide aber auch einzeln gestalten.</p>
           <div class="row" style="flex-wrap:wrap"><button class="btn pri" data-a="editscreen" data-o="portrait">${ICON('pen', 16)} Hochformat gestalten</button><button class="btn pri" data-a="editscreen" data-o="landscape">${ICON('pen', 16)} Querformat gestalten</button>${S.startScreen ? `<button class="ghost" data-a="resetscreen">Zurücksetzen</button>` : ''}</div>
