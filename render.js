@@ -369,7 +369,8 @@
     const i = new Image(); i.crossOrigin = 'anonymous'; imgCache.set(src, i);
     return new Promise(r => { i.onload = () => r(i); i.onerror = () => r(null); i.src = src; });
   }
-  const preloadLayout = L => Promise.all([L.bgImage, ...L.elements.filter(e => (e.type === 'image' || e.type === 'button') && e.src).map(e => e.src)].filter(Boolean).map(loadImg));
+  const preloadLayout = L => Promise.all([L.bgImage, ...L.elements.filter(e => (e.type === 'image' || e.type === 'button') && e.src).map(e => e.src),
+    ...L.elements.filter(e => e.type === 'sbtn').map(btnIconSrc)].filter(Boolean).map(loadImg));
 
   // ---------- Startbildschirm (frei gestaltbar wie ein Layout, aber in Bildschirmgröße) ----------
   const SCREEN_SIZES = { portrait: { w: 1080, h: 1920, label: 'Hochformat' }, landscape: { w: 1920, h: 1080, label: 'Querformat' } };
@@ -435,7 +436,7 @@
   const VMSG_K = { s: .8, m: 1, l: 1.3 };
   const sysSig = e => [e.x, e.y, e.w, e.h, e.rot || 0, !!e.hidden, !!e.locked].join(',');
   function screenSys(L, sys = {}) {
-    if (!L || !L.screen) return L;
+    if (!L || !L.screen || L.kind === 'share') return L;
     const u = Math.min(L.w, L.h) / 100, R = Math.round;
     // unveränderte Standard-Schaltflächen neu setzen (Position aus den Einstellungen), veränderte bleiben, wo sie sind
     const els = L.elements.filter(e => !e.auto || sysSig(e) !== e._d).map(e => { if (e.auto) { delete e.auto; delete e._d; } return e; });
@@ -449,6 +450,27 @@
       add({ type: 'vmsg', x: R(x), y: R(y), w, h, hidden: false });
     }
     return { ...L, elements: els };
+  }
+  // Bildschirm zum Teilen: Foto, Filter-Leiste und Schaltflächen wie bisher „oben“ angeordnet (labels: Beschriftung unter den runden Symbolen)
+  function createShare(orient, o = {}) {
+    const F = SCREEN_SIZES[orient] || SCREEN_SIZES.portrait, land = F.w > F.h, u = Math.min(F.w, F.h) / 100, R = Math.round, els = [];
+    const ph = F.h * (land ? .56 : .5), pw = Math.min(F.w * .9, land ? ph * 1.6 : F.w * .9);
+    els.push({ id: uid(), type: 'spic', x: R((F.w - pw) / 2), y: R(F.h * (land ? .28 : .3)), w: R(pw), h: R(ph), rot: 0 });
+    els.push({ id: uid(), type: 'sfil', x: R(F.w * .05), y: R(F.h * (land ? .165 : .19) - 3 * u), w: R(F.w * .9), h: R(6 * u), rot: 0 });
+    const d = 9 * u, rh = o.labels ? d * 1.32 : d, cy = F.h * (land ? .085 : .07), row = ['bRetake', 'bDeco', 'bPrint', 'bQR', 'bDone'];
+    const wOf = k => k === 'bRetake' ? 36 * u : k === 'bDone' ? 16 * u : d, gap = 2.4 * u;
+    let x0 = (F.w - (row.reduce((a, k) => a + wOf(k), 0) + gap * (row.length - 1))) / 2;
+    const btn = (key, x, y, w, h) => { const b = SHARE_DEF[key]; els.push({ id: uid(), type: 'sbtn', key, shape: b.shape, text: b.shape === 'pill' || o.labels ? b.text : '', fill: b.fill, color: b.color, font: 'modern', x: R(x), y: R(y), w: R(w), h: R(h), rot: 0 }); };
+    for (const k of row) { const w = wOf(k), pill = SHARE_DEF[k].shape === 'pill', h = pill ? 6 * u : rh; btn(k, x0, cy - (pill ? h : d) / 2, w, h); x0 += w + gap; }
+    btn('bMosaic', F.w - 3 * u - d, F.h * .5 - d / 2, d, rh); // erscheint nur, wenn Gäste selbst entscheiden, was ins Mosaik kommt
+    return { id: uid(), screen: true, kind: 'share', orient: SCREEN_SIZES[orient] ? orient : 'portrait', w: F.w, h: F.h, theme: '', bg: '#222225', bgGrad: null, bgImage: '', bgFit: 'cover', live: false, elements: els };
+  }
+  // Ältere Gestaltung ohne eine der Schaltflächen (z. B. neue Funktion): fehlende an der Standardstelle ergänzen
+  function shareSys(L) {
+    if (!L || L.kind !== 'share') return L;
+    const have = new Set(L.elements.map(e => e.type === 'sbtn' ? e.key : e.type)), def = createShare(L.orient);
+    const miss = def.elements.filter(e => !have.has(e.type === 'sbtn' ? e.key : e.type));
+    return miss.length ? { ...L, elements: [...L.elements, ...miss.map(e => ({ ...e, x: Math.round(e.x * L.w / def.w), y: Math.round(e.y * L.h / def.h) }))] } : L;
   }
   // Zum Speichern: unveränderte Standard-Schaltflächen weglassen, veränderte als normale Ebene behalten
   function screenStrip(L) {
@@ -557,6 +579,106 @@
       x.restore();
     }
   }
+  // QR-Code-Muster für Vorschauen (kein echter Code)
+  function qrPattern(x, x0, y0, size) {
+    const n = 25, m = size / n; x.fillStyle = '#1D1D1B';
+    const finder = (i, j) => (i < 7 && j < 7) || (i > n - 8 && j < 7) || (i < 7 && j > n - 8);
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      let on;
+      if (finder(i, j)) { const a = i > n - 8 ? i - (n - 7) : i, c = j > n - 8 ? j - (n - 7) : j; on = a === 0 || a === 6 || c === 0 || c === 6 || (a >= 2 && a <= 4 && c >= 2 && c <= 4); }
+      else on = ((i * 7 + j * 13 + i * j * 3) % 7) < 3;
+      if (on) x.fillRect(x0 + i * m, y0 + j * m, m + .5, m + .5);
+    }
+  }
+  // QR-Code-Element (Teilen-Bildschirm, Fotolayout): weißes Feld mit dem echten Code (values.qr) bzw. einem Muster im Editor
+  function drawQrEl(x, e, w, h, o) {
+    const s = Math.min(w, h), pad = s * .06, img = o.values && o.values.qr;
+    x.fillStyle = e.fill || '#ffffff'; rr(x, -s / 2, -s / 2, s, s, s * .06); x.fill();
+    if (img && (img.naturalWidth || img.width)) { x.imageSmoothingEnabled = false; x.drawImage(img, -s / 2 + pad, -s / 2 + pad, s - 2 * pad, s - 2 * pad); x.imageSmoothingEnabled = true; }
+    else if (o.placeholders) qrPattern(x, -s / 2 + pad, -s / 2 + pad, s - 2 * pad);
+  }
+  // ---------- Bildschirm zum Teilen (frei gestaltbar wie der Startbildschirm) ----------
+  // Schaltflächen der Fotobox: [Schlüssel (id in der Fotobox), Name, Symbol, Form, Füllung, Text-/Symbolfarbe]
+  const SHARE_BTNS = [
+    ['bRetake', 'Löschen und wiederholen', 'refresh', 'pill', '', '#ffffff'],
+    ['bDeco', 'Verzieren', 'sparkles', 'round', '#3a3a40', '#ffffff'],
+    ['bPrint', 'Drucken', 'printer', 'round', '#e5484d', '#ffffff'],
+    ['bQR', 'QR-Code', 'qr', 'round', '#8e3bd6', '#ffffff'],
+    ['bMosaic', 'Mosaik', 'mosaic', 'round', '#0f9d76', '#ffffff'],
+    ['bDone', 'Fertig', 'check', 'pill', '#ffffff', '#1D1D1B'],
+  ];
+  const SHARE_DEF = Object.fromEntries(SHARE_BTNS.map(([key, text, icon, shape, fill, color]) => [key, { key, text, icon, shape, fill, color }]));
+  const icoUrl = (name, color) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="${color || '#ffffff'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${(G.ICONS || {})[name] || ''}</svg>`);
+  const btnIconSrc = e => e.src || icoUrl(e.icon || (SHARE_DEF[e.key] || {}).icon || 'camera', e.color);
+  function drawImgIn(x, src, X, Y, W, H) {
+    const img = imgCache.get(src);
+    if (!img || !img.complete || !img.naturalWidth) { if (!img) { const cb = onImg; loadImg(src).then(i => i && cb && cb()); } return; } // nach dem Laden neu zeichnen
+    const k = Math.min(W / img.naturalWidth, H / img.naturalHeight), iw = img.naturalWidth * k, ih = img.naturalHeight * k;
+    x.drawImage(img, X + (W - iw) / 2, Y + (H - ih) / 2, iw, ih);
+  }
+  // Eine Schaltfläche: rund (Symbol im Kreis, Beschriftung darunter) oder länglich (Symbol + Text in der Pille).
+  // st: { sub: kleiner Text darunter (z. B. „Noch 3 Drucke“), disabled }
+  function drawShareBtn(x, e, w, h, st) {
+    const label = String(e.text || '').trim(), sub = st && st.sub ? String(st.sub) : '', fam = FONTS[e.font] || FONTS.modern, col = e.color || '#ffffff';
+    if (st && st.disabled) x.globalAlpha *= .45;
+    if (e.shape === 'pill') {
+      x.save(); x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = h * .3; x.shadowOffsetY = h * .08;
+      rr(x, -w / 2, -h / 2, w, h, h / 2); if (e.fill) { x.fillStyle = e.fill; x.fill(); } x.restore();
+      if (!e.fill) { x.strokeStyle = col; x.lineWidth = Math.max(2, h * .06); rr(x, -w / 2 + x.lineWidth / 2, -h / 2 + x.lineWidth / 2, w - x.lineWidth, h - x.lineWidth, h / 2); x.stroke(); }
+      const ic = e.src ? h * .7 : h * .46, gap = h * .2; let size = h * .4;
+      const setF = () => { x.font = `600 ${size}px ${fam}`; }; setF();
+      while (label && size > 6 && ic + gap + x.measureText(label).width > w - h * .7) { size -= 1; setF(); }
+      const tw = label ? x.measureText(label).width : 0, total = ic + (label ? gap + tw : 0), x0 = -total / 2;
+      drawImgIn(x, btnIconSrc(e), x0, -ic / 2, ic, ic);
+      if (label) { x.fillStyle = col; x.textAlign = 'left'; x.textBaseline = 'middle'; x.fillText(label, x0 + ic + gap, 0); }
+      if (sub) { x.font = `600 ${h * .3}px ${fam}`; x.textAlign = 'center'; x.textBaseline = 'top'; x.fillStyle = '#ffffff'; x.fillText(sub, 0, h / 2 + h * .12); }
+      return;
+    }
+    const d = Math.min(w, label ? h / 1.32 : h), cy = label ? -h / 2 + d / 2 : 0;
+    if (e.src) drawImgIn(x, e.src, -d / 2, cy - d / 2, d, d);
+    else {
+      x.save(); x.shadowColor = 'rgba(0,0,0,.45)'; x.shadowBlur = d * .2; x.shadowOffsetY = d * .06;
+      x.fillStyle = e.fill || '#3a3a40'; x.beginPath(); x.arc(0, cy, d / 2, 0, 7); x.fill(); x.restore();
+      const ic = d * .46; drawImgIn(x, btnIconSrc(e), -ic / 2, cy - ic / 2, ic, ic);
+    }
+    let ty = cy + d / 2;
+    if (label) {
+      let size = d * .2; const setF = () => { x.font = `600 ${size}px ${fam}`; }; setF();
+      while (size > 6 && x.measureText(label).width > Math.max(w, d * 1.8)) { size -= 1; setF(); }
+      x.fillStyle = e.fill ? '#ffffff' : col; x.textAlign = 'center'; x.textBaseline = 'top'; x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = size * .3;
+      x.fillText(label, 0, ty + d * .06); ty += d * .06 + size * 1.15; x.shadowColor = 'transparent';
+    }
+    if (sub) { x.font = `600 ${d * .17}px ${fam}`; x.fillStyle = '#ffffff'; x.textAlign = 'center'; x.textBaseline = 'top'; x.fillText(sub, 0, ty + d * .05); }
+  }
+  // Editor-Vorschau: Foto der Gäste (Platzhalter) und Filter-Leiste
+  function drawPhotoMock(x, w, h, par) { // par: Seitenverhältnis des Fotolayouts (Breite/Höhe), sonst nach dem Rahmen
+    const ar = par > 0 ? par : h > w ? 2 / 3 : 3 / 2; let pw = w, ph = w / ar; if (ph > h) { ph = h; pw = h * ar; }
+    x.save(); x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = Math.min(pw, ph) * .08; x.shadowOffsetY = Math.min(pw, ph) * .03;
+    x.fillStyle = '#ffffff'; x.fillRect(-pw / 2, -ph / 2, pw, ph); x.restore();
+    const b = Math.min(pw, ph) * .025, iw = pw - 2 * b, ih = ph - 2 * b, g = x.createLinearGradient(-iw / 2, -ih / 2, iw / 2, ih / 2);
+    g.addColorStop(0, '#4a4a52'); g.addColorStop(1, '#1b1b1f'); x.fillStyle = g; x.fillRect(-iw / 2, -ih / 2, iw, ih);
+    x.save(); x.beginPath(); x.rect(-iw / 2, -ih / 2, iw, ih); x.clip();
+    const r = Math.min(iw, ih) * .11;
+    for (const [dx, c] of [[-.17, '#c9a98f'], [.17, '#b48a6e']]) {
+      x.fillStyle = c; x.beginPath(); x.arc(dx * iw, -ih * .08, r, 0, 7); x.fill();
+      x.fillStyle = dx < 0 ? '#2f3b52' : '#5a2f3e'; x.beginPath(); x.ellipse(dx * iw, ih * .42, r * 2.1, ih * .3, 0, Math.PI, 0); x.fill();
+    }
+    x.restore();
+    x.fillStyle = 'rgba(255,255,255,.75)'; x.font = `700 ${Math.min(iw, ih) * .07}px system-ui,sans-serif`; x.textAlign = 'center'; x.textBaseline = 'top';
+    x.fillText(G.I18N_UI ? G.I18N_UI('Foto') : 'Foto', 0, -ih / 2 + ih * .05);
+  }
+  function drawChipsMock(x, w, h) {
+    const names = ['Original', 'Schwarz-Weiß', 'Vintage', 'Warm'].map(n => G.I18N_UI ? G.I18N_UI(n) : n);
+    let size = h * .42; x.font = `600 ${size}px system-ui,sans-serif`;
+    const pad = h * .5, gap = h * .3, tot = () => names.reduce((a, n) => a + x.measureText(n).width + 2 * pad, 0) + gap * (names.length - 1);
+    while (size > 6 && tot() > w) { size -= 1; x.font = `600 ${size}px system-ui,sans-serif`; }
+    let cx = -tot() / 2;
+    names.forEach((n, i) => {
+      const cw = x.measureText(n).width + 2 * pad; rr(x, cx, -h / 2, cw, h, h / 2);
+      x.fillStyle = i ? 'rgba(255,255,255,.12)' : '#F7C838'; x.fill();
+      x.fillStyle = i ? '#ffffff' : '#1D1D1B'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(n, cx + cw / 2, 0); cx += cw + gap;
+    });
+  }
   // Videonachricht-Karte der Fotobox (Editor-Vorschau): Überschrift, QR-Code, Hinweis – Maße wie #vmCard in der Fotobox
   function drawVmsgMock(x, w, h, v) {
     const acc = /^#[0-9a-f]{3,8}$/i.test(v.accent || '') ? v.accent : '#F7C838', b = w * .0214, pad = w * .064, gap = w * .043, inner = w - 2 * (pad + b);
@@ -570,21 +692,15 @@
     let y = -h / 2 + b + pad;
     for (const l of wrapLines(x, title, inner, 2)) { x.fillText(l, 0, y); y += fs * 1.12; }
     y += gap;
-    const n = 25, m = inner / n, x0 = -inner / 2; // QR-Code-Muster (nur Vorschau)
-    x.fillStyle = '#1D1D1B';
-    const finder = (i, j) => (i < 7 && j < 7) || (i > n - 8 && j < 7) || (i < 7 && j > n - 8);
-    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
-      let on;
-      if (finder(i, j)) { const a = i > n - 8 ? i - (n - 7) : i, c = j > n - 8 ? j - (n - 7) : j; on = a === 0 || a === 6 || c === 0 || c === 6 || (a >= 2 && a <= 4 && c >= 2 && c <= 4); }
-      else on = ((i * 7 + j * 13 + i * j * 3) % 7) < 3;
-      if (on) x.fillRect(x0 + i * m, y + j * m, m + .5, m + .5);
-    }
+    qrPattern(x, -inner / 2, y, inner);
     y += inner + gap;
     const fs2 = w * .075; x.font = `400 ${fs2}px ${FONTS.modern}`; x.fillStyle = '#555555';
     for (const l of wrapLines(x, v.sub ?? 'Scanne den Code mit deinem Handy', inner, 2)) { x.fillText(l, 0, y); y += fs2 * 1.25; }
   }
   // Layout zeichnen. o: { photos, values, filter, placeholders (Editor-Vorschau) }
+  let onImg = null; // o.redraw der laufenden Zeichnung: wird aufgerufen, sobald ein noch fehlendes Symbol geladen ist
   function renderLayout(L, o = {}, into) {
+    onImg = o.redraw || null;
     const c = into || document.createElement('canvas');
     if (c.width !== L.w || c.height !== L.h) { c.width = L.w; c.height = L.h; }
     const x = hq(c.getContext('2d'));
@@ -628,6 +744,15 @@
         if (o.placeholders) drawGalleryMock(x, w, h);
       } else if (e.type === 'vmsg') {
         if (o.placeholders && o.vmsg) drawVmsgMock(x, w, h, o.vmsg);
+      } else if (e.type === 'sbtn') { // Teilen-Bildschirm: an der Fotobox liegt darüber die (unsichtbare) echte Schaltfläche
+        if (o.faded && o.faded.has(e.key)) x.globalAlpha *= .35; // Editor: in den Einstellungen ausgeschaltet
+        if (!(o.off && o.off.has(e.key))) drawShareBtn(x, e, w, h, o.state && o.state[e.key]);
+      } else if (e.type === 'spic') {
+        if (o.placeholders) drawPhotoMock(x, w, h, o.photoAr);
+      } else if (e.type === 'sfil') {
+        if (o.placeholders) drawChipsMock(x, w, h);
+      } else if (e.type === 'qr') {
+        drawQrEl(x, e, w, h, o);
       } else if (e.type === 'answer') { // Antwort des Gastes auf Umfrage-Frage Nr. e.q
         const a = o.values && Array.isArray(o.values.antworten) ? o.values.antworten[(e.q || 1) - 1] : null;
         const t = a != null && a !== '' ? String(a) : o.placeholders ? `Umfrageantwort ${e.q || 1}` : '';
@@ -668,5 +793,5 @@
 
   G.FBR = { FONTS, FONT_NAMES, LAYOUTS, TEMPLATES, templateById: byId, render, drawBand, drawCover, placeholder,
     FORMATS, SIZE_LIST, formatKey, sheetOf, PRESETS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid,
-    SCREEN_SIZES, SCREEN_THEMES, createScreen, adaptScreen, applyTheme, screenSys, screenStrip };
+    SCREEN_SIZES, SCREEN_THEMES, createScreen, adaptScreen, applyTheme, screenSys, screenStrip, createShare, shareSys, SHARE_BTNS };
 })(window);
