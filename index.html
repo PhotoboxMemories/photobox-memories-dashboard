@@ -6,24 +6,24 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261021-4';</script>
+<script>window.I18N_V = '20261021-5';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
   window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
 <script src="config.js?v=20261018-9"></script>
-<script src="icons.js?v=20261021-4"></script>
+<script src="icons.js?v=20261021-5"></script>
 <script src="ad.js?v=20261020-3"></script>
 <script src="shop.js?v=20261020-1"></script>
 <script src="render.js?v=20261021-4"></script>
-<script src="advisor-anim.js?v=20261021-4"></script>
+<script src="advisor-anim.js?v=20261021-5"></script>
 <script src="mosaic.js?v=20261017-2"></script>
 <script src="editor.js?v=20261021-4"></script>
 <script src="ai-event.js?v=20261019-3"></script>
 <script src="sketch-draw.js?v=20261018-8"></script>
 <script src="caricature.js?v=20261018-10"></script>
 <script src="start-anim.js?v=20261020-1"></script>
-<script src="event.js?v=20261021-4"></script>
+<script src="event.js?v=20261021-5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -130,6 +130,16 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
 .checks label{display:flex;gap:6px;align-items:center;color:var(--fg);font-size:14px;margin:0}
 .evgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:18px}
 .evc{cursor:pointer;position:relative}
+.helpgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+.helpc{background:#fff;border:1px solid #e3e3ea;border-radius:14px;padding:0;overflow:hidden;cursor:pointer;text-align:left;font:inherit;color:inherit;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
+.helpc:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.helpc .im{position:relative;aspect-ratio:16/9;background:#1D1D1B}.helpc img{width:100%;height:100%;object-fit:cover;display:block}
+.helpc .pl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:#F7C838;color:#1D1D1B;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.helpc .tx{padding:10px 12px 12px;display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.helpc b{font-size:14px;line-height:1.3}.helpc small{color:#888;white-space:nowrap}
+.helpc .zs{display:inline-block;margin-top:4px;font-size:11px;background:#FFF3C4;color:#8a6400;border-radius:999px;padding:1px 8px}
+#helpDlg{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:20px}#helpDlg.hidden{display:none}
+#helpDlg .hbox{position:relative;width:min(1100px,96vw);display:flex;flex-direction:column;gap:10px;color:#fff}#helpDlg video{width:100%;border-radius:10px;background:#000;max-height:80vh}
+#helpDlg .hx{position:absolute;right:-6px;top:-44px;background:none;border:0;color:#fff;font-size:34px;cursor:pointer}
 .evc .evdel{position:absolute;top:8px;right:8px;z-index:1;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.95);color:#d23b3b;box-shadow:0 1px 5px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s}
 .evc:hover .evdel,.evc .evdel:focus-visible{opacity:1}
 @media (hover:none){.evc .evdel{opacity:.92}}
@@ -182,6 +192,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <button data-tab="devices" data-ic="monitor">Geräte</button>
       <button data-tab="leads" data-ic="users">Gäste-Daten</button>
       <button data-tab="licenses" data-ic="key">Meine Lizenzen</button>
+      <button data-tab="help" data-ic="play" class="hidden">Anleitungen</button><!-- erst sichtbar, wenn die Anleitungs-Videos freigegeben sind -->
       <button data-tab="admin" class="hidden" id="navAdmin" data-ic="settings">Verwaltung</button>
     </nav>
     <div class="row small"><span class="muted" id="who"></span><select class="langSel" translate="no" aria-label="Sprache"></select><button class="btn small" id="logout">Abmelden</button></div>
@@ -190,7 +201,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
   <main>
     <!-- Events -->
     <div data-page="events">
-      <div class="pagehead"><h1>Laufende Ereignisse</h1><input id="evSearch" placeholder="🔍 Ereignisname" style="max-width:260px"></div>
+      <div class="pagehead"><h1>Laufende Ereignisse</h1><div class="row" style="gap:10px;flex-wrap:wrap"><button class="btn" id="creditChip" type="button" title="KI-Guthaben ansehen und kaufen">✨ <b id="creditChipN">–</b> KI-Credits</button><input id="evSearch" placeholder="🔍 Ereignisname" style="max-width:260px"></div></div>
       <div class="evgrid" id="eventList"></div>
       <h1 style="margin:28px 0 16px">Abgeschlossene Ereignisse</h1>
       <div class="evgrid" id="eventDone"></div>
@@ -221,6 +232,14 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       </table></div>
       <div class="row" style="margin-top:14px"><button class="btn danger" id="leadDelete">Angezeigte Einträge löschen</button></div>
     </div>
+
+    <!-- Anleitungen: kurze Videos zu jeder Funktion (anleitungen/liste.json, erstellt mit werkzeuge/anleitungen) -->
+    <div data-page="help" class="hidden">
+      <div class="pagehead"><h1>Anleitungen</h1></div>
+      <p class="muted small" style="margin-bottom:16px">Kurze Videos zu jeder Funktion – für dich und deine Mitarbeiter. Untertitel schaltest du im Video unten rechts ein.</p>
+      <div class="helpgrid" id="helpList"></div>
+    </div>
+    <div id="helpDlg" class="hidden"><div class="hbox"><button class="hx" id="helpClose" title="Schließen">×</button><video id="helpVid" controls playsinline preload="metadata"></video><b id="helpTitle"></b></div></div>
 
     <!-- Meine Lizenzen -->
     <div data-page="licenses" class="hidden">
@@ -255,11 +274,17 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <div id="adPreview" style="border-radius:12px;overflow:hidden;border:1px solid var(--line)"></div>
         <div class="row" style="margin-top:14px"><button class="btn primary" id="adSave" type="button">Speichern</button></div>
       </div>
-      <div class="card hidden" id="creditCard" style="margin-top:20px">
+      <div class="card" id="creditCard" style="margin-top:20px">
         <h2>KI-Guthaben</h2>
-        <p style="margin:6px 0 14px">Dein Guthaben: <b id="myCredits">–</b> Credits <span class="small muted">· 1 KI-Bild in 1K = 1 Credit, in 2K = 2 Credits</span></p>
+        <p class="small muted" style="margin:4px 0 14px">1 KI-Bild in 1K = 1 Credit, in 2K = 2 Credits. Das Guthaben gilt für alle deine Fotoboxen und Ereignisse.</p>
+        <div class="stats" id="creditStats"></div>
+        <h3 style="margin:4px 0 10px">Credits kaufen</h3>
         <div class="cards" id="creditPacks"></div>
         <p class="small muted" id="creditHint" style="margin-top:10px"></p>
+        <h3 style="margin:22px 0 10px">Verbrauch nach Ereignis</h3>
+        <div class="tablewrap"><table><thead><tr><th>Ereignis</th><th>KI-Bilder</th><th>Credits</th><th>Zuletzt</th></tr></thead><tbody id="creditUse"></tbody></table></div>
+        <h3 style="margin:22px 0 10px">Käufe und Gutschriften</h3>
+        <div class="tablewrap"><table><thead><tr><th>Datum</th><th>Vorgang</th><th>Credits</th></tr></thead><tbody id="creditLog"></tbody></table></div>
       </div>
     </div>
 
@@ -555,6 +580,7 @@ async function boot() {
   await Promise.all([loadEvents(), loadDevices(), loadLicenses()]);
   loadMyCredits(); loadShop(); loadPlans();
   loadSoftware();
+  dispatchEvent(new Event('pm-ready'));
   if (profile.is_admin) { loadRelease(); loadCredits(); loadOverview(); loadShopCfg(); }
 }
 
@@ -568,7 +594,29 @@ $('#nav').onclick = e => {
   $$('[data-page]').forEach(p => p.classList.toggle('hidden', p.dataset.page !== t));
   if (t === 'devices') loadDevices();
   if (t === 'leads') loadLeads();
+  if (t === 'help') loadHelp();
 };
+
+/* ---------- Anleitungen ---------- */
+async function loadHelp() {
+  const box = $('#helpList'); if (box.dataset.ok) return;
+  try {
+    const list = Object.values(await (await fetch('anleitungen/liste.json?v=' + Date.now())).json()).sort((a, b) => a.nr - b.nr);
+    const mmss = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    box.innerHTML = list.map(v => `<button class="helpc" data-help="${esc(v.datei)}" data-title="${esc(v.titel)}"><div class="im"><img src="anleitungen/${esc(v.datei.replace(/\.mp4$/, '.jpg'))}" alt="" loading="lazy"><span class="pl">${ICON('play', 24)}</span></div>
+      <div class="tx"><div><b>${esc(v.titel)}</b>${v.zusatz ? '<br><span class="zs">Zusatzfunktion</span>' : ''}</div><small>${mmss(v.dauer || 0)}</small></div></button>`).join('');
+    box.dataset.ok = '1';
+  } catch { box.innerHTML = '<p class="muted">Die Anleitungen sind gleich da – bitte später noch einmal vorbeischauen.</p>'; }
+}
+$('#helpList').onclick = e => {
+  const c = e.target.closest('[data-help]'); if (!c) return;
+  const v = $('#helpVid'), f = 'anleitungen/' + c.dataset.help;
+  v.innerHTML = `<track kind="subtitles" srclang="de" label="Deutsch" src="${f.replace(/\.mp4$/, '.vtt')}">`; v.src = f;
+  $('#helpTitle').textContent = c.dataset.title; $('#helpDlg').classList.remove('hidden'); v.play().catch(() => {});
+};
+const helpClose = () => { const v = $('#helpVid'); v.pause(); v.removeAttribute('src'); v.load(); $('#helpDlg').classList.add('hidden'); };
+$('#helpClose').onclick = helpClose;
+$('#helpDlg').onclick = e => { if (e.target.id === 'helpDlg') helpClose(); };
 
 /* ---------- Events ---------- */
 async function loadEvents() {
@@ -1174,13 +1222,31 @@ $('#cGrant').onclick = async () => {
 };
 /* ---------- KI-Guthaben kaufen (Stripe) ---------- */
 const euro = c => (c / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+// Eigenes KI-Guthaben: Stand, Verbrauch je Ereignis (ai_jobs, nur erfolgreiche Bilder), Käufe/Gutschriften (ai_ledger) und Kauf
+// über Stripe (Funktion credits-checkout). Der Bereich ist immer sichtbar – ohne eingerichteten Kauf mit Hinweis statt Knöpfen.
+const showCredits = () => { $('#nav [data-tab="licenses"]')?.click(); setTimeout(() => $('#creditCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150); };
+window.showCredits = showCredits; // auch aus dem Ereignis-Editor (KI-Porträts → „Credits kaufen“)
+$('#creditChip').onclick = showCredits;
 async function loadMyCredits() {
-  if (!me || !$('#myCredits')) return;
-  const w = await sb.from('ai_wallets').select('balance').eq('owner_id', me.id).maybeSingle();
-  $('#myCredits').textContent = w.data?.balance ?? 0;
-  const { data, error } = await sb.functions.invoke('credits-checkout', { body: { action: 'packs' } });
-  const packs = [].concat(data?.packs || []);
-  $('#creditCard').classList.toggle('hidden', !!error || !packs.length || !data.ready); // erst sichtbar, wenn der Kauf auf dem Server eingerichtet ist
+  if (!me || !$('#creditCard')) return;
+  const [w, jobs, led, pk] = await Promise.all([
+    sb.from('ai_wallets').select('balance').eq('owner_id', me.id).maybeSingle(),
+    sb.from('ai_jobs').select('event_id,cost,status,created_at').eq('owner_id', me.id).eq('status', 'succeeded').order('created_at', { ascending: false }).limit(10000),
+    sb.from('ai_ledger').select('amount,note,created_at').eq('owner_id', me.id).gt('amount', 0).order('created_at', { ascending: false }).limit(30),
+    sb.functions.invoke('credits-checkout', { body: { action: 'packs' } }).catch(error => ({ error }))]);
+  const bal = w.data?.balance ?? 0, ok = jobs.data || [], sum = l => l.reduce((a, j) => a + (j.cost || 0), 0), d30 = Date.now() - 30 * 864e5;
+  const day = t => new Date(t).toLocaleDateString('de-DE'), tile = (n, t, sub) => `<div class="card"><b>${n}</b><span>${t}</span><span class="small muted">${sub}</span></div>`;
+  $('#creditChipN').textContent = bal;
+  $('#creditStats').innerHTML = tile(bal, 'Dein Guthaben', 'Credits') + tile(sum(ok), 'Verbraucht', 'Credits insgesamt') + tile(ok.length, 'KI-Bilder', 'insgesamt')
+    + tile(sum(ok.filter(j => new Date(j.created_at) > d30)), 'Letzte 30 Tage', 'Credits verbraucht');
+  const by = new Map();
+  for (const j of ok) { const k = j.event_id || '', r = by.get(k) || { n: 0, c: 0, last: j.created_at }; r.n++; r.c += j.cost || 0; if (j.created_at > r.last) r.last = j.created_at; by.set(k, r); }
+  const evName = id => (events || []).find(e => e.id === id)?.name || 'Gelöschtes Ereignis';
+  $('#creditUse').innerHTML = [...by].sort((a, b) => b[1].c - a[1].c).map(([id, r]) => `<tr><td data-l="Ereignis"><b>${esc(evName(id))}</b></td><td data-l="KI-Bilder">${r.n}</td><td data-l="Credits">${r.c}</td><td data-l="Zuletzt">${day(r.last)}</td></tr>`).join('')
+    || '<tr><td colspan="4" class="muted">Noch keine KI-Bilder.</td></tr>';
+  $('#creditLog').innerHTML = (led.data || []).map(x => `<tr><td data-l="Datum">${day(x.created_at)}</td><td data-l="Vorgang">${esc(x.note || 'Gutschrift')}</td><td data-l="Credits">+${x.amount}</td></tr>`).join('')
+    || '<tr><td colspan="3" class="muted">Noch keine Käufe oder Gutschriften.</td></tr>';
+  const { data, error } = pk, packs = [].concat(data?.packs || []);
   $('#creditPacks').innerHTML = packs.map(p => `<div class="card" style="display:flex;flex-direction:column;gap:8px">
       <b>${esc(p.name)}</b><div>${euro(p.cents)} <span class="small muted">· ${euro(p.cents / p.credits)} pro Credit</span></div>
       <button class="btn primary" data-pack="${esc(p.id)}" ${data.ready ? '' : 'disabled'}>Kaufen</button></div>`).join('');
@@ -1196,7 +1262,9 @@ $('#creditPacks').addEventListener('click', async e => {
 });
 { // Rückkehr von der Bezahlseite
   const k = new URLSearchParams(location.search).get('kauf');
-  if (k) { history.replaceState(null, '', location.pathname); setTimeout(() => toast(k === 'ok' ? 'Danke! Die Zahlung ist eingegangen – das Guthaben wird in wenigen Sekunden gutgeschrieben.' : 'Kauf abgebrochen – es wurde nichts berechnet.', 7000), 800); }
+  if (k) { history.replaceState(null, '', location.pathname); setTimeout(() => toast(k === 'ok' ? 'Danke! Die Zahlung ist eingegangen – das Guthaben wird in wenigen Sekunden gutgeschrieben.' : 'Kauf abgebrochen – es wurde nichts berechnet.', 7000), 800);
+    if (k === 'ok') for (const s of [5, 15, 40]) setTimeout(() => me && loadMyCredits(), s * 1000); } // Gutschrift kommt über den Stripe-Webhook
+  if (k || location.hash === '#guthaben') addEventListener('pm-ready', showCredits, { once: true }); // nach der Anmeldung gleich zum Guthaben
 }
 /* ---------- Lizenz kaufen (Stripe): Tarife, 14 Tage testen, Abo verwalten ---------- */
 let shop = { plans: [], ready: false };
