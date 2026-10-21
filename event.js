@@ -312,7 +312,14 @@
   #ws details.adv summary{cursor:pointer;font-weight:600}
   #ws .thumbs div{position:relative}#ws .thumbs img{height:70px;border-radius:6px;display:block}
   #ws .thumbs button{position:absolute;top:2px;right:2px;border:0;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:11px}
-  #wsModal{position:fixed;inset:0;background:rgba(20,16,40,.55);z-index:60;display:flex;align-items:center;justify-content:center;font:14px system-ui,sans-serif;color:#1d1d24}
+  .vagrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.vagrid .card{margin:0}.vacard.wide{grid-column:1/-1}
+  .vatiles{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;align-items:center}
+  .vatile{position:relative;width:92px;aspect-ratio:9/16;border-radius:8px;overflow:hidden;background:linear-gradient(160deg,#5a6070,#262a33);flex:none}
+  .vatile span{position:absolute;left:0;right:0;bottom:0;z-index:2;font-size:10px;color:#fff;padding:4px;background:linear-gradient(transparent,rgba(0,0,0,.75));text-align:center}
+  .vax{position:absolute;top:4px;right:4px;z-index:3;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;line-height:1;font-size:15px}
+  .vamedia{position:relative;border:1px solid #e3e3ea;border-radius:8px;padding:8px 32px 8px 10px;font-size:13px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  @media(max-width:700px){.vagrid{grid-template-columns:1fr}}
+  #wsModal{position:fixed;inset:0;background:rgba(20,16,40,.55);z-index:150;display:flex;align-items:center;justify-content:center;font:14px system-ui,sans-serif;color:#1d1d24}
   #wsModal .box{background:#fff;border-radius:16px;width:min(1000px,94vw);height:min(720px,92vh);display:flex;flex-direction:column;overflow:hidden}
   #wsModal .mh{padding:16px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:12px}
   #wsModal .mh h3{margin:0;font-size:20px;flex:1}
@@ -387,7 +394,7 @@
     ['warm', 'Warm', 'sepia(.18) saturate(1.3) brightness(1.04)'], ['cool', 'Kühl', 'saturate(.9) hue-rotate(12deg) brightness(1.05)'], ['glam', 'Glamour', 'brightness(1.12) contrast(1.08) saturate(1.1)']];
   const DEF = {
     ai: { enabled: false, prompt: '' },
-    title: '', subtitle: '', startText: 'Tippen zum Starten', startScreen: null, startScreen2: null, attractP: null, attractL: null, accent: '#F7C838', attractUrl: '', attractType: '', attractFit: 'cover', startDisplay: 'media', font: 'modern', frame: '#ffffff', textColor: '#222222', template: 'classic',
+    title: '', subtitle: '', startText: 'Tippen zum Starten', startScreen: null, startScreen2: null, shareScreen: null, shareScreen2: null, attractP: null, attractL: null, accent: '#F7C838', attractUrl: '', attractType: '', attractFit: 'cover', startDisplay: 'media', font: 'modern', frame: '#ffffff', textColor: '#222222', template: 'classic',
     layouts: [], guestLayouts: false, gifFromPhotos: false,
     countdown: 3, countdownNext: 3, between: 2, autoReturn: 30, sound: true, mirror: true, mirrorPhoto: false, cropLive: true,
     modes: { single: true, strip: true, grid: true, gif: true, boomerang: true, video: true }, gifFrames: 4, boomerangLen: 'mittel', videoSecs: 10, videoAudio: true,
@@ -632,6 +639,8 @@
         if (g && !list.includes(g)) list.unshift(g);
         S.x.lang.list = list.length === I18N.CODES.length ? [] : list; save(); return;
       }
+      if (t.dataset.varnd) { S.x.voice = S.x.voice || {}; S.x.voice.rnd = { ...(S.x.voice.rnd || {}), [t.dataset.varnd]: t.checked }; save(); return; }
+      if (t.dataset.livetpl !== undefined) { S.liveView = t.checked ? 'template' : 'plain'; const l = t.closest('.row')?.querySelector('.swl'); if (l) l.textContent = t.checked ? 'Ein' : 'Aus'; save(); return; }
       if (t.dataset.aiConsent !== undefined) { ai.consentOk = t.checked; return; }
       if (t.dataset.cariConsent !== undefined) { cariT.consent = t.checked; return; }
       if (t.dataset.aiCname !== undefined) { ai.cname = t.value; return; }
@@ -668,6 +677,26 @@
     });
     main.addEventListener('dragend', () => { dragLay = ''; main.querySelectorAll('.lay.drop').forEach(n => n.classList.remove('drop')); });
     main.addEventListener('click', async e => {
+      // Virtueller Berater: Animationen wählen/entfernen, eigene Dateien hochladen/entfernen
+      const va = e.target.closest('[data-vapick],[data-vadel],[data-vadelm],[data-vaup]');
+      if (va) {
+        const V = S.x.voice = S.x.voice || {}, steps = { ...AdvisorAnim.DEFAULT_STEPS, ...(V.steps || {}) };
+        if (va.dataset.vapick) {
+          const k = va.dataset.vapick, multi = !!AdvisorAnim.STEPS.find(x => x[0] === k)[2];
+          const r = await AdvisorAnim.pick({ style: V.anim || 'neon', selected: steps[k] || [], multi, step: k }); if (!r) return;
+          V.anim = r.style; V.steps = { ...steps, [k]: r.ids };
+        } else if (va.dataset.vadel) { const [k, id] = va.dataset.vadel.split(':'); V.steps = { ...steps, [k]: (steps[k] || []).filter(x => x !== id) }; }
+        else if (va.dataset.vadelm) { const [k, i] = va.dataset.vadelm.split(':'); const l = [...(V.media?.[k] || [])]; l.splice(+i, 1); V.media = { ...(V.media || {}), [k]: l }; }
+        else {
+          const k = va.dataset.vaup, f = await pick('audio/*,video/mp4,video/webm,.mp3,.mp4'); if (!f) return;
+          if (f.size > 150 * 1024 * 1024) { ctx.toast('Datei ist zu groß (max. 150 MB).', 4000); return; }
+          status('Lädt ' + f.name + ' hoch …');
+          try { const url = await ctx.uploadFile(f), multi = !!AdvisorAnim.STEPS.find(x => x[0] === k)[2], m = { url, name: f.name, type: f.type.startsWith('video') ? 'video' : 'audio' };
+            V.media = { ...(V.media || {}), [k]: multi ? [...(V.media?.[k] || []), m] : [m] }; }
+          catch (err) { ctx.toast('Hochladen fehlgeschlagen: ' + err.message, 5000); status(''); return; }
+        }
+        save(); render(); return;
+      }
       const t = e.target.closest('[data-tab],[data-a],[data-mode],[data-flt],[data-lay]'); if (!t) return;
       if (t.dataset.tab) { const [k, v] = t.dataset.tab.split(':'); sub[k] = v; render(); main.querySelector(`#sec-${k}-${v}`)?.scrollIntoView({ block: 'start' }); return; }
       if (t.dataset.mode) { sub.mode = t.dataset.mode; render(); return; }
@@ -922,6 +951,9 @@
       if (a === 'uplogo') { const f = await pick('image/*'); if (f) { status('Lädt Logo hoch …'); E.logo_url = await ctx.uploadFile(f); save(); render(); } }
       if (a === 'dellogo') { E.logo_url = null; save(); render(); }
       if (a === 'editscreen') { editScreen(t.dataset.o === 'landscape' ? 'landscape' : 'portrait'); return; }
+      if (a === 'valib') { AdvisorAnim.pick({ style: S.x.voice?.anim || 'neon', selected: [] }); return; }
+      if (a === 'editshare') { editShare(t.dataset.o === 'landscape' ? 'landscape' : 'portrait'); return; }
+      if (a === 'resetshare') { if (await (G.pmConfirm || (async t => confirm(t)))('Gestaltung des Bildschirms zum Teilen (Hoch- und Querformat) verwerfen? Danach ordnet die Fotobox die Schaltflächen wieder automatisch an.', 'Zurücksetzen')) { S.shareScreen = null; S.shareScreen2 = null; save(); render(); } return; }
       if (a === 'resetscreen') { if (await (G.pmConfirm || (async t => confirm(t)))('Gestaltung des Startbildschirms (Hoch- und Querformat) verwerfen?', 'Zurücksetzen')) { S.startScreen = null; S.startScreen2 = null; save(); render(); } return; }
       if (a === 'upattract') { await uploadAttract(t.dataset.o === 'landscape' ? 'landscape' : 'portrait'); render(); return; }
       if (a === 'delattract') { removeAttract(t.dataset.o === 'landscape' ? 'landscape' : 'portrait'); render(); return; }
@@ -1214,13 +1246,27 @@
         return `<h1>Aufnahmeeinstellungen</h1><div class="cols"><div class="left">
           <div class="modes">${M.map(([k, ic, n, key]) => `<div class="mode ${sub.mode === k ? 'on' : ''}" data-mode="${k}"><span class="ic">${ICON(ic, 22)}</span>${n}<span class="dot ${isOn(k, key) ? 'a' : ''}"></span></div>`).join('')}</div>
           ${body}
+          <h2>Live-Ansicht</h2><div class="card"><div class="between"><div><b>Live-Ansicht in der Vorlage</b><br><small style="color:#6b6b78">Gäste sehen sich beim Countdown im Fotolayout – so wie das fertige Foto. Aus: nur das Kamerabild.</small></div>
+            <div class="row"><label class="sw"><input type="checkbox" data-livetpl ${S.liveView !== 'plain' ? 'checked' : ''}><i></i></label><span class="swl">${S.liveView !== 'plain' ? 'Ein' : 'Aus'}</span></div></div></div>
           <h2>Spiegeln</h2><div class="card">${sw('mirror', 'Gespiegelte Live-Ansicht')}${sw('mirrorPhoto', 'Aufgenommene Fotos und Videos spiegeln', 'Spiegelt das gespeicherte und gedruckte Ergebnis')}${sw('cropLive', 'Live-Ansicht auf das Fotofeld zuschneiden')}</div>
         </div>${previewBox()}</div>`;
       },
-      voice() {
-        return `${titleSw('Virtueller Berater', 'voice')}<p style="margin:-6px 0 14px;color:#6b6b78">Leiten Sie Ihre Gäste mit Videoanimationen und Audioansagen an</p>
-          <div class="card">${sel('x.voice.style', 'Stil', [['de-frau', 'Audio – Deutsche Stimme (Frau)'], ['de-mann', 'Audio – Deutsche Stimme (Mann)'], ['en-frau', 'Audio – Englische Stimme (Frau)']])}
-            </div>`; // eigene Ansage-Dateien je Schritt (x.voice.files) kann die Fotobox noch nicht abspielen – deshalb ausgeblendet
+      voice() { // wie bei LumaBooth: Stil, je Schritt Animationen aus der Bibliothek (Live-Vorschau) und eigene Dateien
+        const V = S.x.voice || {}, style = V.anim || 'neon', steps = { ...AdvisorAnim.DEFAULT_STEPS, ...(V.steps || {}) };
+        const rnd = k => V.rnd?.[k] ?? (k === 'pre' || k === 'post');
+        const cards = AdvisorAnim.STEPS.map(([k, name, multi]) => {
+          const anims = (steps[k] || []).filter(id => AdvisorAnim.byId(id)), media = V.media?.[k] || [];
+          return `<div class="card vacard ${multi ? 'wide' : ''}"><div class="between"><b>${name}</b>${multi ? `<label class="row" style="gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" data-varnd="${k}" ${rnd(k) ? 'checked' : ''}> Randomisieren</label>` : ''}</div>
+            ${k === 'touch' ? '<small style="color:#6b6b78">Läuft in Schleife auf dem Startbildschirm, bis jemand tippt.</small>' : k === 'proc' ? '<small style="color:#6b6b78">Läuft, bis das Foto fertig ist.</small>' : ''}
+            <div class="vatiles">${anims.map(id => `<div class="vatile" data-anim="${id}"><button class="vax" data-vadel="${k}:${id}" title="Entfernen">×</button><span>${esc(AdvisorAnim.byId(id).name)}</span></div>`).join('')}${media.map((m, i) => `<div class="vamedia">${m.type === 'video' ? '🎬' : '🎵'} ${esc(m.name || 'Datei')}<button class="vax" data-vadelm="${k}:${i}" title="Entfernen">×</button></div>`).join('')}${anims.length || media.length ? '' : '<small style="color:#999">Nichts ausgewählt</small>'}</div>
+            <div class="row" style="flex-wrap:wrap;gap:8px"><button class="ghost" data-vapick="${k}">${ICON('sparkles', 15)} ${multi ? 'Animationen wählen' : 'Animation wählen'}</button><button class="ghost" data-vaup="${k}">${ICON('upload', 15)} Eigene Datei (MP3/MP4)</button></div></div>`;
+        }).join('');
+        return `${titleSw('Virtueller Berater', 'voice')}<p style="margin:-6px 0 14px;color:#6b6b78">Leiten Sie Ihre Gäste mit Animationen und Ansagen an. Die Animationen passen sich jedem Bildschirm an (Hoch- und Querformat) und erscheinen in der Sprache der Gäste. Gilt für alle Fotoboxen dieses Ereignisses.</p>
+          <div class="card"><label class="l">Stil der Animationen</label><select data-s="x.voice.anim" data-rerender="1">${AdvisorAnim.STYLES.map(st => `<option value="${st.id}" ${st.id === style ? 'selected' : ''}>${esc(st.name)}</option>`).join('')}</select>
+            <div class="row" style="margin-top:10px"><button class="ghost" data-a="valib">${ICON('sparkles', 15)} Animationen ansehen</button></div>
+            ${sel('x.voice.style', 'Stimme für Sprachansagen', [['de-frau', 'Deutsche Stimme (Frau)'], ['de-mann', 'Deutsche Stimme (Mann)'], ['en-frau', 'Englische Stimme (Frau)']])}
+            <small style="color:#6b6b78">Ob die Fotobox die Texte zusätzlich vorliest, stellen Sie an der Fotobox unter „Virtueller Berater“ → „Sprachansagen“ ein.</small></div>
+          <div class="vagrid">${cards}</div>`;
       },
       start() {
         // Logo in der weißen Scheibe der Standard-Startanimation – mit Live-Vorschau (start-anim.js), genau wie auf der Fotobox
@@ -1387,7 +1433,7 @@
           : sub.sh === 'wa' ? `${titleSw('WhatsApp', 'x.share.wa.on')}<div class="card">Erfordert eine Internetverbindung. ${NEEDSRV}
               <label class="l">Nachricht (max. 128 Zeichen)</label><textarea rows="2" maxlength="128" data-s="x.share.wa.message">${esc(X.wa.message)}</textarea>
               <div class="grid3x">${text('x.share.wa.cc', 'Ländercode (+)')}${text('x.share.wa.inputText', 'Text für die Eingabe der Telefonnummer')}${text('x.share.wa.scanText', 'Text für „Mit dem Handy scannen“')}</div></div>`
-          : sub.sh === 'screen' ? `<h2>Bildschirm zum Teilen</h2><div class="card">${slider('autoReturn', 'Anzeigedauer des Bildschirms zum Teilen', 0, 120, 5)}
+          : sub.sh === 'screen' ? `<h2>Bildschirm zum Teilen</h2>${sharePreview()}<div class="card">${slider('autoReturn', 'Anzeigedauer des Bildschirms zum Teilen', 0, 120, 5)}
               ${sw('x.share.deleteBtn', 'Schaltfläche „Löschen“ anzeigen', 'Gäste können die Aufnahme verwerfen und wiederholen')}${text('x.share.deleteText', 'Text für die Schaltfläche „Löschen“')}</div>`
           : `<h2>Weitere Optionen</h2><div class="card">${sw('x.share.cloud', 'Cloud-Freigabe', 'Fotos werden in die Online-Galerie hochgeladen und sind über einen Link abrufbar')}
               ${sw('x.share.origUp', 'Originalfotos hochladen', 'Zusätzlich zum fertigen Ausdruck werden die einzelnen Aufnahmen in die Online-Galerie hochgeladen (braucht mehr Speicher)')}
@@ -1578,6 +1624,44 @@
       if (!S.startScreen || S.startScreen.orient === nl.orient) S.startScreen = nl; else S.startScreen2 = nl;
       const b = nl.elements.find(e => e.type === 'button'); S.startText = b && !b.hidden ? String(b.text || '') : ''; save();
     }
+    // Bildschirm zum Teilen: frei gestaltbar wie der Startbildschirm (shareScreen bzw. shareScreen2 je Ausrichtung). Ohne Gestaltung ordnet
+    // die Fotobox die Schaltflächen selbst an (Einstellungen an der Fotobox: Speicherort der Teilen-Symbole, Textetiketten).
+    const shareOf = o => [S.shareScreen, S.shareScreen2].find(L => L && L.screen && L.orient === o) || null;
+    const shareFor = o => shareOf(o) || (S.shareScreen ? FBR.adaptScreen(S.shareScreen, o) : FBR.createShare(o));
+    const shareSysOpts = () => ({ note: 'Mit eigener Gestaltung gelten „Speicherort der Teilen-Symbole“ und „Textetiketten“ nicht mehr – alles steht dort, wo du es hinschiebst.',
+      off: [S.x.share.deleteBtn === false && 'bRetake', S.printButton === false && 'bPrint', S.share === false && 'bQR', S.stickers === false && 'bDeco', !(S.x.mosaic?.on && S.x.mosaic.who === 'guest') && 'bMosaic'].filter(Boolean) });
+    function sharePreview() {
+      const cv = (o, flex) => `<div style="flex:${flex};min-width:0"><small style="color:#555">${FBR.SCREEN_SIZES[o].label}</small><canvas id="wsShare${o === 'landscape' ? 'L' : 'P'}" data-a="editshare" data-o="${o}" title="Anklicken zum Gestalten" style="width:100%;border-radius:8px;display:block;cursor:pointer;margin-top:4px;background:#222225"></canvas><small id="wsShareNote${o === 'landscape' ? 'L' : 'P'}" style="color:#888"></small></div>`;
+      return `<div class="card"><b>Gestaltung</b><p style="margin:4px 0 12px;color:#6b6b78;font-size:13px">Schaltflächen, Foto, Filter-Leiste, Texte, Bilder und einen QR-Code frei anordnen – wie beim Startbildschirm. Gilt an allen Fotoboxen dieses Ereignisses.</p>
+        <div class="row" style="align-items:flex-start;gap:12px">${cv('portrait', 9)}${cv('landscape', 16)}</div>
+        <div class="row" style="flex-wrap:wrap;margin-top:12px"><button class="btn pri" data-a="editshare" data-o="portrait">${ICON('pen', 16)} Hochformat gestalten</button><button class="btn pri" data-a="editshare" data-o="landscape">${ICON('pen', 16)} Querformat gestalten</button>${S.shareScreen ? `<button class="ghost" data-a="resetshare">Zurücksetzen</button>` : ''}</div>
+        ${S.shareScreen ? '' : '<p style="color:#6b6b78;font-size:13px;margin:10px 0 0">Noch nicht gestaltet – die Fotobox ordnet die Schaltflächen automatisch an.</p>'}</div>`;
+    }
+    function drawShare() {
+      const sy = shareSysOpts(), off = new Set(sy.off);
+      for (const o of ['portrait', 'landscape']) {
+        const c = $(root, o === 'landscape' ? '#wsShareL' : '#wsShareP'), note = $(root, o === 'landscape' ? '#wsShareNoteL' : '#wsShareNoteP'); if (!c) continue;
+        const gl = S.x.lang?.guest || window.PM_LANG || 'de', L = I18N.layout(FBR.shareSys(shareFor(o)), gl);
+        if (note) note.textContent = shareOf(o) ? 'gestaltet' : S.shareScreen ? 'automatisch angepasst' : 'Standard-Vorschlag';
+        const go = () => { const big = FBR.renderLayout(L, { values: vals(), placeholders: true, off, photoAr: sharePhotoAr() }); c.width = Math.round(big.width / 4); c.height = Math.round(big.height / 4); c.getContext('2d').drawImage(big, 0, 0, c.width, c.height); };
+        FBR.preloadLayout(L).then(go);
+      }
+    }
+    const sharePhotoAr = () => { const L0 = S.layouts[0]; return L0 ? L0.w / L0.h : 1.5; }; // so groß wirkt das Foto der Gäste
+    function storeShare(nl) { if (!S.shareScreen || S.shareScreen.orient === nl.orient) S.shareScreen = nl; else S.shareScreen2 = nl; save(); }
+    async function dropShare(o) {
+      if (!S.shareScreen) return false;
+      const own = shareOf(o), other = shareOf(o === 'portrait' ? 'landscape' : 'portrait'), part = !!(own && other);
+      if (!await (G.pmConfirm || (async t => confirm(t)))(part ? 'Gestaltung für diese Ausrichtung verwerfen? Sie wird dann aus der anderen Ausrichtung umgerechnet.' : 'Gestaltung des Bildschirms zum Teilen (Hoch- und Querformat) verwerfen? Danach ordnet die Fotobox die Schaltflächen wieder automatisch an.', 'Zurücksetzen')) return false;
+      if (part) { S.shareScreen = other; S.shareScreen2 = null; } else { S.shareScreen = null; S.shareScreen2 = null; }
+      save(); return true;
+    }
+    function editShare(o) {
+      LayoutEditor.open({
+        layout: shareFor(o), layoutFor: o2 => structuredClone(shareFor(o2)), values: vals(), uploadImage: ctx.uploadFile, sys: shareSysOpts(), photoAr: sharePhotoAr(),
+        onSave: async nl => storeShare(nl), onReset: dropShare, onClose: () => render()
+      });
+    }
     // Galerie-Stapel und Videonachricht-Karte der Fotobox als Ebenen im Editor (FBR.screenSys)
     const screenSysOpts = () => ({ gallery: true, vmsg: allowed('videomsg') && S.x.videomsg?.on ? S.x.videomsg : null, accent: S.accent || '#F7C838' });
     const vmsgPlaced = () => [S.startScreen, S.startScreen2].some(L => L && L.screen && L.elements.some(e => e.type === 'vmsg'));
@@ -1681,20 +1765,43 @@
       }
       if (page === 'start') { clearTimeout(drawPreview.t); drawPreview.t = setTimeout(drawStart, fromRender ? 0 : 400); }
       if (page === 'mosaic') { clearTimeout(drawPreview.m); drawPreview.m = setTimeout(drawMosaic, fromRender ? 0 : 120); }
+      if (page === 'share') { clearTimeout(drawPreview.s); drawPreview.s = setTimeout(drawShare, fromRender ? 0 : 300); }
     }
+    const vaStops = [];
     function render() {
       main.innerHTML = '<div class="wpage">' + PAGES[page]() + '</div>';
       drawPreview(true);
       if (page === 'start') startAnimPreview();
+      vaStops.splice(0).forEach(f => f()); // Animations-Kacheln des Virtuellen Beraters
+      if (page === 'voice') main.querySelectorAll('.vatile').forEach(t => vaStops.push(AdvisorAnim.tile(t, t.dataset.anim, S.x.voice?.anim || 'neon', I18N.t(AdvisorAnim.byId(t.dataset.anim).text, S.x.lang?.guest || window.PM_LANG || 'de'))));
       if (page === 'layout') S.layouts.forEach(L => FBR.preloadLayout(L).then(() => { const img = main.querySelector(`.lay[data-id="${L.id}"] img`); if (img) img.src = layoutThumb(L);
         const big = L.id === sub.laySel && main.querySelector('#wsLayImg'); if (big) big.src = layoutThumb(L, 760); }));
     }
 
     // ---------- Layouts ----------
+    // Fotolayouts im Editor verwalten wie bei LumaBooth: Auswahl, Vorlage hinzufügen, Speichern unter, Import/Export, Testdruck, Löschen
+    const layLib = {
+      list: () => S.layouts.map(l => ({ id: l.id, name: l.name })),
+      get: id => { const l = S.layouts.find(x => x.id === id); return l ? structuredClone(l) : null; },
+      add: async l => { S.layouts.push(l); sub.laySel = l.id; save(); },
+      pick: () => new Promise(res => pickTemplate(vals(), res)),
+      remove: async id => {
+        if (!await (G.pmConfirm || (async t => confirm(t)))('Dieses Fotolayout löschen?', 'Löschen')) return false;
+        S.layouts = S.layouts.filter(l => l.id !== id); if (sub.laySel === id) sub.laySel = S.layouts[0]?.id; save(); return true;
+      },
+      print: async L => printTest(L),
+    };
+    // Testdruck im Browser: Druckbogen mit Platzhalter-Fotos in Originalgröße (300 dpi) – im Druckfenster den Fotodrucker wählen
+    function printTest(L) {
+      const c = FBR.renderSheet(L, { placeholders: true, values: vals() }), w = window.open('', '_blank');
+      if (!w) throw new Error('Das Druckfenster wurde blockiert – bitte Pop-ups für das Dashboard erlauben.');
+      w.document.write(`<!doctype html><meta charset="utf-8"><title>Testdruck</title><style>@page{size:${c.width / 300}in ${c.height / 300}in;margin:0}html,body{margin:0;background:#fff}img{display:block;width:100vw;height:100vh;object-fit:contain}</style><img src="${c.toDataURL('image/jpeg', .92)}" onload="setTimeout(function(){print()},300)">`);
+      w.document.close();
+    }
     function editLayout(id) {
       const L = S.layouts.find(x => x.id === id); if (!L) return;
       LayoutEditor.open({
-        layout: L, values: vals(), uploadImage: ctx.uploadFile, questions: (S.x.survey.questions || []).map(q => q.text),
+        layout: L, values: vals(), uploadImage: ctx.uploadFile, questions: (S.x.survey.questions || []).map(q => q.text), lib: layLib,
         onSave: async nl => { const i = S.layouts.findIndex(x => x.id === nl.id); if (i >= 0) S.layouts[i] = nl; save(); },
         onClose: () => render()
       });
