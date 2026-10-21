@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.72": {
+      "date": "2026-10-21",
+      "notes": {
+        "de": [
+          "Drucken: Die Auswahl „Wie viele Kopien?“ startet jetzt immer bei 1 – der Gast tippt auf +, wenn er mehr möchte (höchstens „Kopien pro Gast“). „Kopien pro Ausdruck“ gilt nur noch, wenn nicht gefragt wird."
+        ],
+        "en": [
+          "Printing: the “How many copies?” selection now always starts at 1 – the guest taps + for more (up to “Copies per guest”). “Copies per print” only applies when guests are not asked."
+        ],
+        "tr": [
+          "Baskı: „Kaç kopya?“ seçimi artık her zaman 1’den başlar – misafir daha fazlası için + düğmesine dokunur (en fazla „Misafir başına kopya“). „Baskı başına kopya“ yalnızca sorulmadığında geçerlidir."
+        ],
+        "fr": [
+          "Impression : le choix « Combien de copies ? » commence désormais toujours à 1 – l’invité appuie sur + pour en avoir plus (au maximum « Copies par invité »). « Copies par impression » ne s’applique que si la question n’est pas posée."
+        ],
+        "es": [
+          "Impresión: la selección «¿Cuántas copias?» empieza ahora siempre en 1; el invitado pulsa + si quiere más (como máximo «Copias por invitado»). «Copias por impresión» solo se aplica si no se pregunta."
+        ],
+        "it": [
+          "Stampa: la scelta «Quante copie?» ora parte sempre da 1 – l’ospite tocca + per averne di più (al massimo «Copie per ospite»). «Copie per stampa» vale solo se non viene chiesto."
+        ]
+      }
+    },
     "1.17.71": {
       "date": "2026-10-20",
       "notes": {
