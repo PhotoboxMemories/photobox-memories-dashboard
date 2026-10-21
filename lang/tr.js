@@ -1061,6 +1061,7 @@ I18N.add('tr', {
 "Erst vorwärts, dann rückwärts abspielen": "Önce ileri, sonra geri oynat",
 "Erst vorwärts, dann rückwärts abspielen.": "Önce ileri, sonra geri oynat.",
 "Erstelle auch ein GIF": "Ayrıca GIF oluştur",
+"Erstelle ein kostenloses Konto oder melde dich an – danach geht es direkt weiter zu deinem Tarif.": "Ücretsiz bir hesap oluştur veya giriş yap – ardından doğrudan planına devam edersin.",
 "Erstellen Sie ein neues Ereignis": "Yeni bir etkinlik oluşturun",
 "erstellt dein Porträt": "portreni oluşturuyor",
 "Erstelltes KI-Porträt": "Oluşturulan yapay zekâ portresi",
