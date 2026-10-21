@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.74": {
+      "date": "2026-10-21",
+      "notes": {
+        "de": [
+          "Die Fotobox startet jetzt im Fenster (bildschirmfüllend mit Fensterrahmen) statt im Vollbild. Vollbild beim Start lässt sich unter Allgemein → „Anwendung im Vollbildmodus starten“ wieder einschalten."
+        ],
+        "en": [
+          "The photo booth now starts in a window (filling the screen, with window frame) instead of full screen. Full screen at start can be switched back on under General → “Start application in full-screen mode”."
+        ],
+        "tr": [
+          "Fotoğraf kabini artık tam ekran yerine pencerede (ekranı dolduran, pencere çerçeveli) başlıyor. Başlangıçta tam ekran, Genel → „Uygulamayı tam ekran modunda başlat“ altından yeniden açılabilir."
+        ],
+        "fr": [
+          "Le photobooth démarre désormais dans une fenêtre (plein écran avec cadre) au lieu du mode plein écran. Le plein écran au démarrage se réactive dans Général → « Démarrer l’application en plein écran »."
+        ],
+        "es": [
+          "El fotomatón ahora se inicia en una ventana (a pantalla completa con marco) en lugar de en pantalla completa. La pantalla completa al iniciar se puede volver a activar en General → «Iniciar la aplicación en pantalla completa»."
+        ],
+        "it": [
+          "Il photo booth ora si avvia in una finestra (a tutto schermo con cornice) invece che a schermo intero. Lo schermo intero all’avvio si riattiva in Generale → «Avvia l’applicazione a schermo intero»."
+        ]
+      }
+    },
     "1.17.73": {
       "date": "2026-10-21",
       "notes": {
