@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.84": {
+      "date": "2026-10-21",
+      "notes": {
+        "de": [
+          "Sicher gegen versehentliches Löschen: Ein Ereignis wird erst gelöscht, wenn du zur Bestätigung „LÖSCHEN“ eintippst – an der Fotobox und im Dashboard. Läuft das Ereignis gerade auf einer Fotobox, erscheint zusätzlich eine Warnung."
+        ],
+        "en": [
+          "Protected against accidental deletion: an event is only deleted after you type “DELETE” to confirm – on the photo booth and in the dashboard. If the event is currently running on a photo booth, an extra warning appears."
+        ],
+        "tr": [
+          "Yanlışlıkla silmeye karşı koruma: Bir etkinlik ancak onay için „SİL“ yazdığında silinir – fotoğraf kabininde ve panelde. Etkinlik şu anda bir fotoğraf kabininde çalışıyorsa ek bir uyarı görünür."
+        ],
+        "fr": [
+          "Protégé contre la suppression par erreur : un événement n’est supprimé qu’après avoir tapé « SUPPRIMER » pour confirmer – sur le photobooth et dans le tableau de bord. Si l’événement est en cours sur un photobooth, un avertissement supplémentaire apparaît."
+        ],
+        "es": [
+          "Protegido contra borrados accidentales: un evento solo se elimina después de escribir «BORRAR» para confirmar, en el fotomatón y en el panel. Si el evento se está usando en un fotomatón, aparece además un aviso."
+        ],
+        "it": [
+          "Protetto dalle eliminazioni accidentali: un evento viene eliminato solo dopo aver digitato «ELIMINA» per confermare – sul photo booth e nella dashboard. Se l’evento è in corso su un photo booth compare anche un avviso."
+        ]
+      }
+    },
     "1.17.83": {
       "date": "2026-10-21",
       "notes": {
