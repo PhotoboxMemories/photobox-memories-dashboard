@@ -421,7 +421,7 @@
     gallery: { link: false, guests: false, downloadAll: false, password: '' },
     lang: { guest: '', pick: false, list: [] }, // Gästesprache: '' = wie das Menü der Fotobox
     startLogo: { src: 'own', url: '', size: 72, fit: 'contain' }, // Logo in der weißen Scheibe der Standard-Startanimation
-    videomsg: { on: false, title: 'Videonachricht hinterlassen', sub: 'Scanne den Code mit deinem Handy', pos: 'tl', size: 'm' }, // Zusatzfunktion: Videonachricht per QR-Code
+    videomsg: { on: false, title: 'Videonachricht hinterlassen', sub: 'Scanne den Code mit deinem Handy', pos: 'tl', size: 'm', welcome: '', welcomeText: '' }, // Zusatzfunktion: Videonachricht per QR-Code (welcome = Begrüßungsvideo)
     mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false, preview: true, source: 'original' },
     ai: { skip: false, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Porträt erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
   };
@@ -1506,6 +1506,10 @@
             ${text('x.videomsg.title', 'Überschrift', 'Videonachricht hinterlassen')}${text('x.videomsg.sub', 'Hinweis darunter', 'Scanne den Code mit deinem Handy')}
             ${sel('x.videomsg.pos', 'Position', [['tl', 'Oben links (unter der Galerie)'], ['tr', 'Oben rechts'], ['bl', 'Unten links'], ['br', 'Unten rechts']])}${sel('x.videomsg.size', 'Größe', [['s', 'Klein'], ['m', 'Mittel'], ['l', 'Groß']])}
             <p style="color:#6b6b78;font-size:13px;margin-bottom:0">${vmsgPlaced() ? 'Die Karte ist im Startbildschirm-Editor frei platziert. Eine Auswahl hier setzt sie wieder an die gewählte Stelle.' : 'Tipp: Im Startbildschirm-Editor kannst du die Karte auch frei verschieben und in der Größe ändern.'}</p></div>
+          <h2>Begrüßungsvideo</h2><div class="card"><p style="margin-top:0">Gäste sehen nach dem Scannen zuerst dieses Video – z. B. das Brautpaar sagt Hallo und bittet um eine Nachricht – und nehmen danach ihre eigene Videonachricht auf. Ohne Video geht es direkt zur Aufnahme.</p>
+            ${up('x.videomsg.welcome', '', 'video/mp4,video/quicktime,video/webm', 'MP4 vom Handy oder Computer, bis 50 MB')}
+            ${V.welcome ? `<video src="${esc(V.welcome)}#t=0.1" controls playsinline preload="metadata" style="display:block;width:100%;max-height:300px;margin:10px 0 4px;border-radius:12px;background:#000"></video>` : ''}
+            ${V.welcome ? text('x.videomsg.welcomeText', 'Text unter dem Video (freiwillig)', 'z. B. Schön, dass du da bist!') : ''}</div>
           <h2>Ausprobieren</h2><div class="card"><p style="margin-top:0">So sieht die Seite auf dem Handy aus – sie funktioniert, sobald die Videonachricht oben eingeschaltet ist:</p>
             <a class="btn pri" href="${esc(link)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;gap:6px;align-items:center">${ICON('smartphone', 16)} Handy-Seite öffnen</a></div>
           </div><div class="pv"><div class="frame"><small style="color:#555">Vorschau Startbildschirm</small><div style="position:relative;aspect-ratio:16/9;margin-top:4px;border-radius:10px;overflow:hidden;background:radial-gradient(circle at 50% 35%,#3a3424,#1d1d1b 60%,#0b0b0a)">
