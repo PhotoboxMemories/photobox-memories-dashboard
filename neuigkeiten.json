@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.83": {
+      "date": "2026-10-21",
+      "notes": {
+        "de": [
+          "Virtueller Berater: Die fertigen Animationen sind jetzt deckend – das Startvideo bzw. das Livebild scheint nicht mehr durch und wird währenddessen angehalten. Galerie-Stapel, Videonachricht-Karte und Flaggen bleiben darüber bedienbar. Wer es durchsichtig möchte, stellt „Hintergrund der Animationen“ um."
+        ],
+        "en": [
+          "Virtual assistant: the ready-made animations are now opaque – the start video or live view no longer shows through and is paused meanwhile. The gallery stack, video message card and flags stay usable on top. If you prefer it transparent, change “Animation background”."
+        ],
+        "tr": [
+          "Sanal asistan: Hazır animasyonlar artık opak – başlangıç videosu veya canlı görüntü artık arkadan görünmüyor ve bu sırada durduruluyor. Galeri yığını, video mesaj kartı ve bayraklar üstte kullanılabilir kalır. Şeffaf istersen „Animasyon arka planı“nı değiştir."
+        ],
+        "fr": [
+          "Assistant virtuel : les animations prêtes à l’emploi sont désormais opaques – la vidéo d’accueil ou la vue en direct ne transparaît plus et est mise en pause pendant ce temps. La pile de la galerie, la carte du message vidéo et les drapeaux restent utilisables au-dessus. Pour la transparence, change « Arrière-plan des animations »."
+        ],
+        "es": [
+          "Asistente virtual: las animaciones listas ahora son opacas – el vídeo de inicio o la imagen en directo ya no se transparentan y se pausan mientras tanto. La pila de la galería, la tarjeta del mensaje de vídeo y las banderas siguen usables encima. Si lo prefieres transparente, cambia «Fondo de las animaciones»."
+        ],
+        "it": [
+          "Assistente virtuale: le animazioni pronte ora sono coprenti – il video iniziale o la visione live non trasparono più e nel frattempo vengono messi in pausa. Pila della galleria, scheda del videomessaggio e bandiere restano utilizzabili sopra. Se la preferisci trasparente, cambia «Sfondo delle animazioni»."
+        ]
+      }
+    },
     "1.17.82": {
       "date": "2026-10-21",
       "notes": {
