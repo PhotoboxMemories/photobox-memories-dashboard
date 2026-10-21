@@ -1847,6 +1847,7 @@ I18N.add('es', {
 "Oben (über dem Bild)": "Arriba (sobre la imagen)",
 "Oben in der Liste = vorne im Bild.": "Arriba en la lista = delante en la imagen.",
 "Oben links": "Arriba a la izquierda",
+"Oben links (unter der Galerie)": "Arriba a la izquierda (debajo de la galería)",
 "Oben rechts": "Arriba a la derecha",
 "oben)": "arriba)",
 "Offenes Guthaben": "Saldo pendiente",
