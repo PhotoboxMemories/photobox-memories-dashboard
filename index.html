@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261021-6';</script>
+<script>window.I18N_V = '20261021-7';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -405,6 +405,26 @@ const pmConfirm = (text, ok = 'Löschen') => new Promise(res => {
   document.addEventListener('keydown', key); document.body.appendChild(o);
 });
 window.pmConfirm = pmConfirm;
+// Endgültiges Löschen (Ereignis samt Fotos): erst nach Eintippen von „LÖSCHEN“ – ein Fehlklick (z. B. auf den Mülleimer an der
+// Kachel) reicht so nie. Das Wort gilt auf Deutsch und in der Sprache der Oberfläche.
+const pmConfirmTyped = (text, warn = '') => new Promise(res => {
+  const tr = window.I18N_UI || (x => x), word = 'LÖSCHEN', w = tr(word);
+  const o = document.createElement('div');
+  o.style.cssText = 'position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px';
+  o.innerHTML = `<div style="background:#fff;color:#1d1d24;border-radius:14px;padding:22px;width:min(460px,100%);font:15px/1.5 system-ui,sans-serif">
+    ${warn ? `<p style="background:#fde8e8;color:#9b1c1c;border-radius:10px;padding:10px 12px;margin:0 0 12px;font-weight:600">⚠️ ${esc(warn)}</p>` : ''}<p style="margin:0 0 14px">${esc(text)}</p>
+    <label style="display:block;font-weight:600;margin-bottom:6px">${esc(tr('Zum Bestätigen bitte {x} eintippen:').replace('{x}', '„' + w + '“'))}</label>
+    <input type="text" autocomplete="off" spellcheck="false" autocapitalize="characters" style="width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:10px;font:16px system-ui,sans-serif;margin-bottom:16px">
+    <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn" data-r="0">Abbrechen</button><button class="btn" data-r="1" disabled style="background:#d23b3b;border-color:#d23b3b;color:#fff;opacity:.45">Endgültig löschen</button></div></div>`;
+  const inp = o.querySelector('input'), go = o.querySelector('[data-r="1"]');
+  const ok = () => [w, word].some(x => inp.value.trim().toLocaleUpperCase('de') === x.toLocaleUpperCase('de'));
+  inp.oninput = () => { go.disabled = !ok(); go.style.opacity = ok() ? 1 : .45; };
+  inp.onkeydown = e => { if (e.key === 'Enter' && ok()) done(true); };
+  const done = v => { o.remove(); document.removeEventListener('keydown', key); res(v); };
+  const key = e => { if (e.key === 'Escape') done(false); };
+  o.addEventListener('click', e => { if (e.target === o) done(false); const r = e.target.closest('[data-r]'); if (r && !r.disabled) done(r.dataset.r === '1'); });
+  document.addEventListener('keydown', key); document.body.appendChild(o); setTimeout(() => inp.focus(), 50);
+});
 // Handy: Tabellen erscheinen als Karten – jede Zelle bekommt dafür ihre Spaltenüberschrift als Beschriftung
 const labelCells = tb => { const hs = [...tb.closest('table').querySelectorAll('thead th')].map(th => th.textContent.trim());
   for (const tr of tb.rows) if (tr.cells.length === hs.length) [...tr.cells].forEach((td, i) => { if (td.dataset.l !== hs[i]) td.dataset.l = hs[i]; }); };
@@ -710,8 +730,10 @@ async function deleteEventFull(e) {
   const { count } = DEMO ? { count: 0 } : await sb.from('photos').select('id', { count: 'exact', head: true }).eq('event_id', e.id);
   const n = count || 0;
   const tr = window.I18N_UI || (x => x); // Satz für Satz übersetzen – zusammengesetzt findet ihn das Wörterbuch nicht
-  if (!await pmConfirm(tr('Ereignis „{x}“ endgültig löschen?').replace('{x}', e.name) + (n ? ' ' + tr('Dabei werden auch alle {x} Fotos und Videos aus der Online-Galerie gelöscht.').replace('{x}', n) : '')
-    + ' ' + tr('Das lässt sich nicht rückgängig machen. Fotoboxen und Gäste-Daten bleiben erhalten.'))) return false;
+  const live = (devices || []).filter(d => d.event_id === e.id).length; // läuft gerade auf einer Fotobox?
+  const warn = live ? (live === 1 ? tr('Dieses Ereignis läuft gerade auf einer Fotobox.') : tr('Dieses Ereignis läuft gerade auf {x} Fotoboxen.').replace('{x}', live)) : '';
+  if (!await pmConfirmTyped(tr('Ereignis „{x}“ endgültig löschen?').replace('{x}', e.name) + (n ? ' ' + tr('Dabei werden auch alle {x} Fotos und Videos aus der Online-Galerie gelöscht.').replace('{x}', n) : '')
+    + ' ' + tr('Das lässt sich nicht rückgängig machen. Fotoboxen und Gäste-Daten bleiben erhalten.'), warn)) return false;
   if (DEMO) { toast('Demo-Modus – es wird nichts gelöscht'); return false; }
   if (n) {
     const rows = [];
