@@ -1,6 +1,35 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.79": {
+      "date": "2026-10-21",
+      "notes": {
+        "de": [
+          "Neu: Hilfe-Suche in der Fotobox (Knopf „Suchen“ auf der Startseite und die Lupe im Menü) und im Dashboard (oben „Suchen“): Stichwort eintippen, z. B. „Logo“ oder „Kopien“ – du bekommst eine kurze Erklärung, und „Hingehen“ springt direkt zur richtigen Stelle.",
+          "Logo in der Startanimation jetzt auch an der Fotobox einstellbar (Bildschirm-Editor → Startbildschirm → Einstellungen) und im Dashboard immer sichtbar – mit Hinweis, wenn gerade ein eigenes Video oder das Livebild läuft."
+        ],
+        "en": [
+          "New: help search on the photo booth (“Search” button on the home page and the magnifier in the menu) and in the dashboard (“Search” at the top): type a keyword such as “logo” or “copies” – you get a short explanation, and “Go there” jumps straight to the right place.",
+          "The logo in the start animation can now also be set on the photo booth (screen editor → start screen → settings) and is always visible in the dashboard – with a note when your own video or the live view is playing."
+        ],
+        "tr": [
+          "Yeni: Fotoğraf kabininde (ana sayfada „Ara“ düğmesi ve menüdeki büyüteç) ve panelde (üstte „Ara“) yardım araması: „logo“ veya „kopya“ gibi bir kelime yaz – kısa bir açıklama alırsın ve „Oraya git“ doğrudan doğru yere götürür.",
+          "Başlangıç animasyonundaki logo artık fotoğraf kabininde de ayarlanabilir (ekran düzenleyici → başlangıç ekranı → ayarlar) ve panelde her zaman görünür – kendi videon veya canlı görüntü oynarken bir uyarıyla."
+        ],
+        "fr": [
+          "Nouveau : recherche d’aide sur le photobooth (bouton « Rechercher » sur la page d’accueil et loupe dans le menu) et dans le tableau de bord (« Rechercher » en haut) : tape un mot-clé, p. ex. « logo » ou « copies » – tu obtiens une courte explication et « Y aller » t’emmène directement au bon endroit.",
+          "Le logo de l’animation de démarrage se règle maintenant aussi sur le photobooth (éditeur d’écran → écran d’accueil → réglages) et reste toujours visible dans le tableau de bord – avec un avertissement si ta propre vidéo ou la vue en direct est affichée."
+        ],
+        "es": [
+          "Nuevo: búsqueda de ayuda en el fotomatón (botón «Buscar» en la página de inicio y la lupa del menú) y en el panel («Buscar» arriba): escribe una palabra, p. ej. «logotipo» o «copias» – recibes una breve explicación y «Ir allí» te lleva directamente al lugar correcto.",
+          "El logotipo de la animación de inicio ahora también se ajusta en el fotomatón (editor de pantalla → pantalla de inicio → ajustes) y siempre se ve en el panel – con un aviso si se está mostrando tu propio vídeo o la imagen en directo."
+        ],
+        "it": [
+          "Novità: ricerca nell’aiuto sul photo booth (pulsante «Cerca» nella pagina iniziale e lente nel menu) e nella dashboard («Cerca» in alto): scrivi una parola come «logo» o «copie» – ricevi una breve spiegazione e «Vai lì» porta subito al punto giusto.",
+          "Il logo dell’animazione iniziale ora si imposta anche sul photo booth (editor schermate → schermata iniziale → impostazioni) ed è sempre visibile nella dashboard – con un avviso quando è in riproduzione il tuo video o la visione live."
+        ]
+      }
+    },
     "1.17.78": {
       "date": "2026-10-21",
       "notes": {
