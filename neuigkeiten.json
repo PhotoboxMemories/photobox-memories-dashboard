@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.73": {
+      "date": "2026-10-21",
+      "notes": {
+        "de": [
+          "Videonachricht: Die QR-Karte sitzt jetzt standardmäßig oben links direkt unter dem Galerie-Stapel – auch auf dem Spiegel (Hochformat)."
+        ],
+        "en": [
+          "Video message: the QR card now sits top left directly below the gallery stack by default – also on the mirror (portrait)."
+        ],
+        "tr": [
+          "Video mesaj: QR kartı artık varsayılan olarak sol üstte, galeri yığınının hemen altında – aynada (dikey) da."
+        ],
+        "fr": [
+          "Message vidéo : la carte QR se trouve désormais par défaut en haut à gauche, juste sous la pile de la galerie – aussi sur le miroir (portrait)."
+        ],
+        "es": [
+          "Mensaje de vídeo: la tarjeta QR está ahora por defecto arriba a la izquierda, justo debajo de la pila de la galería, también en el espejo (vertical)."
+        ],
+        "it": [
+          "Videomessaggio: la scheda QR ora si trova di default in alto a sinistra, subito sotto la pila della galleria – anche sullo specchio (verticale)."
+        ]
+      }
+    },
     "1.17.72": {
       "date": "2026-10-21",
       "notes": {
