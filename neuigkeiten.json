@@ -1,6 +1,41 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.76": {
+      "date": "2026-10-21",
+      "notes": {
+        "de": [
+          "Bildschirm zum Teilen wie bei LumaBooth frei gestalten: Schaltflächen (Drucken, QR-Code, Wiederholen, Fertig …), Foto und Filter-Leiste verschieben, Größe ändern, eigene Symbole und Farben, dazu Text, Bild, Form und ein QR-Code direkt auf dem Bildschirm – in der Fotobox und im Dashboard, je Hoch- und Querformat.",
+          "Fotolayout wie bei LumaBooth direkt auf der Seite bearbeiten: Vorlagen-Leiste (Vorlage hinzufügen, Speichern unter, Importieren, Exportieren, Testdruck, Löschen), Sessiondaten, Formen, QR-Code auf dem Ausdruck und Maße in Pixel, Millimeter oder Zoll.",
+          "Virtueller Berater mit Animationsbibliothek: 17 Animationen in 5 Stilen (Neon-Party, Elegant Gold, Pop-Art, Modern, Konfetti) für jeden Schritt, auch gemischt – passt sich Hoch- und Querformat an und spricht die Sprache der Gäste. Aufnahmebildschirm: Live-Ansicht in der Vorlage ein- und ausschaltbar."
+        ],
+        "en": [
+          "Design the sharing screen freely like in LumaBooth: move and resize buttons (print, QR code, retake, done …), photo and filter bar, own icons and colours, plus text, image, shape and a QR code directly on the screen – on the photo booth and in the dashboard, for portrait and landscape.",
+          "Edit the photo layout directly on the page like in LumaBooth: template bar (add template, save as, import, export, test print, delete), session data, shapes, QR code on the print and dimensions in pixels, millimetres or inches.",
+          "Virtual assistant with an animation library: 17 animations in 5 styles (neon party, elegant gold, pop art, modern, confetti) for every step, also mixed – adapts to portrait and landscape and speaks the guests' language. Capture screen: live view in the template can be switched on and off."
+        ],
+        "tr": [
+          "Paylaşım ekranını LumaBooth'taki gibi serbestçe tasarlayın: düğmeleri (yazdır, QR kod, tekrarla, bitti …), fotoğrafı ve filtre çubuğunu taşıyın ve boyutlandırın, kendi simgeleriniz ve renkleriniz, ayrıca ekranda doğrudan metin, resim, şekil ve QR kod – fotoğraf kabininde ve kontrol panelinde, dikey ve yatay için.",
+          "Fotoğraf düzenini LumaBooth'taki gibi doğrudan sayfada düzenleyin: şablon çubuğu (şablon ekle, farklı kaydet, içe aktar, dışa aktar, deneme baskısı, sil), oturum verileri, şekiller, baskıda QR kod ve piksel, milimetre veya inç cinsinden ölçüler.",
+          "Animasyon kütüphanesiyle sanal asistan: her adım için 5 stilde (neon parti, zarif altın, pop art, modern, konfeti) 17 animasyon, karışık da olabilir – dikey ve yataya uyum sağlar, misafirlerin dilini konuşur. Çekim ekranı: şablonda canlı görüntü açılıp kapatılabilir."
+        ],
+        "fr": [
+          "Concevez librement l'écran de partage comme dans LumaBooth : déplacez et redimensionnez boutons (imprimer, QR code, refaire, terminé …), photo et barre de filtres, icônes et couleurs personnelles, plus texte, image, forme et un QR code directement à l'écran – sur le photobooth et dans le tableau de bord, en portrait et en paysage.",
+          "Modifiez la mise en page photo directement sur la page comme dans LumaBooth : barre de modèles (ajouter, enregistrer sous, importer, exporter, impression test, supprimer), données de session, formes, QR code sur l'impression et dimensions en pixels, millimètres ou pouces.",
+          "Assistant virtuel avec bibliothèque d'animations : 17 animations en 5 styles (néon, or élégant, pop art, moderne, confettis) pour chaque étape, aussi en mélange – s'adapte au portrait et au paysage et parle la langue des invités. Écran de prise de vue : vue en direct dans le modèle activable."
+        ],
+        "es": [
+          "Diseña libremente la pantalla para compartir como en LumaBooth: mueve y cambia el tamaño de los botones (imprimir, código QR, repetir, listo …), la foto y la barra de filtros, iconos y colores propios, además de texto, imagen, forma y un código QR directamente en pantalla – en el fotomatón y en el panel, en vertical y horizontal.",
+          "Edita el diseño de foto directamente en la página como en LumaBooth: barra de plantillas (añadir, guardar como, importar, exportar, impresión de prueba, eliminar), datos de sesión, formas, código QR en la impresión y medidas en píxeles, milímetros o pulgadas.",
+          "Asistente virtual con biblioteca de animaciones: 17 animaciones en 5 estilos (fiesta neón, oro elegante, pop art, moderno, confeti) para cada paso, también mezcladas; se adapta a vertical y horizontal y habla el idioma de los invitados. Pantalla de captura: vista en directo en la plantilla activable."
+        ],
+        "it": [
+          "Progetta liberamente la schermata di condivisione come in LumaBooth: sposta e ridimensiona pulsanti (stampa, codice QR, ripeti, fatto …), foto e barra dei filtri, icone e colori propri, più testo, immagine, forma e un codice QR direttamente sullo schermo – sulla photo booth e nella dashboard, in verticale e orizzontale.",
+          "Modifica il layout foto direttamente nella pagina come in LumaBooth: barra dei modelli (aggiungi, salva come, importa, esporta, stampa di prova, elimina), dati della sessione, forme, codice QR sulla stampa e misure in pixel, millimetri o pollici.",
+          "Assistente virtuale con libreria di animazioni: 17 animazioni in 5 stili (neon party, oro elegante, pop art, moderno, coriandoli) per ogni passo, anche mescolate – si adatta a verticale e orizzontale e parla la lingua degli ospiti. Schermata di scatto: anteprima live nel modello attivabile."
+        ]
+      }
+    },
     "1.17.75": {
       "date": "2026-10-21",
       "notes": {
