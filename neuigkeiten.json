@@ -1,6 +1,52 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.81": {
+      "date": "2026-10-21",
+      "notes": {
+        "de": [
+          "Bildschirmtastatur: Beim Antippen eines Textfelds (z. B. Name eines neuen Ereignisses) blendet die Fotobox die Windows-Tastatur ein – auch wenn ein Buzzer angeschlossen ist. Zusätzlich gibt es den Knopf „⌨ Tastatur“ unten rechts. Abschaltbar unter Allgemein."
+        ],
+        "en": [
+          "On-screen keyboard: when you tap a text field (e.g. the name of a new event), the photo booth shows the Windows keyboard – even with a buzzer connected. There is also a “⌨ Keyboard” button at the bottom right. Can be switched off under General."
+        ],
+        "tr": [
+          "Ekran klavyesi: Bir metin alanına dokunduğunda (örn. yeni bir etkinliğin adı) fotoğraf kabini Windows klavyesini açar – buzzer bağlı olsa bile. Ayrıca sağ altta „⌨ Klavye“ düğmesi var. Genel altında kapatılabilir."
+        ],
+        "fr": [
+          "Clavier virtuel : quand tu touches un champ de texte (p. ex. le nom d’un nouvel événement), le photobooth affiche le clavier Windows – même avec un buzzer branché. Un bouton « ⌨ Clavier » est aussi disponible en bas à droite. Désactivable sous Général."
+        ],
+        "es": [
+          "Teclado en pantalla: al tocar un campo de texto (p. ej. el nombre de un evento nuevo), el fotomatón muestra el teclado de Windows, incluso con un pulsador conectado. Además hay un botón «⌨ Teclado» abajo a la derecha. Se puede desactivar en General."
+        ],
+        "it": [
+          "Tastiera su schermo: toccando un campo di testo (ad es. il nome di un nuovo evento) il photo booth mostra la tastiera di Windows – anche con un pulsante collegato. In più c’è il pulsante «⌨ Tastiera» in basso a destra. Disattivabile in Generale."
+        ]
+      }
+    },
+    "1.17.80": {
+      "date": "2026-10-21",
+      "notes": {
+        "de": [
+          "Flüssiger: Die Animationen des Virtuellen Beraters brauchen deutlich weniger Rechenleistung (vor allem die Schleife auf dem Startbildschirm), und liegen gebliebene Fotos werden nur nachgeladen, wenn gerade keine Sitzung läuft."
+        ],
+        "en": [
+          "Smoother: the virtual assistant’s animations need much less computing power (especially the loop on the start screen), and photos that got stuck are only uploaded when no session is running."
+        ],
+        "tr": [
+          "Daha akıcı: Sanal asistanın animasyonları çok daha az işlem gücü harcıyor (özellikle başlangıç ekranındaki döngü) ve takılı kalan fotoğraflar yalnızca seans yokken yükleniyor."
+        ],
+        "fr": [
+          "Plus fluide : les animations de l’assistant virtuel demandent beaucoup moins de puissance (surtout la boucle sur l’écran d’accueil), et les photos restées bloquées ne sont envoyées que lorsqu’aucune session n’est en cours."
+        ],
+        "es": [
+          "Más fluido: las animaciones del asistente virtual necesitan mucha menos potencia (sobre todo el bucle de la pantalla de inicio) y las fotos atascadas solo se suben cuando no hay ninguna sesión en curso."
+        ],
+        "it": [
+          "Più fluido: le animazioni dell’assistente virtuale richiedono molta meno potenza (soprattutto il loop sulla schermata iniziale) e le foto rimaste bloccate vengono caricate solo quando non è in corso nessuna sessione."
+        ]
+      }
+    },
     "1.17.79": {
       "date": "2026-10-21",
       "notes": {
