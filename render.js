@@ -428,6 +428,33 @@
     L.theme = t.id; L.bg = t.grad[0]; L.bgGrad = [...t.grad]; L.bgImage = ''; L.live = false;
     for (const e of L.elements) { if (e.type === 'text') e.color = t.text; if (e.type === 'button') { e.fill = t.btn; e.color = t.text; e.icon = t.ico; } }
   }
+  // Feste Schaltflächen der Fotobox über dem Startbildschirm: Galerie-Stapel (oben links) und Videonachricht-Karte. Im Editor sind sie
+  // Ebenen wie alles andere (verschieben, Größe, ausblenden). Solange niemand sie verändert („auto“), stehen sie an der Standardstelle
+  // der Fotobox und werden nicht gespeichert – dann gilt z. B. die Position aus „Videonachricht“ im Dashboard.
+  // sys: { gallery: false = an dieser Fotobox ausgeschaltet, vmsg: { pos, size, title, sub } oder null }
+  const VMSG_K = { s: .8, m: 1, l: 1.3 };
+  const sysSig = e => [e.x, e.y, e.w, e.h, e.rot || 0, !!e.hidden, !!e.locked].join(',');
+  function screenSys(L, sys = {}) {
+    if (!L || !L.screen) return L;
+    const u = Math.min(L.w, L.h) / 100, R = Math.round;
+    // unveränderte Standard-Schaltflächen neu setzen (Position aus den Einstellungen), veränderte bleiben, wo sie sind
+    const els = L.elements.filter(e => !e.auto || sysSig(e) !== e._d).map(e => { if (e.auto) { delete e.auto; delete e._d; } return e; });
+    const add = e => { Object.assign(e, { id: 'sys-' + e.type, rot: 0, auto: true }); e._d = sysSig(e); els.push(e); };
+    let gal = els.find(e => e.type === 'gallery');
+    if (!gal) add(gal = { type: 'gallery', x: R(2.4 * u), y: R(2.4 * u), w: R(15 * u), h: R(15 * u), hidden: sys.gallery === false });
+    if (sys.vmsg && !els.some(e => e.type === 'vmsg')) {
+      const v = sys.vmsg, w = R(28 * u * (VMSG_K[v.size] || 1)), h = R(w * 1.5), pos = ['tl', 'tr', 'bl', 'br'].includes(v.pos) ? v.pos : 'tl';
+      const x = pos === 'tl' ? 2.4 * u : pos === 'bl' ? 3 * u : L.w - 3 * u - w;
+      const y = pos === 'bl' || pos === 'br' ? L.h - 3 * u - h : pos === 'tl' && !gal.hidden ? 19.8 * u : 3 * u;
+      add({ type: 'vmsg', x: R(x), y: R(y), w, h, hidden: false });
+    }
+    return { ...L, elements: els };
+  }
+  // Zum Speichern: unveränderte Standard-Schaltflächen weglassen, veränderte als normale Ebene behalten
+  function screenStrip(L) {
+    if (!L || !L.screen) return L;
+    return { ...L, elements: L.elements.filter(e => !(e.auto && sysSig(e) === e._d)).map(e => { if (!e.auto) return e; const c = { ...e }; delete c.auto; delete c._d; return c; }) };
+  }
   function drawScreenBg(x, L, o) {
     if (L.live && !o.placeholders) { x.clearRect(0, 0, L.w, L.h); return; } // Fotobox: dahinter läuft das Kamerabild
     if (L.bgGrad) {
@@ -493,6 +520,69 @@
     x.fillStyle = 'rgba(0,0,0,.85)'; x.font = `700 ${Math.min(w, h) * .38}px system-ui,sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
     x.fillText(String(e.n || 1), w * .28, h * .12);
   }
+  // Schlagschatten wie bei LumaBooth: Farbe, Deckkraft, Winkel, Abstand, Weichheit (in Layout-Pixeln).
+  // Ältere Layouts haben nur shadow = true – dann der bisherige weiche Schatten nach unten.
+  function setShadow(x, e, w, h) {
+    if (!e.shadow) return false;
+    const m = Math.min(w, h), old = e.shDist == null, c = /^#[0-9a-f]{6}$/i.test(e.shColor || '') ? e.shColor : '#000000';
+    const a = Math.max(0, Math.min(1, e.shOpacity ?? .35)), dist = old ? m * .015 : +e.shDist || 0, ang = (old ? 90 : +(e.shAngle ?? 90)) * Math.PI / 180;
+    x.shadowColor = `rgba(${parseInt(c.slice(1, 3), 16)},${parseInt(c.slice(3, 5), 16)},${parseInt(c.slice(5, 7), 16)},${a})`;
+    x.shadowBlur = old ? m * .04 : Math.max(0, +e.shBlur || 0);
+    x.shadowOffsetX = Math.cos(ang) * dist; x.shadowOffsetY = Math.sin(ang) * dist;
+    return true;
+  }
+  function wrapLines(x, t, maxW, max) {
+    const out = []; let line = '';
+    for (const w of String(t || '').split(/\s+/).filter(Boolean)) {
+      const tryL = line ? line + ' ' + w : w;
+      if (x.measureText(tryL).width <= maxW || !line) line = tryL; else { out.push(line); line = w; }
+    }
+    if (line) out.push(line);
+    if (out.length > max) { out.length = max; out[max - 1] += '…'; }
+    return out;
+  }
+  // Galerie-Stapel der Fotobox (Editor-Vorschau): zwei schräge Fotokarten, oben ein Bild-Symbol
+  function drawGalleryMock(x, w, h) {
+    const s = Math.min(w, h), c = s * .41;
+    for (const [deg, top] of [[-8, false], [4, true]]) {
+      x.save(); x.rotate(deg * Math.PI / 180);
+      x.save(); x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = s * .1; x.shadowOffsetY = s * .04;
+      x.fillStyle = '#ffffff'; rr(x, -c, -c, c * 2, c * 2, s * .025); x.fill(); x.restore();
+      if (top) {
+        const q = s * .17, cy = -s * .05; x.strokeStyle = '#8a8a8a'; x.lineWidth = s * .03; x.lineJoin = 'round'; x.lineCap = 'round';
+        rr(x, -q * 1.25, cy - q, q * 2.5, q * 2, q * .25); x.stroke();
+        x.beginPath(); x.arc(-q * .45, cy - q * .35, q * .25, 0, 7); x.stroke();
+        x.beginPath(); x.moveTo(-q * 1.25, cy + q * .8); x.lineTo(-q * .15, cy - q * .05); x.lineTo(q * 1.25, cy + q * .7); x.stroke();
+      }
+      x.restore();
+    }
+  }
+  // Videonachricht-Karte der Fotobox (Editor-Vorschau): Überschrift, QR-Code, Hinweis – Maße wie #vmCard in der Fotobox
+  function drawVmsgMock(x, w, h, v) {
+    const acc = /^#[0-9a-f]{3,8}$/i.test(v.accent || '') ? v.accent : '#F7C838', b = w * .0214, pad = w * .064, gap = w * .043, inner = w - 2 * (pad + b);
+    x.save(); x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = w * .12; x.shadowOffsetY = w * .04;
+    x.fillStyle = '#ffffff'; rr(x, -w / 2, -h / 2, w, h, w * .093); x.fill(); x.restore();
+    x.strokeStyle = acc; x.lineWidth = b; rr(x, -w / 2 + b / 2, -h / 2 + b / 2, w - b, h - b, w * .093 - b / 2); x.stroke();
+    x.textAlign = 'center'; x.textBaseline = 'top'; x.fillStyle = '#1D1D1B';
+    const title = '🎥 ' + (v.title || 'Videonachricht hinterlassen');
+    let fs = w * .11; x.font = `700 ${fs}px ${FONTS.modern}`;
+    while (fs > w * .07 && wrapLines(x, title, inner, 9).length > 2) { fs *= .94; x.font = `700 ${fs}px ${FONTS.modern}`; } // lange Überschrift: kleiner statt abgeschnitten
+    let y = -h / 2 + b + pad;
+    for (const l of wrapLines(x, title, inner, 2)) { x.fillText(l, 0, y); y += fs * 1.12; }
+    y += gap;
+    const n = 25, m = inner / n, x0 = -inner / 2; // QR-Code-Muster (nur Vorschau)
+    x.fillStyle = '#1D1D1B';
+    const finder = (i, j) => (i < 7 && j < 7) || (i > n - 8 && j < 7) || (i < 7 && j > n - 8);
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      let on;
+      if (finder(i, j)) { const a = i > n - 8 ? i - (n - 7) : i, c = j > n - 8 ? j - (n - 7) : j; on = a === 0 || a === 6 || c === 0 || c === 6 || (a >= 2 && a <= 4 && c >= 2 && c <= 4); }
+      else on = ((i * 7 + j * 13 + i * j * 3) % 7) < 3;
+      if (on) x.fillRect(x0 + i * m, y + j * m, m + .5, m + .5);
+    }
+    y += inner + gap;
+    const fs2 = w * .075; x.font = `400 ${fs2}px ${FONTS.modern}`; x.fillStyle = '#555555';
+    for (const l of wrapLines(x, v.sub ?? 'Scanne den Code mit deinem Handy', inner, 2)) { x.fillText(l, 0, y); y += fs2 * 1.25; }
+  }
   // Layout zeichnen. o: { photos, values, filter, placeholders (Editor-Vorschau) }
   function renderLayout(L, o = {}, into) {
     const c = into || document.createElement('canvas');
@@ -517,7 +607,7 @@
       x.globalAlpha = e.opacity != null ? e.opacity : 1;
       if (e.type === 'photo') {
         const rad = e.radius || 0;
-        if (e.shadow) { x.save(); x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = Math.min(w, h) * .04; x.shadowOffsetY = Math.min(w, h) * .015; x.fillStyle = '#fff'; rr(x, -w / 2, -h / 2, w, h, rad); x.fill(); x.restore(); }
+        if (e.shadow) { x.save(); setShadow(x, e, w, h); x.fillStyle = '#fff'; rr(x, -w / 2, -h / 2, w, h, rad); x.fill(); x.restore(); }
         x.save(); rr(x, -w / 2, -h / 2, w, h, rad); x.clip();
         const img = photos.length ? photos[((e.n || 1) - 1) % photos.length] : null;
         if (img) { if (o.filter && o.filter !== 'none') x.filter = o.filter; drawCover(x, img, -w / 2, -h / 2, w, h); }
@@ -527,12 +617,17 @@
       } else if (e.type === 'image') {
         const img = imgCache.get(e.src);
         if (img && img.complete && img.naturalWidth) {
+          setShadow(x, e, w, h);
           if (e.fit === 'cover') drawCover(x, img, -w / 2, -h / 2, w, h);
           else if (e.fit === 'contain') { const k = Math.min(w / img.naturalWidth, h / img.naturalHeight); x.drawImage(img, -img.naturalWidth * k / 2, -img.naturalHeight * k / 2, img.naturalWidth * k, img.naturalHeight * k); }
           else x.drawImage(img, -w / 2, -h / 2, w, h);
         } else if (o.placeholders) { x.fillStyle = 'rgba(0,0,0,.08)'; x.fillRect(-w / 2, -h / 2, w, h); }
       } else if (e.type === 'button') {
         drawButtonEl(x, e);
+      } else if (e.type === 'gallery') { // an der Fotobox echte Schaltflächen über dem Startbildschirm – gezeichnet nur im Editor
+        if (o.placeholders) drawGalleryMock(x, w, h);
+      } else if (e.type === 'vmsg') {
+        if (o.placeholders && o.vmsg) drawVmsgMock(x, w, h, o.vmsg);
       } else if (e.type === 'answer') { // Antwort des Gastes auf Umfrage-Frage Nr. e.q
         const a = o.values && Array.isArray(o.values.antworten) ? o.values.antworten[(e.q || 1) - 1] : null;
         const t = a != null && a !== '' ? String(a) : o.placeholders ? `Umfrageantwort ${e.q || 1}` : '';
@@ -549,11 +644,11 @@
           x.stroke(); x.globalAlpha *= .5; x.lineWidth = Math.max(1, h * .012); x.beginPath(); x.moveTo(-w * .46, h * .36); x.lineTo(w * .46, h * .36); x.stroke();
         }
       } else if (e.type === 'text') {
-        drawTextEl(x, e, o.values);
+        setShadow(x, e, w, h); drawTextEl(x, e, o.values);
       } else if (e.type === 'shape') {
-        x.beginPath();
+        setShadow(x, e, w, h); x.beginPath();
         if (e.shape === 'ellipse') x.ellipse(0, 0, w / 2, h / 2, 0, 0, 7); else rr(x, -w / 2, -h / 2, w, h, e.radius || 0);
-        if (e.fill) { x.fillStyle = e.fill; x.fill(); }
+        if (e.fill) { x.fillStyle = e.fill; x.fill(); x.shadowColor = 'transparent'; }
         if (e.stroke && e.strokeW) { x.strokeStyle = e.stroke; x.lineWidth = e.strokeW; x.stroke(); }
       }
       x.restore();
@@ -573,5 +668,5 @@
 
   G.FBR = { FONTS, FONT_NAMES, LAYOUTS, TEMPLATES, templateById: byId, render, drawBand, drawCover, placeholder,
     FORMATS, SIZE_LIST, formatKey, sheetOf, PRESETS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid,
-    SCREEN_SIZES, SCREEN_THEMES, createScreen, adaptScreen, applyTheme };
+    SCREEN_SIZES, SCREEN_THEMES, createScreen, adaptScreen, applyTheme, screenSys, screenStrip };
 })(window);
