@@ -1,6 +1,41 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.77": {
+      "date": "2026-10-21",
+      "notes": {
+        "de": [
+          "Canon-Kamera: In den Kameraeinstellungen wartet die Fotobox jetzt, bis die Kamera nach dem Menü wieder verbunden ist – kein „Keine Canon-Kamera gefunden“ mehr beim Testfoto, und die Kamera-Werte erscheinen zuverlässig.",
+          "Videonachricht mit Begrüßungsvideo: Gäste sehen nach dem Scannen zuerst euer Video (z. B. das Brautpaar sagt Hallo) und nehmen danach ihre eigene Nachricht auf – einstellbar im Dashboard und in der Fotobox (neue Seite „Videonachricht“).",
+          "Nachdrucken aus der Galerie an der Fotobox mit „Wie viele Ausdrucke?“, wenn eingeschaltet. Im Dashboard geänderte Einstellungen (z. B. Virtueller Berater) gelten jetzt immer auch an der Fotobox."
+        ],
+        "en": [
+          "Canon camera: in the camera settings the photo booth now waits until the camera is connected again after the menu – no more “No Canon camera found” on the test photo, and the camera values appear reliably.",
+          "Video message with a welcome video: after scanning, guests first see your video (e.g. the bride and groom say hello) and then record their own message – set it up in the dashboard and on the photo booth (new “Video message” page).",
+          "Reprinting from the gallery on the photo booth now asks “How many prints?” when enabled. Settings changed in the dashboard (e.g. virtual assistant) now always apply on the photo booth too."
+        ],
+        "tr": [
+          "Canon kamera: Kamera ayarlarında fotoğraf kabini artık menüden sonra kamera yeniden bağlanana kadar bekliyor – test fotoğrafında artık „Canon kamera bulunamadı“ yok ve kamera değerleri güvenilir şekilde görünüyor.",
+          "Karşılama videolu video mesaj: Misafirler taradıktan sonra önce sizin videonuzu görür (örn. gelin ve damat merhaba der), ardından kendi mesajlarını kaydeder – panelden ve fotoğraf kabininden ayarlanabilir (yeni „Video mesaj“ sayfası).",
+          "Fotoğraf kabininde galeriden tekrar baskı, açıksa „Kaç baskı?“ diye soruyor. Panelde değiştirilen ayarlar (örn. sanal asistan) artık her zaman fotoğraf kabininde de geçerli."
+        ],
+        "fr": [
+          "Appareil Canon : dans les réglages de l’appareil, le photobooth attend désormais que l’appareil soit reconnecté après le menu – plus de « Aucun appareil Canon trouvé » lors de la photo test, et les valeurs de l’appareil s’affichent de façon fiable.",
+          "Message vidéo avec vidéo de bienvenue : après le scan, les invités voient d’abord votre vidéo (p. ex. les mariés disent bonjour), puis enregistrent leur propre message – à régler dans le tableau de bord et sur le photobooth (nouvelle page « Message vidéo »).",
+          "La réimpression depuis la galerie sur le photobooth demande « Combien d’impressions ? » si l’option est activée. Les réglages modifiés dans le tableau de bord (p. ex. l’assistant virtuel) s’appliquent désormais toujours aussi sur le photobooth."
+        ],
+        "es": [
+          "Cámara Canon: en los ajustes de la cámara, el fotomatón ahora espera hasta que la cámara vuelve a estar conectada después del menú – ya no aparece «No se encontró ninguna cámara Canon» en la foto de prueba y los valores de la cámara se muestran de forma fiable.",
+          "Mensaje de vídeo con vídeo de bienvenida: tras escanear, los invitados ven primero vuestro vídeo (p. ej. los novios saludan) y después graban su propio mensaje – configurable en el panel y en el fotomatón (nueva página «Mensaje de vídeo»).",
+          "Reimprimir desde la galería en el fotomatón pregunta «¿Cuántas copias?» si está activado. Los ajustes cambiados en el panel (p. ej. el asistente virtual) ahora se aplican siempre también en el fotomatón."
+        ],
+        "it": [
+          "Fotocamera Canon: nelle impostazioni della fotocamera il photo booth ora attende che la fotocamera sia di nuovo collegata dopo il menu – niente più «Nessuna fotocamera Canon trovata» alla foto di prova e i valori della fotocamera compaiono in modo affidabile.",
+          "Videomessaggio con video di benvenuto: dopo la scansione gli ospiti vedono prima il vostro video (ad es. gli sposi salutano) e poi registrano il proprio messaggio – impostabile nella dashboard e sul photo booth (nuova pagina «Videomessaggio»).",
+          "La ristampa dalla galleria sul photo booth chiede «Quante stampe?» se attivato. Le impostazioni modificate nella dashboard (ad es. l’assistente virtuale) ora valgono sempre anche sul photo booth."
+        ]
+      }
+    },
     "1.17.76": {
       "date": "2026-10-21",
       "notes": {
