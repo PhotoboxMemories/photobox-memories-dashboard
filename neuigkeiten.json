@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.78": {
+      "date": "2026-10-21",
+      "notes": {
+        "de": [
+          "„Originalfotos hochladen“ funktioniert jetzt: Die einzelnen Aufnahmen landen zusätzlich zum fertigen Foto in der Online-Galerie. Originalfotos, die bisher hängen geblieben sind, lädt die Fotobox beim nächsten Start nach."
+        ],
+        "en": [
+          "“Upload original photos” now works: the individual shots are added to the online gallery in addition to the finished photo. Original photos that got stuck so far are uploaded the next time the photo booth starts."
+        ],
+        "tr": [
+          "„Orijinal fotoğrafları yükle“ artık çalışıyor: Tek tek çekimler, bitmiş fotoğrafa ek olarak çevrimiçi galeriye yüklenir. Şimdiye kadar takılı kalan orijinal fotoğrafları fotoğraf kabini bir sonraki açılışta yükler."
+        ],
+        "fr": [
+          "« Télécharger les photos originales » fonctionne désormais : les prises de vue individuelles s’ajoutent à la galerie en ligne en plus de la photo finale. Les photos originales restées bloquées jusqu’ici sont envoyées au prochain démarrage du photobooth."
+        ],
+        "es": [
+          "«Subir fotos originales» ya funciona: las tomas individuales se suben a la galería en línea además de la foto terminada. Las fotos originales que se habían quedado atascadas se suben la próxima vez que se inicie el fotomatón."
+        ],
+        "it": [
+          "«Carica foto originali» ora funziona: i singoli scatti finiscono nella galleria online oltre alla foto finita. Le foto originali rimaste bloccate finora vengono caricate al prossimo avvio del photo booth."
+        ]
+      }
+    },
     "1.17.77": {
       "date": "2026-10-21",
       "notes": {
