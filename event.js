@@ -1316,6 +1316,7 @@
         return `${titleSw('Virtueller Berater', 'voice')}<p style="margin:-6px 0 14px;color:#6b6b78">Leiten Sie Ihre Gäste mit Animationen und Ansagen an. Die Animationen passen sich jedem Bildschirm an (Hoch- und Querformat) und erscheinen in der Sprache der Gäste. Gilt für alle Fotoboxen dieses Ereignisses.</p>
           <div class="card"><label class="l">Stil der Animationen</label><select data-s="x.voice.anim" data-rerender="1">${AdvisorAnim.STYLES.map(st => `<option value="${st.id}" ${st.id === style ? 'selected' : ''}>${esc(st.name)}</option>`).join('')}</select>
             <div class="row" style="margin-top:10px"><button class="ghost" data-a="valib">${ICON('sparkles', 15)} Animationen ansehen</button></div>
+            ${sel('x.voice.bg', 'Hintergrund der Animationen', [['solid', 'Deckend – nur die Animation'], ['see', 'Durchsichtig – Video bzw. Livebild bleibt sichtbar']])}
             ${sel('x.voice.style', 'Stimme für Sprachansagen', [['de-frau', 'Deutsche Stimme (Frau)'], ['de-mann', 'Deutsche Stimme (Mann)'], ['en-frau', 'Englische Stimme (Frau)']])}
             <small style="color:#6b6b78">Ob die Fotobox die Texte zusätzlich vorliest, stellen Sie an der Fotobox unter „Virtueller Berater“ → „Sprachansagen“ ein.</small></div>
           <div class="vagrid">${cards}</div>`;
