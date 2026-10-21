@@ -6,14 +6,14 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261021-8';</script>
+<script>window.I18N_V = '20261022-1';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
   window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
 <script src="config.js?v=20261018-9"></script>
 <script src="icons.js?v=20261021-5"></script>
-<script src="ad.js?v=20261020-3"></script>
+<script src="ad.js?v=20261022-1"></script>
 <script src="shop.js?v=20261020-1"></script>
 <script src="render.js?v=20261021-4"></script>
 <script src="advisor-anim.js?v=20261021-6"></script>
@@ -23,7 +23,7 @@
 <script src="sketch-draw.js?v=20261018-8"></script>
 <script src="caricature.js?v=20261018-10"></script>
 <script src="start-anim.js?v=20261020-1"></script>
-<script src="event.js?v=20261021-7"></script>
+<script src="event.js?v=20261022-1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -111,7 +111,9 @@ tr:last-child td{border-bottom:0}
 .tablewrap{overflow-x:auto}
 .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
 .plan{display:flex;flex-direction:column;gap:8px}
-.plan .price{font:600 26px/1.15 Fredoka,system-ui,sans-serif}.plan .price small{display:block;font:400 13px system-ui,sans-serif;color:var(--muted);margin-top:2px}
+.plan .price{font:600 26px/1.15 Fredoka,system-ui,sans-serif}
+.plan.cur{border:2px solid var(--accent,#F7C838)}.plan .tag{align-self:flex-start;background:#F7C838;color:#1D1D1B;font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px}
+.billSw{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}.billSw button{background:none;border:0;padding:6px 14px;cursor:pointer;font:inherit;color:inherit}.billSw button.on{background:#F7C838;color:#1D1D1B;font-weight:700}.plan .price small{display:block;font:400 13px system-ui,sans-serif;color:var(--muted);margin-top:2px}
 .plan ul{margin:4px 0 6px 18px;font-size:14px;line-height:1.6;flex:1}
 .plan input{max-width:110px}
 .planrow{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
@@ -246,13 +248,18 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <div class="pagehead"><h1>Meine Lizenzen</h1></div>
       <p class="muted small" style="margin-bottom:14px">In der FotoBox <b>Esc → System</b> öffnen und mit diesem Konto (gleiche E-Mail & Passwort) anmelden – oder den Schlüssel eintragen.</p>
       <div class="cards" id="myLicenses"></div>
-      <div class="card hidden" id="shopCard" style="margin-top:20px">
-        <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Lizenz kaufen</h2><button class="btn hidden" id="shopPortal">Abo &amp; Rechnungen verwalten</button></div>
+      <div class="card" id="shopCard" style="margin-top:20px">
+        <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Tarife und Preise</h2><div class="row" style="gap:8px"><div class="billSw" id="shopBill"><button type="button" data-bill="month" class="on">Monatlich</button><button type="button" data-bill="year">Jährlich</button></div><button class="btn hidden" id="shopPortal">Abo &amp; Rechnungen verwalten</button></div></div>
+        <p id="shopTier" style="margin:0 0 6px"></p>
         <p class="small muted" id="shopHint" style="margin-bottom:14px"></p>
         <div class="plans" id="shopPlans"></div>
-        <div class="row hidden" id="trialRow" style="margin-top:16px"><button class="btn primary" id="trialGo">14 Tage kostenlos testen</button><span class="small muted">Ohne Zahlungsdaten · 1 Fotobox · endet von selbst</span></div>
+        <div class="row hidden" id="trialRow" style="margin-top:16px"><button class="btn primary" id="trialGo">14 Tage Pro kostenlos testen</button><span class="small muted">Ohne Zahlungsdaten · alle Funktionen · endet von selbst</span></div>
+        <h3 style="margin:22px 0 6px">Zusatzfunktionen</h3>
+        <p class="small muted" style="margin:0 0 10px">Zu Pro dazubuchbar – oder alle zusammen im Paket „Alles inklusive“.</p>
+        <div class="plans" id="shopAddons"></div>
       </div>
       <div class="card hidden" id="adCard" style="margin-top:20px">
+        <p class="small" id="adFreeNote" hidden style="background:#FFFAEA;border-radius:10px;padding:8px 12px;margin:0 0 10px">Im Tarif Kostenlos zeigen die Fotobox und die Gäste-Seiten das Logo und die Werbung von Photobox Memories. Ab Basis erscheint hier deine eigene.</p>
         <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Deine Werbung in der Galerie</h2><label class="row" style="gap:8px;margin:0;font-size:14px"><input type="checkbox" id="adOn" checked> anzeigen</label></div>
         <p class="small muted" style="margin-bottom:14px">Erscheint oben auf jeder Foto- und Galerieseite deiner Gäste (QR-Code an der Fotobox und Freigabe-Link der Galerie). Leere Felder werden nicht gezeigt.</p>
         <div class="grid2">
@@ -356,6 +363,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <div id="lValidWrap"><label>Abo bezahlt bis</label><input id="lValid" type="date"></div>
           <div id="lUpdWrap" class="hidden"><label>Updates inklusive bis (leer = immer)</label><input id="lUpd" type="date"></div>
           <div><label>Anzahl Geräte</label><input id="lMax" type="number" min="1" value="1"></div>
+          <div><label>Tarif</label><select id="lTier"><option value="pro">Pro (alle Funktionen)</option><option value="basis">Basis (nur Fotobox, eigenes Logo)</option><option value="free">Kostenlos (mit Werbung von Photobox Memories)</option></select></div>
           <div id="lCreditsWrap" class="hidden"><label>KI-Credits dazu (für KI-Porträts)</label><input id="lCredits" type="number" min="0" max="1000" value="20"></div>
           <div><label>Freigaben</label><div class="row" style="margin-top:10px;gap:16px"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMosaic" style="width:auto"> Fotomosaik</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lCari" style="width:auto"> Live-Karikatur</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lVideo" style="width:auto"> Videonachricht</label></div></div>
           <div style="grid-column:1/-1"><label>Notiz (z.B. Rechnungsnummer)</label><input id="lNotes"></div>
@@ -597,7 +605,7 @@ async function boot() {
   profile = data || {};
   $('#navAdmin').classList.toggle('hidden', !profile.is_admin);
   $$('.adminCol').forEach(e => e.classList.toggle('hidden', !profile.is_admin));
-  await Promise.all([loadEvents(), loadDevices(), loadLicenses()]);
+  await Promise.all([loadEvents(), loadDevices(), loadLicenses(), loadMyTier()]);
   loadMyCredits(); loadShop(); loadPlans();
   loadSoftware();
   dispatchEvent(new Event('pm-ready'));
@@ -717,7 +725,7 @@ async function uploadFile(file) {
 }
 function openEvent(ev, page) {
   EventWS.open(ev, {
-    sb, me, toast, uploadFile, devices, admin: !!profile?.is_admin, demo: DEMO, page, extra: hasExtra,
+    sb, me, toast, uploadFile, devices, admin: !!profile?.is_admin, demo: DEMO, page, extra: hasExtra, tier: curTier,
     leadsCount: id => (typeof leads !== 'undefined' && leads.length) ? leads.filter(l => l.event_id === id).length : '–',
     onClose: () => loadEvents(),
     onDelete: async (e, closeWs) => { if (await deleteEventFull(e)) closeWs(); }
@@ -913,7 +921,16 @@ function licStatus(l) {
 const kindName = k => k === 'lifetime' ? 'Einmalkauf' : 'Abo';
 // Zusatzfunktionen, die der Betreiber je Lizenz freischaltet (Spalte licenses.extras); der Betreiber selbst hat immer alle
 const EXTRAS = [['mosaic', 'Fotomosaik'], ['caricature', 'Live-Karikatur'], ['videomsg', 'Videonachricht']];
-const hasExtra = k => DEMO || !!profile?.is_admin || licenses.some(l => l.owner_id === me?.id && l.active && (l.extras || []).includes(k));
+const hasExtra = k => DEMO || !!profile?.is_admin || (myTier?.extras || []).includes(k) || licenses.some(l => l.owner_id === me?.id && l.active && (l.extras || []).includes(k));
+// Tarif des eigenen Kontos (Server my_tier: 'free' | 'basis' | 'pro' und gebuchte Zusatzfunktionen). Ohne Antwort (Datenbank noch ohne
+// Tarife) gilt alles wie bisher. Steuert die Schlösser im Ereignis-Editor und die Preisübersicht.
+let myTier = null;
+async function loadMyTier() {
+  if (DEMO) return;
+  const { data, error } = await sb.rpc('my_tier');
+  myTier = !error && data && ['free', 'basis', 'pro'].includes(data.tier) ? data : null;
+}
+const curTier = () => profile?.is_admin ? 'pro' : myTier?.tier || 'pro';
 const licKind = l => l.trial ? 'Testphase' : isTestLic(l) ? 'Testversion' : kindName(l.kind);
 async function loadLicenses() {
   const { data, error } = await sb.from('licenses').select('*, devices(id)').order('created_at', { ascending: false });
@@ -924,7 +941,7 @@ async function loadLicenses() {
   licenses = data;
   const mine = licenses.filter(l => l.owner_id === me.id);
   $('#myLicenses').innerHTML = mine.length ? mine.map(l => `<div class="card" style="display:flex;flex-direction:column;gap:8px">
-      <b>${licKind(l)}${l.plan && !l.trial ? ` <span class="small muted">· ${esc(l.plan)}</span>` : ''}</b>
+      <b>${licKind(l)}${'tier' in l ? ` · ${esc(TIER_NAME[l.tier] || l.tier)}` : ''}${l.plan && !l.trial ? ` <span class="small muted">· ${esc(l.plan)}</span>` : ''}</b>
       <div><code class="key" data-copy="${esc(l.key)}" title="Klicken zum Kopieren">${esc(l.key)}</code></div>
       <div>${licStatus(l)}</div>
       <div class="small muted">Geräte: ${l.dev_count} von ${l.max_devices}</div>
@@ -1143,6 +1160,7 @@ $('#lCreate').onclick = async () => {
     max_devices: Math.max(1, +$('#lMax').value || 1), notes: $('#lNotes').value.trim() || (test ? 'Testversion' : null)
   };
   const extras = [$('#lMosaic').checked && 'mosaic', $('#lCari').checked && 'caricature', $('#lVideo').checked && 'videomsg'].filter(Boolean); if (extras.length) row.extras = extras;
+  if ($('#lTier').value !== 'pro') row.tier = $('#lTier').value; // Pro ist Standard (auch ohne Tarif-Spalte in der Datenbank)
   const credits = test ? Math.max(0, Math.min(1000, Math.round(+$('#lCredits').value || 0))) : 0;
   const { data, error } = await sb.from('licenses').insert(row).select().single();
   if (error) return toast('Fehler: ' + error.message, 4000);
@@ -1173,7 +1191,7 @@ function renderAdmin() {
   $('#licList').innerHTML = list.length ? list.map(l => `<tr>
       <td><b>${esc(l.customer_name || '–')}</b><br><span class="small muted">${esc(l.customer_email)}${l.owner_id ? '' : ' · noch nicht registriert'}</span>${l.notes ? `<br><span class="small muted">📝 ${esc(l.notes)}</span>` : ''}</td>
       <td><code class="key" data-copy="${esc(l.key)}" title="Klicken zum Kopieren">${esc(l.key)}</code></td>
-      <td>${licKind(l)}</td>
+      <td>${licKind(l)}${'tier' in l ? `<br><select data-lic="${l.id}" data-act="tier" style="margin-top:4px;padding:3px 6px">${Object.entries(TIER_NAME).map(([k, n]) => `<option value="${k}" ${l.tier === k ? 'selected' : ''}>${n}</option>`).join('')}</select>` : ''}</td>
       <td>${licStatus(l)}</td>
       <td>${l.dev_count} / <input type="number" min="1" value="${l.max_devices}" data-lic="${l.id}" data-act="max" style="width:60px;padding:4px 6px"></td>
       <td data-l="Freigaben"><div style="display:flex;flex-direction:column;gap:4px">${EXTRAS.map(([k, n]) => `<label class="small" style="display:flex;gap:6px;align-items:center;white-space:nowrap;cursor:pointer"><input type="checkbox" data-lic="${l.id}" data-act="extra" data-x="${k}" ${(l.extras || []).includes(k) ? 'checked' : ''}> ${n}</label>`).join('')}</div></td>
@@ -1192,7 +1210,7 @@ function extend(date, months) {
   d.setMonth(d.getMonth() + months); return d.toISOString();
 }
 $('#licList').addEventListener('click', async e => {
-  const id = e.target.dataset.lic, act = e.target.dataset.act; if (!id || act === 'max' || act === 'extra') return;
+  const id = e.target.dataset.lic, act = e.target.dataset.act; if (!id || act === 'max' || act === 'extra' || act === 'tier') return;
   if (act === 'mail') { e.target.disabled = true; toast(await sendLicenseMail(id), 6000); e.target.disabled = false; loadLicenses(); return; }
   const l = licenses.find(x => x.id === id);
   const patch = act === 'm1' ? { valid_until: extend(l.valid_until, 1) }
@@ -1211,6 +1229,12 @@ $('#licList').addEventListener('change', async e => {
     const { error } = await sb.from('licenses').update({ extras }).eq('id', l.id);
     if (error) { e.target.checked = !e.target.checked; return toast('Fehler: ' + (/extras/.test(error.message) ? 'Bitte zuerst die Datenbank-Änderung „Fotomosaik-Freigabe“ ausführen.' : error.message), 6000); }
     l.extras = extras; return toast(`${name} für ${l.customer_name || l.customer_email} ${e.target.checked ? 'freigeschaltet' : 'gesperrt'}`);
+  }
+  if (e.target.dataset.act === 'tier') { // Tarif-Stufe dieser Lizenz (Kostenlos/Basis/Pro)
+    const l = licenses.find(x => x.id === e.target.dataset.lic), t = e.target.value;
+    const { error } = await sb.from('licenses').update({ tier: t }).eq('id', l.id);
+    if (error) { e.target.value = l.tier; return toast('Fehler: ' + error.message, 5000); }
+    l.tier = t; return toast(`Tarif von ${l.customer_name || l.customer_email}: ${TIER_NAME[t]} – die Fotobox übernimmt es beim nächsten Abgleich`, 5000);
   }
   if (e.target.dataset.act !== 'max') return;
   const { error } = await sb.from('licenses').update({ max_devices: Math.max(1, +e.target.value || 1) }).eq('id', e.target.dataset.lic);
@@ -1289,8 +1313,24 @@ $('#creditPacks').addEventListener('click', async e => {
   if (k || location.hash === '#guthaben') addEventListener('pm-ready', showCredits, { once: true }); // nach der Anmeldung gleich zum Guthaben
 }
 /* ---------- Lizenz kaufen (Stripe): Tarife, 14 Tage testen, Abo verwalten ---------- */
-let shop = { plans: [], ready: false };
+let shop = { plans: [], ready: false }, shopBill = 'month';
 const PER = { month: 'pro Monat', year: 'pro Jahr', once: 'einmalig' };
+const TIER_NAME = { free: 'Kostenlos', basis: 'Basis', pro: 'Pro' };
+// Karten der Preisübersicht. Preise und Kauf kommen aus der Tabelle plans (Kennung <tarif>-monat bzw. -jahr); solange ein Tarif
+// noch nicht eingeschaltet ist, zeigt die Karte den geplanten Preis und „bald buchbar“.
+const TIER_CARDS = [
+  { key: 'free', name: 'Kostenlos', lines: ['Fotobox-Funktionen: Foto, Collage, Fotostreifen, Drucken, QR-Code, Online-Galerie', 'Logo und Werbung von Photobox Memories auf Fotos und Gäste-Seiten', '1 Fotobox · Online-Galerie 30 Tage'] },
+  { key: 'basis', name: 'Basis', plan: 'basis', price: { month: 900, year: 7900 }, incl: 1, extra: { month: 500, year: 4900 },
+    lines: ['Fotobox-Funktionen wie Kostenlos', 'Dein eigenes Logo statt Photobox Memories', 'Online-Galerie 1 Jahr'] },
+  { key: 'pro', name: 'Pro', plan: 'pro', price: { month: 2400, year: 19900 }, incl: 2, extra: { month: 800, year: 7900 },
+    lines: ['Alle Funktionen: GIF, Boomerang, Video, Filter, Hintergrund entfernen, Virtueller Berater', 'Eigene Vorlagen und Bildschirme, Umfrage, Galerie mit Passwort, Fernsteuerung', '2 Fotoboxen inklusive'] },
+  { key: 'alles', name: 'Alles inklusive', plan: 'alles', price: { month: 3900, year: 34900 }, incl: 2, extra: { month: 800, year: 7900 },
+    lines: ['Pro mit allen Zusatzfunktionen', 'Fotomosaik, Live-Karikatur, Videonachricht', '2 Fotoboxen inklusive'] },
+];
+const ADDON_CARDS = [['mosaik', 'mosaic', 'Fotomosaik', { month: 900, year: 7900 }], ['karikatur', 'caricature', 'Live-Karikatur', { month: 900, year: 7900 }], ['videonachricht', 'videomsg', 'Videonachricht', { month: 500, year: 4900 }]];
+const showTarife = () => { $('#nav [data-tab="licenses"]')?.click(); setTimeout(() => $('#shopCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150); };
+window.showTarife = showTarife; // auch aus dem Ereignis-Editor („Tarife ansehen“)
+if (location.hash === '#tarife') addEventListener('pm-ready', showTarife, { once: true }); // Link aus der Fotobox
 const devN = v => Math.max(1, Math.min(50, Math.round(+v || 1)));
 async function loadShop() {
   if (!me || !$('#shopCard')) return;
@@ -1298,29 +1338,61 @@ async function loadShop() {
   shop = { plans: p.error ? [] : [].concat(p.data || []).filter(x => x.active !== false && x.cents > 0), ready: !st.error && !!st.data?.ready };
   renderShop();
 }
+// Preis eines Tarifs für n Fotoboxen: Grundpreis (enthält incl Fotoboxen) plus Aufpreis je weitere Fotobox
+const planSum = (cents, incl, extra, n) => cents + Math.max(0, n - incl) * (extra || 0);
 function renderShop() {
   if (!me || !$('#shopCard')) return;
-  const mine = licenses.filter(l => l.owner_id === me.id), bought = mine.some(l => l.stripe_customer);
-  $('#shopCard').classList.toggle('hidden', !shop.plans.length && !bought);
+  const mine = licenses.filter(l => l.owner_id === me.id), bought = mine.some(l => l.stripe_customer), cur = mine.length || profile?.is_admin ? curTier() : null;
+  const sfx = shopBill === 'year' ? 'jahr' : 'monat', per = PER[shopBill], live = id => shop.plans.find(p => p.id === id && p.active !== false && !p.addon);
+  $('#shopCard').classList.toggle('hidden', !myTier && !profile?.is_admin); // erst sichtbar, wenn die Datenbank die Tarife kennt (Betreiber immer)
   $('#shopPortal').classList.toggle('hidden', !bought || !shop.ready);
-  $('#trialRow').classList.toggle('hidden', !!mine.length || !shop.plans.length);
-  $('#shopHint').textContent = shop.ready ? 'Preise pro Fotobox inkl. MwSt. Bezahlung sicher über Stripe. Die Lizenz wird direkt nach der Zahlung freigeschaltet – eine Testlizenz läuft dabei einfach weiter.'
+  $$('#shopBill button').forEach(b => b.classList.toggle('on', b.dataset.bill === shopBill));
+  $('#adFreeNote').hidden = cur !== 'free';
+  $('#trialRow').classList.toggle('hidden', mine.some(l => l.trial || (l.tier && l.tier !== 'free') || !('tier' in l)));
+  const ext = (myTier?.extras || []).map(k => ({ mosaic: 'Fotomosaik', caricature: 'Live-Karikatur', videomsg: 'Videonachricht' })[k]).filter(Boolean);
+  $('#shopTier').innerHTML = cur ? `<span>Dein Tarif:</span> <b>${esc(TIER_NAME[cur])}</b>${ext.length ? ` <span class="small muted">+ ${esc(ext.join(', '))}</span>` : ''}`
+    : '<span>Du hast noch keine Lizenz. Starte kostenlos – oder teste 14 Tage alle Funktionen.</span>';
+  $('#shopHint').textContent = shop.ready ? 'Bezahlung sicher über Stripe. Der Tarif wird direkt nach der Zahlung freigeschaltet – deine Fotobox bleibt angemeldet.'
     : 'Der Kauf wird gerade eingerichtet und ist bald verfügbar.';
-  $('#shopPlans').innerHTML = shop.plans.map(p => `<div class="card plan" data-plan="${esc(p.id)}">
-      <b>${esc(p.name)}</b><div class="price">${euro(p.cents)}<small>${PER[p.billing] || ''} · pro Fotobox</small></div>
-      <ul>${String(p.features || '').split('\n').map(f => f.trim()).filter(Boolean).map(f => `<li>${esc(f)}</li>`).join('')}</ul>
-      <label>Anzahl Fotoboxen</label><input type="number" min="1" max="50" value="1" data-dev>
-      <div class="small muted" data-sum><span>Zusammen</span> <b>${euro(p.cents)}</b> <span>${PER[p.billing] || ''}</span></div>
-      <button class="btn primary" data-buy ${shop.ready ? '' : 'disabled'}>Jetzt kaufen</button></div>`).join('');
+  $('#shopPlans').innerHTML = TIER_CARDS.map(t => {
+    const isCur = cur === t.key || (t.key === 'alles' && cur === 'pro' && ext.length === 3) ? true : false;
+    if (t.key === 'free') return `<div class="card plan ${cur === 'free' ? 'cur' : ''}" data-tier="free">${cur === 'free' ? '<span class="tag">Dein Tarif</span>' : ''}
+      <b>${t.name}</b><div class="price">0 €<small>für immer</small></div><ul>${t.lines.map(l => `<li>${esc(l)}</li>`).join('')}</ul>
+      ${mine.length ? '' : '<button class="btn primary" data-free>Kostenlos starten</button>'}</div>`;
+    const p = live(`${t.plan}-${sfx}`), cents = p ? p.cents : t.price[shopBill], incl = p ? Math.max(1, p.devices_included || 1) : t.incl, extra = p ? p.extra_cents : t.extra[shopBill];
+    const lines = p ? String(p.features || '').split('\n').map(f => f.trim()).filter(Boolean) : t.lines;
+    return `<div class="card plan ${isCur ? 'cur' : ''}" data-plan="${esc(`${t.plan}-${sfx}`)}" data-cents="${cents}" data-incl="${incl}" data-extra="${extra || 0}">${isCur ? '<span class="tag">Dein Tarif</span>' : ''}
+      <b>${esc(t.name)}</b><div class="price">${euro(cents)}<small><span>${per}</span> · <span>${incl > 1 ? `${incl} Fotoboxen inklusive` : '1 Fotobox inklusive'}</span></small></div>
+      <ul>${lines.map(l => `<li>${esc(l)}</li>`).join('')}</ul>
+      <label>Anzahl Fotoboxen</label><input type="number" min="1" max="50" value="${incl}" data-dev>
+      <div class="small muted">${extra ? `<span>je weitere Fotobox</span> ${euro(extra)}` : ''}</div>
+      <div class="small muted" data-sum><span>Zusammen</span> <b>${euro(cents)}</b> <span>${per}</span></div>
+      ${p ? `<button class="btn primary" data-buy ${shop.ready ? '' : 'disabled'}>${isCur ? 'Verlängern' : 'Jetzt buchen'}</button>` : '<button class="btn" disabled>Bald buchbar</button>'}</div>`;
+  }).join('');
+  $('#shopAddons').innerHTML = ADDON_CARDS.map(([id, k, name, price]) => {
+    const p = shop.plans.find(x => x.id === `${id}-${sfx}` && x.addon), has = (myTier?.extras || []).includes(k), cents = p ? p.cents : price[shopBill];
+    return `<div class="card plan" data-plan="${esc(`${id}-${sfx}`)}" data-addon="1"><b>${esc(name)}</b><div class="price">${euro(cents)}<small>${per}</small></div>
+      ${has ? '<span class="tag">Gebucht</span>' : p && cur === 'pro' ? `<button class="btn primary" data-buy ${shop.ready ? '' : 'disabled'}>Dazubuchen</button>`
+        : `<button class="btn" disabled>${p ? 'Zu Pro buchbar' : 'Bald buchbar'}</button>`}</div>`;
+  }).join('');
 }
+$('#shopBill').addEventListener('click', e => { const b = e.target.closest('[data-bill]'); if (!b) return; shopBill = b.dataset.bill; renderShop(); });
 $('#shopPlans').addEventListener('input', e => {
-  const c = e.target.closest('.plan'), p = c && shop.plans.find(x => x.id === c.dataset.plan); if (!p || !e.target.matches('[data-dev]')) return;
-  c.querySelector('[data-sum] b').textContent = euro(p.cents * devN(e.target.value));
+  const c = e.target.closest('.plan'); if (!c || !e.target.matches('[data-dev]')) return;
+  c.querySelector('[data-sum] b').textContent = euro(planSum(+c.dataset.cents, +c.dataset.incl, +c.dataset.extra, devN(e.target.value)));
 });
-$('#shopPlans').addEventListener('click', async e => {
+$('#shopCard').addEventListener('click', async e => {
+  if (e.target.closest('[data-free]')) { // kostenlose Lizenz (1 Fotobox, mit Werbung von Photobox Memories)
+    const b = e.target.closest('[data-free]'); b.disabled = true;
+    const { data, error } = await sb.rpc('free_license');
+    b.disabled = false;
+    if (error || !data?.ok) return toast(data?.error || (error && /free_license|schema cache/i.test(error.message) ? 'Die Tarife sind auf dem Server noch nicht eingerichtet.' : error?.message) || 'Das hat nicht geklappt.', 6000);
+    toast('Deine kostenlose Lizenz ist bereit. Melde dich in der Fotobox mit diesem Konto an.', 7000);
+    await Promise.all([loadLicenses(), loadMyTier()]); renderShop(); return;
+  }
   const b = e.target.closest('[data-buy]'); if (!b) return;
-  const c = b.closest('.plan'); b.disabled = true;
-  const { data, error } = await sb.functions.invoke('license-shop', { body: { action: 'checkout', plan: c.dataset.plan, devices: devN(c.querySelector('[data-dev]').value) } });
+  const c = b.closest('.plan'), dev = c.querySelector('[data-dev]'); b.disabled = true;
+  const { data, error } = await sb.functions.invoke('license-shop', { body: { action: 'checkout', plan: c.dataset.plan, devices: dev ? devN(dev.value) : 1 } });
   if (error || !/^https:\/\/checkout\.stripe\.com\//.test(data?.url || '')) { b.disabled = false; return toast(data?.error || 'Die Bezahlseite konnte nicht geöffnet werden.', 5000); }
   location.href = data.url;
 });
@@ -1342,7 +1414,7 @@ $('#trialGo').onclick = async () => {
 { // Rückkehr von der Bezahlseite (Lizenz)
   const k = new URLSearchParams(location.search).get('lizenz');
   if (k) { history.replaceState(null, '', location.pathname); setTimeout(() => toast(k === 'ok' ? 'Danke! Die Zahlung ist eingegangen – deine Lizenz wird in wenigen Sekunden freigeschaltet.' : 'Kauf abgebrochen – es wurde nichts berechnet.', 7000), 800);
-    if (k === 'ok') setTimeout(() => me && loadLicenses(), 6000); }
+    if (k === 'ok') setTimeout(() => me && Promise.all([loadLicenses(), loadMyTier()]).then(renderShop), 6000); }
 }
 // Verwaltung: Tarife pflegen
 const BILLING = [['month', 'Abo monatlich'], ['year', 'Abo jährlich'], ['once', 'Einmalkauf']];
@@ -1354,7 +1426,12 @@ async function loadPlans() {
   $('#planList').innerHTML = list.length ? list.map(p => `<div class="planrow" data-id="${esc(p.id)}" data-sort="${p.sort || 0}">
       <div class="grid3"><div><label>Name</label><input data-f="name" value="${esc(p.name)}"></div>
         <div><label>Abrechnung</label><select data-f="billing">${BILLING.map(([k, n]) => `<option value="${k}" ${p.billing === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
-        <div><label>Preis pro Fotobox (€, brutto)</label><input data-f="price" type="number" min="0" step="0.01" value="${(p.cents / 100).toFixed(2)}"></div>
+        <div><label>${'devices_included' in p ? 'Preis (€, brutto)' : 'Preis pro Fotobox (€, brutto)'}</label><input data-f="price" type="number" min="0" step="0.01" value="${(p.cents / 100).toFixed(2)}"></div>
+        ${'tier' in p ? `<div><label>Tarif-Stufe</label><select data-f="tier">${Object.entries(TIER_NAME).map(([k, n]) => `<option value="${k}" ${p.tier === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+        <div><label>Enthaltene Fotoboxen</label><input data-f="incl" type="number" min="1" max="50" value="${p.devices_included || 1}"></div>
+        <div><label>Je weitere Fotobox (€)</label><input data-f="extra" type="number" min="0" step="0.01" value="${((p.extra_cents || 0) / 100).toFixed(2)}"></div>
+        <div style="grid-column:1/-1"><label>Zusatzfunktionen</label><div class="row" style="gap:16px">${EXTRAS.map(([k, n]) => `<label class="row" style="margin:0;gap:6px;font-weight:400;font-size:14px"><input type="checkbox" data-x="${k}" ${(p.extras || []).includes(k) ? 'checked' : ''}> ${n}</label>`).join('')}
+          <label class="row" style="margin:0;gap:6px;font-weight:400;font-size:14px"><input type="checkbox" data-f="addon" ${p.addon ? 'checked' : ''}> Einzeln buchbare Zusatzfunktion (kein eigener Tarif)</label></div></div>` : ''}
         <div style="grid-column:1/-1"><label>Vorteile (eine Zeile pro Vorteil)</label><textarea data-f="features" rows="3">${esc(p.features)}</textarea></div></div>
       <div class="row" style="margin-top:10px"><label class="row" style="margin:0;color:var(--fg);font-weight:400;font-size:14px"><input type="checkbox" data-f="active" ${p.active ? 'checked' : ''}> Für Kunden sichtbar</label>
         <span style="flex:1"></span><span class="small muted">Kennung ${esc(p.id)}</span><button class="btn small danger" data-plan-del>Löschen</button><button class="btn small primary" data-plan-save>Speichern</button></div></div>`).join('')
@@ -1373,7 +1450,10 @@ $('#planList').addEventListener('click', async e => {
   const cents = Math.round(parseFloat(String(f('price').value).replace(',', '.')) * 100);
   if (!f('name').value.trim() || !(cents >= 0)) return toast('Bitte Name und Preis eintragen.');
   if (f('active').checked && !(cents > 0)) return toast('Ein sichtbarer Tarif braucht einen Preis über 0 €.', 5000);
-  const { error } = await sb.from('plans').update({ name: f('name').value.trim(), billing: f('billing').value, cents, features: f('features').value.trim(), active: f('active').checked }).eq('id', id);
+  const upd = { name: f('name').value.trim(), billing: f('billing').value, cents, features: f('features').value.trim(), active: f('active').checked };
+  if (f('tier')) Object.assign(upd, { tier: f('tier').value, devices_included: Math.max(1, Math.round(+f('incl').value || 1)), extra_cents: Math.max(0, Math.round(parseFloat(String(f('extra').value).replace(',', '.')) * 100) || 0),
+    addon: f('addon').checked, extras: [...row.querySelectorAll('[data-x]')].filter(x => x.checked).map(x => x.dataset.x) });
+  const { error } = await sb.from('plans').update(upd).eq('id', id);
   if (error) return toast(error.message, 5000);
   toast('Tarif gespeichert'); loadPlans(); loadShop();
 });
