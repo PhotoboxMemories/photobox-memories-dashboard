@@ -1,7 +1,7 @@
 // Photobox Memories – Virtueller Berater: Animationsbibliothek (wie die „Shop-Medien“ bei LumaBooth).
 // Die Animationen werden live gezeichnet statt als Video abgespielt: Sie passen sich jedem Bildschirm an (Hoch- und Querformat),
 // sprechen die Sprache der Gäste und brauchen keine Dateien. Gleiche Datei in der Fotobox und im Dashboard (Vorschau).
-// AdvisorAnim.play(canvas, id, { style, text, loop, preview }) → { done: Promise<boolean>, stop() }
+// AdvisorAnim.play(canvas, id, { style, text, loop, preview, solid }) → { done: Promise<boolean>, stop() }
 // AdvisorAnim.frame(ctx, w, h, sekunden, id, style, text) zeichnet ein Einzelbild (Vorschau-Kacheln).
 (function (G) {
   'use strict';
@@ -194,11 +194,15 @@
     },
   };
 
-  // Ein Einzelbild: sec = Sekunden seit dem Start, D = Dauer (endlos bei Schleifen)
-  function frame(x, W, H, sec, id, style, text, D = 2.6) {
+  // Deckender Hintergrund je Stil (Standard): Video bzw. Livebild darunter scheinen nicht durch. Durchsichtig nur auf Wunsch
+  // (Einstellung „Hintergrund der Animationen“), dann liegt nur der leichte Schleier des Stils über dem Bildschirm.
+  const BG = { neon: '#0b0014', gold: '#100b04', pop: '#3ec1d3', clean: '#1D1D1B', confetti: '#15121f' };
+  // Ein Einzelbild: sec = Sekunden seit dem Start, D = Dauer (endlos bei Schleifen), solid = deckender Hintergrund
+  function frame(x, W, H, sec, id, style, text, D = 2.6, solid = false) {
     const it = byId(id) || LIB[0], st = DRAW[style] ? style : 'neon', loop = !!it.loop || !isFinite(D);
     const a = outCubic(clamp(sec / .45)), out = loop ? 0 : clamp((sec - (D - .4)) / .4);
     x.save(); x.globalAlpha = clamp(a * 1.6) * (1 - out);
+    if (solid) { x.fillStyle = BG[st]; x.fillRect(0, 0, W, H); }
     DRAW[st](x, W, H, sec, it, text || it.text, Math.min(W, H) * (W > H ? .095 : .11), a, loop);
     x.restore();
   }
@@ -222,8 +226,8 @@
       const k = Math.min(Math.min(2, G.devicePixelRatio || 1), MAXPX / Math.max(W, H, 1)), cw = Math.round(W * k), ch = Math.round(H * k);
       if (cv.width !== cw || cv.height !== ch) { cv.width = cw; cv.height = ch; }
       x.setTransform(k, 0, 0, k, 0, 0); x.clearRect(0, 0, W, H);
-      if (o.preview && !loop) frame(x, W, H, sec % (D + .7), id, o.style, o.text, D);
-      else frame(x, W, H, sec, id, o.style, o.text, loop ? Infinity : D);
+      if (o.preview && !loop) frame(x, W, H, sec % (D + .7), id, o.style, o.text, D, !!o.solid);
+      else frame(x, W, H, sec, id, o.style, o.text, loop ? Infinity : D, !!o.solid);
       if (!loop && !o.preview && sec >= D) finish(true);
     };
     raf = requestAnimationFrame(tick);
@@ -235,7 +239,7 @@
   // Vorschau-Kachel: Leinwand in el, Animation läuft in Schleife; gibt stop() zurück
   function tile(el, id, style, text) {
     const cv = document.createElement('canvas'); cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none'; el.appendChild(cv);
-    return play(cv, id, { style, preview: true, text }).stop;
+    return play(cv, id, { style, preview: true, text, solid: true }).stop;
   }
   const CSS = `
   .aa-dlg{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
