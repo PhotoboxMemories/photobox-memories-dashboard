@@ -1,6 +1,41 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.75": {
+      "date": "2026-10-21",
+      "notes": {
+        "de": [
+          "Neuer Startbildschirm-Editor wie bei LumaBooth: direkt in der Vorschau anklicken, verschieben, Größe ändern und drehen. Rechts stehen „Ausgewähltes Objekt“ (X/Y/Breite/Höhe, Seitenverhältnis, Drehen), Ausrichten, Ebene anheben/absenken und die Ebenen mit Auge, Schloss und Sortieren per Ziehen.",
+          "Galerie-Stapel und Videonachricht-Karte sind jetzt eigene Ebenen: frei verschieben, vergrößern oder ausblenden. Hoch- und Querformat lassen sich im Editor umschalten.",
+          "Fotolayouts und Startbildschirm: Schlagschatten mit Farbe, Winkel, Abstand und Weichheit. Alles stellst du an der Fotobox oder im Dashboard ein – beide zeigen dieselbe Gestaltung."
+        ],
+        "en": [
+          "New start screen editor like LumaBooth: click, move, resize and rotate directly in the preview. On the right you find “Selected object” (X/Y/width/height, aspect ratio, rotation), align, bring forward/send backward and the layers with eye, lock and drag-to-reorder.",
+          "The gallery stack and the video message card are now layers of their own: move, enlarge or hide them freely. Portrait and landscape can be switched in the editor.",
+          "Photo layouts and start screen: drop shadow with colour, angle, distance and softness. You can set everything on the photo booth or in the dashboard – both show the same design."
+        ],
+        "tr": [
+          "LumaBooth gibi yeni başlangıç ekranı düzenleyicisi: önizlemede doğrudan tıklayın, taşıyın, boyutlandırın ve döndürün. Sağda „Seçili nesne“ (X/Y/genişlik/yükseklik, en boy oranı, döndürme), hizalama, öne getir/geri gönder ve göz, kilit ve sürükleyerek sıralama içeren katmanlar bulunur.",
+          "Galeri yığını ve video mesaj kartı artık ayrı katmanlar: serbestçe taşıyın, büyütün veya gizleyin. Dikey ve yatay format düzenleyicide değiştirilebilir.",
+          "Fotoğraf düzenleri ve başlangıç ekranı: renk, açı, mesafe ve yumuşaklık ayarlı gölge. Her şeyi fotoğraf kabininde veya kontrol panelinde ayarlarsınız – ikisi de aynı tasarımı gösterir."
+        ],
+        "fr": [
+          "Nouvel éditeur d’écran d’accueil comme LumaBooth : cliquez, déplacez, redimensionnez et faites pivoter directement dans l’aperçu. À droite : « Objet sélectionné » (X/Y/largeur/hauteur, proportions, rotation), aligner, avancer/reculer et les calques avec œil, cadenas et tri par glisser.",
+          "La pile de la galerie et la carte du message vidéo sont désormais des calques à part entière : déplacez-les, agrandissez-les ou masquez-les librement. Portrait et paysage se changent dans l’éditeur.",
+          "Mises en page photo et écran d’accueil : ombre portée avec couleur, angle, distance et flou. Tout se règle sur le photobooth ou dans le tableau de bord – les deux affichent la même mise en page."
+        ],
+        "es": [
+          "Nuevo editor de pantalla de inicio como LumaBooth: haz clic, mueve, cambia el tamaño y gira directamente en la vista previa. A la derecha encontrarás «Objeto seleccionado» (X/Y/ancho/alto, relación de aspecto, giro), alinear, traer adelante/enviar atrás y las capas con ojo, candado y ordenar arrastrando.",
+          "La pila de la galería y la tarjeta del mensaje de vídeo son ahora capas propias: muévelas, amplíalas u ocúltalas libremente. Vertical y horizontal se cambian en el editor.",
+          "Diseños de foto y pantalla de inicio: sombra paralela con color, ángulo, distancia y difuminado. Todo se ajusta en el fotomatón o en el panel – ambos muestran el mismo diseño."
+        ],
+        "it": [
+          "Nuovo editor della schermata iniziale come LumaBooth: fai clic, sposta, ridimensiona e ruota direttamente nell’anteprima. A destra trovi «Oggetto selezionato» (X/Y/larghezza/altezza, proporzioni, rotazione), allinea, porta avanti/indietro e i livelli con occhio, lucchetto e riordino trascinando.",
+          "La pila della galleria e la scheda del videomessaggio ora sono livelli propri: spostali, ingrandiscili o nascondili liberamente. Verticale e orizzontale si cambiano nell’editor.",
+          "Layout foto e schermata iniziale: ombra con colore, angolo, distanza e morbidezza. Imposti tutto sulla photo booth o nella dashboard – entrambe mostrano lo stesso design."
+        ]
+      }
+    },
     "1.17.74": {
       "date": "2026-10-21",
       "notes": {
