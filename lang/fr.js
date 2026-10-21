@@ -1847,6 +1847,7 @@ I18N.add('fr', {
 "Oben (über dem Bild)": "En haut (au-dessus de l'image)",
 "Oben in der Liste = vorne im Bild.": "En haut de la liste = devant dans l'image.",
 "Oben links": "En haut à gauche",
+"Oben links (unter der Galerie)": "En haut à gauche (sous la galerie)",
 "Oben rechts": "En haut à droite",
 "oben)": "haut)",
 "Offenes Guthaben": "Crédit restant",
