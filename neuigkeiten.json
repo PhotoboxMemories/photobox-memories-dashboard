@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.82": {
+      "date": "2026-10-21",
+      "notes": {
+        "de": [
+          "KI-Guthaben im Überblick: Im Dashboard unter „Meine Lizenzen“ siehst du dein Guthaben, wie viele Credits jedes Ereignis verbraucht hat und deine Käufe – und kaufst Credits direkt über Stripe. Oben bei den Ereignissen steht dein Guthaben, an der Fotobox (KI-Porträts) gibt es den Knopf „Credits kaufen“."
+        ],
+        "en": [
+          "AI balance at a glance: in the dashboard under “My licenses” you see your balance, how many credits each event used and your purchases – and buy credits directly via Stripe. Your balance is shown at the top of the events, and on the photo booth (AI portraits) there is a “Buy credits” button."
+        ],
+        "tr": [
+          "Yapay zeka bakiyesine genel bakış: Panelde „Lisanslarım“ altında bakiyeni, her etkinliğin kaç kredi kullandığını ve satın almalarını görürsün – ve Stripe ile doğrudan kredi alırsın. Etkinliklerin üstünde bakiyen görünür, fotoğraf kabininde (yapay zeka portreleri) „Kredi satın al“ düğmesi var."
+        ],
+        "fr": [
+          "Solde IA en un coup d’œil : dans le tableau de bord, sous « Mes licences », tu vois ton solde, les crédits utilisés par chaque événement et tes achats – et tu achètes des crédits directement via Stripe. Ton solde s’affiche en haut des événements, et sur le photobooth (portraits IA) il y a un bouton « Acheter des crédits »."
+        ],
+        "es": [
+          "Saldo de IA de un vistazo: en el panel, en «Mis licencias», ves tu saldo, cuántos créditos usó cada evento y tus compras, y compras créditos directamente con Stripe. Tu saldo aparece arriba en los eventos y en el fotomatón (retratos IA) hay un botón «Comprar créditos»."
+        ],
+        "it": [
+          "Saldo IA a colpo d’occhio: nella dashboard alla voce «Le mie licenze» vedi il saldo, quanti crediti ha usato ogni evento e i tuoi acquisti – e acquisti crediti direttamente con Stripe. Il saldo compare in alto negli eventi e sul photo booth (ritratti IA) c’è il pulsante «Acquista crediti»."
+        ]
+      }
+    },
     "1.17.81": {
       "date": "2026-10-21",
       "notes": {
