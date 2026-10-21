@@ -1,6 +1,35 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.85": {
+      "date": "2026-10-21",
+      "notes": {
+        "de": [
+          "Virtueller Berater: Für den Startbildschirm wählst du jetzt „Animation des Beraters“ oder „Startvideo“ (Standard-Video mit Logo bzw. eigenes Video) – die übrigen Berater-Schritte bleiben aktiv. Die Videonachricht-Karte bleibt auch über der Animation sichtbar.",
+          "Live-Ansicht in der Vorlage: Das Livebild erscheint nur im Feld des Fotos, das gerade aufgenommen wird – beim ersten Foto im ersten Feld. Fertige Fotos bleiben stehen, die übrigen Felder zeigen ihre Nummer."
+        ],
+        "en": [
+          "Virtual assistant: for the start screen you now choose “Assistant animation” or “Start video” (standard video with logo or your own video) – the other assistant steps stay active. The video message card stays visible above the animation too.",
+          "Live view in the template: the live image only appears in the slot of the photo being taken – the first slot for the first photo. Finished photos stay in place, the other slots show their number."
+        ],
+        "tr": [
+          "Sanal asistan: Başlangıç ekranı için artık „Asistan animasyonu“ veya „Başlangıç videosu“ (logolu standart video veya kendi videon) seçersin – asistanın diğer adımları etkin kalır. Video mesaj kartı animasyonun üstünde de görünür kalır.",
+          "Şablonda canlı görüntü: Canlı görüntü yalnızca o anda çekilen fotoğrafın alanında görünür – ilk fotoğrafta ilk alanda. Biten fotoğraflar yerinde kalır, diğer alanlar numaralarını gösterir."
+        ],
+        "fr": [
+          "Assistant virtuel : pour l’écran d’accueil, tu choisis maintenant « Animation de l’assistant » ou « Vidéo d’accueil » (vidéo standard avec logo ou ta propre vidéo) – les autres étapes de l’assistant restent actives. La carte du message vidéo reste visible au-dessus de l’animation.",
+          "Vue en direct dans le modèle : l’image en direct n’apparaît que dans la case de la photo en cours – la première case pour la première photo. Les photos prises restent affichées, les autres cases montrent leur numéro."
+        ],
+        "es": [
+          "Asistente virtual: para la pantalla de inicio ahora eliges «Animación del asistente» o «Vídeo de inicio» (vídeo estándar con logotipo o tu propio vídeo); los demás pasos del asistente siguen activos. La tarjeta del mensaje de vídeo sigue visible sobre la animación.",
+          "Imagen en directo en la plantilla: la imagen en directo solo aparece en la casilla de la foto que se está haciendo – en la primera casilla para la primera foto. Las fotos hechas se quedan, las demás casillas muestran su número."
+        ],
+        "it": [
+          "Assistente virtuale: per la schermata iniziale ora scegli «Animazione dell’assistente» o «Video iniziale» (video standard con logo o video tuo) – gli altri passi dell’assistente restano attivi. La scheda del videomessaggio resta visibile sopra l’animazione.",
+          "Visione live nel modello: l’immagine live compare solo nel riquadro della foto in corso – nel primo riquadro per la prima foto. Le foto fatte restano, gli altri riquadri mostrano il loro numero."
+        ]
+      }
+    },
     "1.17.84": {
       "date": "2026-10-21",
       "notes": {
