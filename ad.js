@@ -85,8 +85,16 @@
   const publicUrl = (owner, cfg) => `${cfg.supabaseUrl}/storage/v1/object/public/photos/${path(owner)}`;
   // Konto aus dem Pfad eines Fotos (hz/<Konto>/… oder <Konto>/…)
   const ownerOf = p => { const m = String(p || '').match(/^(?:hz\/)?([0-9a-f-]{36})\//i); return m && UUID.test(m[1]) ? m[1].toLowerCase() : ''; };
-  async function load(owner, cfg) {
+  // raw: genau dieses Konto (Bearbeiten der eigenen Werbung). Sonst entscheidet der Tarif des Kontos (Server brand_info):
+  // im kostenlosen Tarif erscheinen Logo und Werbung von Photobox Memories statt der des Kunden.
+  async function load(owner, cfg, raw) {
     if (!UUID.test(owner || '') || !cfg?.supabaseUrl) return null;
+    if (!raw) try {
+      const r = await fetch(cfg.supabaseUrl + '/rest/v1/rpc/brand_info', { method: 'POST', body: JSON.stringify({ p_owner: owner }),
+        headers: { 'Content-Type': 'application/json', apikey: cfg.supabaseAnonKey, Authorization: 'Bearer ' + cfg.supabaseAnonKey } });
+      const j = r.ok ? await r.json() : null;
+      if (UUID.test(j?.brand_owner || '')) owner = j.brand_owner.toLowerCase();
+    } catch {} // ältere Datenbank ohne Tarife: wie bisher die Werbung des Kunden
     try {
       const r = await fetch(publicUrl(owner, cfg) + '?t=' + Math.floor(Date.now() / 60000), { cache: 'no-store' });
       if (!r.ok) return null;
