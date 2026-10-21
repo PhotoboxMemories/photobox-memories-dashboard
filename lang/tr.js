@@ -1847,6 +1847,7 @@ I18N.add('tr', {
 "Oben (über dem Bild)": "Üst (görselin üstünde)",
 "Oben in der Liste = vorne im Bild.": "Listenin üstü = görselin önü.",
 "Oben links": "Sol üst",
+"Oben links (unter der Galerie)": "Sol üst (galerinin altında)",
 "Oben rechts": "Sağ üst",
 "oben)": "üst)",
 "Offenes Guthaben": "Açık bakiye",
