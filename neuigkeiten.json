@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.88": {
+      "date": "2026-10-22",
+      "notes": {
+        "de": [
+          "Gelber Hinweis auf dem Startbildschirm, wenn kein Ereignis aus dem Dashboard gewählt ist (oder die Fotobox nicht angemeldet ist): Dann kommen die Fotos nicht in die Online-Galerie und der QR-Code funktioniert nur im selben WLAN. Antippen führt direkt zur Ereignis-Auswahl."
+        ],
+        "en": [
+          "Yellow notice on the start screen when no event from the dashboard is selected (or the photo booth is not signed in): photos then don’t go to the online gallery and the QR code only works on the same Wi-Fi. Tapping it opens the event selection."
+        ],
+        "tr": [
+          "Panelden etkinlik seçilmediğinde (veya fotoğraf kabini oturum açmadığında) başlangıç ekranında sarı uyarı: Fotoğraflar çevrim içi galeriye gitmez ve QR kod yalnızca aynı Wi-Fi ağında çalışır. Dokununca doğrudan etkinlik seçimi açılır."
+        ],
+        "fr": [
+          "Avis jaune sur l’écran d’accueil quand aucun événement du tableau de bord n’est sélectionné (ou que le photobooth n’est pas connecté) : les photos n’arrivent alors pas dans la galerie en ligne et le QR code ne fonctionne que sur le même Wi-Fi. Un appui ouvre directement le choix de l’événement."
+        ],
+        "es": [
+          "Aviso amarillo en la pantalla de inicio cuando no hay ningún evento del panel seleccionado (o el fotomatón no ha iniciado sesión): las fotos no llegan a la galería en línea y el código QR solo funciona en la misma red Wi-Fi. Al tocarlo se abre la selección de evento."
+        ],
+        "it": [
+          "Avviso giallo nella schermata iniziale quando non è selezionato nessun evento della dashboard (o il photo booth non è collegato): le foto non arrivano nella galleria online e il codice QR funziona solo sulla stessa rete Wi-Fi. Toccandolo si apre subito la scelta dell’evento."
+        ]
+      }
+    },
     "1.17.87": {
       "date": "2026-10-22",
       "notes": {
