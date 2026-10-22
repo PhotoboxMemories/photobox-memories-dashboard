@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.87": {
+      "date": "2026-10-22",
+      "notes": {
+        "de": [
+          "Mit Live-Ansicht in der Vorlage erscheint jedes Foto direkt in seinem Feld der Vorlage – nicht mehr zusätzlich groß ohne Rahmen über den ganzen Bildschirm."
+        ],
+        "en": [
+          "With live view in the template, each photo now appears right in its slot of the template – no longer also shown full screen without the frame."
+        ],
+        "tr": [
+          "Şablonda canlı görüntü açıkken her fotoğraf doğrudan şablondaki yerinde görünür – artık ayrıca çerçevesiz tam ekran gösterilmez."
+        ],
+        "fr": [
+          "Avec l’aperçu en direct dans le modèle, chaque photo apparaît directement dans sa case du modèle – elle n’est plus affichée en plus en plein écran sans cadre."
+        ],
+        "es": [
+          "Con la vista en vivo en la plantilla, cada foto aparece directamente en su hueco de la plantilla; ya no se muestra además a pantalla completa sin marco."
+        ],
+        "it": [
+          "Con l’anteprima dal vivo nel modello, ogni foto appare direttamente nel suo spazio del modello – non viene più mostrata anche a schermo intero senza cornice."
+        ]
+      }
+    },
     "1.17.86": {
       "date": "2026-10-22",
       "notes": {
