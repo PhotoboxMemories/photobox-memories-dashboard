@@ -1,6 +1,52 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.91": {
+      "date": "2026-10-22",
+      "notes": {
+        "de": [
+          "Schärfere Fotos mit Canon: Neue Einstellung „Scharfstellen: Direkt beim Auslösen, wie LumaBooth“ (Standard) – die Kamera stellt beim Auslösen noch einmal scharf und löst sofort aus. Bisher wurde nur im Countdown scharfgestellt; bewegte sich jemand, wurde das Foto unscharf."
+        ],
+        "en": [
+          "Sharper photos with Canon: new setting “Focus: right when shooting, like LumaBooth” (default) – the camera focuses once more and fires immediately. Before, it only focused during the countdown; if someone moved, the photo was blurry."
+        ],
+        "tr": [
+          "Canon ile daha net fotoğraflar: Yeni ayar „Netleme: Çekim anında, LumaBooth gibi“ (varsayılan) – fotoğraf makinesi çekimde bir kez daha netler ve hemen çeker. Önceden yalnızca geri sayımda netleme yapılıyordu; biri hareket ederse fotoğraf bulanık oluyordu."
+        ],
+        "fr": [
+          "Photos plus nettes avec Canon : nouveau réglage « Mise au point : juste au déclenchement, comme LumaBooth » (par défaut) – l’appareil refait la mise au point et déclenche aussitôt. Avant, la mise au point se faisait seulement pendant le compte à rebours ; si quelqu’un bougeait, la photo était floue."
+        ],
+        "es": [
+          "Fotos más nítidas con Canon: nuevo ajuste «Enfoque: justo al disparar, como LumaBooth» (predeterminado): la cámara vuelve a enfocar y dispara al instante. Antes solo enfocaba durante la cuenta atrás; si alguien se movía, la foto salía borrosa."
+        ],
+        "it": [
+          "Foto più nitide con Canon: nuova impostazione «Messa a fuoco: subito allo scatto, come LumaBooth» (predefinita) – la fotocamera rimette a fuoco e scatta subito. Prima metteva a fuoco solo durante il conto alla rovescia; se qualcuno si muoveva, la foto era sfocata."
+        ]
+      }
+    },
+    "1.17.90": {
+      "date": "2026-10-22",
+      "notes": {
+        "de": [
+          "Beste Fotoqualität: Das fertige Foto hat jetzt die doppelte Auflösung (z. B. 3600 × 2400 statt 1800 × 1200 Pixel) – schärfer auf dem Handy, in der Galerie und im Druck, auch jedes Einzelfoto in Collagen. Canon-Kameras fotografieren standardmäßig in „Mittel“ (ca. 4000 Pixel). Der Schönheitsfilter glättet nur noch die Haut, Augen, Haare und Kanten bleiben scharf; er ist anfangs immer aus."
+        ],
+        "en": [
+          "Best photo quality: the finished photo now has double the resolution (e.g. 3600 × 2400 instead of 1800 × 1200 pixels) – sharper on phones, in the gallery and in print, including every single photo in collages. Canon cameras now shoot in “Medium” (approx. 4000 pixels) by default. The beauty filter only smooths the skin; eyes, hair and edges stay sharp. It is always off at the start."
+        ],
+        "tr": [
+          "En iyi fotoğraf kalitesi: Hazır fotoğraf artık iki kat çözünürlükte (ör. 1800 × 1200 yerine 3600 × 2400 piksel) – telefonda, galeride ve baskıda daha net, kolajlardaki her tek fotoğraf da. Canon fotoğraf makineleri varsayılan olarak „Orta“ (yakl. 4000 piksel) çeker. Güzellik filtresi yalnızca cildi yumuşatır; gözler, saçlar ve kenarlar net kalır. Başlangıçta her zaman kapalıdır."
+        ],
+        "fr": [
+          "Meilleure qualité photo : la photo finale a maintenant une résolution double (p. ex. 3600 × 2400 au lieu de 1800 × 1200 pixels) – plus nette sur le téléphone, dans la galerie et à l’impression, y compris chaque photo des collages. Les appareils Canon photographient par défaut en « Moyen » (env. 4000 pixels). Le filtre beauté lisse uniquement la peau ; yeux, cheveux et contours restent nets. Il est toujours désactivé au départ."
+        ],
+        "es": [
+          "La mejor calidad de foto: la foto final tiene ahora el doble de resolución (p. ej. 3600 × 2400 en lugar de 1800 × 1200 píxeles), más nítida en el móvil, en la galería y en la impresión, también cada foto de los collages. Las cámaras Canon fotografían por defecto en «Mediano» (aprox. 4000 píxeles). El filtro de belleza solo suaviza la piel; ojos, pelo y bordes siguen nítidos. Al principio siempre está desactivado."
+        ],
+        "it": [
+          "Migliore qualità foto: la foto finale ha ora una risoluzione doppia (ad es. 3600 × 2400 invece di 1800 × 1200 pixel) – più nitida sul telefono, nella galleria e in stampa, anche ogni singola foto dei collage. Le fotocamere Canon scattano ora di default in «Medio» (circa 4000 pixel). Il filtro bellezza leviga solo la pelle; occhi, capelli e contorni restano nitidi. All’inizio è sempre disattivato."
+        ]
+      }
+    },
     "1.17.89": {
       "date": "2026-10-22",
       "notes": {
