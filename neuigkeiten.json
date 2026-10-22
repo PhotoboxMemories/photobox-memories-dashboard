@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.92": {
+      "date": "2026-10-22",
+      "notes": {
+        "de": [
+          "Live-Karikatur vom Handy: QR-Code und Code stehen jetzt auch auf dem Startbildschirm der Fotobox (unten rechts) – nicht nur auf der Karikaturen-Wand. Die Zeichnung läuft langsamer: Standard 20 Sekunden, einstellbar bis 60 Sekunden („Dauer der Zeichnung“)."
+        ],
+        "en": [
+          "Live caricature from the phone: the QR code and the code now also appear on the photo booth start screen (bottom right) – not only on the caricature wall. Drawing is slower: 20 seconds by default, adjustable up to 60 seconds (“Drawing duration”)."
+        ],
+        "tr": [
+          "Telefondan canlı karikatür: QR kod ve kod artık fotoğraf kabininin başlangıç ekranında da (sağ altta) görünüyor – yalnızca karikatür duvarında değil. Çizim daha yavaş: varsayılan 20 saniye, 60 saniyeye kadar ayarlanabilir („Çizim süresi“)."
+        ],
+        "fr": [
+          "Caricature en direct depuis le téléphone : le QR code et le code apparaissent maintenant aussi sur l’écran d’accueil du photobooth (en bas à droite) – pas seulement sur le mur de caricatures. Le dessin est plus lent : 20 secondes par défaut, réglable jusqu’à 60 secondes (« Durée du dessin »)."
+        ],
+        "es": [
+          "Caricatura en vivo desde el móvil: el código QR y el código aparecen ahora también en la pantalla de inicio del fotomatón (abajo a la derecha), no solo en el muro de caricaturas. El dibujo es más lento: 20 segundos por defecto, ajustable hasta 60 segundos («Duración del dibujo»)."
+        ],
+        "it": [
+          "Caricatura dal vivo dal telefono: il codice QR e il codice compaiono ora anche sulla schermata iniziale del photo booth (in basso a destra), non solo sul muro delle caricature. Il disegno è più lento: 20 secondi di default, regolabile fino a 60 secondi («Durata del disegno»)."
+        ]
+      }
+    },
     "1.17.91": {
       "date": "2026-10-22",
       "notes": {
