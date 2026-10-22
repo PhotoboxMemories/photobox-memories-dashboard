@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261022-6';</script>
+<script>window.I18N_V = '20261022-7';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -23,7 +23,7 @@
 <script src="sketch-draw.js?v=20261018-8"></script>
 <script src="caricature.js?v=20261018-10"></script>
 <script src="start-anim.js?v=20261020-1"></script>
-<script src="event.js?v=20261022-2"></script>
+<script src="event.js?v=20261022-3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -261,7 +261,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <p id="shopTier" style="margin:0 0 6px"></p>
         <p class="small muted" id="shopHint" style="margin-bottom:14px"></p>
         <div class="plans" id="shopPlans"></div>
-        <div class="row hidden" id="trialRow" style="margin-top:16px"><button class="btn primary" id="trialGo">14 Tage Pro kostenlos testen</button><span class="small muted">Ohne Zahlungsdaten · alle Funktionen · endet von selbst</span></div>
+        <div class="row hidden" id="trialRow" style="margin-top:16px"><button class="btn primary" id="trialGo">1 Monat Zusatzfunktionen kostenlos testen</button><span class="small muted">Ohne Zahlungsdaten · Fotomosaik, Live-Karikatur, Videonachricht und 10 KI-Credits · endet von selbst, danach geht es kostenlos weiter</span></div>
         <h3 style="margin:22px 0 6px">Zusatzfunktionen</h3>
         <p class="small muted" style="margin:0 0 10px">Zu Pro dazubuchbar – oder alle zusammen im Paket „Alles inklusive“.</p>
         <div class="plans" id="shopAddons"></div>
@@ -984,7 +984,7 @@ async function loadLicenses() {
       <div>${licStatus(l)}</div>
       <div class="small muted">Geräte: ${l.dev_count} von ${l.max_devices}</div>
       ${EXTRAS.filter(([k]) => (l.extras || []).includes(k)).map(([, n]) => `<div class="small">✓ ${n} freigeschaltet</div>`).join('')}
-    </div>`).join('') : `<div class="card empty" style="grid-column:1/-1">${shop.plans.length ? 'Noch keine Lizenz. Teste 14 Tage kostenlos oder kaufe unten eine Lizenz.' : 'Keine Lizenz mit deiner E-Mail gefunden. Bitte melde dich beim Verkäufer.'}</div>`;
+    </div>`).join('') : `<div class="card empty" style="grid-column:1/-1">${shop.plans.length ? 'Noch keine Lizenz. Starte kostenlos, teste 1 Monat die Zusatzfunktionen oder kaufe unten eine Lizenz.' : 'Keine Lizenz mit deiner E-Mail gefunden. Bitte melde dich beim Verkäufer.'}</div>`;
   renderShop();
   $('#adCard').classList.toggle('hidden', !(mine.length || profile.is_admin)); if (!adData && (mine.length || profile.is_admin)) loadAd();
   if (profile.is_admin) { renderAdmin(); renderOverview(); }
@@ -1356,7 +1356,7 @@ $('#creditPacks').addEventListener('click', async e => {
     if (k === 'ok') for (const s of [5, 15, 40]) setTimeout(() => me && loadMyCredits(), s * 1000); } // Gutschrift kommt über den Stripe-Webhook
   if (k || location.hash === '#guthaben') addEventListener('pm-ready', showCredits, { once: true }); // nach der Anmeldung gleich zum Guthaben
 }
-/* ---------- Lizenz kaufen (Stripe): Tarife, 14 Tage testen, Abo verwalten ---------- */
+/* ---------- Lizenz kaufen (Stripe): Tarife, 1 Monat Zusatzfunktionen testen, Abo verwalten ---------- */
 let shop = { plans: [], ready: false }, shopBill = 'month';
 const PER = { month: 'pro Monat', year: 'pro Jahr', once: 'einmalig' };
 const TIER_NAME = { free: 'Kostenlos', basis: 'Basis', pro: 'Pro' };
@@ -1378,7 +1378,7 @@ if (location.hash === '#tarife') addEventListener('pm-ready', showTarife, { once
 // Links von der Webseite (photobox-memories.de/software):
 //   ?konto=neu  → Anmeldeseite gleich auf „Neues Konto erstellen“
 //   ?tarif=kostenlos|test|<tarif>-monat|-jahr|<zusatz>-monat|-jahr → nach der Anmeldung Meine Lizenzen: kostenlose Lizenz holen,
-//   14 Tage testen bzw. den Kauf starten (Anzahl Fotoboxen kurz abfragen). Der Tarif wird einen Tag gemerkt – auch über
+//   Zusatzfunktionen testen bzw. den Kauf starten (Anzahl Fotoboxen kurz abfragen). Der Tarif wird einen Tag gemerkt – auch über
 //   Registrierung und Bestätigungs-Mail hinweg.
 let shopPick = null;
 {
@@ -1449,10 +1449,11 @@ function renderShop() {
   $('#shopPortal').classList.toggle('hidden', !bought || !shop.ready);
   $$('#shopBill button').forEach(b => b.classList.toggle('on', b.dataset.bill === shopBill));
   $('#adFreeNote').hidden = cur !== 'free';
-  $('#trialRow').classList.toggle('hidden', mine.some(l => l.trial || (l.tier && l.tier !== 'free') || !('tier' in l)));
+  $('#trialRow').classList.toggle('hidden', !!myTier?.trial_until || mine.some(l => l.trial || (l.tier && l.tier !== 'free') || !('tier' in l)));
   const ext = (myTier?.extras || []).map(k => ({ mosaic: 'Fotomosaik', caricature: 'Live-Karikatur', videomsg: 'Videonachricht' })[k]).filter(Boolean);
-  $('#shopTier').innerHTML = cur ? `<span>Dein Tarif:</span> <b>${esc(TIER_NAME[cur])}</b>${ext.length ? ` <span class="small muted">+ ${esc(ext.join(', '))}</span>` : ''}`
-    : '<span>Du hast noch keine Lizenz. Starte kostenlos – oder teste 14 Tage alle Funktionen.</span>';
+  const trial = myTier?.trial_until && new Date(myTier.trial_until) > new Date() ? ` <span class="small muted">· <span>Test bis</span> ${fmtDate(myTier.trial_until)}</span>` : '';
+  $('#shopTier').innerHTML = cur ? `<span>Dein Tarif:</span> <b>${esc(TIER_NAME[cur])}</b>${ext.length ? ` <span class="small muted">+ ${esc(ext.join(', '))}</span>` : ''}${trial}`
+    : '<span>Du hast noch keine Lizenz. Starte kostenlos – oder teste 1 Monat die Zusatzfunktionen mit 10 KI-Credits.</span>';
   $('#shopHint').textContent = shop.ready ? 'Bezahlung sicher über Stripe. Der Tarif wird direkt nach der Zahlung freigeschaltet – deine Fotobox bleibt angemeldet.'
     : 'Der Kauf wird gerade eingerichtet und ist bald verfügbar.';
   $('#shopPlans').innerHTML = TIER_CARDS.map(t => {
@@ -1510,8 +1511,8 @@ $('#trialGo').onclick = async () => {
   const { error } = await sb.rpc('start_trial');
   $('#trialGo').disabled = false;
   if (error) return toast(error.message, 5000);
-  toast('Deine Testlizenz läuft 14 Tage. Melde dich in der Fotobox mit diesem Konto an – oder trage dort den Schlüssel ein.', 8000);
-  loadLicenses();
+  toast('Dein Test läuft 1 Monat: Fotomosaik, Live-Karikatur und Videonachricht sind freigeschaltet, dazu 10 KI-Credits. Melde dich in der Fotobox mit diesem Konto an.', 9000);
+  await loadMyTier(); loadLicenses(); loadMyCredits();
 };
 { // Rückkehr von der Bezahlseite (Lizenz)
   const k = new URLSearchParams(location.search).get('lizenz');
