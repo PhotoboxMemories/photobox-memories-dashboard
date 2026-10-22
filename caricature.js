@@ -12,9 +12,9 @@
   // approve: jede Einsendung erst im Dashboard freigeben · print: Karikaturen vom Handy ausdrucken · secret: für den Code
   function normalize(x) {
     const o = x && typeof x === 'object' ? x : {};
-    return { on: o.on === true, prompt: typeof o.prompt === 'string' && o.prompt.trim() ? o.prompt.slice(0, 1200) : '', secs: num(o.secs, 6, 20, 10),
+    return { on: o.on === true, prompt: typeof o.prompt === 'string' && o.prompt.trim() ? o.prompt.slice(0, 1200) : '', secs: num(o.secs, 8, 60, 20),
       title: typeof o.title === 'string' ? o.title.slice(0, 80) : '', phone: o.phone !== false, needCode: o.needCode !== false, approve: o.approve === true,
-      print: o.print !== false, secret: typeof o.secret === 'string' && /^[0-9a-f]{16,64}$/.test(o.secret) ? o.secret : '' };
+      print: o.print !== false, pos: ['br', 'bl', 'tr', 'tl'].includes(o.pos) ? o.pos : 'br', secret: typeof o.secret === 'string' && /^[0-9a-f]{16,64}$/.test(o.secret) ? o.secret : '' };
   }
   const newSecret = () => [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('');
   // Zweistelliger Code für die Wand – wechselt alle 2 Minuten, gleiche Rechnung wie in der Funktion „cari“
