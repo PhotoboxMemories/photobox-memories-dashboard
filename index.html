@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261022-3';</script>
+<script>window.I18N_V = '20261022-4';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -374,11 +374,11 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <div class="card" style="margin-bottom:20px">
         <h2>KI-Guthaben vergeben</h2>
         <div class="grid3">
-          <div><label>E-Mail des Kunden</label><input id="cEmail" type="email" placeholder="kunde@beispiel.de"></div>
+          <div><label style="display:flex;justify-content:space-between;align-items:baseline">E-Mail des Kunden <a href="#" id="cSelf" class="small">Mir selbst</a></label><input id="cEmail" type="email" placeholder="kunde@beispiel.de" list="cEmails" autocomplete="off"><datalist id="cEmails"></datalist></div>
           <div><label>Credits (Minus zieht ab)</label><input id="cAmount" type="number" step="1" value="100"></div>
           <div><label>Notiz (z.B. Rechnungsnummer)</label><input id="cNote" maxlength="200"></div>
         </div>
-        <div class="row" style="margin-top:14px"><button class="btn primary" id="cGrant">Guthaben buchen</button><span class="small muted">1 KI-Bild in 1K = 1 Credit, in 2K = 2 Credits. Der Kunde muss im Dashboard registriert sein.</span></div>
+        <div class="row" style="margin-top:14px"><button class="btn primary" id="cGrant">Guthaben buchen</button><span class="small muted">1 KI-Bild in 1K = 1 Credit, in 2K = 2 Credits. Der Kunde muss im Dashboard registriert sein. Tipp: Klick auf einen Kunden in der Liste übernimmt seine E-Mail.</span></div>
         <div class="tablewrap" style="margin-top:16px"><table>
           <thead><tr><th>Kunde</th><th>Guthaben</th><th>Letzte Buchung</th></tr></thead>
           <tbody id="creditList"><tr><td colspan="3" class="empty">Lädt …</td></tr></tbody>
@@ -1250,12 +1250,18 @@ async function loadCredits() {
   ]);
   if (w.error) { el.innerHTML = `<tr><td colspan="3" class="empty">${esc(w.error.message)}</td></tr>`; return; }
   const mail = Object.fromEntries([].concat(p.data || []).map(x => [x.id, x.email])), last = {};
+  // Vorschläge fürs E-Mail-Feld: alle registrierten Konten
+  $('#cEmails').innerHTML = [...new Set(Object.values(mail).filter(Boolean))].sort().map(m => `<option value="${esc(m)}">`).join('');
   for (const x of [].concat(l.data || [])) last[x.owner_id] ||= x; // absteigend sortiert: erster Treffer = neueste Buchung
   const rows = [].concat(w.data || []).sort((a, b) => (mail[a.owner_id] || '').localeCompare(mail[b.owner_id] || ''));
-  el.innerHTML = rows.length ? rows.map(x => { const b = last[x.owner_id]; return `<tr><td>${esc(mail[x.owner_id] || x.owner_id)}</td><td><b>${x.balance}</b> Credits</td>
+  el.innerHTML = rows.length ? rows.map(x => { const b = last[x.owner_id]; return `<tr data-mail="${esc(mail[x.owner_id] || '')}" style="cursor:pointer"><td>${esc(mail[x.owner_id] || x.owner_id)}</td><td><b>${x.balance}</b> Credits</td>
     <td class="small">${b ? `${b.amount > 0 ? '+' : ''}${b.amount} · ${fmtDate(b.created_at)}${b.note ? ' · ' + esc(b.note) : ''}` : '–'}</td></tr>`; }).join('')
     : '<tr><td colspan="3" class="empty">Noch kein Guthaben vergeben</td></tr>';
 }
+// E-Mail übernehmen: eigenes Konto oder Klick auf einen Kunden in der Liste
+const cPick = m => { if (!m) return; $('#cEmail').value = m; $('#cAmount').focus(); $('#cAmount').select(); };
+$('#cSelf').onclick = e => { e.preventDefault(); cPick(me?.email); };
+$('#creditList').onclick = e => cPick(e.target.closest('tr[data-mail]')?.dataset.mail);
 $('#cGrant').onclick = async () => {
   const email = $('#cEmail').value.trim(), amount = Math.trunc(+$('#cAmount').value);
   if (!email || !amount) return toast('Bitte E-Mail und eine Menge ungleich 0 eingeben.');
