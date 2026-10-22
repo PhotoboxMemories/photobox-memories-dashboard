@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.89": {
+      "date": "2026-10-22",
+      "notes": {
+        "de": [
+          "Läuft ein Ereignis oder ist die Fotobox gesperrt, ist sie jetzt immer im Vollbild – Gäste sehen keine Taskleiste mehr. Startseite und Einstellungen bleiben im Fenster, außer „Anwendung im Vollbildmodus starten“ ist an (gilt jetzt sofort)."
+        ],
+        "en": [
+          "While an event is running or the photo booth is locked, it is now always full screen – guests no longer see the taskbar. Start page and settings stay in a window unless “Start app in full-screen mode” is on (now takes effect immediately)."
+        ],
+        "tr": [
+          "Bir etkinlik çalışırken veya fotoğraf kabini kilitliyken artık her zaman tam ekrandır – misafirler görev çubuğunu artık görmez. Başlangıç sayfası ve ayarlar, „Uygulamayı tam ekran başlat“ açık değilse pencerede kalır (artık hemen geçerli)."
+        ],
+        "fr": [
+          "Pendant un événement ou quand le photobooth est verrouillé, il est désormais toujours en plein écran – les invités ne voient plus la barre des tâches. La page d’accueil et les réglages restent dans une fenêtre, sauf si « Lancer l’application en plein écran » est activé (effet immédiat)."
+        ],
+        "es": [
+          "Mientras hay un evento en marcha o el fotomatón está bloqueado, ahora siempre está a pantalla completa: los invitados ya no ven la barra de tareas. La página de inicio y los ajustes siguen en una ventana salvo que «Iniciar la aplicación en pantalla completa» esté activado (ahora surte efecto al instante)."
+        ],
+        "it": [
+          "Durante un evento o con il photo booth bloccato ora è sempre a schermo intero – gli ospiti non vedono più la barra delle applicazioni. Pagina iniziale e impostazioni restano in una finestra, a meno che «Avvia l’applicazione a schermo intero» sia attivo (ora vale subito)."
+        ]
+      }
+    },
     "1.17.88": {
       "date": "2026-10-22",
       "notes": {
