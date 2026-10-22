@@ -1526,7 +1526,7 @@
       // Fotomosaik: viele Gästefotos ergeben ein großes Bild (Bildschirm und/oder Klebewand mit nummerierter Tafel)
       cari() { // Live-Karikatur: Foto → KI-Karikatur → live gezeichnet an der Fotobox und auf dem zweiten Bildschirm
         if (!allowed('caricature')) return lockedPage('Live-Karikatur', 'Jedes Foto wird zur Karikatur – live Strich für Strich gezeichnet, an der Fotobox und per Selfie vom Handy.');
-        S.x ??= {}; const c0 = S.x.caricature ??= {}; c0.secs ??= 10; c0.phone ??= true; c0.needCode ??= true; c0.print ??= true; c0.approve ??= false;
+        S.x ??= {}; const c0 = S.x.caricature ??= {}; c0.secs ??= 20; c0.phone ??= true; c0.needCode ??= true; c0.print ??= true; c0.approve ??= false;
         if (!/^[0-9a-f]{16,64}$/.test(c0.secret || '')) { c0.secret = Caricature.newSecret(); save(); } // für den wechselnden Code auf der Wand
         const c = Caricature.normalize(c0), link = (window.FOTOBOX_CONFIG?.dashboardUrl || location.origin + location.pathname.replace(/[^/]*$/, '')).replace(/\/?$/, '/') + 'karikatur.html?e=' + ev.id;
         if (!cariT.loaded && !ctx.demo) { cariT.loaded = true; cariLoad(); }
@@ -1543,7 +1543,7 @@
             <li>Auf dem Bildschirm der Fotobox und auf dem zweiten Bildschirm (Fernseher/Beamer) wird sie Strich für Strich gezeichnet und eingefärbt.</li><li>Danach wie gewohnt: Drucken, QR-Code, Galerie.</li></ol>
             <p style="margin:0;color:#6b6b78;font-size:13px">Ist die Live-Karikatur an, entfällt die Stilauswahl der KI-Porträts. Den zweiten Bildschirm öffnest du an der Fotobox unter Menü → Live-Karikatur.</p></div>
           <div class="card"><b>Selfies vom Handy</b>
-            <p style="margin:4px 0 10px;color:#6b6b78;font-size:13px">Auf der Karikaturen-Wand (zweiter Bildschirm der Fotobox) stehen ein QR-Code und ein Code. Gäste schicken damit vom eigenen Handy ein Selfie mit Gruß und Namen – ohne App. Die Fotobox zeichnet, zeigt und druckt jede Karikatur.</p>
+            <p style="margin:4px 0 10px;color:#6b6b78;font-size:13px">Auf dem Startbildschirm der Fotobox (unten rechts) und auf der Karikaturen-Wand (zweiter Bildschirm) stehen ein QR-Code und ein Code. Gäste schicken damit vom eigenen Handy ein Selfie mit Gruß und Namen – ohne App. Die Fotobox zeichnet, zeigt und druckt jede Karikatur.</p>
             ${sw('x.caricature.phone', 'Gäste schicken Selfies vom Handy', 'Aus = nur Fotos direkt an der Fotobox.')}
             ${sw('x.caricature.needCode', 'Code vom Bildschirm verlangen', 'Zwei Ziffern, wechseln alle 2 Minuten – so machen nur Gäste im Saal mit.')}
             ${sw('x.caricature.approve', 'Jedes Foto vorher freigeben', 'Einsendungen werden erst gezeichnet, wenn du sie unten freigibst.')}
@@ -1553,7 +1553,7 @@
             <div data-cari-qr style="margin-top:10px"></div></div>
           <div class="card"><div class="between"><b>Einsendungen (${(cariT.list || []).length})</b><button class="ghost" data-a="cari-refresh">Aktualisieren</button></div>
             ${rows || '<p style="margin:8px 0 0;color:#6b6b78;font-size:13px">Noch keine Einsendungen vom Handy.</p>'}</div>
-          <div class="card">${slider('x.caricature.secs', 'Dauer der Zeichnung', 6, 20, 1, 's')}
+          <div class="card">${slider('x.caricature.secs', 'Dauer der Zeichnung', 8, 60, 1, 's')}
             ${text('x.caricature.title', 'Überschrift beim Zeichnen', Caricature.TITLE)}
             <label class="l">Beschreibung für die KI</label><textarea rows="6" maxlength="1200" data-s="x.caricature.prompt">${esc(Caricature.promptOf(c))}</textarea>
             <div class="between" style="margin-top:6px"><small style="color:#6b6b78">Wichtig für die Zeichnung: kräftige schwarze Linien und weißer Hintergrund.</small><a href="#" data-a="cari-reset">Standard-Text einsetzen</a></div></div>
@@ -1970,7 +1970,7 @@
     ['LIVE-KARIKATUR', 'cari', 'pen', 'LIVE-KARIKATUR', 'Eigene App: Gäste werden live Strich für Strich als Karikatur gezeichnet – an der Fotobox oder per Selfie vom Handy',
       { modes: { single: true, strip: false, grid: false, gif: false, boomerang: false, video: false }, x: { caricature: { on: true, phone: true, needCode: true, print: true, approve: false } } }],
     ['FOTO', 'photo', 'camera', 'PHOTO BOOTH', 'Fotos für den Druck oder die digitale Weitergabe', {}],
-    ['FOTO', 'glam', 'sparkles', 'GLAM BOOTH', 'Fotos mit Hautglättung und Farbfiltern', { beauty: true, beautyStrength: 55, filtersOn: true, filters: ['normal', 'bw', 'glam', 'warm'], template: 'elegant', frame: '#111111', textColor: '#f3efe6', font: 'elegant' }],
+    ['FOTO', 'glam', 'sparkles', 'GLAM BOOTH', 'Fotos mit Hautglättung und Farbfiltern', { beauty: false, beautyStrength: 55, filtersOn: true, filters: ['normal', 'bw', 'glam', 'warm'], template: 'elegant', frame: '#111111', textColor: '#f3efe6', font: 'elegant' }],
     ['FOTO', 'bgremoval', 'wand', 'BACKGROUND REMOVAL', 'Hintergrund per KI durch ein digitales Bild ersetzen', { bgMode: 'ai', bgGuestChoice: true }],
     ['FOTO', 'mirror', 'smartphone', 'MIRROR BOOTH', 'Interaktive Sprachansagen und Animationen während der Aufnahme', { voice: true }],
     ['VIDEO', 'slowmo', 'film', '360 / SLOW-MO', 'Zeitlupen-Videos mit Tempo-Rampen', null],
