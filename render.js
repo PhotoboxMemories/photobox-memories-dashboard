@@ -40,6 +40,9 @@
   // Fotos werden stark verkleinert (Kamera ~3000 px → Layout 300 dpi, Streifen nur ~540 px breit): mit der
   // hochwertigen Glättung, sonst wirken Kanten und Haare unruhig und unscharf (Standard des Browsers ist „low“)
   const hq = x => { x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; return x; };
+  // o.scale: dasselbe Layout in höherer Auflösung zeichnen (fertiges Foto der Fotobox). Koordinaten bleiben die des Layouts;
+  // nur Schatten (shadowBlur/-Offset rechnen in echten Pixeln) werden mit SHS vergrößert.
+  let SHS = 1;
   function drawCover(x, img, dx, dy, dw, dh) {
     const iw = img.naturalWidth || img.videoWidth || img.width, ih = img.naturalHeight || img.videoHeight || img.height;
     const s = Math.max(dw / iw, dh / ih), sw = dw / s, sh = dh / s;
@@ -133,7 +136,7 @@
         g.addColorStop(0, '#12002e'); g.addColorStop(1, '#001a2e'); x.fillStyle = g; x.fillRect(R.x, R.y, R.w, R.h);
         const r = rng(7);
         for (let i = 0; i < 60; i++) { x.fillStyle = `rgba(${r() < .5 ? '255,43,214' : '0,229,255'},${.15 + r() * .35})`; x.beginPath(); x.arc(R.x + r() * R.w, R.y + r() * R.h, (2 + r() * 5) * s, 0, 7); x.fill(); }
-        x.save(); x.shadowColor = '#00e5ff'; x.shadowBlur = 25 * s; x.strokeStyle = '#00e5ff'; x.lineWidth = 5 * s;
+        x.save(); x.shadowColor = '#00e5ff'; x.shadowBlur = (25 * s) * SHS; x.strokeStyle = '#00e5ff'; x.lineWidth = 5 * s;
         x.strokeRect(R.x + 14 * s, R.y + 14 * s, R.w - 28 * s, R.h - 28 * s); x.restore();
       } },
     { id: 'confetti', name: 'Konfetti', cat: 'Party', frame: '#ffffff', text: '#222222', accent: '#ff5d8f', font: 'modern',
@@ -230,8 +233,9 @@
   // o: { template, frame, textColor, font, title, subtitle, logo, filter, hideBand }
   function render(L, photos, o) {
     const t = typeof o.template === 'object' ? o.template : byId(o.template);
-    const c = document.createElement('canvas'); c.width = L.w; c.height = L.h;
-    const x = hq(c.getContext('2d'));
+    const sc = o.scale || 1; SHS = sc;
+    const c = document.createElement('canvas'); c.width = Math.round(L.w * sc); c.height = Math.round(L.h * sc);
+    const x = hq(c.getContext('2d')); x.setTransform(sc, 0, 0, sc, 0, 0);
     x.fillStyle = o.frame || t.frame; x.fillRect(0, 0, L.w, L.h);
     const copies = L.copies || [0], regW = L.copies ? L.w / L.copies.length : L.w;
     for (const ox of copies) {
@@ -245,7 +249,7 @@
       slots.forEach((sl, i) => {
         const [X, Y, W, H] = sl, rad = (t.radius || 0) * s;
         if (t.shadow) {
-          x.save(); x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = 24 * s; x.shadowOffsetY = 8 * s;
+          x.save(); x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = (24 * s) * SHS; x.shadowOffsetY = (8 * s) * SHS;
           x.fillStyle = '#fff'; rr(x, X, Y, W, H, rad); x.fill(); x.restore();
         }
         const img = photos[i % photos.length];
@@ -256,7 +260,7 @@
         x.restore();
         if (t.slotBorder) {
           x.save(); x.strokeStyle = t.slotBorder.c; x.lineWidth = t.slotBorder.w * s * 2;
-          if (t.slotBorder.glow) { x.shadowColor = t.slotBorder.glow; x.shadowBlur = 22 * s; }
+          if (t.slotBorder.glow) { x.shadowColor = t.slotBorder.glow; x.shadowBlur = (22 * s) * SHS; }
           rr(x, X, Y, W, H, rad); x.stroke(); x.restore();
         }
       });
@@ -502,7 +506,7 @@
     const img = e.src && imgCache.get(e.src);
     if (img && img.complete && img.naturalWidth) { const k = Math.min(d / img.naturalWidth, d / img.naturalHeight); x.drawImage(img, -img.naturalWidth * k / 2, cy - img.naturalHeight * k / 2, img.naturalWidth * k, img.naturalHeight * k); }
     else {
-      x.save(); x.shadowColor = 'rgba(0,0,0,.3)'; x.shadowBlur = d * .12; x.shadowOffsetY = d * .04;
+      x.save(); x.shadowColor = 'rgba(0,0,0,.3)'; x.shadowBlur = (d * .12) * SHS; x.shadowOffsetY = (d * .04) * SHS;
       x.fillStyle = e.fill || '#ffffff'; x.beginPath(); x.arc(0, cy, d / 2, 0, 7); x.fill(); x.restore();
       const s = d * .2; x.strokeStyle = e.icon || '#222222'; x.lineWidth = d * .045; x.lineJoin = 'round';
       rr(x, -s * 1.15, cy - s * .75, s * 2.3, s * 1.7, s * .3); x.stroke();
@@ -549,8 +553,8 @@
     const m = Math.min(w, h), old = e.shDist == null, c = /^#[0-9a-f]{6}$/i.test(e.shColor || '') ? e.shColor : '#000000';
     const a = Math.max(0, Math.min(1, e.shOpacity ?? .35)), dist = old ? m * .015 : +e.shDist || 0, ang = (old ? 90 : +(e.shAngle ?? 90)) * Math.PI / 180;
     x.shadowColor = `rgba(${parseInt(c.slice(1, 3), 16)},${parseInt(c.slice(3, 5), 16)},${parseInt(c.slice(5, 7), 16)},${a})`;
-    x.shadowBlur = old ? m * .04 : Math.max(0, +e.shBlur || 0);
-    x.shadowOffsetX = Math.cos(ang) * dist; x.shadowOffsetY = Math.sin(ang) * dist;
+    x.shadowBlur = (old ? m * .04 : Math.max(0, +e.shBlur || 0)) * SHS;
+    x.shadowOffsetX = (Math.cos(ang) * dist) * SHS; x.shadowOffsetY = (Math.sin(ang) * dist) * SHS;
     return true;
   }
   function wrapLines(x, t, maxW, max) {
@@ -568,7 +572,7 @@
     const s = Math.min(w, h), c = s * .41;
     for (const [deg, top] of [[-8, false], [4, true]]) {
       x.save(); x.rotate(deg * Math.PI / 180);
-      x.save(); x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = s * .1; x.shadowOffsetY = s * .04;
+      x.save(); x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = (s * .1) * SHS; x.shadowOffsetY = (s * .04) * SHS;
       x.fillStyle = '#ffffff'; rr(x, -c, -c, c * 2, c * 2, s * .025); x.fill(); x.restore();
       if (top) {
         const q = s * .17, cy = -s * .05; x.strokeStyle = '#8a8a8a'; x.lineWidth = s * .03; x.lineJoin = 'round'; x.lineCap = 'round';
@@ -622,7 +626,7 @@
     const label = String(e.text || '').trim(), sub = st && st.sub ? String(st.sub) : '', fam = FONTS[e.font] || FONTS.modern, col = e.color || '#ffffff';
     if (st && st.disabled) x.globalAlpha *= .45;
     if (e.shape === 'pill') {
-      x.save(); x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = h * .3; x.shadowOffsetY = h * .08;
+      x.save(); x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = (h * .3) * SHS; x.shadowOffsetY = (h * .08) * SHS;
       rr(x, -w / 2, -h / 2, w, h, h / 2); if (e.fill) { x.fillStyle = e.fill; x.fill(); } x.restore();
       if (!e.fill) { x.strokeStyle = col; x.lineWidth = Math.max(2, h * .06); rr(x, -w / 2 + x.lineWidth / 2, -h / 2 + x.lineWidth / 2, w - x.lineWidth, h - x.lineWidth, h / 2); x.stroke(); }
       const ic = e.src ? h * .7 : h * .46, gap = h * .2; let size = h * .4;
@@ -637,7 +641,7 @@
     const d = Math.min(w, label ? h / 1.32 : h), cy = label ? -h / 2 + d / 2 : 0;
     if (e.src) drawImgIn(x, e.src, -d / 2, cy - d / 2, d, d);
     else {
-      x.save(); x.shadowColor = 'rgba(0,0,0,.45)'; x.shadowBlur = d * .2; x.shadowOffsetY = d * .06;
+      x.save(); x.shadowColor = 'rgba(0,0,0,.45)'; x.shadowBlur = (d * .2) * SHS; x.shadowOffsetY = (d * .06) * SHS;
       x.fillStyle = e.fill || '#3a3a40'; x.beginPath(); x.arc(0, cy, d / 2, 0, 7); x.fill(); x.restore();
       const ic = d * .46; drawImgIn(x, btnIconSrc(e), -ic / 2, cy - ic / 2, ic, ic);
     }
@@ -645,7 +649,7 @@
     if (label) {
       let size = d * .2; const setF = () => { x.font = `600 ${size}px ${fam}`; }; setF();
       while (size > 6 && x.measureText(label).width > Math.max(w, d * 1.8)) { size -= 1; setF(); }
-      x.fillStyle = e.fill ? '#ffffff' : col; x.textAlign = 'center'; x.textBaseline = 'top'; x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = size * .3;
+      x.fillStyle = e.fill ? '#ffffff' : col; x.textAlign = 'center'; x.textBaseline = 'top'; x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = (size * .3) * SHS;
       x.fillText(label, 0, ty + d * .06); ty += d * .06 + size * 1.15; x.shadowColor = 'transparent';
     }
     if (sub) { x.font = `600 ${d * .17}px ${fam}`; x.fillStyle = '#ffffff'; x.textAlign = 'center'; x.textBaseline = 'top'; x.fillText(sub, 0, ty + d * .05); }
@@ -653,7 +657,7 @@
   // Editor-Vorschau: Foto der Gäste (Platzhalter) und Filter-Leiste
   function drawPhotoMock(x, w, h, par) { // par: Seitenverhältnis des Fotolayouts (Breite/Höhe), sonst nach dem Rahmen
     const ar = par > 0 ? par : h > w ? 2 / 3 : 3 / 2; let pw = w, ph = w / ar; if (ph > h) { ph = h; pw = h * ar; }
-    x.save(); x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = Math.min(pw, ph) * .08; x.shadowOffsetY = Math.min(pw, ph) * .03;
+    x.save(); x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = (Math.min(pw, ph) * .08) * SHS; x.shadowOffsetY = (Math.min(pw, ph) * .03) * SHS;
     x.fillStyle = '#ffffff'; x.fillRect(-pw / 2, -ph / 2, pw, ph); x.restore();
     const b = Math.min(pw, ph) * .025, iw = pw - 2 * b, ih = ph - 2 * b, g = x.createLinearGradient(-iw / 2, -ih / 2, iw / 2, ih / 2);
     g.addColorStop(0, '#4a4a52'); g.addColorStop(1, '#1b1b1f'); x.fillStyle = g; x.fillRect(-iw / 2, -ih / 2, iw, ih);
@@ -682,7 +686,7 @@
   // Videonachricht-Karte der Fotobox (Editor-Vorschau): Überschrift, QR-Code, Hinweis – Maße wie #vmCard in der Fotobox
   function drawVmsgMock(x, w, h, v) {
     const acc = /^#[0-9a-f]{3,8}$/i.test(v.accent || '') ? v.accent : '#F7C838', b = w * .0214, pad = w * .064, gap = w * .043, inner = w - 2 * (pad + b);
-    x.save(); x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = w * .12; x.shadowOffsetY = w * .04;
+    x.save(); x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = (w * .12) * SHS; x.shadowOffsetY = (w * .04) * SHS;
     x.fillStyle = '#ffffff'; rr(x, -w / 2, -h / 2, w, h, w * .093); x.fill(); x.restore();
     x.strokeStyle = acc; x.lineWidth = b; rr(x, -w / 2 + b / 2, -h / 2 + b / 2, w - b, h - b, w * .093 - b / 2); x.stroke();
     x.textAlign = 'center'; x.textBaseline = 'top'; x.fillStyle = '#1D1D1B';
@@ -702,9 +706,10 @@
   function renderLayout(L, o = {}, into) {
     onImg = o.redraw || null;
     const c = into || document.createElement('canvas');
-    if (c.width !== L.w || c.height !== L.h) { c.width = L.w; c.height = L.h; }
+    const sc = o.scale || 1, cw = Math.round(L.w * sc), ch = Math.round(L.h * sc); SHS = sc;
+    if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; }
     const x = hq(c.getContext('2d'));
-    x.setTransform(1, 0, 0, 1, 0, 0);
+    x.setTransform(sc, 0, 0, sc, 0, 0);
     if (L.screen) drawScreenBg(x, L, o); else { x.fillStyle = L.bg || '#ffffff'; x.fillRect(0, 0, L.w, L.h); }
     const photos = o.photos || [];
     const slots = L.elements.filter(e => e.type === 'photo').map(e => [e.x, e.y, e.w, e.h]);
