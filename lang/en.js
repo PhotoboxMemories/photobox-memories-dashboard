@@ -280,6 +280,7 @@ I18N.add('en', {
 "Aus vielen kleinen Gästefotos entsteht ein großes Bild – live auf einem Fernseher oder Beamer und/oder als Klebewand: Jede Kachel wird mit ihrer Feldnummer (z. B. „C7“) gedruckt und auf die vorher gedruckte Tafel geklebt. Diese Einstellungen gelten für das ganze Ereignis und sind auch im Dashboard einstellbar.": "Lots of small guest photos form one big picture – live on a TV or projector and/or as a sticker wall: every tile is printed with its field number (e.g. “C7”) and stuck onto the board printed beforehand. These settings apply to the whole event and can also be set in the dashboard.",
 "Aus vielen kleinen Gästefotos entsteht ein großes Bild – live auf einem Fernseher oder Beamer und/oder als Klebewand: Jede Kachel wird mit ihrer Feldnummer (z. B. „C7“) gedruckt und auf die vorher gedruckte Tafel geklebt. {x}": "Lots of small guest photos form one big picture – live on a TV or projector and/or as a sticker wall: every tile is printed with its field number (e.g. “C7”) and stuck onto the board printed beforehand. {x}",
 "Aus – Objektiv auf MF stellen (am schnellsten)": "Off – set the lens to MF (fastest)",
+"Aus: Startseite und Einstellungen im Fenster. Läuft ein Ereignis oder ist die Fotobox gesperrt, ist sie immer im Vollbild – ohne Taskleiste, über die Gäste an Windows kämen.": "Off: start page and settings in a window. While an event is running or the photo booth is locked, it is always full screen – without the taskbar guests could use to get into Windows.",
 "Ausblenden": "Hide",
 "ausblenden": "hide",
 "Ausdrucke": "Prints",
