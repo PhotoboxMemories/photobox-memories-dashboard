@@ -629,7 +629,7 @@
     });
     $(root, '.navshade').addEventListener('click', () => root.classList.remove('navopen'));
     // Hilfe-Suche (hilfe.js, dieselbe wie in der Fotobox): Stichwort eintippen → wie man es einstellt, „Hingehen“ öffnet die Seite
-    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261022-1'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261022-2'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     const closeEditor = () => close(); // Editor schließen (für Themen auf den Hauptseiten, z. B. „Meine Lizenzen“)
     async function openHelp() {
       try { await helpLib(); } catch { return ctx.toast('Die Hilfe konnte nicht geladen werden.'); }
