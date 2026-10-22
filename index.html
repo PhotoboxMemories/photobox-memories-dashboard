@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261022-5';</script>
+<script>window.I18N_V = '20261022-6';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -70,6 +70,11 @@ header{background:var(--brand-dark);color:#fff;border-bottom:1px solid var(--lin
 nav{display:flex;gap:4px;flex:1;flex-wrap:wrap}
 nav button{background:none;border:0;padding:8px 14px;border-radius:8px;color:#bdbdb8;font-weight:600;display:inline-flex;gap:7px;align-items:center}
 nav button.on{background:rgba(247,200,56,.16);color:var(--accent)}
+/* Verwaltung: Unterseiten als Reiterleiste */
+.admnav{display:flex;gap:4px;flex-wrap:wrap;margin:-6px 0 22px;padding:5px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);width:fit-content;max-width:100%}
+.admnav button{background:none;border:0;padding:9px 14px;border-radius:8px;color:var(--muted);font-weight:600;display:inline-flex;gap:7px;align-items:center;cursor:pointer}
+.admnav button:hover{color:var(--fg);background:var(--soft)}
+.admnav button.on{background:var(--accent);color:var(--accent-fg)}
 header .muted{color:#bdbdb8}
 main{max-width:1200px;margin:0 auto;padding:32px 24px 80px}
 .pagehead{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;gap:12px;flex-wrap:wrap}
@@ -89,6 +94,9 @@ tr:last-child td{border-bottom:0}
   #nav{order:3;flex:0 0 calc(100% + 24px);flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:2px;margin:0 -12px;padding:2px 12px 8px;scrollbar-width:none}
   #nav::-webkit-scrollbar{display:none}
   #nav button{white-space:nowrap;padding:8px 11px;flex:none}
+  .admnav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;width:auto;scrollbar-width:none}
+  .admnav::-webkit-scrollbar{display:none}
+  .admnav button{white-space:nowrap;flex:none;padding:8px 11px}
   #app>main{padding:16px 12px 80px}
   .pagehead input{max-width:none!important;width:100%}
   .evgrid{grid-template-columns:repeat(2,1fr);gap:12px}
@@ -298,97 +306,115 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
     <!-- Admin -->
     <div data-page="admin" class="hidden">
       <div class="pagehead"><h1>Verwaltung</h1><span class="badge" id="releaseInfo"></span></div>
-      <div class="stats" id="ovStats"></div>
-      <div class="card" style="margin-bottom:20px">
-        <div class="pagehead" style="margin-bottom:10px"><h2 style="margin:0">Kunden</h2><input id="ovSearch" placeholder="Suchen…" style="max-width:260px"></div>
-        <div class="tablewrap"><table>
-          <thead><tr><th>Kunde</th><th>Registriert</th><th>Lizenz</th><th>Fotoboxen</th><th>Guthaben</th><th>Erhalten</th><th>KI-Bilder</th></tr></thead>
-          <tbody id="ovCustomers"><tr><td colspan="7" class="empty">Lädt …</td></tr></tbody>
-        </table></div>
+      <!-- Unterseiten der Verwaltung (zuletzt gewählte bleibt gemerkt) -->
+      <div class="admnav" id="admNav">
+        <button type="button" data-adm="overview" data-ic="users" class="on">Übersicht</button>
+        <button type="button" data-adm="licenses" data-ic="key">Lizenzen</button>
+        <button type="button" data-adm="credits" data-ic="sparkles">KI-Guthaben</button>
+        <button type="button" data-adm="sales" data-ic="gift">Tarife &amp; Foto-Shop</button>
+        <button type="button" data-adm="system" data-ic="settings">Software &amp; Speicher</button>
       </div>
-      <div class="card" style="margin-bottom:20px">
-        <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Tarife (Lizenz-Shop)</h2><button class="btn" id="planAdd">+ Tarif</button></div>
-        <p class="small muted" style="margin:0 0 12px">Preise pro Fotobox, brutto. Kunden sehen nur eingeschaltete Tarife unter „Meine Lizenzen“ und kaufen über Stripe – die Lizenz entsteht nach der Zahlung von selbst. Abos verlängern sich automatisch; gekündigte laufen bis zum Ende der bezahlten Zeit.</p>
-        <div id="planList"><p class="small muted">Lädt …</p></div>
-      </div>
-      <div class="card" style="margin-bottom:20px" id="shopCard">
-        <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Foto-Shop für Gäste</h2><span class="badge" id="shState"></span></div>
-        <p class="small muted" style="margin:0 0 12px">Gäste bestellen auf ihrer Fotoseite (QR-Code an der Fotobox) ihr Foto als Tasse, Mauspad, Magnet und mehr. Bezahlt wird über Stripe, gedruckt und verschickt wird von Gelato oder Printful. Gilt für die Fotos aller Fotoboxen – auch die deiner Software-Kunden; Verkäufer bist immer du. Bei Printful-Produkten schiebt der Gast sein Foto selbst zurecht.</p>
-        <div class="small" id="shServer" style="margin-bottom:12px"></div>
-        <div class="grid3">
-          <div><label>Shop</label><select id="sh_mode"></select></div>
-          <div><label>Verkäufer (Name oder Firma)</label><input id="sh_seller" maxlength="80" placeholder="z. B. Photobox Memories"></div>
-          <div><label>Versand pro Bestellung (€, brutto)</label><input id="sh_ship" type="number" min="0" step="0.01"></div>
-          <div><label>Umsatzsteuer</label><select id="sh_vat"></select></div>
-          <div><label>Lieferländer (Ländercodes)</label><input id="sh_countries" placeholder="DE, AT"></div>
-          <div><label>AGB (Link)</label><input id="sh_agb" placeholder="https://…"></div>
-          <div><label>Datenschutz (Link)</label><input id="sh_privacy" placeholder="https://…"></div>
-          <div><label>Impressum (Link)</label><input id="sh_imprint" placeholder="https://…"></div>
-          <div><label>Widerrufsbelehrung (Link, freiwillig)</label><input id="sh_withdrawal" placeholder="https://…"></div>
+      <div data-admp="overview">
+        <div class="stats" id="ovStats"></div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="pagehead" style="margin-bottom:10px"><h2 style="margin:0">Kunden</h2><input id="ovSearch" placeholder="Suchen…" style="max-width:260px"></div>
+          <div class="tablewrap"><table>
+            <thead><tr><th>Kunde</th><th>Registriert</th><th>Lizenz</th><th>Fotoboxen</th><th>Guthaben</th><th>Erhalten</th><th>KI-Bilder</th></tr></thead>
+            <tbody id="ovCustomers"><tr><td colspan="7" class="empty">Lädt …</td></tr></tbody>
+          </table></div>
         </div>
-        <label style="margin-top:16px">Produkte</label>
-        <p class="small muted" style="margin:0 0 8px"><span>Gelato-Produktnummer: in Gelato unter „Produktkatalog“ Produkt und Größe wählen, dann unter der Beschreibung die „Product UID“ kopieren. Hoch- oder Querformat wählt der Shop selbst passend zum Foto.</span> <span>Printful: die Varianten-ID (eine Zahl) aus dem Printful-Katalog.</span> <span>Produkte ohne Nummer erscheinen nicht.</span></p>
-        <div id="shProducts"></div>
-        <div class="row" style="margin-top:12px"><button class="btn" id="shAdd" type="button">+ Produkt</button><span style="flex:1"></span><a class="btn hidden" id="shTest" target="_blank" rel="noopener">Fotoseite ansehen</a><button class="btn primary" id="shSave" type="button">Speichern</button></div>
-        <h3 style="margin:22px 0 8px">Bestellungen</h3>
-        <div class="tablewrap"><table>
-          <thead><tr><th>Datum</th><th>Produkt</th><th>Betrag</th><th>Kunde</th><th>Status</th></tr></thead>
-          <tbody id="shOrders"><tr><td colspan="5" class="empty">Lädt …</td></tr></tbody>
-        </table></div>
       </div>
-      <div class="card" style="margin-bottom:20px">
-        <h2>Fotobox-Software veröffentlichen</h2>
-        <p class="small muted" style="margin:0 0 10px"><b>Passiert jetzt automatisch:</b> Nach jedem Bau kommt die neue Version von selbst in den Download-Bereich – „Neueste Version herunterladen“ unter „Geräte“ bietet immer die neueste an. Von Hand nur nötig, wenn das einmal nicht geklappt hat: Installationsdatei <b>FotoBox-Setup-…exe</b> aus Dropbox („Photobox Memories Installer“) auswählen.</p>
-        <div class="row"><input type="file" id="relFile" accept=".exe" class="hidden"><button class="btn" id="relPick">⬆ Installationsdatei wählen …</button><span class="small" id="relState"></span></div>
-      </div>
-      <div class="card" style="margin-bottom:20px">
-        <h2>Foto-Speicher (Hetzner)</h2>
-        <p class="small muted" style="margin:0 0 10px">Die Fotos der Fotoboxen liegen bei Hetzner in Deutschland. Die Zugangsdaten stehen nur in Supabase (Edge Functions → Secrets: HZ_ACCESS_KEY, HZ_SECRET_KEY, HZ_BUCKET, HZ_LOCATION). Dieser Knopf richtet den Speicher ein und prüft ihn: Fotos über den Link lesbar, Liste aller Fotos für Fremde gesperrt.</p>
-        <div class="row"><button class="btn" id="hzSetup">Einrichten &amp; prüfen</button><span class="small" id="hzState"></span></div>
-        <div class="small" id="hzResult" style="margin-top:10px"></div>
-      </div>
-      <div class="card" style="margin-bottom:20px">
-        <h2>Guthaben-Buchungen</h2>
-        <div class="tablewrap"><table>
-          <thead><tr><th>Datum</th><th>Kunde</th><th>Credits</th><th>Bezahlt</th><th>Notiz</th></tr></thead>
-          <tbody id="ovLedger"><tr><td colspan="5" class="empty">Lädt …</td></tr></tbody>
-        </table></div>
-      </div>
-      <div class="card" style="margin-bottom:20px">
-        <h2>Neue Lizenz erstellen</h2>
-        <div class="grid3">
-          <div><label>Kunde / Firma</label><input id="lName" placeholder="Musterfoto GmbH"></div>
-          <div><label>E-Mail des Kunden</label><input id="lEmail" type="email" placeholder="kunde@beispiel.de"></div>
-          <div><label>Art</label><select id="lKind"><option value="subscription">Abo</option><option value="lifetime">Einmalkauf</option><option value="test">Testversion (läuft, bis du sie beendest)</option></select></div>
-          <div id="lValidWrap"><label>Abo bezahlt bis</label><input id="lValid" type="date"></div>
-          <div id="lUpdWrap" class="hidden"><label>Updates inklusive bis (leer = immer)</label><input id="lUpd" type="date"></div>
-          <div><label>Anzahl Geräte</label><input id="lMax" type="number" min="1" value="1"></div>
-          <div><label>Tarif</label><select id="lTier"><option value="pro">Pro (alle Funktionen)</option><option value="basis">Basis (nur Fotobox, eigenes Logo)</option><option value="free">Kostenlos (mit Werbung von Photobox Memories)</option></select></div>
-          <div id="lCreditsWrap" class="hidden"><label>KI-Credits dazu (für KI-Porträts)</label><input id="lCredits" type="number" min="0" max="1000" value="20"></div>
-          <div><label>Freigaben</label><div class="row" style="margin-top:10px;gap:16px"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMosaic" style="width:auto"> Fotomosaik</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lCari" style="width:auto"> Live-Karikatur</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lVideo" style="width:auto"> Videonachricht</label></div></div>
-          <div style="grid-column:1/-1"><label>Notiz (z.B. Rechnungsnummer)</label><input id="lNotes"></div>
-          <div style="grid-column:1/-1"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMail" checked style="width:auto"> Willkommens-Mail an den Kunden senden (Lizenzschlüssel, Dashboard-Link und Anleitung)</label></div>
+      <div data-admp="licenses" class="hidden">
+        <div class="pagehead"><h2 style="margin:0">Alle Lizenzen</h2><div class="row" style="gap:10px;flex-wrap:wrap"><input id="lSearch" placeholder="Suchen…" style="flex:1 1 180px;width:auto;max-width:260px"><button class="btn primary" id="lNewBtn" type="button">+ Neue Lizenz</button></div></div>
+        <div class="card hidden" style="margin-bottom:20px" id="lNewCard">
+          <h2>Neue Lizenz erstellen</h2>
+          <div class="grid3">
+            <div><label>Kunde / Firma</label><input id="lName" placeholder="Musterfoto GmbH"></div>
+            <div><label>E-Mail des Kunden</label><input id="lEmail" type="email" placeholder="kunde@beispiel.de"></div>
+            <div><label>Art</label><select id="lKind"><option value="subscription">Abo</option><option value="lifetime">Einmalkauf</option><option value="test">Testversion (läuft, bis du sie beendest)</option></select></div>
+            <div id="lValidWrap"><label>Abo bezahlt bis</label><input id="lValid" type="date"></div>
+            <div id="lUpdWrap" class="hidden"><label>Updates inklusive bis (leer = immer)</label><input id="lUpd" type="date"></div>
+            <div><label>Anzahl Geräte</label><input id="lMax" type="number" min="1" value="1"></div>
+            <div><label>Tarif</label><select id="lTier"><option value="pro">Pro (alle Funktionen)</option><option value="basis">Basis (nur Fotobox, eigenes Logo)</option><option value="free">Kostenlos (mit Werbung von Photobox Memories)</option></select></div>
+            <div id="lCreditsWrap" class="hidden"><label>KI-Credits dazu (für KI-Porträts)</label><input id="lCredits" type="number" min="0" max="1000" value="20"></div>
+            <div><label>Freigaben</label><div class="row" style="margin-top:10px;gap:16px"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMosaic" style="width:auto"> Fotomosaik</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lCari" style="width:auto"> Live-Karikatur</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lVideo" style="width:auto"> Videonachricht</label></div></div>
+            <div style="grid-column:1/-1"><label>Notiz (z.B. Rechnungsnummer)</label><input id="lNotes"></div>
+            <div style="grid-column:1/-1"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMail" checked style="width:auto"> Willkommens-Mail an den Kunden senden (Lizenzschlüssel, Dashboard-Link und Anleitung)</label></div>
+          </div>
+          <div class="row" style="margin-top:14px"><button class="btn primary" id="lCreate">Lizenz erstellen</button><span class="small muted">Der Kunde registriert sich im Dashboard mit derselben E-Mail – die Lizenz wird automatisch zugeordnet.</span></div>
         </div>
-        <div class="row" style="margin-top:14px"><button class="btn primary" id="lCreate">Lizenz erstellen</button><span class="small muted">Der Kunde registriert sich im Dashboard mit derselben E-Mail – die Lizenz wird automatisch zugeordnet.</span></div>
-      </div>
-      <div class="card" style="margin-bottom:20px">
-        <h2>KI-Guthaben vergeben</h2>
-        <div class="grid3">
-          <div><label style="display:flex;justify-content:space-between;align-items:baseline">E-Mail des Kunden <a href="#" id="cSelf" class="small">Mir selbst</a></label><input id="cEmail" type="email" placeholder="kunde@beispiel.de" list="cEmails" autocomplete="off"><datalist id="cEmails"></datalist></div>
-          <div><label>Credits (Minus zieht ab)</label><input id="cAmount" type="number" step="1" value="100"></div>
-          <div><label>Notiz (z.B. Rechnungsnummer)</label><input id="cNote" maxlength="200"></div>
-        </div>
-        <div class="row" style="margin-top:14px"><button class="btn primary" id="cGrant">Guthaben buchen</button><span class="small muted">1 KI-Bild in 1K = 1 Credit, in 2K = 2 Credits. Der Kunde muss im Dashboard registriert sein. Tipp: Klick auf einen Kunden in der Liste übernimmt seine E-Mail.</span></div>
-        <div class="tablewrap" style="margin-top:16px"><table>
-          <thead><tr><th>Kunde</th><th>Guthaben</th><th>Letzte Buchung</th></tr></thead>
-          <tbody id="creditList"><tr><td colspan="3" class="empty">Lädt …</td></tr></tbody>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Kunde</th><th>Schlüssel</th><th>Art</th><th>Gültig</th><th>Geräte</th><th>Freigaben</th><th>Aktionen</th></tr></thead>
+          <tbody id="licList"></tbody>
         </table></div>
       </div>
-      <div class="pagehead"><h2 style="margin:0">Alle Lizenzen</h2><input id="lSearch" placeholder="Suchen…" style="max-width:260px"></div>
-      <div class="tablewrap"><table>
-        <thead><tr><th>Kunde</th><th>Schlüssel</th><th>Art</th><th>Gültig</th><th>Geräte</th><th>Freigaben</th><th>Aktionen</th></tr></thead>
-        <tbody id="licList"></tbody>
-      </table></div>
+      <div data-admp="credits" class="hidden">
+        <div class="card" style="margin-bottom:20px">
+          <h2>KI-Guthaben vergeben</h2>
+          <div class="grid3">
+            <div><label style="display:flex;justify-content:space-between;align-items:baseline">E-Mail des Kunden <a href="#" id="cSelf" class="small">Mir selbst</a></label><input id="cEmail" type="email" placeholder="kunde@beispiel.de" list="cEmails" autocomplete="off"><datalist id="cEmails"></datalist></div>
+            <div><label>Credits (Minus zieht ab)</label><input id="cAmount" type="number" step="1" value="100"></div>
+            <div><label>Notiz (z.B. Rechnungsnummer)</label><input id="cNote" maxlength="200"></div>
+          </div>
+          <div class="row" style="margin-top:14px"><button class="btn primary" id="cGrant">Guthaben buchen</button><span class="small muted">1 KI-Bild in 1K = 1 Credit, in 2K = 2 Credits. Der Kunde muss im Dashboard registriert sein. Tipp: Klick auf einen Kunden in der Liste übernimmt seine E-Mail.</span></div>
+          <div class="tablewrap" style="margin-top:16px"><table>
+            <thead><tr><th>Kunde</th><th>Guthaben</th><th>Letzte Buchung</th></tr></thead>
+            <tbody id="creditList"><tr><td colspan="3" class="empty">Lädt …</td></tr></tbody>
+          </table></div>
+        </div>
+        <div class="card" style="margin-bottom:20px">
+          <h2>Guthaben-Buchungen</h2>
+          <div class="tablewrap"><table>
+            <thead><tr><th>Datum</th><th>Kunde</th><th>Credits</th><th>Bezahlt</th><th>Notiz</th></tr></thead>
+            <tbody id="ovLedger"><tr><td colspan="5" class="empty">Lädt …</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+      <div data-admp="sales" class="hidden">
+        <div class="card" style="margin-bottom:20px">
+          <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Tarife (Lizenz-Shop)</h2><button class="btn" id="planAdd">+ Tarif</button></div>
+          <p class="small muted" style="margin:0 0 12px">Preise pro Fotobox, brutto. Kunden sehen nur eingeschaltete Tarife unter „Meine Lizenzen“ und kaufen über Stripe – die Lizenz entsteht nach der Zahlung von selbst. Abos verlängern sich automatisch; gekündigte laufen bis zum Ende der bezahlten Zeit.</p>
+          <div id="planList"><p class="small muted">Lädt …</p></div>
+        </div>
+        <div class="card" style="margin-bottom:20px" id="photoShopCard">
+          <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Foto-Shop für Gäste</h2><span class="badge" id="shState"></span></div>
+          <p class="small muted" style="margin:0 0 12px">Gäste bestellen auf ihrer Fotoseite (QR-Code an der Fotobox) ihr Foto als Tasse, Mauspad, Magnet und mehr. Bezahlt wird über Stripe, gedruckt und verschickt wird von Gelato oder Printful. Gilt für die Fotos aller Fotoboxen – auch die deiner Software-Kunden; Verkäufer bist immer du. Bei Printful-Produkten schiebt der Gast sein Foto selbst zurecht.</p>
+          <div class="small" id="shServer" style="margin-bottom:12px"></div>
+          <div class="grid3">
+            <div><label>Shop</label><select id="sh_mode"></select></div>
+            <div><label>Verkäufer (Name oder Firma)</label><input id="sh_seller" maxlength="80" placeholder="z. B. Photobox Memories"></div>
+            <div><label>Versand pro Bestellung (€, brutto)</label><input id="sh_ship" type="number" min="0" step="0.01"></div>
+            <div><label>Umsatzsteuer</label><select id="sh_vat"></select></div>
+            <div><label>Lieferländer (Ländercodes)</label><input id="sh_countries" placeholder="DE, AT"></div>
+            <div><label>AGB (Link)</label><input id="sh_agb" placeholder="https://…"></div>
+            <div><label>Datenschutz (Link)</label><input id="sh_privacy" placeholder="https://…"></div>
+            <div><label>Impressum (Link)</label><input id="sh_imprint" placeholder="https://…"></div>
+            <div><label>Widerrufsbelehrung (Link, freiwillig)</label><input id="sh_withdrawal" placeholder="https://…"></div>
+          </div>
+          <label style="margin-top:16px">Produkte</label>
+          <p class="small muted" style="margin:0 0 8px"><span>Gelato-Produktnummer: in Gelato unter „Produktkatalog“ Produkt und Größe wählen, dann unter der Beschreibung die „Product UID“ kopieren. Hoch- oder Querformat wählt der Shop selbst passend zum Foto.</span> <span>Printful: die Varianten-ID (eine Zahl) aus dem Printful-Katalog.</span> <span>Produkte ohne Nummer erscheinen nicht.</span></p>
+          <div id="shProducts"></div>
+          <div class="row" style="margin-top:12px"><button class="btn" id="shAdd" type="button">+ Produkt</button><span style="flex:1"></span><a class="btn hidden" id="shTest" target="_blank" rel="noopener">Fotoseite ansehen</a><button class="btn primary" id="shSave" type="button">Speichern</button></div>
+          <h3 style="margin:22px 0 8px">Bestellungen</h3>
+          <div class="tablewrap"><table>
+            <thead><tr><th>Datum</th><th>Produkt</th><th>Betrag</th><th>Kunde</th><th>Status</th></tr></thead>
+            <tbody id="shOrders"><tr><td colspan="5" class="empty">Lädt …</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+      <div data-admp="system" class="hidden">
+        <div class="card" style="margin-bottom:20px">
+          <h2>Fotobox-Software veröffentlichen</h2>
+          <p class="small muted" style="margin:0 0 10px"><b>Passiert jetzt automatisch:</b> Nach jedem Bau kommt die neue Version von selbst in den Download-Bereich – „Neueste Version herunterladen“ unter „Geräte“ bietet immer die neueste an. Von Hand nur nötig, wenn das einmal nicht geklappt hat: Installationsdatei <b>FotoBox-Setup-…exe</b> aus Dropbox („Photobox Memories Installer“) auswählen.</p>
+          <div class="row"><input type="file" id="relFile" accept=".exe" class="hidden"><button class="btn" id="relPick">⬆ Installationsdatei wählen …</button><span class="small" id="relState"></span></div>
+        </div>
+        <div class="card" style="margin-bottom:20px">
+          <h2>Foto-Speicher (Hetzner)</h2>
+          <p class="small muted" style="margin:0 0 10px">Die Fotos der Fotoboxen liegen bei Hetzner in Deutschland. Die Zugangsdaten stehen nur in Supabase (Edge Functions → Secrets: HZ_ACCESS_KEY, HZ_SECRET_KEY, HZ_BUCKET, HZ_LOCATION). Dieser Knopf richtet den Speicher ein und prüft ihn: Fotos über den Link lesbar, Liste aller Fotos für Fremde gesperrt.</p>
+          <div class="row"><button class="btn" id="hzSetup">Einrichten &amp; prüfen</button><span class="small" id="hzState"></span></div>
+          <div class="small" id="hzResult" style="margin-top:10px"></div>
+        </div>
+      </div>
     </div>
   </main>
 </section>
@@ -624,6 +650,18 @@ $('#nav').onclick = e => {
   if (t === 'leads') loadLeads();
   if (t === 'help') loadHelp();
 };
+
+/* ---------- Verwaltung: Unterseiten (Übersicht, Lizenzen, KI-Guthaben, Tarife & Foto-Shop, Software & Speicher) ---------- */
+const admShow = k => {
+  if (!$(`#admNav [data-adm="${k}"]`)) k = 'overview';
+  $$('#admNav button').forEach(b => b.classList.toggle('on', b.dataset.adm === k));
+  $$('[data-admp]').forEach(p => p.classList.toggle('hidden', p.dataset.admp !== k));
+  try { localStorage.setItem('pm.adm', k); } catch {}
+};
+$('#admNav').onclick = e => { const b = e.target.closest('[data-adm]'); if (b) admShow(b.dataset.adm); };
+try { admShow(localStorage.getItem('pm.adm') || 'overview'); } catch { admShow('overview'); }
+// „+ Neue Lizenz“ klappt das Formular über der Liste auf und zu
+$('#lNewBtn').onclick = () => { if (!$('#lNewCard').classList.toggle('hidden')) $('#lName').focus(); };
 
 /* ---------- Anleitungen ---------- */
 async function loadHelp() {
@@ -1003,7 +1041,7 @@ document.addEventListener('click', e => {
 let shCfg = null, shSample = '';
 const shCents = v => Math.round(parseFloat(String(v).replace(',', '.')) * 100);
 async function loadShopCfg() {
-  if (!profile?.is_admin || !$('#shopCard')) return;
+  if (!profile?.is_admin || !$('#photoShopCard')) return;
   const b = DEMO ? null : await fetch(`${CFG.supabaseUrl}/storage/v1/object/public/photos/${PM_SHOP.path(me.id)}?t=${Date.now()}`, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
   shCfg = PM_SHOP.normalize(b);
   $('#sh_mode').innerHTML = PM_SHOP.MODES.map(([k, n]) => `<option value="${k}">${n}</option>`).join('');
