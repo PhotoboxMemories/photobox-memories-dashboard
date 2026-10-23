@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261022-9';</script>
+<script>window.I18N_V = '20261023-1';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -312,7 +312,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <button type="button" data-adm="overview" data-ic="users" class="on">Übersicht</button>
         <button type="button" data-adm="licenses" data-ic="key">Lizenzen</button>
         <button type="button" data-adm="credits" data-ic="sparkles">KI-Guthaben</button>
-        <button type="button" data-adm="sales" data-ic="gift">Tarife &amp; Foto-Shop</button>
+        <button type="button" data-adm="sales" data-ic="gift"><span data-admpaid>Tarife &amp; Foto-Shop</span><span data-admfree class="hidden">Foto-Shop</span></button>
         <button type="button" data-adm="system" data-ic="settings">Software &amp; Speicher</button>
       </div>
       <div data-admp="overview">
@@ -332,11 +332,11 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <div class="grid3">
             <div><label>Kunde / Firma</label><input id="lName" placeholder="Musterfoto GmbH"></div>
             <div><label>E-Mail des Kunden</label><input id="lEmail" type="email" placeholder="kunde@beispiel.de"></div>
-            <div><label>Art</label><select id="lKind"><option value="subscription">Abo</option><option value="lifetime">Einmalkauf</option><option value="test">Testversion (läuft, bis du sie beendest)</option></select></div>
+            <div id="lKindWrap"><label>Art</label><select id="lKind"><option value="subscription">Abo</option><option value="lifetime">Einmalkauf</option><option value="test">Testversion (läuft, bis du sie beendest)</option></select></div>
             <div id="lValidWrap"><label>Abo bezahlt bis</label><input id="lValid" type="date"></div>
             <div id="lUpdWrap" class="hidden"><label>Updates inklusive bis (leer = immer)</label><input id="lUpd" type="date"></div>
-            <div><label>Anzahl Geräte</label><input id="lMax" type="number" min="1" value="1"></div>
-            <div><label>Tarif</label><select id="lTier"><option value="pro">Pro (alle Funktionen)</option><option value="basis">Basis (nur Fotobox, eigenes Logo)</option><option value="free">Kostenlos (mit Werbung von Photobox Memories)</option></select></div>
+            <div id="lMaxWrap"><label>Anzahl Geräte</label><input id="lMax" type="number" min="1" value="1"></div>
+            <div id="lTierWrap"><label>Tarif</label><select id="lTier"><option value="pro">Pro (alle Funktionen)</option><option value="basis">Basis (nur Fotobox, eigenes Logo)</option><option value="free">Kostenlos (mit Werbung von Photobox Memories)</option></select></div>
             <div id="lCreditsWrap" class="hidden"><label>KI-Credits dazu (für KI-Porträts)</label><input id="lCredits" type="number" min="0" max="1000" value="20"></div>
             <div><label>Freigaben</label><div class="row" style="margin-top:10px;gap:16px"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMosaic" style="width:auto"> Fotomosaik</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lCari" style="width:auto"> Live-Karikatur</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lVideo" style="width:auto"> Videonachricht</label></div></div>
             <div style="grid-column:1/-1"><label>Notiz (z.B. Rechnungsnummer)</label><input id="lNotes"></div>
@@ -372,7 +372,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         </div>
       </div>
       <div data-admp="sales" class="hidden">
-        <div class="card" style="margin-bottom:20px">
+        <div class="card" style="margin-bottom:20px" id="planCard">
           <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Tarife (Lizenz-Shop)</h2><button class="btn" id="planAdd">+ Tarif</button></div>
           <p class="small muted" style="margin:0 0 12px">Preise pro Fotobox, brutto. Kunden sehen nur eingeschaltete Tarife unter „Meine Lizenzen“ und kaufen über Stripe – die Lizenz entsteht nach der Zahlung von selbst. Abos verlängern sich automatisch; gekündigte laufen bis zum Ende der bezahlten Zeit.</p>
           <div id="planList"><p class="small muted">Lädt …</p></div>
@@ -570,7 +570,7 @@ $('#aSwitch').onclick = e => {
   e.preventDefault(); signup = !signup;
   $('#aGo').textContent = signup ? 'Konto erstellen' : 'Anmelden';
   $('#aSwitch').textContent = signup ? 'Ich habe schon ein Konto' : 'Neues Konto erstellen';
-  $('#authHint').textContent = signup ? 'Verwende die E-Mail-Adresse, mit der du die Lizenz gekauft hast.' : 'Melde dich an, um deine Events und Fotoboxen zu verwalten.';
+  $('#authHint').textContent = signup ? 'Erstelle dein kostenloses Konto – mit derselben E-Mail und demselben Passwort meldest du dich auch in der Fotobox an.' : 'Melde dich an, um deine Events und Fotoboxen zu verwalten.';
 };
 $('#aGo').onclick = async () => {
   const email = $('#aEmail').value.trim(), password = $('#aPw').value;
@@ -966,7 +966,7 @@ const hasExtra = k => DEMO || !!profile?.is_admin || (myTier?.extras || []).incl
 // Tarife) gilt alles wie bisher. Steuert die Schlösser im Ereignis-Editor und die Preisübersicht.
 let myTier = null;
 async function loadMyTier() {
-  if (DEMO) return;
+  if (DEMO) { myTier = { tier: 'pro', free_mode: true, extras: ['mosaic', 'caricature', 'videomsg'], trial_until: null }; return; } // Vorführung (?demo): wie im Kostenlos-Modus
   const { data, error } = await sb.rpc('my_tier');
   myTier = !error && data && ['free', 'basis', 'pro'].includes(data.tier) ? data : null;
 }
@@ -1227,18 +1227,30 @@ async function sendLicenseMail(id) {
     return '⚠️ Mail nicht gesendet: ' + (r?.error || error?.message || 'unbekannter Fehler');
   } catch (e) { return '⚠️ Mail nicht gesendet: ' + e.message; }
 }
+// Kostenlos-Modus in der Verwaltung: keine Tarife, Abos oder Laufzeiten – neue Lizenzen sind kostenlos und unbegrenzt
+function adminFree() {
+  const free = freeMode();
+  $('#planCard').classList.toggle('hidden', free);
+  $$('[data-admpaid]').forEach(e => e.classList.toggle('hidden', free)); $$('[data-admfree]').forEach(e => e.classList.toggle('hidden', !free));
+  if (free && $('#lKind').value !== 'lifetime') { $('#lKind').value = 'lifetime'; $('#lKind').onchange(); }
+  if (free) $('#lTier').value = 'pro';
+  for (const id of ['#lKindWrap', '#lTierWrap', '#lMaxWrap', '#lValidWrap', '#lUpdWrap']) if (free) $(id).classList.add('hidden');
+  if (!free) for (const id of ['#lKindWrap', '#lTierWrap', '#lMaxWrap']) $(id).classList.remove('hidden');
+  return free;
+}
 function renderAdmin() {
+  const free = adminFree();
   const q = $('#lSearch').value.toLowerCase();
   const list = licenses.filter(l => !q || [l.customer_name, l.customer_email, l.key, l.notes].some(v => (v || '').toLowerCase().includes(q)));
   $('#licList').innerHTML = list.length ? list.map(l => `<tr>
       <td><b>${esc(l.customer_name || '–')}</b><br><span class="small muted">${esc(l.customer_email)}${l.owner_id ? '' : ' · noch nicht registriert'}</span>${l.notes ? `<br><span class="small muted">📝 ${esc(l.notes)}</span>` : ''}</td>
       <td><code class="key" data-copy="${esc(l.key)}" title="Klicken zum Kopieren">${esc(l.key)}</code></td>
-      <td>${licKind(l)}${'tier' in l ? `<br><select data-lic="${l.id}" data-act="tier" style="margin-top:4px;padding:3px 6px">${Object.entries(TIER_NAME).map(([k, n]) => `<option value="${k}" ${l.tier === k ? 'selected' : ''}>${n}</option>`).join('')}</select>` : ''}</td>
-      <td>${licStatus(l)}</td>
-      <td>${l.dev_count} / <input type="number" min="1" value="${l.max_devices}" data-lic="${l.id}" data-act="max" style="width:60px;padding:4px 6px"></td>
+      <td>${free ? 'Kostenlos' : licKind(l)}${'tier' in l && !free ? `<br><select data-lic="${l.id}" data-act="tier" style="margin-top:4px;padding:3px 6px">${Object.entries(TIER_NAME).map(([k, n]) => `<option value="${k}" ${l.tier === k ? 'selected' : ''}>${n}</option>`).join('')}</select>` : ''}</td>
+      <td>${free ? (l.active ? '<span class="badge ok">aktiv</span>' : '<span class="badge bad">gesperrt</span>') : licStatus(l)}</td>
+      <td>${free ? l.dev_count : `${l.dev_count} / <input type="number" min="1" value="${l.max_devices}" data-lic="${l.id}" data-act="max" style="width:60px;padding:4px 6px">`}</td>
       <td data-l="Freigaben"><div style="display:flex;flex-direction:column;gap:4px">${EXTRAS.map(([k, n]) => `<label class="small" style="display:flex;gap:6px;align-items:center;white-space:nowrap;cursor:pointer"><input type="checkbox" data-lic="${l.id}" data-act="extra" data-x="${k}" ${(l.extras || []).includes(k) ? 'checked' : ''}> ${n}</label>`).join('')}</div></td>
       <td><div class="row">
-        ${isTestLic(l) ? ''
+        ${isTestLic(l) || free ? ''
           : l.kind === 'subscription'
           ? `<button class="btn small" data-lic="${l.id}" data-act="m1">+1 Monat</button><button class="btn small" data-lic="${l.id}" data-act="y1">+1 Jahr</button>`
           : `<button class="btn small" data-lic="${l.id}" data-act="u1">+1 Jahr Updates</button>`}
@@ -1395,7 +1407,7 @@ let shopPick = null;
   if (w && !(w.q && Date.now() - w.t < 864e5)) { w = null; try { localStorage.removeItem('pm.tarif'); } catch {} }
   if (q || neu) {
     if (!signup) $('#aSwitch').click();
-    $('#authHint').textContent = w ? 'Erstelle ein kostenloses Konto oder melde dich an – danach geht es direkt weiter zu deinem Tarif.'
+    $('#authHint').textContent = w ? 'Erstelle ein kostenloses Konto oder melde dich an – danach kannst du sofort loslegen.'
       : 'Erstelle dein kostenloses Konto – mit derselben E-Mail und demselben Passwort meldest du dich auch in der Fotobox an.';
   }
   if (w) addEventListener('pm-ready', () => { try { localStorage.removeItem('pm.tarif'); } catch {} pickTarif(w.q); }, { once: true });
@@ -1607,7 +1619,8 @@ function renderOverview() {
   const tile = (n, t, sub) => `<div class="card"><b>${n}</b><span>${t}</span><span class="small muted">${sub}</span></div>`;
   $('#ovStats').innerHTML =
     tile(ov.profiles.length, 'Registrierte Kunden', `${ov.profiles.filter(x => new Date(x.created_at) > d30).length} neu in 30 Tagen`) +
-    tile(live.length, 'Aktive Lizenzen', ending.length ? `${ending.length === 1 ? '1 läuft' : ending.length + ' laufen'} in 14 Tagen ab` : 'keine läuft bald ab') +
+    (freeMode() ? tile(live.length, 'Aktive Lizenzen', 'kostenlos, ohne Ablauf')
+      : tile(live.length, 'Aktive Lizenzen', ending.length ? `${ending.length === 1 ? '1 läuft' : ending.length + ' laufen'} in 14 Tagen ab` : 'keine läuft bald ab')) +
     tile(`${online} / ${devices.length}`, 'Eigene Fotoboxen online', 'gerade verbunden / gesamt') +
     tile(sum(lm, x => x.amount), 'Credits vergeben', `diesen Monat · gesamt ${sum(ov.ledger.filter(x => x.amount > 0), x => x.amount)}`) +
     tile(jm.length, 'KI-Bilder', `diesen Monat · ${sum(jm, x => x.cost)} Credits verbraucht`) +
@@ -1618,7 +1631,7 @@ function renderOverview() {
   $('#ovCustomers').innerHTML = rows.length ? rows.map(x => { const ls = lic(x.id); return `<tr>
       <td><b>${esc(x.name || x.email)}</b>${x.is_admin ? ' <span class="badge">Betreiber</span>' : ''}${x.name ? `<br><span class="small muted">${esc(x.email)}</span>` : ''}</td>
       <td>${fmtDate(x.created_at)}</td>
-      <td>${ls.length ? ls.map(licStatus).join('<br>') : '<span class="small muted">keine</span>'}</td>
+      <td>${ls.length ? ls.map(l => freeMode() ? (l.active ? '<span class="badge ok">aktiv</span>' : '<span class="badge bad">gesperrt</span>') : licStatus(l)).join('<br>') : '<span class="small muted">keine</span>'}</td>
       <td>${boxes(x.id)}</td>
       <td><b>${bal[x.id] ?? 0}</b></td>
       <td>${got[x.id] || 0}</td>
