@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.93": {
+      "date": "2026-10-23",
+      "notes": {
+        "de": [
+          "Die Fotobox-Software ist jetzt komplett kostenlos – alle Funktionen, mit deinem eigenen Logo, ohne Tarife und ohne Ablaufdatum. Geld kosten nur KI-Bilder (Credits im Online-Dashboard)."
+        ],
+        "en": [
+          "The photo booth software is now completely free – all features, with your own logo, no plans and no expiry date. Only AI images cost money (credits in the online dashboard)."
+        ],
+        "tr": [
+          "Fotoğraf kabini yazılımı artık tamamen ücretsiz – tüm özellikler, kendi logonla, plan ve son kullanma tarihi olmadan. Yalnızca yapay zekâ görselleri ücretlidir (çevrim içi paneldeki krediler)."
+        ],
+        "fr": [
+          "Le logiciel de photobooth est désormais entièrement gratuit – toutes les fonctions, avec ton propre logo, sans offre ni date d’expiration. Seules les images IA sont payantes (crédits dans le tableau de bord en ligne)."
+        ],
+        "es": [
+          "El software del fotomatón ahora es totalmente gratuito: todas las funciones, con tu propio logo, sin planes ni fecha de vencimiento. Solo las imágenes de IA cuestan dinero (créditos en el panel en línea)."
+        ],
+        "it": [
+          "Il software del photo booth ora è completamente gratuito – tutte le funzioni, con il tuo logo, senza piani né scadenza. Costano solo le immagini IA (crediti nella dashboard online)."
+        ]
+      }
+    },
     "1.17.92": {
       "date": "2026-10-22",
       "notes": {
