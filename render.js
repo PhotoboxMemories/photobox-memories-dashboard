@@ -365,13 +365,17 @@
   }
   const photoCount = L => L.elements.filter(e => e.type === 'photo').reduce((a, e) => Math.max(a, e.n || 1), 0);
 
-  // Bilder (Logos, Designs) einmal laden und merken
+  // Bilder (Logos, Designs) einmal laden und merken. Die Fotobox kann über setResolver eine lokal gespeicherte Fassung
+  // (blob:-Adresse) unterschieben – dann gehen Vorlagen auch ohne Internet; Schlüssel bleibt die Original-Adresse.
+  // Fehlgeschlagene Bilder werden nicht gemerkt, damit sie nach der Wiederverbindung neu geladen werden.
   const imgCache = new Map();
+  let resolveSrc = null;
+  const setResolver = fn => { resolveSrc = typeof fn === 'function' ? fn : null; };
   function loadImg(src) {
     if (!src) return Promise.resolve(null);
-    if (imgCache.has(src)) { const i = imgCache.get(src); return i.complete ? Promise.resolve(i) : new Promise(r => { i.addEventListener('load', () => r(i)); i.addEventListener('error', () => r(null)); }); }
+    if (imgCache.has(src)) { const i = imgCache.get(src); return i.complete ? Promise.resolve(i.naturalWidth ? i : null) : new Promise(r => { i.addEventListener('load', () => r(i)); i.addEventListener('error', () => r(null)); }); }
     const i = new Image(); i.crossOrigin = 'anonymous'; imgCache.set(src, i);
-    return new Promise(r => { i.onload = () => r(i); i.onerror = () => r(null); i.src = src; });
+    return new Promise(r => { i.onload = () => r(i); i.onerror = () => { if (imgCache.get(src) === i) imgCache.delete(src); r(null); }; i.src = (resolveSrc && resolveSrc(src)) || src; });
   }
   const preloadLayout = L => Promise.all([L.bgImage, ...L.elements.filter(e => (e.type === 'image' || e.type === 'button') && e.src).map(e => e.src),
     ...L.elements.filter(e => e.type === 'sbtn').map(btnIconSrc)].filter(Boolean).map(loadImg));
@@ -796,7 +800,7 @@
     return c;
   }
 
-  G.FBR = { FONTS, FONT_NAMES, LAYOUTS, TEMPLATES, templateById: byId, render, drawBand, drawCover, placeholder,
+  G.FBR = { FONTS, FONT_NAMES, LAYOUTS, TEMPLATES, templateById: byId, render, drawBand, drawCover, placeholder, setResolver,
     FORMATS, SIZE_LIST, formatKey, sheetOf, PRESETS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid,
     SCREEN_SIZES, SCREEN_THEMES, createScreen, adaptScreen, applyTheme, screenSys, screenStrip, createShare, shareSys, SHARE_BTNS };
 })(window);
