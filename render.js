@@ -45,8 +45,16 @@
   let SHS = 1;
   function drawCover(x, img, dx, dy, dw, dh) {
     const iw = img.naturalWidth || img.videoWidth || img.width, ih = img.naturalHeight || img.videoHeight || img.height;
-    const s = Math.max(dw / iw, dh / ih), sw = dw / s, sh = dh / s;
-    hq(x).drawImage(img, (iw - sw) / 2, (ih - sh) / 2, sw, sh, dx, dy, dw, dh);
+    const s = Math.max(dw / iw, dh / ih), sw = dw / s, sh = dh / s, f = img.pmFocus;
+    let sx = (iw - sw) / 2, sy = (ih - sh) / 2;
+    // Fotos der Fotobox bringen die Lage der Gesichter mit (img.pmFocus, Anteile 0–1): so zuschneiden, dass alle Köpfe mit
+    // Luft darüber im Feld bleiben. Ohne gefundenes Gesicht lieber unten als oben abschneiden. Logos und Designs: mittig.
+    if (f && f.w) {
+      const fx = f.x * iw, fy = f.y * ih, fw = f.w * iw, fh = f.h * ih;
+      sx = Math.min(iw - sw, Math.max(0, fx + fw / 2 - sw / 2));
+      sy = Math.min(ih - sh, Math.max(0, fh < sh ? fy - (sh - fh) * .35 : fy));
+    } else if (f) sy = (ih - sh) * .3;
+    hq(x).drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
   }
   function confetti(x, R, n, colors, seed, sizeF = 1) {
     const r = rng(seed), s = Math.min(R.w, R.h) / 1200;
