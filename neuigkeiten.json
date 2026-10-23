@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.94": {
+      "date": "2026-10-23",
+      "notes": {
+        "de": [
+          "Ohne Internet geht nichts mehr verloren: Die Fotobox speichert alle Bilder der Vorlagen, des Start- und Teilen-Bildschirms und die Berater-Medien des Ereignisses auf dem PC. Auf der Startseite steht „Ereignis offline bereit ✓“. Fotos ohne Internet warten in der Warteschlange (jetzt auch bei sehr vielen Fotos) und kommen automatisch in die Online-Galerie, sobald wieder Internet da ist."
+        ],
+        "en": [
+          "Nothing gets lost without internet anymore: the photo booth stores all images of the event’s templates, start and share screens and the advisor media on the PC. The start page shows “Event ready offline ✓”. Photos taken without internet wait in the queue (now even very many photos) and go to the online gallery automatically as soon as there is internet again."
+        ],
+        "tr": [
+          "İnternet olmadan artık hiçbir şey kaybolmuyor: Fotoğraf kabini etkinliğin şablonlarındaki, başlangıç ve paylaşım ekranlarındaki tüm görselleri ve danışman medyasını bilgisayara kaydeder. Başlangıç sayfasında „Etkinlik çevrimdışı hazır ✓“ yazar. İnternetsiz çekilen fotoğraflar kuyrukta bekler (artık çok sayıda fotoğrafta da) ve internet geri gelir gelmez otomatik olarak çevrim içi galeriye yüklenir."
+        ],
+        "fr": [
+          "Plus rien ne se perd sans internet : le photobooth enregistre sur le PC toutes les images des modèles, des écrans d’accueil et de partage et les médias de l’assistant de l’événement. La page d’accueil affiche « Événement prêt hors ligne ✓ ». Les photos prises sans internet attendent dans la file (désormais même en très grand nombre) et arrivent automatiquement dans la galerie en ligne dès que l’internet revient."
+        ],
+        "es": [
+          "Sin internet ya no se pierde nada: el fotomatón guarda en el PC todas las imágenes de las plantillas, de las pantallas de inicio y de compartir y los medios del asistente del evento. En la página de inicio aparece «Evento listo sin conexión ✓». Las fotos hechas sin internet esperan en la cola (ahora también si son muchísimas) y llegan automáticamente a la galería en línea en cuanto vuelve internet."
+        ],
+        "it": [
+          "Senza internet non si perde più nulla: il photo booth salva sul PC tutte le immagini dei modelli, delle schermate iniziale e di condivisione e i media dell’assistente dell’evento. Nella pagina iniziale compare «Evento pronto offline ✓». Le foto scattate senza internet aspettano in coda (ora anche se sono moltissime) e arrivano automaticamente nella galleria online appena torna internet."
+        ]
+      }
+    },
     "1.17.93": {
       "date": "2026-10-23",
       "notes": {
