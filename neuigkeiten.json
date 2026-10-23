@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.95": {
+      "date": "2026-10-23",
+      "notes": {
+        "de": [
+          "Keine abgeschnittenen Köpfe mehr: Die Fotobox erkennt die Gesichter auf jedem Foto und setzt es so in die Felder der Vorlage, dass alle Köpfe mit etwas Platz darüber im Bild bleiben – auch bei flachen oder schmalen Feldern und bei KI-Bildern."
+        ],
+        "en": [
+          "No more cut-off heads: the photo booth detects the faces in every photo and places it in the template’s photo areas so that all heads stay in the picture with a little space above – even in flat or narrow areas and with AI images."
+        ],
+        "tr": [
+          "Artık kesik kafa yok: Fotoğraf kabini her fotoğraftaki yüzleri tanır ve fotoğrafı şablonun alanlarına, tüm kafalar üstünde biraz boşlukla görünecek şekilde yerleştirir – basık veya dar alanlarda ve yapay zekâ görsellerinde de."
+        ],
+        "fr": [
+          "Fini les têtes coupées : la photobooth détecte les visages sur chaque photo et la place dans les zones du modèle de sorte que toutes les têtes restent dans l’image avec un peu d’espace au-dessus – même dans les zones plates ou étroites et pour les images IA."
+        ],
+        "es": [
+          "Se acabaron las cabezas cortadas: el fotomatón detecta las caras en cada foto y la coloca en los huecos de la plantilla de modo que todas las cabezas queden en la imagen con algo de espacio por encima, también en huecos planos o estrechos y en las imágenes de IA."
+        ],
+        "it": [
+          "Basta teste tagliate: la photobooth riconosce i volti in ogni foto e la inserisce negli spazi del modello in modo che tutte le teste restino nell’immagine con un po’ di spazio sopra – anche negli spazi bassi o stretti e nelle immagini IA."
+        ]
+      }
+    },
     "1.17.94": {
       "date": "2026-10-23",
       "notes": {
