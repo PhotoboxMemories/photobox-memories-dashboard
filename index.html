@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261024-3';</script>
+<script>window.I18N_V = '20261024-4';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -163,6 +163,21 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
 #newVer{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 32px);background:var(--accent);color:var(--accent-fg);padding:10px 14px 10px 18px;border-radius:12px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.25)}
 #newVer button{background:var(--accent-fg);color:#fff;border:0;border-radius:8px;padding:7px 14px;font:inherit;cursor:pointer}
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:10px;font-weight:600;z-index:30;display:none}
+/* Kopfzeile: „Software“ (Download der Fotobox-Software) immer erreichbar – am Handy vorne in der Menüleiste */
+#nav #navSw{margin-left:auto;background:var(--accent);color:var(--accent-fg);border-radius:999px;padding:8px 16px}
+#nav #navSw:hover{filter:brightness(.97)}
+@media(max-width:820px){#nav #navSw{order:-1;margin-left:0}}
+/* Willkommens-Karte für neue Kunden (noch keine Fotobox verbunden): die drei Schritte bis zur ersten Fotobox */
+.startCard{position:relative;background:var(--accent);border-color:var(--accent);color:var(--accent-fg);margin-bottom:24px}
+.startCard h2{margin:0 36px 14px 0}
+.startCard .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.startCard .step{display:flex;gap:12px;align-items:flex-start}
+.startCard .num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--accent-fg);color:var(--accent);font:700 16px/30px Fredoka,system-ui,sans-serif;text-align:center}
+.startCard .step p{font-size:13.5px;margin-top:2px;color:rgba(29,29,27,.78)}
+.startCard .btn.dark{background:var(--accent-fg);border-color:var(--accent-fg);color:#fff;margin-top:10px}
+.startCard .x{position:absolute;top:10px;right:12px;width:32px;height:32px;background:none;border:0;font-size:26px;line-height:1;color:var(--accent-fg);opacity:.6}
+.startCard .x:hover{opacity:1}
+@media(max-width:700px){.startCard .steps{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -204,6 +219,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <button data-tab="licenses" data-ic="key">Meine Lizenzen</button>
       <button data-tab="help" data-ic="play" class="hidden">Anleitungen</button><!-- erst sichtbar, wenn die Anleitungs-Videos freigegeben sind -->
       <button data-tab="admin" class="hidden" id="navAdmin" data-ic="settings">Verwaltung</button>
+      <button type="button" id="navSw" data-ic="download" title="Neueste Fotobox-Software für Windows herunterladen">Software</button>
     </nav>
     <div class="row small"><span class="muted" id="who"></span><select class="langSel" translate="no" aria-label="Sprache"></select><button class="btn small" id="logout">Abmelden</button></div>
   </header>
@@ -211,6 +227,17 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
   <main>
     <!-- Events -->
     <div data-page="events">
+      <!-- Willkommens-Karte: nur solange noch keine eigene Fotobox verbunden ist (startCard) -->
+      <div class="card startCard hidden" id="startCard">
+        <button type="button" class="x" id="startClose" title="Ausblenden" aria-label="Ausblenden">×</button>
+        <h2>Willkommen! So startest du</h2>
+        <div class="steps">
+          <div class="step"><span class="num">1</span><div><b>Software herunterladen</b><p>Für den Fotobox-PC mit Windows.</p><button type="button" class="btn dark" id="startDl">⬇ Jetzt herunterladen</button></div></div>
+          <div class="step"><span class="num">2</span><div><b>Auf dem Fotobox-PC installieren</b><p>Datei öffnen, „Weiter“ klicken und die Windows-Abfrage mit „Ja“ bestätigen.</p></div></div>
+          <div class="step"><span class="num">3</span><div><b>Mit diesem Konto anmelden</b><p>In der Fotobox mit derselben E-Mail und demselben Passwort wie hier im Dashboard.</p></div></div>
+        </div>
+        <p class="small hidden" id="startMail" style="margin-top:14px">📧 Den Download-Link haben wir dir auch per Mail geschickt.</p>
+      </div>
       <div class="pagehead"><h1>Laufende Ereignisse</h1><div class="row" style="gap:10px;flex-wrap:wrap"><button class="btn" id="creditChip" type="button" title="KI-Guthaben ansehen und kaufen">✨ <b id="creditChipN">–</b> KI-Credits</button><input id="evSearch" placeholder="🔍 Ereignisname" style="max-width:260px"></div></div>
       <div class="evgrid" id="eventList"></div>
       <h1 style="margin:28px 0 16px">Abgeschlossene Ereignisse</h1>
@@ -221,7 +248,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
     <div data-page="devices" class="hidden">
       <div class="pagehead"><h1>Geräte</h1><button class="btn" id="reloadDevices">↻ Aktualisieren</button></div>
       <p class="muted small" style="margin-bottom:14px">Jede FotoBox erscheint hier, sobald sie mit einem Lizenzschlüssel aktiviert wurde. Weise ein Event zu – die Box übernimmt die Einstellungen innerhalb einer Minute.</p>
-      <div class="card" style="margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div class="card" id="swCard" style="margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <div style="flex:1;min-width:220px"><b>Fotobox-Software für Windows</b><div class="small muted" id="swInfo">Lädt …</div></div>
         <button class="btn" id="swDl" disabled>⬇ Neueste Version herunterladen</button>
       </div>
@@ -302,6 +329,11 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <h3 style="margin:22px 0 10px">Käufe und Gutschriften</h3>
         <div class="tablewrap"><table><thead><tr><th>Datum</th><th>Vorgang</th><th>Credits</th></tr></thead><tbody id="creditLog"></tbody></table></div>
       </div>
+      <div class="card" id="storeCard" style="margin-top:20px">
+        <h2>Speicher für deine Online-Galerien</h2>
+        <p class="small muted" style="margin:4px 0 12px">Zählt alle Fotos, Videos und Videonachrichten deiner Online-Galerien. Fotos werden nach 1 Jahr automatisch gelöscht.</p>
+        <div id="storeBar" class="small muted">Wird berechnet …</div>
+      </div>
     </div>
 
     <!-- Admin -->
@@ -318,10 +350,10 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <div data-admp="overview">
         <div class="stats" id="ovStats"></div>
         <div class="card" style="margin-bottom:20px">
-          <div class="pagehead" style="margin-bottom:10px"><h2 style="margin:0">Kunden</h2><input id="ovSearch" placeholder="Suchen…" style="max-width:260px"></div>
+          <div class="pagehead" style="margin-bottom:10px"><h2 style="margin:0">Kunden</h2><div class="row" style="gap:8px"><button type="button" class="btn small" id="ovStoreScan" title="Belegten Speicher aller Kunden bei Hetzner neu zählen">Speicher neu berechnen</button><input id="ovSearch" placeholder="Suchen…" style="max-width:260px"></div></div>
           <div class="tablewrap"><table>
-            <thead><tr><th>Kunde</th><th>Registriert</th><th>Lizenz</th><th>Fotoboxen</th><th>Guthaben</th><th>Erhalten</th><th>KI-Bilder</th></tr></thead>
-            <tbody id="ovCustomers"><tr><td colspan="7" class="empty">Lädt …</td></tr></tbody>
+            <thead><tr><th>Kunde</th><th>Registriert</th><th>Lizenz</th><th>Fotoboxen</th><th>Guthaben</th><th>Erhalten</th><th>KI-Bilder</th><th>Speicher</th><th>Passwort</th></tr></thead>
+            <tbody id="ovCustomers"><tr><td colspan="9" class="empty">Lädt …</td></tr></tbody>
           </table></div>
         </div>
       </div>
@@ -563,6 +595,9 @@ if (DEMO) document.addEventListener('DOMContentLoaded', () => {
 });
 
 let me = null, profile = null, events = [], devices = [], licenses = [];
+// Adresse mit ?download=1 (Knopf in der Willkommens-Mail): nach dem Anmelden startet der Download der Fotobox-Software sofort
+// (siehe swOpen). Bis dahin bleibt der Zusatz in der Adresse – auch über Registrierung und Bestätigungs-Link (emailRedirectTo).
+const DL_AUTO = new URLSearchParams(location.search).get('download') === '1';
 
 /* ---------- Login ---------- */
 let signup = false;
@@ -592,6 +627,7 @@ const AUTH_ERR = m => /Invalid login credentials/i.test(m) ? 'E-Mail oder Passwo
   : /already registered|already been registered/i.test(m) ? 'Für diese E-Mail-Adresse gibt es schon ein Konto – bitte anmelden.'
   : /rate limit|too many/i.test(m) ? 'Gerade wurden zu viele Mails verschickt. Bitte in ein paar Minuten noch einmal versuchen.'
   : /expired|invalid.*link/i.test(m) ? 'Der Link ist abgelaufen. Bitte noch einmal anfordern.'
+  : /different from the old/i.test(m) ? 'Das neue Passwort muss sich vom alten unterscheiden.'
   : /password.*(short|least|weak)/i.test(m) ? 'Das Passwort ist zu kurz oder zu einfach.' : m;
 // E-Mail noch nicht bestätigt: Hinweis mit Knopf, der die Bestätigungs-Mail noch einmal schickt
 function authUnconfirmed(email) {
@@ -611,16 +647,48 @@ $('#aForgot').onclick = async e => {
   error ? authMsg(AUTH_ERR(error.message)) : authMsg('Wir haben dir einen Link zum Zurücksetzen geschickt.', true);
 };
 $('#rGo').onclick = async () => {
-  const { error } = await sb.auth.updateUser({ password: $('#rPw').value });
+  // war ein Einmal-Passwort vergeben (Merker pm_pw_temp), ist es mit dem neuen Passwort erledigt
+  const { error } = await sb.auth.updateUser({ password: $('#rPw').value, ...(me?.user_metadata?.pm_pw_temp ? { data: { pm_pw_temp: false } } : {}) });
   const m = $('#rMsg'); m.classList.remove('hidden');
-  if (error) { m.className = 'msg err'; m.textContent = error.message; return; }
+  if (error) { m.className = 'msg err'; m.textContent = AUTH_ERR(error.message); return; }
   location.hash = ''; location.reload();
 };
+// Mit einem Einmal-Passwort angemeldet (vom Betreiber vergeben, Merker pm_pw_temp): zuerst ein eigenes Passwort festlegen.
+// Das Fenster schließt sich nur mit neuem Passwort – oder über „Abmelden“. Nicht über der Seite „Neues Passwort festlegen“.
+function pwForce() {
+  if ($('#pwForce') || !$('#reset').classList.contains('hidden')) return;
+  const o = document.createElement('div'); o.id = 'pwForce';
+  o.style.cssText = 'position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:16px';
+  o.innerHTML = `<div class="card" style="width:min(420px,100%);display:flex;flex-direction:column;gap:14px">
+    <h2 style="margin:0">Bitte lege jetzt ein eigenes Passwort fest</h2>
+    <p class="small muted">Du hast dich mit einem Einmal-Passwort angemeldet. Mit deinem eigenen Passwort meldest du dich künftig im Dashboard und in der Fotobox an.</p>
+    <div><label>Neues Passwort</label><input type="password" data-p="1" autocomplete="new-password"></div>
+    <div><label>Passwort wiederholen</label><input type="password" data-p="2" autocomplete="new-password"></div>
+    <div class="msg err hidden" data-m></div>
+    <div class="row" style="justify-content:space-between"><button type="button" class="btn" data-a="out">Abmelden</button><button type="button" class="btn primary" data-a="save">Passwort speichern</button></div>
+    <p class="small muted">Fotoboxen, die mit dem Einmal-Passwort angemeldet sind, meldest du danach mit dem neuen Passwort neu an.</p></div>`;
+  const [p1, p2] = [1, 2].map(n => o.querySelector(`[data-p="${n}"]`)), m = o.querySelector('[data-m]'), go = o.querySelector('[data-a="save"]');
+  const err = t => { m.textContent = t; m.classList.remove('hidden'); };
+  const save = async () => {
+    if (go.disabled) return;
+    if (p1.value.length < 6) return err('Bitte ein Passwort mit mindestens 6 Zeichen eingeben.');
+    if (p1.value !== p2.value) return err('Die beiden Passwörter sind nicht gleich.');
+    go.disabled = true;
+    const { data, error } = await sb.auth.updateUser({ password: p1.value, data: { pm_pw_temp: false } });
+    go.disabled = false;
+    if (error) return err(AUTH_ERR(error.message));
+    if (data?.user) me = data.user;
+    o.remove(); toast('Dein neues Passwort ist gespeichert.', 5000);
+  };
+  o.addEventListener('click', e => { const a = e.target.closest('[data-a]')?.dataset.a; if (a === 'save') save(); else if (a === 'out') { o.remove(); sb.auth.signOut({ scope: 'local' }); } });
+  o.addEventListener('keydown', e => { if (e.key === 'Enter') save(); });
+  document.body.appendChild(o); setTimeout(() => p1.focus(), 50);
+}
 // nur diesen Browser abmelden – sonst wären auch alle Fotoboxen mit diesem Konto abgemeldet
 $('#logout').onclick = () => sb.auth.signOut({ scope: 'local' });
 
 sb.auth.onAuthStateChange((ev, session) => {
-  if (ev === 'PASSWORD_RECOVERY') { show('reset'); return; }
+  if (ev === 'PASSWORD_RECOVERY') { $('#pwForce')?.remove(); show('reset'); return; }
   if (session?.user) { if (me?.id !== session.user.id) { me = session.user; boot(); } }
   else { me = null; show('auth'); }
 });
@@ -629,14 +697,16 @@ function show(id) { ['auth', 'reset', 'app'].forEach(s => $('#' + s).classList.t
 async function boot() {
   show('app');
   $('#who').textContent = me.email;
+  if (me.user_metadata?.pm_pw_temp && !DEMO) pwForce(); // Einmal-Passwort vom Betreiber: zuerst ein eigenes festlegen
   const { data } = await sb.from('profiles').select('*').eq('id', me.id).single();
   profile = data || {};
   $('#navAdmin').classList.toggle('hidden', !profile.is_admin);
   $$('.adminCol').forEach(e => e.classList.toggle('hidden', !profile.is_admin));
   await loadMyTier(); // zuerst: Kostenlos-Modus entscheidet, ob Tarife und Preise erscheinen
   await welcomeCredits(); // vor den Lizenzen: kostenlose Lizenz sofort, neue Konten einmal 20 KI-Credits (der Server prüft, ob schon bekommen)
+  welcomeMail(); // danach: neue Konten bekommen einmal die Willkommens-Mail mit Download-Link (samt Lizenzschlüssel)
   await Promise.all([loadEvents(), loadDevices(), loadLicenses()]);
-  loadMyCredits(); loadShop(); loadPlans();
+  loadMyCredits(); loadShop(); loadPlans(); loadStorage();
   loadSoftware();
   dispatchEvent(new Event('pm-ready'));
   if (profile.is_admin) { loadRelease(); loadCredits(); loadOverview(); loadShopCfg(); }
@@ -824,8 +894,16 @@ async function loadDevices() {
   // nur Fotoboxen der eigenen Lizenzen – auch der Admin sieht hier keine Geräte seiner Kunden
   const { data, error } = await sb.from('devices').select('*, licenses!inner(customer_name, customer_email, owner_id)').eq('licenses.owner_id', me.id).order('last_seen', { ascending: false, nullsFirst: false });
   if (error) return toast('Fehler: ' + error.message);
-  devices = data; renderDevices(); renderEvents();
+  devices = data; renderDevices(); renderEvents(); startCard();
 }
+// Willkommens-Karte „So startest du“ (Ereignisse oben): für Konten ohne eigene Fotobox. Verschwindet, sobald eine Fotobox
+// verbunden ist, oder per × (gemerkt je Konto in diesem Browser).
+const startKey = () => 'pm.start.' + (me?.id || '');
+function startCard() {
+  let off = false; try { off = localStorage.getItem(startKey()) === '1'; } catch {}
+  $('#startCard').classList.toggle('hidden', off || devices.length > 0);
+}
+$('#startClose').onclick = () => { try { localStorage.setItem(startKey(), '1'); } catch {} $('#startCard').classList.add('hidden'); };
 // Details eines Geräts: was die Fotobox zuletzt gemeldet hat, plus Fernbefehle (Testdruck, Kamerawerte)
 let openDev = null, devTimer = 0;
 function deviceDetails(d, online, mine) {
@@ -1356,6 +1434,29 @@ $('#creditChip').onclick = showCredits;
 async function welcomeCredits() {
   try { const { data } = await sb.rpc('welcome_credits'); if (data > 0) toast('Willkommen! Du hast 20 KI-Credits zum Testen bekommen.', 8000); } catch {}
 }
+// Neues Konto (bis 7 Tage alt): einmal eine Willkommens-Mail mit Download-Link zur Fotobox-Software (Funktion license-mail,
+// action 'welcome'). Der Server prüft und setzt den Merker pm_welcome_mail (app_metadata) selbst – hier wird nur unnötiges Fragen gespart.
+async function welcomeMail() {
+  if (DEMO || profile?.is_admin || me?.app_metadata?.pm_welcome_mail || !(Date.now() - new Date(me?.created_at) < 7 * 864e5)) return;
+  // Registrier-Tab und Tab vom Bestätigungs-Link starten fast gleichzeitig (Supabase meldet die Anmeldung an alle Tabs):
+  // nur einer fragt, die anderen warten nicht, sondern lassen es (die Sperre gilt für alle Tabs der Seite)
+  const id = me.id;
+  if (navigator.locks) return navigator.locks.request('pm-welcome-' + id, { ifAvailable: true }, l => l && welcomeSend(id)).catch(() => welcomeSend(id));
+  return welcomeSend(id);
+}
+async function welcomeSend(id) {
+  // Merker im Browser schon vor der Anfrage („läuft“ mit Uhrzeit, gilt 1 Minute), bei Fehler wieder weg; '1' = erledigt
+  const k = 'pm.welcome.' + id;
+  try { const v = localStorage.getItem(k); if (v === '1' || (v && Date.now() - Number(v) < 6e4)) return; localStorage.setItem(k, String(Date.now())); } catch {}
+  const undo = () => { try { localStorage.removeItem(k); } catch {} };
+  try {
+    const { data, error } = await sb.functions.invoke('license-mail', { body: { action: 'welcome' } });
+    let r = data; if (error?.context?.json) { try { r = await error.context.json(); } catch {} }
+    if (!r?.ok) { undo(); return console.warn('Willkommens-Mail:', r?.error || error?.message); }
+    try { localStorage.setItem(k, '1'); } catch {}
+    if (!r.skipped) $('#startMail').classList.remove('hidden'); // Hinweis in der Willkommens-Karte
+  } catch (e) { undo(); console.warn('Willkommens-Mail:', e.message); }
+}
 async function loadMyCredits() {
   if (!me || !$('#creditCard')) return;
   const [w, jobs, led, pk] = await Promise.all([
@@ -1423,7 +1524,8 @@ let shopPick = null;
 {
   const sp = new URLSearchParams(location.search), q = sp.get('tarif'), neu = sp.get('konto') === 'neu';
   if (q || neu) {
-    history.replaceState(null, '', location.pathname + location.hash);
+    sp.delete('tarif'); sp.delete('konto'); // nur die eigenen Zusätze entfernen – ?download=1 bleibt bis nach der Anmeldung
+    history.replaceState(null, '', location.pathname + (String(sp) ? '?' + sp : '') + location.hash);
     if (q && /^[a-z0-9-]{2,40}$/.test(q)) try { localStorage.setItem('pm.tarif', JSON.stringify({ q, t: Date.now() })); } catch {}
   }
   let w = null; try { w = JSON.parse(localStorage.getItem('pm.tarif') || 'null'); } catch {}
@@ -1615,16 +1717,18 @@ $('#planAdd').onclick = async () => {
 let ov = null;
 async function loadOverview() {
   if (!profile?.is_admin || !$('#ovStats')) return;
-  const [p, w, l, j] = await Promise.all([
+  const [p, w, l, j, st] = await Promise.all([
     sb.from('profiles').select('id,email,name,is_admin,created_at').order('created_at', { ascending: false }),
     sb.from('ai_wallets').select('owner_id,balance'),
     (async () => { // Spalte „cents“ gibt es erst nach der Stripe-Migration
       const r = await sb.from('ai_ledger').select('owner_id,amount,note,created_at,cents').order('created_at', { ascending: false }).limit(1000);
       return r.error ? sb.from('ai_ledger').select('owner_id,amount,note,created_at').order('created_at', { ascending: false }).limit(1000) : r;
     })(),
-    sb.from('ai_jobs').select('owner_id,cost,status,created_at').order('created_at', { ascending: false }).limit(5000)
+    sb.from('ai_jobs').select('owner_id,cost,status,created_at').order('created_at', { ascending: false }).limit(5000),
+    sb.from('storage_usage').select('owner_id,quota_gb,bytes,updated_at') // erst nach SQL 202610240002
   ]);
-  ov = { profiles: [].concat(p.data || []), wallets: [].concat(w.data || []), ledger: [].concat(l.data || []), jobs: [].concat(j.data || []).filter(x => x.status === 'succeeded') };
+  ov = { profiles: [].concat(p.data || []), wallets: [].concat(w.data || []), ledger: [].concat(l.data || []), jobs: [].concat(j.data || []).filter(x => x.status === 'succeeded'),
+    storage: Object.fromEntries([].concat(st.data || []).map(x => [x.owner_id, x])) };
   renderOverview();
 }
 function renderOverview() {
@@ -1647,6 +1751,7 @@ function renderOverview() {
     tile(`${online} / ${devices.length}`, 'Eigene Fotoboxen online', 'gerade verbunden / gesamt') +
     tile(sum(lm, x => x.amount), 'Credits vergeben', `diesen Monat · gesamt ${sum(ov.ledger.filter(x => x.amount > 0), x => x.amount)}`) +
     tile(jm.length, 'KI-Bilder', `diesen Monat · ${sum(jm, x => x.cost)} Credits verbraucht`) +
+    tile(gbTxt(sum(Object.values(ov.storage || {}), x => +x.bytes || 0)) + ' GB', 'Speicher belegt', `alle Kunden zusammen · ${Object.values(ov.storage || {}).filter(x => x.bytes > (x.quota_gb || 5) * 1e9).length} über ihrer Grenze`) +
     tile(sum(ov.wallets, x => x.balance), 'Offenes Guthaben', 'Credits aller Kunden zusammen') +
     tile(euro(sum(ov.ledger.filter(inMonth), x => x.cents || 0)), 'Umsatz Guthaben', `diesen Monat über Stripe · gesamt ${euro(sum(ov.ledger, x => x.cents || 0))}`);
   const q = $('#ovSearch').value.toLowerCase(), mail = Object.fromEntries(ov.profiles.map(x => [x.id, x.email]));
@@ -1659,15 +1764,96 @@ function renderOverview() {
       <td><b>${bal[x.id] ?? 0}</b></td>
       <td>${got[x.id] || 0}</td>
       <td>${pics[x.id] || 0}${used[x.id] ? ` <span class="small muted">(${used[x.id]} Credits)</span>` : ''}</td>
-    </tr>`; }).join('') : '<tr><td colspan="7" class="empty">Keine Kunden gefunden</td></tr>';
+      <td>${storeCell(x.id)}</td>
+      <td>${x.is_admin ? '<span class="small muted">–</span>' : `<div class="row" style="gap:6px"><button type="button" class="btn small" data-pw="temp" data-id="${esc(x.id)}" title="Neues Passwort zum Vorlesen am Telefon – der Kunde bekommt es auch per Mail">🔑 Einmal-Passwort vergeben</button>
+        <button type="button" class="btn small" data-pw="link" data-id="${esc(x.id)}" title="Mail mit einem Link, über den der Kunde selbst ein neues Passwort festlegt">✉ Passwort-Link senden</button></div>`}</td>
+    </tr>`; }).join('') : '<tr><td colspan="9" class="empty">Keine Kunden gefunden</td></tr>';
   $('#ovLedger').innerHTML = ov.ledger.length ? ov.ledger.slice(0, 50).map(x => `<tr><td>${fmtDate(x.created_at)}</td><td>${esc(mail[x.owner_id] || x.owner_id)}</td>
       <td><b>${x.amount > 0 ? '+' : ''}${x.amount}</b></td><td>${x.cents ? euro(x.cents) : '<span class="small muted">von Hand</span>'}</td><td class="small">${esc(x.note || '–')}</td></tr>`).join('')
     : '<tr><td colspan="5" class="empty">Noch keine Buchungen</td></tr>';
 }
 $('#ovSearch').oninput = renderOverview;
+// Speicher je Kunde (Standard 5 GB, nur Hinweis): Zelle „1,2 / 5 GB“ – Klick ändert die Grenze; „Speicher neu berechnen“ zählt bei Hetzner
+const gbTxt = b => (b / 1e9).toLocaleString('de-DE', { maximumFractionDigits: b < 1e10 ? 1 : 0 });
+function storeCell(id) {
+  const u = ov?.storage?.[id], q = u?.quota_gb || 5, b = +u?.bytes || 0, c = b > q * 1e9 ? 'var(--bad,#e5484d)' : b > q * 8e8 ? '#b8860b' : 'inherit';
+  return `<a href="#" data-store="${esc(id)}" title="Grenze ändern" style="color:${c};white-space:nowrap">${u?.updated_at ? gbTxt(b) : '–'} / ${q} GB</a>`;
+}
+$('#ovCustomers').addEventListener('click', async e => {
+  const a = e.target.closest('[data-store]'), x = a && ov?.profiles.find(p => p.id === a.dataset.store); if (!x) return;
+  e.preventDefault();
+  const v = prompt(`Speicher-Grenze für ${x.email} in GB (Standard 5):`, String(ov.storage?.[x.id]?.quota_gb || 5)); if (v === null) return;
+  const gb = Math.round(+String(v).replace(',', '.')); if (!(gb >= 1 && gb <= 100000)) return toast('Bitte eine Zahl von 1 bis 100000 eingeben.');
+  const { error } = await sb.rpc('set_storage_gb', { p_owner: x.id, p_gb: gb });
+  if (error) return toast(/set_storage_gb|schema cache/i.test(error.message) ? 'Die Speicher-Funktion ist auf dem Server noch nicht eingerichtet.' : 'Fehler: ' + error.message, 6000);
+  toast(`Speicher für ${x.email}: ${gb} GB`); loadOverview();
+});
+$('#ovStoreScan').onclick = async () => {
+  const b = $('#ovStoreScan'); b.disabled = true;
+  try { const t = (await sb.auth.getSession()).data.session?.access_token, r = await FOTOBOX_PHOTOS.call({ action: 'usage', all: true }, t);
+    toast(`Speicher neu berechnet: ${gbTxt(r.bytes || 0)} GB bei ${r.owners || 0} Kunden`, 5000); await loadOverview(); }
+  catch (er) { toast('Speicher konnte nicht berechnet werden: ' + er.message, 6000); }
+  b.disabled = false;
+};
+// Eigener Speicher (Meine Lizenzen): Stand aus storage_usage, bei Bedarf (älter als 6 Stunden) über photo-store neu zählen
+async function loadStorage() {
+  const el = $('#storeBar'); if (!el || !me) return;
+  if (DEMO) { el.textContent = '0,4 GB von 5 GB belegt'; return; }
+  let { data: u } = await sb.from('storage_usage').select('bytes,quota_gb,updated_at').eq('owner_id', me.id).maybeSingle();
+  if (!u?.updated_at || Date.now() - new Date(u.updated_at) > 6 * 3600e3) try {
+    const t = (await sb.auth.getSession()).data.session?.access_token, r = t && window.FOTOBOX_PHOTOS ? await FOTOBOX_PHOTOS.call({ action: 'usage' }, t) : null;
+    if (r) u = { bytes: r.bytes, quota_gb: r.quota_gb, updated_at: new Date().toISOString() };
+  } catch (e) { console.warn('Speicher:', e.message); }
+  if (!u?.updated_at) { el.textContent = 'Noch nicht berechnet.'; return; }
+  const q = u.quota_gb || 5, p = (+u.bytes || 0) / (q * 1e9);
+  el.innerHTML = `<div style="display:flex;justify-content:space-between;gap:10px;font-weight:600;color:inherit"><span>${gbTxt(+u.bytes || 0)} GB von ${q} GB belegt</span><span>${Math.round(p * 100)} %</span></div>
+    <div style="height:10px;border-radius:99px;background:#e9e9ee;overflow:hidden;margin:8px 0"><div style="height:100%;width:${Math.min(100, p * 100).toFixed(1)}%;background:${p >= 1 ? '#e5484d' : p >= .8 ? '#F7C838' : '#3fb950'}"></div></div>
+    ${p >= 1 ? '<div class="msg err">Dein Speicher ist voll. Es wird trotzdem weiter hochgeladen – wenn du mehr Speicher brauchst, melde dich bei Photobox Memories.</div>' : p >= .8 ? '<div class="msg">Dein Speicher ist fast voll.</div>' : ''}`;
+}
+// Kunde hat sein Passwort vergessen (Funktion license-mail, nur Betreiber): Einmal-Passwort vergeben – der Kunde bekommt es per
+// Mail, der Betreiber sieht es einmal zum Vorlesen am Telefon – oder einen Link zum Festlegen eines neuen Passworts mailen
+$('#ovCustomers').addEventListener('click', async e => {
+  const b = e.target.closest('[data-pw]'), x = b && ov?.profiles.find(p => p.id === b.dataset.id); if (!x) return;
+  const temp = b.dataset.pw === 'temp';
+  if (temp && !await pmConfirm(`Neues Einmal-Passwort für ${x.email} vergeben? Das alte Passwort gilt dann nicht mehr – angemeldete Fotoboxen dieses Kontos müssen sich danach neu anmelden.`, 'Passwort vergeben')) return;
+  b.disabled = true;
+  let r = null, error = null;
+  try {
+    const res = await sb.functions.invoke('license-mail', { body: { action: temp ? 'temp-password' : 'password-link', user: x.id } });
+    r = res.data; error = res.error; if (error?.context?.json) { try { r = await error.context.json(); } catch {} }
+  } catch (err) { error = err; }
+  b.disabled = false;
+  if (!r?.ok) return toast('Fehler: ' + (r?.error || r?.message || error?.message || 'unbekannter Fehler'), 7000);
+  if (temp) pwShow(r); else toast(`Link zum Festlegen eines neuen Passworts an ${r.to} gesendet.`, 6000);
+});
+// Einmal-Passwort einmal anzeigen (wird nirgends gespeichert) – mit „Kopieren“ und Hilfe zum Vorlesen
+function pwShow(r) {
+  const o = document.createElement('div');
+  o.style.cssText = 'position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px';
+  o.innerHTML = `<div style="background:#fff;color:#1d1d24;border-radius:16px;padding:22px;width:min(440px,100%);font:15px/1.5 system-ui,sans-serif">
+    <div style="font:700 20px Fredoka,system-ui,sans-serif">🔑 Einmal-Passwort</div>
+    <div class="small muted" translate="no">${esc(r.to)}</div>
+    <div translate="no" style="margin:14px 0 8px;background:#FFFAEA;border:2px solid #F7C838;border-radius:12px;padding:14px;text-align:center;font:700 26px ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px;user-select:all">${esc(r.password)}</div>
+    <p class="small muted" style="margin:0 0 12px">Zum Vorlesen: „Foto“, Bindestrich, vier Ziffern, Bindestrich, dann ein großer und drei kleine Buchstaben.</p>
+    ${r.mailError ? '<p style="background:#fde8e8;color:#9b1c1c;border-radius:10px;padding:10px 12px;margin:0 0 10px;font-size:14px">⚠️ Die Mail an den Kunden konnte nicht gesendet werden. Bitte gib ihm das Passwort selbst weiter.</p>'
+      : '<p style="margin:0 0 10px;font-size:14px">Der Kunde hat das Passwort auch per Mail bekommen.</p>'}
+    ${r.confirmed ? '<p style="margin:0 0 10px;font-size:14px">✓ Seine E-Mail-Adresse war noch nicht bestätigt – das ist jetzt mit erledigt.</p>' : ''}
+    <p style="margin:0 0 18px;font-size:14px">Beim nächsten Anmelden im Dashboard legt er ein eigenes Passwort fest. Das Einmal-Passwort wird nur jetzt angezeigt.</p>
+    <div style="display:flex;gap:10px;justify-content:flex-end"><button type="button" class="btn" data-r="copy">Kopieren</button><button type="button" class="btn primary" data-r="ok">Fertig</button></div></div>`;
+  const done = () => { o.remove(); document.removeEventListener('keydown', key); };
+  const key = e => { if (e.key === 'Escape') done(); };
+  o.addEventListener('click', e => {
+    const b = e.target.closest('[data-r]'); if (!b) return;
+    if (b.dataset.r !== 'copy') return done();
+    (navigator.clipboard ? navigator.clipboard.writeText(r.password) : Promise.reject()).then(() => { b.textContent = '✓ Kopiert'; }, () => { b.textContent = 'Bitte abschreiben'; });
+  });
+  document.addEventListener('keydown', key); document.body.appendChild(o);
+}
 // Neueste Fotobox-Software: liegt privat bei Hetzner, nur angemeldete Kunden bekommen einen Download-Link (gilt 1 Stunde)
-let swInfo = null, swAt = 0;
-async function loadSoftware() {
+let swInfo = null, swAt = 0, swLoad = null;
+// läuft schon eine Abfrage, auf diese warten statt doppelt zu fragen (sonst käme auch „Was ist neu“ doppelt)
+function loadSoftware() { return swLoad ||= swFetch().finally(() => { swLoad = null; }); }
+async function swFetch() {
   const el = $('#swInfo'); if (!el || !window.FOTOBOX_PHOTOS) return;
   try {
     const t = (await sb.auth.getSession()).data.session?.access_token; if (!t) return;
@@ -1710,10 +1896,30 @@ async function showWhatsNew() {
   });
   document.body.appendChild(o);
 }
-$('#swDl').onclick = async () => {
+async function swGo() {
   if (!swInfo || Date.now() - swAt > 45 * 60e3) await loadSoftware(); // Link nach einer Stunde ungültig – dann neu holen
-  if (swInfo?.url) location.href = swInfo.url;
-};
+  if (!swInfo?.url || Date.now() - swAt > 55 * 60e3) return toast('Der Download ist gerade nicht möglich. Bitte später noch einmal versuchen.', 6000);
+  location.href = swInfo.url;
+  toast('Der Download startet – die Datei findest du danach im Ordner „Downloads“.', 6000);
+}
+$('#swDl').onclick = swGo;
+// Download von überall (Knopf „Software“ in der Kopfzeile, Willkommens-Karte, ?download=1): Seite „Geräte“ mit der
+// Installations-Anleitung zeigen und den Download starten
+function swOpen() {
+  $('#nav [data-tab="devices"]')?.click();
+  setTimeout(() => { const c = $('#swCard'); c?.scrollIntoView({ behavior: 'smooth', block: 'center' }); c?.classList.add('pick'); setTimeout(() => c?.classList.remove('pick'), 4000); }, 150);
+  return swGo();
+}
+$('#navSw').onclick = swOpen;
+$('#startDl').onclick = swOpen;
+if (DL_AUTO) { // Knopf in der Willkommens-Mail: nach der Anmeldung gleich herunterladen, danach den Zusatz aus der Adresse nehmen
+  if (!signup) $('#authHint').textContent = 'Melde dich an – danach startet der Download der Fotobox-Software sofort.';
+  addEventListener('pm-ready', () => {
+    const sp = new URLSearchParams(location.search); sp.delete('download');
+    history.replaceState(null, '', location.pathname + (String(sp) ? '?' + sp : '') + location.hash);
+    swOpen();
+  }, { once: true });
+}
 async function loadRelease() {
   if (!CFG.releasesRepo) return;
   try {
