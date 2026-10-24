@@ -2696,6 +2696,7 @@ I18N.add('en', {
 "Titel": "Title",
 "Titel für Haftungsausschluss": "Disclaimer title",
 "Tokio": "Tokyo",
+"Ton an": "Sound on",
 "Ton aufnehmen": "Record sound",
 "Touchscreen": "Touchscreen",
 "Trage als neueste Version ein …": "Registering as latest version …",
