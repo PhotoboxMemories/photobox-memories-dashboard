@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.97": {
+      "date": "2026-10-24",
+      "notes": {
+        "de": [
+          "Keine alten Fotos mehr beim nächsten Ereignis: Hängen nach einem Ereignis noch Fotos in der Drucker-Warteschlange (z. B. Papier leer), fragt die Fotobox beim Beenden, ob sie gelöscht werden sollen, und löscht Reste beim Wechsel zum nächsten Ereignis und beim Start. Neu in den Druckeinstellungen: „Jetzt alle wartenden Fotos löschen“. Live-Karikaturen vom Handy, die älter als 2 Stunden sind, werden nicht mehr gezeichnet und gedruckt."
+        ],
+        "en": [
+          "No more old photos at the next event: if photos are still stuck in the printer queue after an event (e.g. paper empty), the photo booth asks when quitting whether to delete them, and deletes leftovers when switching to the next event and at start-up. New in the print settings: “Delete all waiting photos now”. Live caricatures from phones older than 2 hours are no longer drawn and printed."
+        ],
+        "tr": [
+          "Bir sonraki etkinlikte eski fotoğraf yok: Bir etkinlikten sonra yazıcı kuyruğunda hâlâ fotoğraf kalırsa (ör. kâğıt bitti), fotoğraf kabini kapatılırken silinip silinmeyeceğini sorar, bir sonraki etkinliğe geçerken ve açılışta kalanları siler. Yazdırma ayarlarında yeni: „Bekleyen tüm fotoğrafları şimdi sil“. 2 saatten eski telefon canlı karikatürleri artık çizilmez ve basılmaz."
+        ],
+        "fr": [
+          "Plus d’anciennes photos au prochain événement : si des photos restent bloquées dans la file d’impression après un événement (p. ex. plus de papier), la photobooth demande à la fermeture s’il faut les supprimer, et supprime les restes au passage à l’événement suivant et au démarrage. Nouveau dans les réglages d’impression : « Supprimer maintenant toutes les photos en attente ». Les caricatures en direct envoyées depuis un téléphone il y a plus de 2 heures ne sont plus dessinées ni imprimées."
+        ],
+        "es": [
+          "Se acabaron las fotos antiguas en el siguiente evento: si tras un evento quedan fotos en la cola de impresión (p. ej. sin papel), el fotomatón pregunta al cerrar si hay que borrarlas, y borra los restos al cambiar al siguiente evento y al arrancar. Nuevo en los ajustes de impresión: «Borrar ahora todas las fotos en espera». Las caricaturas en directo desde el móvil con más de 2 horas ya no se dibujan ni se imprimen."
+        ],
+        "it": [
+          "Niente più foto vecchie all’evento successivo: se dopo un evento restano foto nella coda di stampa (ad es. carta finita), la photobooth chiede alla chiusura se eliminarle, ed elimina i resti al passaggio all’evento successivo e all’avvio. Nuovo nelle impostazioni di stampa: «Elimina ora tutte le foto in attesa». Le caricature dal vivo inviate dal telefono più di 2 ore fa non vengono più disegnate né stampate."
+        ]
+      }
+    },
     "1.17.96": {
       "date": "2026-10-24",
       "notes": {
