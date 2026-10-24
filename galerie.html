@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Fotogalerie</title>
-<script>window.I18N_V = '20261022-1';</script>
+<script>window.I18N_V = '20261023-2';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache: vom QR-Code der Fotobox (?l=…), sonst die des Handys
 (function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
@@ -81,50 +81,95 @@
   .spin{width:40px;height:40px;border:4px solid rgba(0,0,0,.1);border-top-color:#F9CB38;border-radius:50%;animation:sp 1s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}} @keyframes shim{to{background-position:-300% 0}} @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}}
   @media(prefers-reduced-motion:reduce){.polaroid,.ph,.spin{animation:none}}
-  /* Foto-Shop unter dem Einzelfoto (Druck über Gelato, Bezahlung über Stripe) */
+  /* Foto-Shop unter dem Einzelfoto (Druck über Printful/Gelato, Bezahlung über Stripe) */
   .shop{margin:30px 0 6px;padding:20px 14px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:18px}
-  .shop h2{margin:0;font:600 22px Fredoka,system-ui,sans-serif;text-align:center}
+  .shop h2{margin:0;font:600 22px Fredoka,system-ui,sans-serif;text-align:center;outline:none}
   .shop .lead{margin:4px 0 16px;text-align:center;color:var(--muted);font-size:14px}
   .sgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
   .sp{display:flex;flex-direction:column;gap:2px;text-align:left;background:#fff;color:#1D1D1B;border:0;border-radius:14px;padding:8px 8px 11px;font:inherit;cursor:pointer;transition:transform .15s}
   .sp:hover{transform:translateY(-2px)}
   .sp b{font-size:14px;line-height:1.25;margin-top:7px;padding:0 2px}
-  .sp span{font-size:14px;color:#9a7400;font-weight:700;padding:0 2px}
+  .sp span{font-size:14px;color:#7a5c00;font-weight:700;padding:0 2px}
+  .sp.sph{cursor:default;pointer-events:none}
+  .sph .mk{background:linear-gradient(100deg,#eee 30%,#f8f8f8 50%,#eee 70%) 0 0/300% 100%;animation:shim 1.4s linear infinite}
+  .sph b,.sph span{display:block;height:12px;border-radius:6px;background:#eee;margin:9px 2px 0}.sph span{width:45%;margin-top:6px}
+  .sgo{display:flex;width:100%;align-items:center;justify-content:center;gap:8px;margin:0 0 6px;padding:14px 18px;font-size:15px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.18)}
+  .sgo[hidden]{display:none}
   .slegal{color:#8a8a92;font-size:12px;text-align:center;margin:12px 0 0;line-height:1.7}
   .slegal a{color:#c9c9cf}
   .stest{background:var(--y);color:var(--k);font-weight:700;font-size:13px;text-align:center;border-radius:10px;padding:6px 10px;margin-bottom:12px}
-  .sdlg{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.72);display:none;align-items:flex-end;justify-content:center}
+  /* Bestellfenster: am Handy im Vollbild (Kopf oben, Fußleiste mit Preis und Bezahlen immer sichtbar), sonst als Fenster */
+  .sdlg{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.72);display:none;align-items:stretch;justify-content:center;overscroll-behavior:contain}
   .sdlg.on{display:flex}
-  .sbox{position:relative;width:100%;max-width:460px;max-height:94vh;overflow:auto;background:#fff;color:#1D1D1B;border-radius:20px 20px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom))}
-  @media(min-width:600px){.sdlg{align-items:center}.sbox{border-radius:20px}}
-  .sbox .mk{max-width:280px;margin:0 auto}
-  .sreal{display:block;width:100%;max-width:300px;aspect-ratio:1;margin:0 auto;border-radius:14px;background:#efeae1;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+  .sbox{position:relative;display:flex;flex-direction:column;width:100%;height:100%;height:100dvh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:#fff;color:#1D1D1B}
+  @media(min-width:600px) and (min-height:620px){.sdlg{align-items:center;padding:16px}.sbox{max-width:500px;height:auto;max-height:94vh;max-height:94dvh;border-radius:20px}}
+  .sbox button{touch-action:manipulation}
+  .shd{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;padding-top:calc(8px + env(safe-area-inset-top));background:#fff;border-bottom:1px solid #eee}
+  .sti{flex:1;min-width:0;display:flex;flex-direction:column}
+  .shd h3{margin:0;font:600 19px/1.2 Fredoka,system-ui,sans-serif;overflow-wrap:anywhere}
+  .sunit{font-size:14px;font-weight:700;color:#7a5c00}
+  .sx{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:rgba(0,0,0,.07);font-size:24px;line-height:1;cursor:pointer;color:#1D1D1B}
+  .sbody{flex:1 0 auto;padding:10px 16px 14px}
+  .sbody .mk{max-width:300px;margin:4px auto 0}
+  /* Arbeitsfläche so groß, dass sie beim Öffnen ganz zwischen Kopf und Fußleiste passt (mit Fotoauswahl darüber kleiner) */
+  .swork{position:relative;width:100%;max-width:55vh;max-width:min(55dvh,max(160px,calc(100dvh - 215px)));margin:4px auto 0}
+  #sdPick:not(:empty)+#sdMk .swork{max-width:min(55dvh,max(160px,calc(100dvh - 320px)))}
+  @media(min-width:600px) and (min-height:620px){.swork{max-width:min(55dvh,calc(94dvh - 215px))}#sdPick:not(:empty)+#sdMk .swork{max-width:min(55dvh,calc(94dvh - 320px))}}
+  .sreal{display:block;width:100%;height:auto;border-radius:14px;background:#efeae1;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
   .sreal:active{cursor:grabbing}
-  .pedlbl{text-align:center;margin-top:8px}
-  #sdMk .sreal + .pedlbl + .ped{margin-top:6px}
-  .ped{position:relative;width:100%;overflow:hidden;background:#fff;border:1px solid #e3e0d8;border-radius:10px;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;margin-top:30px}
-  .ped:active{cursor:grabbing}
-  .ped img{position:absolute;max-width:none;pointer-events:none;-webkit-user-drag:none}
-  .ped.mug::before,.ped.mug::after{content:'';position:absolute;top:0;bottom:0;width:6%;z-index:1;background:repeating-linear-gradient(45deg,rgba(255,255,255,.6) 0 5px,rgba(255,255,255,.25) 5px 10px);pointer-events:none}
-  .ped.mug::before{left:0}.ped.mug::after{right:0}
-  .pedbar{display:flex;align-items:center;gap:8px;margin-top:10px;color:#6b6b78}
-  .pedbar input{flex:1;accent-color:#E2A800}
-  .pedbar button{border:1px solid #ddd;background:#f6f6f6;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;color:#1D1D1B}
-  .sbox h3{margin:12px 0 6px;font:600 20px Fredoka,system-ui,sans-serif;text-align:center}
-  .sx{position:absolute;right:10px;top:10px;z-index:1;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.08);font-size:22px;line-height:1;cursor:pointer;color:#1D1D1B}
-  .sdrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid #eee;font-size:15px}
-  .sdrow.tot{font-size:17px;border-bottom:0}
-  .qty{display:flex;align-items:center;gap:14px}
-  .qty button{width:36px;height:36px;border-radius:50%;border:1px solid #ddd;background:#f6f6f6;font-size:19px;line-height:1;cursor:pointer;color:#1D1D1B}
-  .fine{font-size:12px;color:#6b6b78;margin:6px 0 0;text-align:center}
-  .sbox .btn{width:100%;margin-top:12px;padding:15px;font-size:16px}
-  .sbox .err{text-align:center;color:#d23b3b;margin-top:8px}
-  .spick{margin:12px 0 2px;text-align:center}
+  .sreal:focus-visible{outline:3px solid #E2A800;outline-offset:2px}
+  .smini{position:absolute;left:3%;top:3%;width:36%;height:auto;border-radius:4px;box-shadow:0 1px 5px rgba(0,0,0,.3);pointer-events:none}
+  .shint{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:max-content;max-width:92%;background:rgba(29,29,27,.84);color:#fff;font-size:13px;line-height:1.3;text-align:center;border-radius:999px;padding:7px 14px;pointer-events:none}
+  .sload{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .sfail{display:flex;flex-direction:column;align-items:center;gap:4px;margin:4px 0 0;padding:26px 16px;border-radius:14px;background:#f1eee6;text-align:center;color:#4a4a52;font-size:14px}
+  .sfail p{margin:0}
+  .sbox .sfail .btn{width:auto;min-height:44px;background:#1D1D1B;color:#fff;padding:10px 20px;font-size:15px}
+  .spre{display:flex;gap:6px;margin:10px 0 0;padding:4px;background:#f1eee6;border-radius:12px}
+  .spre[hidden]{display:none}
+  .spre button{flex:1;min-height:44px;border:0;border-radius:9px;background:transparent;font:600 14px system-ui,sans-serif;color:#4a4a52;cursor:pointer;padding:6px 8px}
+  .spre button[aria-pressed="true"]{background:#fff;color:#1D1D1B;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .szoom{display:flex;align-items:center;gap:8px;margin-top:6px;color:#6b6b78}
+  .szoom input{flex:1;min-width:0;height:44px;margin:0;accent-color:#E2A800}
+  .szoom button{min-height:44px;border:1px solid #ddd;background:#f6f6f6;border-radius:999px;padding:6px 14px;font:inherit;font-size:14px;cursor:pointer;color:#1D1D1B}
+  .sq{margin:6px 0 0;font-size:13px;border-radius:8px;padding:6px 10px}
+  .sq:empty{display:none}
+  .sq.warn{background:#fff4cc;color:#6b4f00}
+  .sq.bad{background:#fdeaea;color:#a1201b}
+  .fine{font-size:12px;color:#6b6b78;margin:8px 0 0;text-align:center}
+  .sfoot{position:sticky;bottom:0;z-index:3;background:#fff;border-top:1px solid #eee;padding:10px 16px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -6px 16px rgba(0,0,0,.06)}
+  .sfrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .qty{display:flex;align-items:center;gap:8px}
+  .qty b{min-width:1.6em;text-align:center;font-size:17px}
+  .qty button{width:44px;height:44px;border-radius:50%;border:1px solid #ddd;background:#f6f6f6;font-size:20px;line-height:1;cursor:pointer;color:#1D1D1B}
+  .qty button[aria-disabled="true"]{opacity:.4;cursor:default}
+  .stot{display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+  .stot small{font-size:12px;color:#6b6b78}
+  .stot b{font-size:19px}
+  .sbox .btn{width:100%;min-height:50px;margin-top:10px;padding:13px 15px;font-size:16px;display:flex;align-items:center;justify-content:center;gap:10px}
+  .sbox .btn[aria-busy="true"]{opacity:.8;cursor:progress}
+  .sbox .err{text-align:center;color:#c0262d;margin-top:8px;min-height:0;font-size:14px}
+  .sbox .err:empty{display:none}
+  .sbox .err.info{color:#6b4f00;background:#fff4cc;border-radius:8px;padding:7px 10px}
+  .sspin{flex:none;width:18px;height:18px;border:2.5px solid rgba(29,29,27,.25);border-top-color:#1D1D1B;border-radius:50%;animation:sp .8s linear infinite}
+  .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+  .spick{margin:2px 0 6px;text-align:center}
   .spick>span{font-size:14px;color:#6b6b78}
-  .spt{display:flex;gap:8px;justify-content:center;overflow-x:auto;padding:6px 2px}
+  .spt{display:flex;gap:8px;justify-content:flex-start;overflow-x:auto;padding:6px 2px}
+  .spt button:first-child{margin-left:auto}.spt button:last-child{margin-right:auto} /* mittig, bei Überlauf aber von links scrollbar */
   .spt button{flex:0 0 auto;width:64px;height:64px;border-radius:10px;border:3px solid transparent;padding:0;overflow:hidden;background:#eee;cursor:pointer}
   .spt button.on{border-color:var(--y)}
   .spt img{width:100%;height:100%;object-fit:cover;display:block}
+  @media(max-height:560px) and (max-aspect-ratio:5/4){.spt button{width:52px;height:52px}} /* kleine Handys: mehr Platz für die Arbeitsfläche */
+  @media(prefers-reduced-motion:reduce){.sph .mk,.sspin{animation:none}.sp{transition:none}}
+  /* Handy quer (niedriges Fenster): Kopf und Fußleiste scrollen mit, links die Arbeitsfläche, rechts die Bedienung */
+  @media(max-height:500px) and (min-aspect-ratio:5/4){
+    .shd,.sfoot{position:static}
+    .sbody{display:grid;grid-template-columns:min(calc(100vh - 86px),55%) minmax(0,1fr);grid-template-columns:min(calc(100dvh - 86px),55%) minmax(0,1fr);grid-template-rows:auto auto auto 1fr;column-gap:18px;align-items:start}
+    .sbody>#sdMk{grid-column:1;grid-row:1/-1}
+    .sbody>:not(#sdMk){grid-column:2}
+    .swork,#sdPick:not(:empty)+#sdMk .swork,.sbody .mk{max-width:none}
+    .szoom{flex-wrap:wrap}.szoom input{min-width:110px}
+  }
   .snote{color:var(--muted);font-size:13px;text-align:center;margin:10px 0 0}
   .keep{color:var(--muted);font-size:13px;text-align:center;margin:10px 0 0}
   .sdone{display:flex;flex-direction:column;gap:4px;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:14px;margin-bottom:16px}
@@ -143,7 +188,7 @@
 <script src="config.js?v=20261018-9"></script>
 <script src="icons.js?v=20261017-2"></script>
 <script src="ad.js?v=20261022-1"></script>
-<script src="shop.js?v=20261020-1"></script>
+<script src="shop.js?v=20261023-2"></script>
 <script>
 (function () {
   'use strict';
@@ -160,7 +205,9 @@
   const Q = new URLSearchParams(location.search), token = Q.get('g') || '', single = Q.get('f') || '', show = Q.get('show') === '1';
   const url = path => window.FOTOBOX_PHOTOS ? FOTOBOX_PHOTOS.url(path) : CFG.supabaseUrl + '/storage/v1/object/public/photos/' + String(path).split('/').map(encodeURIComponent).join('/');
   // Notfall-Kopie: antwortet der Foto-Speicher (Hetzner) nicht, das Bild bzw. Video von der Ersatzadresse laden
-  document.addEventListener('error', e => { const el = e.target; if (!/^(IMG|VIDEO)$/.test(el?.tagName) || el.dataset.alt) return; const a = window.FOTOBOX_PHOTOS?.altSrc?.(el.currentSrc || el.src); if (a) { el.dataset.alt = '1'; el.src = a; } }, true);
+  // data-big: zuletzt dieses Bild nehmen (Fotoauswahl im Shop: das Original, solange seine Vorschau fehlt)
+  document.addEventListener('error', e => { const el = e.target; if (!/^(IMG|VIDEO)$/.test(el?.tagName)) return; const a = !el.dataset.alt && window.FOTOBOX_PHOTOS?.altSrc?.(el.currentSrc || el.src);
+    if (a) { el.dataset.alt = '1'; el.src = a; } else if (el.dataset.big) { el.src = el.dataset.big; el.dataset.big = ''; } }, true);
   const fetchAny = async path => { // Herunterladen: erst Hetzner, sonst die Notfall-Kopie
     try { const r = await fetch(url(path)); if (r.ok) return r; } catch {}
     const a = window.FOTOBOX_PHOTOS?.alt?.(path); if (!a) throw new Error('nicht erreichbar'); const r = await fetch(a); if (!r.ok) throw new Error('nicht erreichbar'); return r;
@@ -258,11 +305,13 @@
     b.disabled = false; b.textContent = 'Alle herunterladen';
   }
 
-  // Foto-Shop unter dem Einzelfoto: Poster, Leinwand, Tasse … mit dem eigenen Foto (Druck und Versand: Gelato, Bezahlung: Stripe).
-  // Produkte, Preise und Rechtstexte kommen vom Server (Funktion photo-shop); ohne Freigabe dort erscheint hier nichts.
+  // Foto-Shop unter dem Einzelfoto: Tasse, Mauspad, Magnet … mit dem eigenen Foto (Druck und Versand: Printful oder Gelato,
+  // Bezahlung: Stripe). Produkte, Preise und Rechtstexte kommen vom Server (Funktion photo-shop); ohne Freigabe dort erscheint hier nichts.
   const shopCall = body => fetch(CFG.supabaseUrl + '/functions/v1/photo-shop', { method: 'POST', body: JSON.stringify(body),
     headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey } })
     .then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'HTTP ' + r.status); return j; });
+  // Keine Verbindung (Funkloch): fetch wirft dann einen TypeError („Failed to fetch“, Safari: „Load failed“)
+  const offline = e => e instanceof TypeError || /Failed to fetch|Load failed|NetworkError/i.test(String(e?.message || ''));
   function orderNote() {
     const k = Q.get('bestellt'); if (k !== 'ok' && k !== 'abbruch') return '';
     try { const u = new URL(location.href); u.searchParams.delete('bestellt'); history.replaceState(null, '', u.href); } catch {}
@@ -271,126 +320,351 @@
       : '<div class="sdone"><b>Bestellung abgebrochen</b><span>Es wurde nichts berechnet. Du kannst jederzeit neu bestellen.</span></div>';
   }
   async function showShop(src) {
-    if (!window.PM_SHOP || !/\.(jpe?g|png)$/i.test(single)) return;
-    const testing = Q.get('shop') === 'test';
-    let s; try { s = await shopCall({ action: 'info', path: single, test: testing }); } catch { return; }
-    const im = $('.polaroid img');
-    if (!s?.products?.length || !im || $('#shop')) return;
+    if (!window.PM_SHOP || !/\.(jpe?g|png)$/i.test(single) || $('#shop')) return;
+    const testing = Q.get('shop') === 'test', ask = () => shopCall({ action: 'info', path: single, test: testing });
     PM_SHOP.addCss();
+    const sec = document.createElement('section'); sec.className = 'shop'; sec.id = 'shop'; sec.setAttribute('aria-labelledby', 'shopH');
+    const head = '<h2 id="shopH" tabindex="-1">Dein Foto als Andenken</h2><p class="lead">Gedruckt und direkt zu dir nach Hause geschickt.</p>';
+    // Platzhalter-Karten, solange die Produkte laden: erst nach 0,4 s und nur, wenn es beim letzten Besuch auf diesem Handy
+    // Produkte gab – sonst erschiene kurz ein Shop, den es nicht gibt (Shop aus oder nur im Testmodus)
+    const KEY = 'pm-shop' + (testing ? '-t' : ''), had = (() => { try { return localStorage.getItem(KEY) === '1'; } catch { return false; } })();
+    const phT = had && setTimeout(() => { sec.innerHTML = head + `<div class="sgrid" aria-busy="true">${'<div class="sp sph" aria-hidden="true"><div class="mk"></div><b></b><span></span></div>'.repeat(2)}</div>`; $('#main').appendChild(sec); }, 400);
+    let s = null; // klappt es nicht, einmal nach 3 s wiederholen
+    try { s = await ask(); } catch { try { await new Promise(r => setTimeout(r, 3000)); s = await ask(); } catch {} }
+    clearTimeout(phT);
+    if (s) try { localStorage.setItem(KEY, s.products?.length ? '1' : '0'); } catch {}
+    const im = $('.polaroid img');
+    if (!s?.products?.length || !im) { sec.remove(); return; }
     const eur = c => PM_SHOP.price(c, LOC);
     // Gedruckt wird das Original-Foto ohne Rahmen (bei mehreren Fotos wählt der Gast). Ältere Fotos ohne Original: das fertige Foto.
-    const n = Math.min(8, Math.max(0, s.originals | 0)), oBase = single.replace(/\.(jpe?g|png)$/i, '');
-    const thumbOf = k => k ? url(`${oBase}_o${k}t.jpg`) : src;
-    const isLand = u => new Promise(r => { const i = new Image(); i.onload = () => r(i.naturalWidth > i.naturalHeight); i.onerror = () => r(true); i.src = u; });
-    let pick = n ? 1 : 0, land = pick ? await isLand(thumbOf(1)) : im.naturalWidth > im.naturalHeight;
-    const mk = p => PM_SHOP.mockup(p.type, thumbOf(pick), land, { side: p.side, area: p.area });
+    let n = Math.min(8, Math.max(0, s.originals | 0));
+    const oBase = single.replace(/\.(jpe?g|png)$/i, ''), thumbOf = k => k ? url(`${oBase}_o${k}t.jpg`) : src, bigOf = k => url(`${oBase}_o${k}.jpg`);
+    // Foto k laden: die Vorschau (sonst ihre Notfall-Kopie). Fehlt die Vorschau eines Originals noch – die Fotobox lädt sie erst
+    // nach dem Original hoch –, das Original selbst; FULL merkt sich solche Bilder (dann ist auch die Druckqualität bekannt).
+    const FULL = new WeakSet(), viaAlt = u => PM_SHOP.loadImg(u).catch(e => { const a = window.FOTOBOX_PHOTOS?.altSrc?.(u); if (!a) throw e; return PM_SHOP.loadImg(a); });
+    const photoOf = k => viaAlt(thumbOf(k)).catch(e => { if (!k) throw e; return viaAlt(bigOf(k)).then(i => (FULL.add(i), i)); });
+    const isLand = k => photoOf(k).then(i => i.naturalWidth > i.naturalHeight, () => true);
+    let pick = n ? 1 : 0, land = pick ? await isLand(1) : im.naturalWidth > im.naturalHeight;
+    // Zuletzt gewählte Lage je Produkt: bleibt beim Schließen erhalten, die Produktkarte zeigt sie (solange das Foto gleich ist)
+    const memo = {};
+    const mk = p => { const m = memo[p.id], o = { area: p.area, alt: pick ? bigOf(pick) : '' };
+      return PM_SHOP.mockup(p.type, thumbOf(pick), land, m && m.pick === pick ? { ...o, view: m.view, place: m.place } : { ...o, side: p.side }); };
+    const cards = () => sec.querySelectorAll('.sp[data-p]').forEach(c => { const p = s.products.find(x => x.id === c.dataset.p); if (p) c.querySelector('.mk').outerHTML = mk(p); });
     let names = s.countries.join(', ');
     try { const dn = new Intl.DisplayNames([LOC], { type: 'region' }); names = s.countries.map(c => dn.of(c)).join(', '); } catch {}
     const L = s.legal, link = (u, t) => u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${t}</a>` : '';
     const vatTxt = s.vat === 0 ? '<span>Kein Ausweis der Umsatzsteuer (§ 19 UStG).</span>' : '<span>Alle Preise inkl. MwSt.</span>';
-    const sec = document.createElement('section'); sec.className = 'shop'; sec.id = 'shop';
-    sec.innerHTML = `${s.test ? '<div class="stest">Testmodus – nur über den Test-Link sichtbar</div>' : ''}
-      <h2>Dein Foto als Andenken</h2><p class="lead">Gedruckt und direkt zu dir nach Hause geschickt.</p>
-      <div class="sgrid">${s.products.map(p => `<button class="sp" type="button" data-p="${esc(p.id)}">${mk(p)}<b>${esc(p.name)}</b><span translate="no">${eur(p.cents)}</span></button>`).join('')}</div>
-      ${n ? '<p class="snote">Gedruckt wird dein Foto ohne Rahmen in voller Qualität.</p>' : ''}
-      <p class="slegal">${vatTxt} · ${s.ship ? `<span>Versand:</span> <b translate="no">${eur(s.ship)}</b>` : '<span>Kostenloser Versand</span>'} · <span>Lieferung nach:</span> <span translate="no">${esc(names)}</span></p>
+    const shipTxt = s.ship ? `<span>Versand:</span> <b translate="no">${eur(s.ship)}</b>` : '<span>Kostenloser Versand</span>';
+    const fullQ = '<p class="snote">Gedruckt wird dein Foto ohne Rahmen in voller Qualität.</p>';
+    sec.innerHTML = `${s.test ? '<div class="stest">Testmodus – nur über den Test-Link sichtbar</div>' : ''}${head}
+      <div class="sgrid">${s.products.map(p => `<button class="sp" type="button" data-p="${esc(p.id)}" aria-haspopup="dialog">${mk(p)}<b>${esc(p.name)}</b><span translate="no">${eur(p.cents)}</span></button>`).join('')}</div>
+      ${n ? fullQ : ''}
+      <p class="slegal">${vatTxt} · ${shipTxt} · <span>Lieferung nach:</span> <span translate="no">${esc(names)}</span></p>
       <p class="slegal">${s.seller ? `<span>Verkäufer:</span> <span translate="no">${esc(s.seller)}</span> · ` : ''}${[link(L.agb, 'AGB'), link(L.privacy, 'Datenschutz'), link(L.imprint, 'Impressum'), link(L.withdrawal, 'Widerrufsbelehrung')].filter(Boolean).join(' · ')}</p>`;
-    $('#main').appendChild(sec);
-    let dlg = $('#sdlg');
-    if (!dlg) {
-      dlg = document.createElement('div'); dlg.id = 'sdlg'; dlg.className = 'sdlg'; dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-modal', 'true');
-      dlg.innerHTML = `<div class="sbox"><button class="sx" type="button" aria-label="Schließen">×</button><div id="sdMk"></div><h3 id="sdName" translate="no"></h3><div id="sdPick"></div>
-        <div class="sdrow"><span>Menge</span><div class="qty"><button type="button" data-q="-1" aria-label="Weniger">−</button><b id="sdQty">1</b><button type="button" data-q="1" aria-label="Mehr">+</button></div></div>
-        <div class="sdrow"><span>Preis</span><b id="sdPrice" translate="no"></b></div>
-        <div class="sdrow"><span>Versand</span><b id="sdShip" translate="no"></b></div>
-        <div class="sdrow tot"><span>Gesamt</span><b id="sdTot" translate="no"></b></div>
-        <p class="fine">${vatTxt} <span>Lieferadresse und Bezahlung auf der nächsten Seite.</span> <span>Die Rechnung kommt per E-Mail.</span></p>
-        <p class="fine">Wird mit deinem Foto angefertigt – deshalb gibt es kein Widerrufsrecht.</p>
-        <div class="err" id="sdErr"></div><button class="btn" type="button" id="sdGo">Weiter zur Bezahlung</button></div>`;
-      document.body.appendChild(dlg);
-      document.addEventListener('keydown', e => { if (e.key === 'Escape') dlg.classList.remove('on'); });
+    if (!sec.isConnected) $('#main').appendChild(sec);
+    // Knopf unter „Foto speichern“ springt zum Shop; Tasse und Mauspad nennt er nur, wenn genau die angeboten werden
+    const go = $('#oneShop'), types = [...new Set(s.products.map(p => p.type))].sort().join();
+    if (go) { go.querySelector('span').textContent = types === 'mousepad,mug' ? 'Als Tasse oder Mauspad bestellen' : 'Foto als Andenken bestellen';
+      go.hidden = false; go.onclick = () => { $('#shopH').focus({ preventScroll: true }); sec.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }; }
+
+    const dlg = document.createElement('div'); dlg.id = 'sdlg'; dlg.className = 'sdlg';
+    dlg.innerHTML = `<div class="sbox" role="dialog" aria-modal="true" aria-labelledby="sdName">
+      <div class="shd"><div class="sti"><h3 id="sdName" translate="no"></h3><span class="sunit" id="sdUnit" translate="no"></span></div><button class="sx" type="button" aria-label="Schließen">×</button></div>
+      <div class="sbody"><div id="sdPick"></div><div id="sdMk"></div>
+        <div id="sdCtl"><div class="spre" id="sdPre" role="group" aria-label="Lage des Fotos"></div><div class="spre" id="sdView" role="group" aria-label="Ansicht der Tasse" hidden></div>
+          <div class="szoom"><span aria-hidden="true">−</span><input type="range" id="sdZoom" min="0" max="100" step="1" aria-label="Zoom"><span aria-hidden="true">+</span><button type="button" id="sdReset">Zurücksetzen</button></div>
+          <p class="sq" id="sdQ" role="status" translate="no"></p></div>
+        <p class="fine">${shipTxt} · ${vatTxt} <span>Lieferadresse und Bezahlung auf der nächsten Seite.</span> <span>Die Rechnung kommt per E-Mail.</span></p>
+        <p class="fine">Wird mit deinem Foto angefertigt – deshalb gibt es kein Widerrufsrecht.</p></div>
+      <div class="sfoot"><div class="sfrow"><div class="qty" role="group" aria-label="Menge"><button type="button" data-q="-1" aria-label="Weniger">−</button><b id="sdQty" aria-live="polite">1</b><button type="button" data-q="1" aria-label="Mehr">+</button></div>
+          <div class="stot"><small>${s.ship ? 'Gesamt inkl. Versand' : 'Gesamt · Kostenloser Versand'}</small><b id="sdTot" translate="no"></b></div></div>
+        <div class="err" id="sdErr" role="alert" translate="no"></div><button class="btn" type="button" id="sdGo" translate="no"></button></div></div>`;
+    document.body.appendChild(dlg);
+
+    // Bestellfenster mit EINER Arbeitsfläche: der Vorschau des echten Produkts, darauf schiebt und zoomt der Gast sein Foto.
+    // place = { x, y, w }: linke Kante, obere Kante, Breite als Anteile der Druckfläche (so rechnet auch der Server); die Höhe
+    // ergibt sich aus dem Seitenverhältnis des Fotos. mode = gewählte Vorlage (PM_SHOP.presets), view = sichtbare Seite der Tasse.
+    // Ohne Druckfläche (Gelato) gibt es nur die Vorschau – dort platziert Gelato das Foto selbst.
+    let cur = null, qty = 1, place = null, mode = '', view = .25, ia = 1, img = null, base = null, pxW = 0, ready = Promise.resolve(), edTk = 0, edPick = 0, pend = null;
+    let act = false, guide = null, low = false, raf = 0, raw = null, hinted = false, opener = null, busy = false, sayT = 0;
+    const A = () => cur.area[0] / cur.area[1], hRel = (w = place.w) => w * A() / ia;
+    const pres = () => PM_SHOP.presets(cur.type, ia, A(), view), preOf = id => pres().find(p => p.id === id) || pres()[0];
+    const geo = () => PM_SHOP.geom(cur.type, A(), view, !!base);
+    const midU = () => cur.type === 'mug' ? view : .5; // Mitte zum Einrasten – Tasse: Mitte der sichtbaren Seite
+    // erlaubte Breite: über alle Vorlagen des Produkts (Zoom wechselt bei Bedarf die Vorlage, siehe follow), nach oben zusätzlich
+    // durch die Druckqualität begrenzt (höchstens 2,6-fach vergrößert) – die Standardlage jeder Vorlage bleibt aber erreichbar
+    const range = () => { const P = pres(), a = Math.min(...P.map(p => p.min)), q = pxW ? 2.6 * pxW / cur.area[0] : Infinity;
+      return [a, Math.max(a, ...P.map(p => p.place.w), Math.min(q, Math.max(...P.map(p => p.max))))]; };
+    const clampP = () => { const [a, z] = range(); place.w = Math.min(z, Math.max(a, place.w)); place.x = PM_SHOP.keep(place.x, place.w); place.y = PM_SHOP.keep(place.y, hRel()); };
+    // Verlässt die Breite beim Zoomen die gewählte Vorlage, gilt die passende andere – z. B. Tasse über „Vorderseite“ hinaus
+    // → „Groß“, „Füllen“ kleiner → „Ganzes Foto“. Dazwischen (keine passt) bleibt die bisherige.
+    const follow = () => { const w = place.w, fits = p => w >= p.min * .999 && w <= p.max * 1.001;
+      if (fits(preOf(mode))) return; const p = pres().find(fits); if (p) { mode = p.id; pressed(); } };
+    // um einen Punkt (u, v) der Fläche zoomen – ohne Angabe um die Bildmitte
+    const zoomAt = (k, u = place.x + place.w / 2, v = place.y + hRel() / 2) => {
+      const [a, z] = range(), w = Math.min(z, Math.max(a, place.w * k)), r = w / place.w;
+      place.x = u - (u - place.x) * r; place.y = v - (v - place.y) * r; place.w = w; clampP(); follow();
+    };
+    // Verschieben mit Einrasten an der waagerechten/senkrechten Mitte (±2 %, nur beim Ziehen). raw = Lage ohne Einrasten,
+    // damit das Foto die Mitte auch wieder verlassen kann.
+    const moveBy = (du, dv) => {
+      const h = hRel(), sx = midU() - place.w / 2, sy = .5 - h / 2;
+      raw.x = PM_SHOP.keep(raw.x + du, place.w); raw.y = PM_SHOP.keep(raw.y + dv, h);
+      place.x = raw.x; place.y = raw.y; guide = { u: null, v: null };
+      if (Math.abs(place.x - sx) < .02 && Math.abs(1 - place.w) > 1e-6 && PM_SHOP.keep(sx, place.w) === sx) { place.x = sx; guide.u = midU(); }
+      if (Math.abs(place.y - sy) < .02 && Math.abs(1 - h) > 1e-6 && PM_SHOP.keep(sy, h) === sy) { place.y = sy; guide.v = .5; }
+    };
+    // Lage unabhängig vom Foto merken (Vorlage, Bildmitte, Zoom-Stufe) – für Fotowechsel und erneutes Öffnen
+    const rel = () => place ? { mode, view, cx: place.x + place.w / 2, cy: place.y + hRel() / 2, z: place.w / preOf(mode).place.w } : pend;
+    const pressed = () => dlg.querySelectorAll('[data-pre],[data-view]').forEach(b => b.setAttribute('aria-pressed', b.dataset.pre ? b.dataset.pre === mode : +b.dataset.view === view));
+    const usePreset = id => { if (!place) return; mode = preOf(id).id; place = { ...preOf(mode).place }; clampP(); pressed(); redraw(); say(); };
+    // Tasse: „Henkel links/rechts“ dreht nur die Ansicht und nimmt das Foto mit auf diese Seite
+    const turn = v => { if (!place || v === view) return; place.x += v - view; view = v; clampP(); pressed(); redraw(); say(); };
+
+    // Neu zeichnen höchstens einmal je Bild (requestAnimationFrame), beim Ziehen in halber Auflösung (alte Handys)
+    const redraw = () => { if (!raf) raf = requestAnimationFrame(frame); };
+    function frame() {
+      raf = 0; const cv = $('#sdReal'); if (!cv || !place || !img) return;
+      const full = Math.round(Math.min(1000, Math.max(360, cv.clientWidth * (window.devicePixelRatio || 1)))), S = low ? Math.max(300, full >> 1) : full;
+      if (cv.width !== S) cv.width = cv.height = S;
+      PM_SHOP.paint(cv, cur.type, base, img, { view, place, area: cur.area, guides: act ? guide : null, ghost: act });
+      mini();
+      const [a, z] = range(), zr = $('#sdZoom'); zr.disabled = z <= a * 1.001; zr.value = zr.disabled ? 0 : Math.round(100 * Math.log(place.w / a) / Math.log(z / a));
+      quality();
     }
-    let cur = null, qty = 1;
-    const picker = () => n > 1 ? `<div class="spick"><span>Welches Foto?</span><div class="spt">${Array.from({ length: n }, (_, i) =>
-      `<button type="button" data-pick="${i + 1}" class="${i + 1 === pick ? 'on' : ''}" aria-label="Foto ${i + 1}"><img src="${esc(thumbOf(i + 1))}" alt=""></button>`).join('')}</div></div>` : '';
-    // Druckfläche zum Selbst-Platzieren (Printful): Der Gast verschiebt sein Foto mit dem Finger und zoomt mit zwei Fingern,
-    // dem Mausrad oder dem Regler. place = { x, y, w }: linke Kante, obere Kante, Breite als Anteile der Druckfläche (so rechnet
-    // auch der Server); die Höhe ergibt sich aus dem Seitenverhältnis des Fotos. Ohne Druckfläche (Gelato): nur die Vorschau.
-    let place = null, ia = 1;
-    const A = () => cur.area[0] / cur.area[1], hRel = () => place.w * A() / ia;
-    const zoomRange = () => [Math.min(1, ia / A()), Math.max(1, ia / A()) * 3]; // von „ganz sichtbar“ bis 3 × „füllt die Fläche“ (sonst unscharf)
-    const sliderOf = w => { const [a, z] = zoomRange(); return Math.round(100 * Math.log(w / a) / Math.log(z / a)); };
-    const wOf = v => { const [a, z] = zoomRange(); return a * Math.pow(z / a, v / 100); };
-    const defPlace = () => {
-      if (cur.type === 'mug') { // wie bisher: volle Höhe auf einer Hälfte der Tasse
-        let h = 1, w = ia / A(); if (w > .625) { w = .625; h = w * A() / ia; }
-        const cx = cur.side === 'right' ? .75 : .25; return { x: Math.min(1 - w, Math.max(0, cx - w / 2)), y: (1 - h) / 2, w };
-      }
-      const w = Math.max(1, ia / A()), h = w * A() / ia; return { x: (1 - w) / 2, y: h > 1 ? 0 : (1 - h) / 2, w }; // füllt die Fläche; zu hohe Fotos oben ausgerichtet – keine abgeschnittenen Köpfe
-    };
-    const keepIn = () => { const cx = place.x + place.w / 2, cy = place.y + hRel() / 2; // Bildmitte bleibt auf der Fläche
-      place.x += Math.min(1, Math.max(0, cx)) - cx; place.y += Math.min(1, Math.max(0, cy)) - cy; };
-    // Produktfoto über der Druckfläche zeigt die Platzierung live (höchstens alle 80 ms neu gezeichnet)
-    // Tasse: die Seite zeigen, auf der das Foto gerade liegt (Henkel rechts = linke Hälfte der Druckfläche)
-    let realT = 0, realBusy = false, realAgain = false;
-    const drawRealNow = async () => { const c = $('#sdReal'); if (!c || !place) return; if (realBusy) { realAgain = true; return; } realBusy = true;
-      try { await PM_SHOP.drawReal(c, cur.type, thumbOf(pick), { side: place.x + place.w / 2 < .5 ? 'left' : 'right', place: { ...place }, area: cur.area }); } catch {}
-      realBusy = false; if (realAgain) { realAgain = false; drawRealNow(); } };
-    const drawPlace = () => { const im = $('#pedImg'); if (!im || !place) return;
-      Object.assign(im.style, { left: place.x * 100 + '%', top: place.y * 100 + '%', width: place.w * 100 + '%', height: hRel() * 100 + '%' });
-      $('#pedZoom').value = sliderOf(place.w);
-      clearTimeout(realT); realT = setTimeout(drawRealNow, 80); };
-    const zoomTo = w => { const [a, z] = zoomRange(); w = Math.min(z, Math.max(a, w));
-      const cx = place.x + place.w / 2, cy = place.y + hRel() / 2; place.w = w; place.x = cx - w / 2; place.y = cy - hRel() / 2; keepIn(); drawPlace(); };
-    const showEditor = async () => {
-      place = null;
-      if (!cur.area) { $('#sdMk').innerHTML = mk(cur); return; }
-      const real = !!PM_SHOP.drawReal && ['mug', 'mousepad'].includes(cur.type);
-      $('#sdMk').innerHTML = (real ? '<canvas id="sdReal" class="sreal" width="640" height="640"></canvas><p class="fine pedlbl">Schieb und zoom dein Foto direkt auf der Vorschau – darunter siehst du die ganze Druckfläche.</p>' : '') + `<div class="ped${cur.type === 'mug' ? ' mug' : ''}" id="ped" style="aspect-ratio:${+cur.area[0]} / ${+cur.area[1]}"><img id="pedImg" src="${esc(thumbOf(pick))}" alt="" draggable="false"></div>
-        <div class="pedbar"><span aria-hidden="true">−</span><input type="range" id="pedZoom" min="0" max="100" aria-label="Zoom"><span aria-hidden="true">+</span><button type="button" id="pedReset">Zurücksetzen</button></div>
-        <p class="fine">Verschiebe dein Foto mit dem Finger und zoome mit zwei Fingern oder dem Regler – so wird es gedruckt.</p>${cur.type === 'mug' ? '<p class="fine">Die Fläche geht einmal rund um die Tasse – links und rechts ist der Henkel.</p>' : ''}`;
-      const im = $('#pedImg'); await im.decode?.().catch(() => {});
-      ia = im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : land ? 1.5 : 2 / 3;
-      place = defPlace(); drawPlace();
-      // Verschieben mit einem Finger, Zoomen mit zwei Fingern oder dem Mausrad – auf der Druckfläche und direkt auf dem
-      // Produktfoto (fx/fy: Bildschirm-Pixel → Anteil der Druckfläche; Tasse: sichtbar ist die halbe Fläche über 55 % der Breite)
-      const drag = (el, fx, fy) => { const pts = new Map(); let span = 0;
-        el.onpointerdown = e => { el.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); span = 0; };
-        el.onpointermove = e => {
-          const prev = pts.get(e.pointerId); if (!prev) return; pts.set(e.pointerId, [e.clientX, e.clientY]);
-          if (pts.size === 1) { const r = el.getBoundingClientRect(); place.x += (e.clientX - prev[0]) * fx(r); place.y += (e.clientY - prev[1]) * fy(r); keepIn(); drawPlace(); }
-          else { const [p, q] = [...pts.values()], d = Math.hypot(p[0] - q[0], p[1] - q[1]); if (span) zoomTo(place.w * d / span); span = d; }
-        };
-        el.onpointerup = el.onpointercancel = e => { pts.delete(e.pointerId); span = 0; };
-        el.onwheel = e => { e.preventDefault(); zoomTo(place.w * Math.exp(-e.deltaY / 400)); };
+    // kleine Übersicht der ganzen Druckfläche (nur Tasse, nicht bedienbar): sichtbare Seite hell, Rückseite abgedunkelt
+    function mini() {
+      const c = $('#sdMini'); if (!c || c.hidden) return; const x = c.getContext('2d'), W = c.width, H = c.height, [lo, hi] = geo().vis;
+      x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); x.drawImage(img, place.x * W, place.y * H, place.w * W, hRel() * H);
+      x.fillStyle = 'rgba(29,29,27,.5)'; if (lo > 0) x.fillRect(0, 0, lo * W, H); if (hi < 1) x.fillRect(hi * W, 0, W - hi * W, H);
+      x.strokeStyle = '#F9CB38'; x.lineWidth = 3; x.strokeRect(Math.max(0, lo) * W + 1.5, 1.5, (Math.min(1, hi) - Math.max(0, lo)) * W - 3, H - 3);
+    }
+    // Druckqualität – nur bekannt, wenn das gedruckte Bild selbst geladen ist (fertiges Foto; von den Originalen gibt es hier
+    // meist nur die Vorschau): Vergrößerung = gedruckte Pixel je Pixel des Fotos
+    function quality() {
+      const q = $('#sdQ'), m = pxW ? place.w * cur.area[0] / pxW : 0, c = m >= 2.59 ? 'bad' : m > 1.6 ? 'warn' : '';
+      if (q.dataset.c === c) return; q.dataset.c = c; q.className = 'sq ' + c;
+      q.textContent = c === 'bad' ? T('Stark vergrößert – wird unscharf gedruckt') : c ? T('Wird etwas weicher gedruckt') : '';
+    }
+    // kurze Ansage für Screenreader nach Änderungen, z. B. „Foto mittig, 120 %“
+    const POS = { '': 'Foto mittig', l: 'Foto links', r: 'Foto rechts', o: 'Foto oben', u: 'Foto unten', ol: 'Foto oben links', or: 'Foto oben rechts', ul: 'Foto unten links', ur: 'Foto unten rechts' };
+    const say = () => { clearTimeout(sayT); sayT = setTimeout(() => { const l = $('#sdLive'); if (!l || !place) return;
+      const dx = place.x + place.w / 2 - midU(), dy = place.y + hRel() / 2 - .5;
+      l.textContent = T(POS[(dy < -.03 ? 'o' : dy > .03 ? 'u' : '') + (dx < -.03 ? 'l' : dx > .03 ? 'r' : '')]) + ', ' + Math.round(100 * place.w / preOf(mode).place.w) + ' %'; }, 450); };
+    // Für die Vorschau verkleinert (alte Handys): höchstens 1400 Pixel an der langen Seite
+    const SMALL = new WeakMap(), shrink = im => { let c = SMALL.get(im); if (c) return c;
+      const k = Math.min(1, 1400 / Math.max(im.naturalWidth, im.naturalHeight)); c = im;
+      if (k < 1) { c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); }
+      SMALL.set(im, c); return c; };
+
+    // Gesten auf der Arbeitsfläche (Pointer Events): ein Finger verschiebt – das Foto bleibt unter dem Finger, auf der Tasse
+    // zylindrisch umgerechnet –, zwei Finger zoomen um ihren Mittelpunkt und verschieben zugleich, Doppeltipp wechselt die Vorlage.
+    function bind(cv) {
+      const pts = new Map(); let tap = null, last = null, gest = false, gs = 1;
+      const pos = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; };
+      // Hinweis weg, sobald der Gast loslegt; erst dann erscheint die Übersicht der Tasse (sie läge sonst unter dem Hinweis)
+      const hide = () => { hinted = true; $('#sdHint')?.remove(); const m = $('#sdMini'); if (m && base) m.hidden = false; };
+      const begin = () => { if (place) raw = { x: place.x, y: place.y }; guide = null; };
+      // Während „Bezahlseite wird geöffnet …“ (busy) bleibt die Lage, wie sie ist – bestellt wird, was zu sehen ist
+      cv.addEventListener('pointerdown', e => {
+        if (!place || busy || e.button > 0) return; e.preventDefault(); hide(); cv.focus({ preventScroll: true });
+        try { cv.setPointerCapture(e.pointerId); } catch {}
+        pts.set(e.pointerId, pos(e)); act = low = true; begin();
+        tap = pts.size === 1 ? { t: e.timeStamp, x: e.clientX, y: e.clientY } : null;
+      });
+      cv.addEventListener('pointermove', e => {
+        const p0 = pts.get(e.pointerId); if (!p0 || !place) return;
+        const p1 = pos(e), g = geo();
+        if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 8) tap = null;
+        if (pts.size === 1) { const a = g.at(...p0), b = g.at(...p1); pts.set(e.pointerId, p1); moveBy(b[0] - a[0], b[1] - a[1]); }
+        else {
+          const [q, r] = [...pts.values()], m0 = [(q[0] + r[0]) / 2, (q[1] + r[1]) / 2], d0 = Math.hypot(q[0] - r[0], q[1] - r[1]);
+          pts.set(e.pointerId, p1);
+          const [q1, r1] = [...pts.values()], m1 = [(q1[0] + r1[0]) / 2, (q1[1] + r1[1]) / 2], d1 = Math.hypot(q1[0] - r1[0], q1[1] - r1[1]);
+          const a = g.at(...m0), b = g.at(...m1); guide = null;
+          place.x += b[0] - a[0]; place.y += b[1] - a[1]; zoomAt(d0 > .01 ? d1 / d0 : 1, b[0], b[1]);
+        }
+        redraw();
+      });
+      const up = e => {
+        if (!pts.delete(e.pointerId)) return;
+        if (e.type === 'pointerup' && tap && !pts.size && e.timeStamp - tap.t < 300) { // Doppeltipp: zwischen den beiden Vorlagen wechseln
+          if (last && tap.t - last.t < 350 && Math.hypot(tap.x - last.x, tap.y - last.y) < 30) { last = null; usePreset(pres().find(p => p.id !== mode)?.id || mode); }
+          else last = tap;
+        }
+        tap = null; begin();
+        if (!pts.size) { act = low = false; redraw(); say(); }
       };
-      drag($('#ped'), r => 1 / r.width, r => 1 / r.height);
-      if (real) drag($('#sdReal'), r => cur.type === 'mug' ? .5 / (.553 * r.width) : 1 / (.8 * r.width), r => 1 / ((cur.type === 'mug' ? .647 : .654) * r.height));
-      $('#pedZoom').oninput = e => zoomTo(wOf(+e.target.value));
-      $('#pedReset').onclick = () => { place = defPlace(); drawPlace(); };
-    };
-    const sum = () => { $('#sdQty').textContent = qty; $('#sdPrice').textContent = eur(cur.cents * qty); $('#sdShip').textContent = eur(s.ship); $('#sdTot').textContent = eur(cur.cents * qty + s.ship); };
-    sec.querySelector('.sgrid').onclick = e => {
-      const b = e.target.closest('[data-p]'); cur = b && s.products.find(p => p.id === b.dataset.p); if (!cur) return;
-      qty = 1; showEditor(); $('#sdPick').innerHTML = picker(); $('#sdErr').textContent = '';
-      $('#sdName').textContent = T(cur.name); // Standardnamen übersetzt, eigene Namen wie eingetragen
-      sum(); $('#sdGo').disabled = false; dlg.classList.add('on');
-    };
-    dlg.onclick = async e => {
-      if (e.target === dlg || e.target.closest('.sx')) return dlg.classList.remove('on');
-      const pk = e.target.closest('[data-pick]');
-      if (pk) { // anderes Foto gewählt: Vorschau im Fenster und auf allen Produkten anpassen
-        pick = +pk.dataset.pick; land = await isLand(thumbOf(pick));
-        showEditor(); $('#sdPick').innerHTML = picker();
-        sec.querySelectorAll('.sp').forEach(c => { const p = s.products.find(x => x.id === c.dataset.p); if (p) c.querySelector('.mk').outerHTML = mk(p); });
+      ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => cv.addEventListener(t, up));
+      // Mausrad zoomt nur mit gedrückter Strg-Taste (so meldet sich auch das Zusammenziehen auf dem Trackpad), sonst scrollt die Seite
+      cv.addEventListener('wheel', e => {
+        if (!e.ctrlKey || !place) return; e.preventDefault(); if (gest || busy) return; hide();
+        const [u, v] = geo().at(...pos(e)); zoomAt(Math.exp(-e.deltaY * (e.deltaMode === 1 ? 16 : 1) / 250), u, v); redraw(); say();
+      }, { passive: false });
+      // Safari: kein Zoomen der ganzen Seite; am Mac (Trackpad, ohne Pointer) zoomt die Geste das Foto
+      cv.addEventListener('gesturestart', e => { e.preventDefault(); gest = true; gs = 1; });
+      cv.addEventListener('gesturechange', e => { e.preventDefault(); if (pts.size || !place || busy) return; hide(); zoomAt(e.scale / gs); gs = e.scale; redraw(); });
+      cv.addEventListener('gestureend', e => { e.preventDefault(); gest = false; say(); });
+      // Tastatur: Pfeile 1 %, mit Umschalt 5 %, + / − zoomen, 0 setzt zurück
+      cv.addEventListener('keydown', e => {
+        if (!place || busy || e.ctrlKey || e.metaKey || e.altKey) return;
+        const st = e.shiftKey ? .05 : .01, d = { ArrowLeft: [-st, 0], ArrowRight: [st, 0], ArrowUp: [0, -st], ArrowDown: [0, st] }[e.key];
+        if (d) { place.x = PM_SHOP.keep(place.x + d[0], place.w); place.y = PM_SHOP.keep(place.y + d[1], hRel()); }
+        else if (e.key === '+' || e.key === '=') zoomAt(1.1);
+        else if (e.key === '-' || e.key === '_') zoomAt(1 / 1.1);
+        else if (e.key === '0') { e.preventDefault(); hide(); return usePreset(mode); }
+        else return;
+        e.preventDefault(); hide(); redraw(); say();
+      });
+      cv.addEventListener('contextmenu', e => e.preventDefault());
+    }
+    // Arbeitsfläche aufbauen, Foto laden und platzieren: r = gemerkte Lage (relativ), sonst die Standard-Vorlage
+    const showEditor = r => ready = (async () => {
+      const tk = ++edTk; place = img = base = null; act = low = false; pxW = 0; pend = r || null;
+      $('#sdCtl').hidden = !cur.area;
+      if (!cur.area) { $('#sdMk').innerHTML = mk(cur); return; }
+      const hint = matchMedia('(pointer: coarse)').matches ? 'Mit einem Finger verschieben · mit zwei Fingern zoomen' : 'Mit der Maus verschieben · Strg + Mausrad zoomt';
+      $('#sdMk').innerHTML = `<div class="swork"><canvas id="sdReal" class="sreal" width="640" height="640" tabindex="0" role="application" aria-describedby="sdLive"
+          aria-label="Foto auf dem Produkt – Pfeiltasten verschieben, Plus und Minus zoomen, Null setzt zurück"></canvas>
+        ${cur.type === 'mug' ? `<canvas id="sdMini" class="smini" width="240" height="${Math.round(240 / A())}" aria-hidden="true" hidden></canvas>` : ''}
+        ${hinted ? '' : `<div class="shint" id="sdHint" aria-hidden="true">${hint}</div>`}<div class="sload" id="sdLoad"><div class="spin"></div></div></div>
+        <p class="sr" id="sdLive" aria-live="polite" translate="no"></p>`;
+      $('#sdPre').innerHTML = ''; $('#sdView').hidden = true; Object.assign($('#sdQ'), { textContent: '', className: 'sq' }); $('#sdQ').dataset.c = '';
+      bind($('#sdReal'));
+      const R = PM_SHOP.REAL[cur.type];
+      let b, ph;
+      try { [b, ph] = await Promise.all([R ? PM_SHOP.loadImg(R.src).catch(() => null) : null, photoOf(pick)]); }
+      catch { // Ohne Foto gibt es keine Lage: nicht still weiter (der Server druckte dann seine eigene Standardlage), sondern neu versuchen
+        if (tk === edTk) { $('#sdCtl').hidden = true;
+          $('#sdMk').innerHTML = '<div class="sfail"><p>Dein Foto konnte gerade nicht geladen werden.</p><button type="button" class="btn" id="sdRetry">Erneut versuchen</button></div>'; }
         return;
       }
-      const q = e.target.closest('[data-q]'); if (q) { qty = Math.min(10, Math.max(1, qty + +q.dataset.q)); sum(); }
+      if (tk !== edTk) return;
+      base = b; img = shrink(ph); ia = ph.naturalWidth / ph.naturalHeight; pxW = !pick || FULL.has(ph) ? ph.naturalWidth : 0;
+      if (r) view = r.view;
+      mode = r && pres().some(p => p.id === r.mode) ? r.mode : pres()[0].id;
+      if (r) { const w = preOf(mode).place.w * r.z; place = { x: r.cx - w / 2, y: r.cy - hRel(w) / 2, w }; } else place = { ...preOf(mode).place };
+      clampP(); pend = null; raw = { x: place.x, y: place.y }; edPick = pick; // Foto, zu dem place gehört
+      $('#sdLoad')?.remove(); if ($('#sdMini')) $('#sdMini').hidden = !base || !!$('#sdHint');
+      const P = pres(); $('#sdPre').hidden = P.length < 2; // eine Vorlage (z. B. Tasse mit Hochformat): keine Knöpfe, die nichts ändern
+      $('#sdPre').innerHTML = P.length < 2 ? '' : P.map(p => `<button type="button" data-pre="${p.id}">${esc(p.name)}</button>`).join('');
+      const vw = $('#sdView'); vw.hidden = cur.type !== 'mug';
+      vw.innerHTML = cur.type === 'mug' ? '<button type="button" data-view="0.25">Henkel links</button><button type="button" data-view="0.75">Henkel rechts</button>' : '';
+      pressed(); redraw(); say();
+    })();
+
+    const picker = () => n > 1 ? `<div class="spick"><span id="sdPickL">Welches Foto?</span><div class="spt" role="group" aria-labelledby="sdPickL">${Array.from({ length: n }, (_, i) =>
+      `<button type="button" data-pick="${i + 1}" class="${i + 1 === pick ? 'on' : ''}" aria-pressed="${i + 1 === pick}" aria-label="Foto ${i + 1}"><img src="${esc(thumbOf(i + 1))}" data-big="${esc(bigOf(i + 1))}" alt=""></button>`).join('')}</div></div>` : '';
+    const markPick = () => $('#sdPick').querySelectorAll('[data-pick]').forEach(b => { const on = +b.dataset.pick === pick; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    // anderes Foto: Lage relativ übernehmen, Vorschau im Fenster und auf allen Produktkarten anpassen. ready gilt sofort für den
+    // ganzen Wechsel – Bezahlen wartet so nie mit dem neuen Foto auf die Lage des alten.
+    // Nach dem Warten nur weiter, wenn inzwischen nichts anderes geöffnet wurde (Schließen, andere Karte, Erneut versuchen zählen edTk hoch).
+    const choose = k => ready = (async () => {
+      const r = rel(), tk = edTk; pick = k; markPick();
+      const l = await isLand(k); if (pick === k) land = l;
+      cards(); if (tk === edTk) await showEditor(r);
+    })();
+    // Originale sind erst nach dem Öffnen angekommen: auf Original 1 umschalten (Lage relativ übernehmen)
+    const useOriginals = k => ready = (async () => {
+      n = k; const r = rel(), tk = edTk; pick = 1;
+      const l = await isLand(1); if (pick === 1) land = l;
+      if (!sec.querySelector('.snote')) sec.querySelector('.sgrid').insertAdjacentHTML('afterend', fullQ);
+      cards(); if (tk !== edTk) return;
+      $('#sdPick').innerHTML = picker(); await showEditor(r);
+    })();
+    const sum = () => { $('#sdQty').textContent = qty; $('#sdTot').textContent = eur(cur.cents * qty + s.ship);
+      dlg.querySelector('[data-q="-1"]').setAttribute('aria-disabled', qty <= 1); dlg.querySelector('[data-q="1"]').setAttribute('aria-disabled', qty >= 10); };
+    const goBtn = on => { const b = $('#sdGo'); b.setAttribute('aria-busy', on); b.setAttribute('aria-disabled', on);
+      b.innerHTML = on ? `<span class="sspin" aria-hidden="true"></span><span>${esc(T('Bezahlseite wird geöffnet …'))}</span>` : esc(T('Weiter zur Bezahlung')); };
+    const note = (t, info) => { const el = $('#sdErr'); el.textContent = t ? T(t) : ''; el.classList.toggle('info', !!info); };
+    addEventListener('pageshow', e => { if (e.persisted) { busy = false; goBtn(false); } }); // zurück von der Bezahlseite (Seite aus dem Zwischenspeicher)
+
+    // Öffnen und Schließen: Seite dahinter sperren (kein Scrollen, kein Fokus), Fokus in den Dialog und danach zurück auf die
+    // Produktkarte. Die Zurück-Taste des Handys schließt nur das Fenster.
+    let lockY = 0, popBack = false, payTk = 0, downOut = false;
+    const modal = on => {
+      [...document.body.children].forEach(el => { if (el !== dlg && el.tagName !== 'SCRIPT') el.inert = on; });
+      const st = document.body.style;
+      if (on) { lockY = window.scrollY; Object.assign(st, { position: 'fixed', top: -lockY + 'px', left: '0', right: '0' }); }
+      else { Object.assign(st, { position: '', top: '', left: '', right: '' }); window.scrollTo(0, lockY); }
     };
+    const openDlg = btn => { opener = btn; try { history.pushState({ sdlg: 1 }, ''); } catch {} modal(true); dlg.classList.add('on'); dlg.querySelector('.sx').focus(); };
+    const closeDlg = pop => {
+      if (!dlg.classList.contains('on')) return;
+      if (cur && place) { memo[cur.id] = { pick: edPick, view, place: { ...place }, rel: rel() }; const c = sec.querySelector(`.sp[data-p="${cur.id}"] .mk`); if (c) c.outerHTML = mk(cur); }
+      ++edTk; ++payTk; act = false; clearTimeout(sayT); dlg.classList.remove('on'); modal(false); opener?.focus({ preventScroll: true }); // ++payTk: laufendes Bezahlen verwerfen
+      if (pop !== true && history.state?.sdlg) { popBack = true; history.back(); }
+    };
+    addEventListener('popstate', () => { if (popBack) { popBack = false; return; } closeDlg(true); });
+    // Zurück von Stripe ohne Seiten-Zwischenspeicher: Die Seite ist neu geladen, der Verlaufseintrag des (jetzt geschlossenen)
+    // Fensters steht aber noch da – ihn verlassen, sonst bewirkt der nächste Tipp auf „Zurück“ nichts
+    if (history.state?.sdlg) { popBack = true; history.back(); }
+    addEventListener('resize', () => { if (dlg.classList.contains('on')) redraw(); });
+    document.addEventListener('keydown', e => {
+      if (!dlg.classList.contains('on')) return;
+      if (e.key === 'Escape') { e.preventDefault(); return closeDlg(); }
+      if (e.key !== 'Tab') return; // Fokus im Dialog halten
+      const f = [...dlg.querySelectorAll('button, input, a[href], [tabindex="0"]')].filter(el => !el.disabled && el.offsetParent !== null);
+      const i = f.indexOf(document.activeElement);
+      if (f.length && (e.shiftKey ? i <= 0 : i === f.length - 1 || i < 0)) { e.preventDefault(); f[e.shiftKey ? f.length - 1 : 0].focus(); }
+    });
+
+    sec.querySelector('.sgrid').addEventListener('click', e => {
+      const b = e.target.closest('[data-p]'), p = b && s.products.find(x => x.id === b.dataset.p); if (!p) return;
+      const m = memo[p.id]; cur = p; qty = 1; view = m ? m.view : p.side === 'right' ? .75 : .25;
+      $('#sdName').textContent = T(p.name); // Standardnamen übersetzt, eigene Namen wie eingetragen
+      $('#sdUnit').textContent = eur(p.cents);
+      $('#sdPick').innerHTML = picker(); note(''); busy = false; goBtn(false); sum();
+      openDlg(b); showEditor(m?.rel);
+    });
+    // Schließen über den dunklen Hintergrund nur, wenn das Drücken auch dort begann: Wer beim Ziehen (Foto, Zoom-Regler) erst
+    // außerhalb der Box loslässt, löst den Klick sonst auf dem Hintergrund aus
+    dlg.addEventListener('pointerdown', e => { downOut = e.target === dlg; });
+    dlg.addEventListener('click', async e => {
+      if (e.target === dlg ? downOut : e.target.closest('.sx')) return closeDlg();
+      // während „Bezahlseite wird geöffnet …“ nichts mehr ändern – bestellt wird, was zu sehen ist
+      const t = e.target.closest('[data-pick],[data-pre],[data-view],[data-q],#sdRetry'); if (!t || busy) return;
+      if (t.id === 'sdRetry') { note(''); return showEditor(rel()); }
+      if (t.dataset.pre) return usePreset(t.dataset.pre);
+      if (t.dataset.view) return turn(+t.dataset.view);
+      if (t.dataset.q) { qty = Math.min(10, Math.max(1, qty + +t.dataset.q)); return sum(); }
+      if (+t.dataset.pick !== pick) await choose(+t.dataset.pick);
+    });
+    const zr = $('#sdZoom');
+    zr.oninput = () => { if (!place || busy) return redraw(); const [a, z] = range(); zoomAt(a * Math.pow(z / a, +zr.value / 100) / place.w); redraw(); };
+    zr.onchange = say;
+    $('#sdReset').onclick = () => { if (!busy) usePreset(mode); };
+    // Bezahlen. payTk zählt die Versuche: Schließen des Fensters (×, Esc, Zurück-Taste) verwirft einen laufenden – die Seite
+    // springt dann nicht mehr zu Stripe. Nach jedem Warten wird deshalb geprüft, ob der Versuch noch gilt.
+    const stale = tk => tk !== payTk || !dlg.classList.contains('on');
     $('#sdGo').onclick = async () => {
-      const b = $('#sdGo'); b.disabled = true; $('#sdErr').textContent = '';
-      try { const j = await shopCall({ action: 'checkout', path: single, product: cur.id, qty, pick, lang: PM_LANG, test: testing, ...(place ? { place } : {}) }); location.href = j.url; }
-      catch (err) { $('#sdErr').textContent = T(err.message || 'Das hat nicht geklappt. Bitte noch einmal versuchen.'); b.disabled = false; }
+      if (busy || !cur) return; busy = true; goBtn(true); note('');
+      const tk = ++payTk;
+      try {
+        for (let r; r !== ready;) await (r = ready); // erst wenn die Vorschau steht, ist die Lage bekannt (auch nach einem Fotowechsel)
+        if (stale(tk)) return;
+        // Kommen die Originale erst jetzt an (Foto gerade hochgeladen), nähme der Server still Original 1 statt des gezeigten
+        // Fotos (Math.max(1, pick)). Deshalb vorher nachfragen, umschalten und den Gast erst prüfen lassen – noch nicht bezahlen.
+        if (!pick) {
+          const k = Math.min(8, Math.max(0, (await ask())?.originals | 0)); if (stale(tk)) return;
+          if (k) { await useOriginals(k); if (stale(tk)) return; note('Dein Foto ist jetzt in voller Qualität da – bitte kurz prüfen.', true); busy = false; goBtn(false); return; }
+        }
+        // Mit Druckfläche nie ohne Lage bestellen (Foto nicht geladen): Der Server druckte sonst seine eigene Standardlage,
+        // nicht die gezeigte. Einmal neu laden, klappt das nicht, Hinweis statt Bestellung.
+        if (cur.area && !place) { await showEditor(rel()); if (stale(tk)) return; if (!place) throw new Error('Dein Foto konnte gerade nicht geladen werden.'); }
+        const r4 = v => Math.round(v * 1e4) / 1e4;
+        const j = await shopCall({ action: 'checkout', path: single, product: cur.id, qty, pick, lang: PM_LANG, test: testing, ...(place ? { place: { x: r4(place.x), y: r4(place.y), w: r4(place.w) } } : {}) });
+        if (stale(tk)) return;
+        // Antwort ohne Adresse: Shop inzwischen ausgeschaltet (der Server meldet dann products: []) oder ein anderer Fehler
+        if (!j?.url) throw new Error(Array.isArray(j?.products) ? 'Bestellen ist gerade nicht möglich. Bitte später noch einmal versuchen.' : 'Das hat nicht geklappt. Bitte noch einmal versuchen.');
+        // Restfenster: Kam das Original zwischen Nachfrage und Bestellung an, hat der Server schon Original 1 statt des gezeigten Fotos
+        // genommen. Dann nicht weiterleiten (die angelegte Bezahlseite verfällt unbezahlt), sondern umschalten und prüfen lassen.
+        if (!pick) {
+          const k = Math.min(8, Math.max(0, (await ask())?.originals | 0)); if (stale(tk)) return;
+          if (k) { await useOriginals(k); if (stale(tk)) return; note('Dein Foto ist jetzt in voller Qualität da – bitte kurz prüfen.', true); busy = false; goBtn(false); return; }
+        }
+        location.href = j.url;
+      } catch (err) { if (stale(tk)) return; note(offline(err) ? 'Keine Verbindung – bitte noch einmal tippen.' : err.message || 'Das hat nicht geklappt. Bitte noch einmal versuchen.'); busy = false; goBtn(false); }
     };
   }
   // Einzelnes Foto (QR-Code an der Fotobox): nur dieses eine Bild mit „Herunterladen“
@@ -421,6 +695,7 @@
       $('#main').innerHTML = `${orderNote()}<div class="polaroid">${vid ? `<video src="${esc(src)}" controls autoplay loop playsinline muted></video>` : `<img src="${esc(src)}" alt="Dein Foto">`}
           <div class="cap">${capHtml()}</div></div>
         <div class="acts"><button class="btn" id="oneDl">${I('download')} ${vid ? 'Video speichern' : 'Foto speichern'}</button>${shareOk ? `<button class="btn ghost" id="oneSh">${I('share')} Teilen</button>` : ''}</div>
+        ${vid ? '' : `<button class="btn ghost sgo" id="oneShop" type="button" hidden>${I('gift')} <span></span></button>`}
         <p class="tip">${vid ? 'Tipp: Nach dem Speichern findest du das Video in deinen Downloads bzw. in der Fotos-App.' : 'Tipp: Auf dem iPhone das Foto gedrückt halten → „Zu Fotos hinzufügen“.'}</p>
         <p class="keep">${vid ? '<span>Dein Video bleibt 1 Jahr online und wird danach automatisch gelöscht.</span> <span>Speichere es dir am besten gleich.</span>'
           : '<span>Dein Foto bleibt 1 Jahr online und wird danach automatisch gelöscht.</span> <span>Speichere es dir am besten gleich.</span>'}</p>`;
