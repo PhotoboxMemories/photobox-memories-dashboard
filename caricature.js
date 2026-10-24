@@ -9,10 +9,12 @@
   const TITLE = 'Strich für Strich – dein Porträt entsteht';
   const num = (v, a, b, d) => { const n = Math.round(+v); return Number.isFinite(n) ? Math.min(b, Math.max(a, n)) : d; };
   // phone: Gäste schicken Selfies vom Handy (QR-Code auf der Wand) · needCode: zweistelliger Code vom Bildschirm nötig ·
-  // approve: jede Einsendung erst im Dashboard freigeben · print: Karikaturen vom Handy ausdrucken · secret: für den Code
+  // approve: jede Einsendung erst im Dashboard freigeben · print: Karikaturen vom Handy ausdrucken · secret: für den Code ·
+  // resolution: Bildqualität der KI – '1k' (Standard, 1 Credit pro Bild) oder '2k' (2 Credits); ai-generate rechnet genauso
   function normalize(x) {
     const o = x && typeof x === 'object' ? x : {};
     return { on: o.on === true, prompt: typeof o.prompt === 'string' && o.prompt.trim() ? o.prompt.slice(0, 1200) : '', secs: num(o.secs, 8, 60, 20),
+      resolution: o.resolution === '2k' ? '2k' : '1k',
       title: typeof o.title === 'string' ? o.title.slice(0, 80) : '', phone: o.phone !== false, needCode: o.needCode !== false, approve: o.approve === true,
       print: o.print !== false, pos: ['br', 'bl', 'tr', 'tl'].includes(o.pos) ? o.pos : 'br', secret: typeof o.secret === 'string' && /^[0-9a-f]{16,64}$/.test(o.secret) ? o.secret : '' };
   }
@@ -50,8 +52,9 @@
     return c;
   }
   const promptOf = c => (c && c.prompt) || PROMPT;
-  // KI-Einstellungen für die Fotobox: immer die zentrale KI (1 Credit pro Bild) mit dem Prompt der Live-Karikatur
-  const aiSettings = (ai, c) => ({ connection: 'central', resolution: ai && ai.resolution === '1k' ? '1k' : '2k', enabled: true, prompt: promptOf(c) });
+  // KI-Einstellungen für die Fotobox: immer die zentrale KI mit dem Prompt der Live-Karikatur. Die Bildqualität kommt aus der
+  // Live-Karikatur selbst (1K = 1 Credit, 2K = 2 Credits), nicht aus den KI-Porträts
+  const aiSettings = (ai, c) => ({ connection: 'central', resolution: c && c.resolution === '2k' ? '2k' : '1k', enabled: true, prompt: promptOf(c) });
   const tr = (s, lang) => (lang && lang !== 'de' && G.I18N ? G.I18N.t(s, lang) : s);
 
   function wrap(x, text, maxW) {
