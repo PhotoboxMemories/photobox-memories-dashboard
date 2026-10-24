@@ -1,6 +1,35 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.96": {
+      "date": "2026-10-24",
+      "notes": {
+        "de": [
+          "Hoch- und Querformat automatisch: Die Fotobox erkennt selbst, ob ihr Bildschirm hochkant oder quer steht – beim Start und wenn er gedreht wird. Sie nimmt dann das passende Fotolayout und Startvideo (Gäste, die selbst wählen, sehen weiter alle Layouts). Neue Kamera-Einstellung „Drehung: Automatisch“: Die Canon meldet mit jedem Foto, wie sie hängt – vor dem Ereignis ein Testfoto machen.",
+          "Live-Karikatur: neue Auswahl „Bildqualität“ – 1K für 1 Credit (Standard) oder 2K für 2 Credits. Die 2K-Auswahl braucht diese Fotobox-Version."
+        ],
+        "en": [
+          "Portrait and landscape automatically: the photo booth detects by itself whether its screen is upright or landscape – at start-up and when it is rotated. It then uses the matching photo layout and start video (guests who choose themselves still see all layouts). New camera setting “Rotation: Automatic”: the Canon reports with every photo how it is mounted – take a test photo before the event.",
+          "Live caricature: new “Image quality” option – 1K for 1 credit (default) or 2K for 2 credits. The 2K option requires this photo booth version."
+        ],
+        "tr": [
+          "Dikey ve yatay otomatik: Fotoğraf kabini ekranının dikey mi yatay mı durduğunu kendisi algılar – açılışta ve döndürüldüğünde. Ardından uygun fotoğraf düzenini ve açılış videosunu kullanır (kendileri seçen misafirler tüm düzenleri görmeye devam eder). Yeni kamera ayarı „Döndürme: Otomatik“: Canon her fotoğrafla nasıl monte edildiğini bildirir – etkinlikten önce bir test fotoğrafı çek.",
+          "Canlı karikatür: yeni „Görüntü kalitesi“ seçeneği – 1 kredi ile 1K (varsayılan) veya 2 kredi ile 2K. 2K seçeneği bu fotoğraf kabini sürümünü gerektirir."
+        ],
+        "fr": [
+          "Portrait et paysage automatiques : la photobooth détecte elle-même si son écran est vertical ou horizontal – au démarrage et quand il est tourné. Elle utilise alors la mise en page photo et la vidéo d’accueil adaptées (les invités qui choisissent eux-mêmes voient toujours toutes les mises en page). Nouveau réglage de l’appareil « Rotation : Automatique » : le Canon indique à chaque photo comment il est monté – prends une photo test avant l’événement.",
+          "Caricature en direct : nouvelle option « Qualité d’image » – 1K pour 1 crédit (par défaut) ou 2K pour 2 crédits. L’option 2K nécessite cette version de la photobooth."
+        ],
+        "es": [
+          "Vertical y horizontal automático: el fotomatón detecta por sí mismo si su pantalla está en vertical u horizontal, al arrancar y cuando se gira. Entonces usa el diseño de foto y el vídeo de inicio adecuados (los invitados que eligen siguen viendo todos los diseños). Nuevo ajuste de cámara «Rotación: Automática»: la Canon indica con cada foto cómo está montada; haz una foto de prueba antes del evento.",
+          "Caricatura en directo: nueva opción «Calidad de imagen»: 1K por 1 crédito (predeterminado) o 2K por 2 créditos. La opción 2K necesita esta versión del fotomatón."
+        ],
+        "it": [
+          "Verticale e orizzontale automatici: la photobooth riconosce da sola se il suo schermo è in verticale o in orizzontale – all’avvio e quando viene ruotato. Usa poi il layout foto e il video iniziale adatti (gli ospiti che scelgono da soli vedono ancora tutti i layout). Nuova impostazione della fotocamera «Rotazione: Automatica»: la Canon segnala con ogni foto come è montata – scatta una foto di prova prima dell’evento.",
+          "Caricatura dal vivo: nuova opzione «Qualità dell’immagine» – 1K per 1 credito (predefinito) o 2K per 2 crediti. L’opzione 2K richiede questa versione della photobooth."
+        ]
+      }
+    },
     "1.17.95": {
       "date": "2026-10-23",
       "notes": {
