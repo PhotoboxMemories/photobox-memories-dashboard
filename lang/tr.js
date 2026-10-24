@@ -2696,6 +2696,7 @@ I18N.add('tr', {
 "Titel": "Başlık",
 "Titel für Haftungsausschluss": "Sorumluluk reddi başlığı",
 "Tokio": "Tokyo",
+"Ton an": "Sesi aç",
 "Ton aufnehmen": "Ses kaydet",
 "Touchscreen": "Dokunmatik ekran",
 "Trage als neueste Version ein …": "En son sürüm olarak kaydediliyor …",
