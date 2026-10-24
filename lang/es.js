@@ -2696,6 +2696,7 @@ I18N.add('es', {
 "Titel": "Título",
 "Titel für Haftungsausschluss": "Título del descargo de responsabilidad",
 "Tokio": "Tokio",
+"Ton an": "Activar sonido",
 "Ton aufnehmen": "Grabar sonido",
 "Touchscreen": "Pantalla táctil",
 "Trage als neueste Version ein …": "Registrando como última versión …",
