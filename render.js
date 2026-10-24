@@ -321,6 +321,12 @@
   }
   const SIZE_LIST = SIZES.map(([size, a, b, name]) => ({ size, square: a === b, label: name || `${String(a).replace('.', ',')}×${String(b).replace('.', ',')}` }));
   const formatKey = (size, orient) => Object.keys(FORMATS).find(k => FORMATS[k].size === size && (FORMATS[k].orient === orient || !FORMATS[k].orient)) || null;
+  // Ausrichtung eines Layouts: 'portrait', 'landscape' oder '' (quadratisch – passt zu beiden). Bildschirm-Layouts tragen sie selbst.
+  const layoutOrient = L => { if (!L) return ''; if (L.screen) return L.orient || '';
+    const w = +L.w || 0, h = +L.h || 0; return h > w * 1.02 ? 'portrait' : w > h * 1.02 ? 'landscape' : ''; };
+  // Layouts, die zur Ausrichtung der Fotobox passen (quadratische immer). Nie leer: ohne passendes Layout gelten alle.
+  const pickForOrient = (list, o) => { const all = list || [], fit = all.filter(L => { const lo = layoutOrient(L); return !lo || lo === o; });
+    return fit.length ? fit : all.slice(); };
   const uid = () => Math.random().toString(36).slice(2, 10);
   // Grundaufteilungen je Format: [Format, Anzahl Fotos, Fotofelder]
   function presetSlots(format, n, noBand = false) { // noBand: ohne Vorlage – kein Platz für Titel und Untertitel
@@ -765,7 +771,7 @@
         if (o.faded && o.faded.has(e.key)) x.globalAlpha *= .35; // Editor: in den Einstellungen ausgeschaltet
         if (!(o.off && o.off.has(e.key))) drawShareBtn(x, e, w, h, o.state && o.state[e.key]);
       } else if (e.type === 'spic') {
-        if (o.placeholders) drawPhotoMock(x, w, h, o.photoAr);
+        if (o.placeholders) drawPhotoMock(x, w, h, typeof o.photoAr === 'function' ? o.photoAr(L) : o.photoAr); // Zahl oder je Layout (Hoch/Quer)
       } else if (e.type === 'sfil') {
         if (o.placeholders) drawChipsMock(x, w, h);
       } else if (e.type === 'qr') {
@@ -809,6 +815,6 @@
   }
 
   G.FBR = { FONTS, FONT_NAMES, LAYOUTS, TEMPLATES, templateById: byId, render, drawBand, drawCover, placeholder, setResolver,
-    FORMATS, SIZE_LIST, formatKey, sheetOf, PRESETS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid,
+    FORMATS, SIZE_LIST, formatKey, layoutOrient, pickForOrient, sheetOf, PRESETS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid,
     SCREEN_SIZES, SCREEN_THEMES, createScreen, adaptScreen, applyTheme, screenSys, screenStrip, createShare, shareSys, SHARE_BTNS };
 })(window);
