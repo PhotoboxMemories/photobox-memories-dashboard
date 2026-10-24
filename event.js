@@ -178,6 +178,9 @@
   #ws .lay.on{border-color:#F7C838;background:#FFF8DD} #ws .lay.drop{outline:2px dashed #F7C838}
   #ws .lay .grip{position:absolute;top:4px;left:6px;cursor:grab;color:#777;font-size:14px;letter-spacing:-2px;background:#fff;border-radius:6px;padding:0 5px;border:1px solid #ddd}
   #ws .lay .acts button{background:#fff;border:1px solid #ddd;border-radius:6px;cursor:pointer;padding:2px 6px;font-size:12px}
+  #ws .lay .ori{display:inline-block;margin-top:4px;font-size:11px;line-height:1.5;padding:0 8px;border-radius:999px;background:#ececf2;color:#444}
+  #ws .orHint{background:#FFF8E1;border-left:4px solid #F7C838;border-radius:8px;padding:10px 14px;margin:10px 0;font-size:13px;line-height:1.55;color:#333}
+  #ws .orHint div+div{margin-top:4px}
   #ws .empty{border:1px dashed #d0d0da;border-radius:10px;padding:26px;text-align:center;color:#888;background:#fafafc}
   #ws .dd{position:relative;display:inline-block}
   #ws .dd .menu{position:absolute;top:110%;left:0;background:#fff;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.15);padding:6px;min-width:190px;z-index:5}
@@ -629,7 +632,7 @@
     });
     $(root, '.navshade').addEventListener('click', () => root.classList.remove('navopen'));
     // Hilfe-Suche (hilfe.js, dieselbe wie in der Fotobox): Stichwort eintippen → wie man es einstellt, „Hingehen“ öffnet die Seite
-    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261022-4'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261024-1'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     const closeEditor = () => close(); // Editor schließen (für Themen auf den Hauptseiten, z. B. „Meine Lizenzen“)
     async function openHelp() {
       try { await helpLib(); } catch { return ctx.toast('Die Hilfe konnte nicht geladen werden.'); }
@@ -1061,7 +1064,7 @@
         setTimeout(() => ctx.sb.from('devices').update({ command: { id: crypto.randomUUID(), at: new Date().toISOString(), type: 'sync' } }).eq('event_id', ev.id).then(() => {}, () => {}), 2500);
         return ctx.toast('Mosaik wird neu gestartet – die Fotobox übernimmt es in etwa 15 Sekunden, sobald keine Aufnahme läuft. Danach die Tafel neu drucken.', 7000);
       }
-      if (a === 'edit1') { const l = S.layouts[0]; if (l) editLayout(l.id); else pickTemplate(vals(), addLayout); }
+      if (a === 'edit1') { const l = firstLayout(boxOrient()); if (l) editLayout(l.id); else pickTemplate(vals(), addLayout); } // das Layout aus der Vorschau
     });
     const pick = accept => new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => res(i.files[0] || null); i.click(); });
 
@@ -1069,13 +1072,38 @@
     const addLayout = L => { S.layouts.push(L); sub.laySel = L.id; save(); render(); if (pro()) editLayout(L.id); }; // Vorlage wählen geht in jedem Tarif, Bearbeiten ab Pro
     const layoutThumb = (L, px = 300) => thumbOf(L, px, vals());
     const vals = () => ({ titel: S.title || E.name, untertitel: S.subtitle || (E.event_date ? new Date(E.event_date).toLocaleDateString('de-DE') : ''), datum: new Date().toLocaleDateString('de-DE'), uhrzeit: '20:15', event: E.name, name: 'Lisa' });
+    // Hoch- und Querformat: Die Fotobox erkennt ihren Bildschirm selbst und nimmt das erste passende Layout (quadratische passen immer).
+    // Zugewiesene Fotoboxen melden ihre Ausrichtung im Gerätestatus (status.display.orient) – danach richten sich Vorschau und Warnungen.
+    const ORI_NAME = { portrait: 'Hochformat', landscape: 'Querformat', '': 'Hoch + Quer' };
+    const evDevs = () => (ctx.devices || []).filter(d => d.event_id === ev.id);
+    const boxOrient = () => evDevs().map(d => d.status?.display?.orient).find(o => o === 'portrait' || o === 'landscape') || '';
+    const firstLayout = o => (o ? FBR.pickForOrient(S.layouts, o) : S.layouts)[0] || null; // ohne bekannte Ausrichtung: das erste Layout
+    const hasOrient = o => S.layouts.some(L => { const lo = FBR.layoutOrient(L); return !lo || lo === o; });
+    // Hinweis, wenn eine Ausrichtung fehlt – nur Text, die Fotobox nimmt dann das vorhandene Layout. Gelb nur, wenn eine zugewiesene
+    // Fotobox wirklich andersherum steht; sonst grau als Information (Ereignisse mit nur einer Ausrichtung sind der Normalfall).
+    function orientHint() {
+      if (!S.layouts.length) return '';
+      const miss = ['portrait', 'landscape'].filter(o => !hasOrient(o)), lines = [];
+      if (miss[0] === 'portrait') lines.push('Nur Querformat-Layouts: Steht eine Fotobox hochkant, nimmt sie trotzdem eines davon. Für hochkant stehende Fotoboxen zusätzlich ein Layout im Hochformat anlegen.');
+      if (miss[0] === 'landscape') lines.push('Nur Hochformat-Layouts: Steht eine Fotobox quer, nimmt sie trotzdem eines davon. Für quer stehende Fotoboxen zusätzlich ein Layout im Querformat anlegen.');
+      const warn = evDevs().map(devOrientWarn).filter(Boolean).map(w => '⚠️ ' + esc(w));
+      if (!warn.length) return lines.length ? `<p style="margin:6px 0 0;color:#6b6b78;font-size:13px">${lines.join(' ')}</p>` : '';
+      return `<div class="orHint">${[...lines, ...warn].map(l => `<div>${l}</div>`).join('')}</div>`;
+    }
+    // Warnung je Fotobox: Sie steht hochkant (bzw. quer), das Ereignis hat aber kein Layout dieser Ausrichtung
+    const devOrientWarn = d => { const o = d.status?.display?.orient;
+      if (!S.layouts.length || (o !== 'portrait' && o !== 'landscape') || hasOrient(o)) return '';
+      return o === 'portrait' ? `Fotobox ${d.name || 'FotoBox'} steht hochkant – dieses Ereignis hat kein Hochformat-Layout`
+        : `Fotobox ${d.name || 'FotoBox'} steht quer – dieses Ereignis hat kein Querformat-Layout`; };
     function layoutCards() {
       return `<div class="dd"><button class="btn" data-a="newlay">${ICON('plus', 16)} Neues Layout ${ICON('chevronDown', 16)}</button><div class="menu" style="display:none">
           <button data-a="fromtpl">${ICON('gallery', 16)} Vorlage wählen</button><button data-a="fromplain">${ICON('image', 16)} Ohne Vorlage (nur Foto)</button><button data-a="fromimg">${ICON('upload', 16)} Bild hochladen</button></div></div>
+        ${S.layouts.length ? '<p style="margin:12px 0 0;color:#6b6b78;font-size:13px">Die Fotobox nimmt automatisch das erste Layout, das zu ihrem Bildschirm passt (hochkant → Hochformat, quer → Querformat). Wählen die Gäste das Layout selbst, sehen sie alle Layouts.</p>' : ''}
+        ${orientHint()}
         <div class="lays">${S.layouts.length ? S.layouts.map(L => `<div class="lay ${sub.laySel === L.id ? 'on' : ''}" data-a="sellay" data-id="${L.id}" draggable="true" title="Anklicken zum Auswählen · am Griff ziehen zum Umsortieren">
             <span class="grip" title="Ziehen zum Umsortieren">⋮⋮</span>
             <div class="acts"><button data-a="dellay" data-id="${L.id}" title="Löschen">${ICON('trash', 13)}</button></div>
-            <img src="${layoutThumb(L)}" alt=""><div class="nm">${esc(L.name)} · ${FBR.photoCount(L)} Foto(s)</div></div>`).join('')
+            <img src="${layoutThumb(L)}" alt=""><div class="nm">${esc(L.name)} · ${FBR.photoCount(L)} Foto(s)</div><span class="ori">${ORI_NAME[FBR.layoutOrient(L)]}</span></div>`).join('')
           : `<div class="empty" style="flex:1">Noch keine Layouts hinzugefügt</div>`}</div>`;
     }
     // ---------- Online-Galerie: Fotos dieses Ereignisses aus dem Speicher ----------
@@ -1247,7 +1275,7 @@
               <div class="foot"><span></span><button class="more" data-a="go" data-pg="analytics">Analysen →</button></div></div>
             <div class="dcard"><div class="nums"><span>Uploads<b>${n(P.length)}</b></span><span>Ausdrucke<b>${prints}</b></span><span>Gäste-Daten<b>${ctx.leadsCount?.(ev.id) ?? '–'}</b></span><span>Fotoboxen<b>${devs.length}</b></span></div>
               <div class="foot"><span>${n(P.length)} Shares insgesamt</span><button class="more" data-a="go" data-pg="shares">Shares →</button></div></div>
-            <div class="dcard boxes"><b class="dt">Zugewiesene Fotoboxen</b>${devs.length ? devs.map(d => `<div class="between"><span>📸 ${esc(d.name || 'FotoBox')}${d.status?.uploads ? ` <small style="display:inline">· ${d.status.uploads} Foto(s) warten auf den Upload</small>` : ''}</span><small>${d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? '🟢 online' : 'offline'}</small></div>`).join('')
+            <div class="dcard boxes"><b class="dt">Zugewiesene Fotoboxen</b>${devs.length ? devs.map(d => `<div class="between"><span>📸 ${esc(d.name || 'FotoBox')}${d.status?.uploads ? ` <small style="display:inline">· ${d.status.uploads} Foto(s) warten auf den Upload</small>` : ''}${devOrientWarn(d) ? `<small style="color:#b26a00">⚠️ ${esc(devOrientWarn(d))}</small>` : ''}</span><small>${d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? '🟢 online' : 'offline'}</small></div>`).join('')
             : '<p style="color:#777">Noch keine. In der FotoBox anmelden und dieses Event auswählen – oder oben unter „Geräte“ zuweisen.</p>'}</div>
             <div class="dcard share"><b class="dt">Online-Galerie</b>
               ${sw('x.gallery.link', 'Freigabe von Links', 'Jeder mit dem Link zum Ereignis darf dieses Ereignis sehen')}
@@ -1528,6 +1556,7 @@
         if (!allowed('caricature')) return lockedPage('Live-Karikatur', 'Jedes Foto wird zur Karikatur – live Strich für Strich gezeichnet, an der Fotobox und per Selfie vom Handy.');
         S.x ??= {}; const c0 = S.x.caricature ??= {}; c0.secs ??= 20; c0.phone ??= true; c0.needCode ??= true; c0.print ??= true; c0.approve ??= false;
         if (!/^[0-9a-f]{16,64}$/.test(c0.secret || '')) { c0.secret = Caricature.newSecret(); save(); } // für den wechselnden Code auf der Wand
+        const k2 = c0.resolution === '2k'; // Bildqualität: 1K = 1 Credit (Standard), 2K = 2 Credits – so rechnet ai-generate ab
         const c = Caricature.normalize(c0), link = (window.FOTOBOX_CONFIG?.dashboardUrl || location.origin + location.pathname.replace(/[^/]*$/, '')).replace(/\/?$/, '/') + 'karikatur.html?e=' + ev.id;
         if (!cariT.loaded && !ctx.demo) { cariT.loaded = true; cariLoad(); }
         const stTxt = { review: 'wartet auf Freigabe', new: 'in der Reihe', processing: 'wird gezeichnet', done: 'fertig', rejected: 'abgelehnt', failed: 'fehlgeschlagen' };
@@ -1539,7 +1568,7 @@
               <button class="ghost" data-a="cari-del" data-id="${r.id}" title="Einsendung und Selfie löschen">🗑</button></div></div>`).join('');
         return `${titleSw('Live-Karikatur', 'x.caricature.on')}<p class="sub" style="margin:-6px 0 14px;color:#6b6b78">Jedes Foto wird zur Karikatur – live gezeichnet vor allen Gästen</p>
           <div class="card"><b>So funktioniert es</b>
-            <ol style="margin:8px 0 6px;padding-left:20px;line-height:1.6"><li>Der Gast macht an der Fotobox ein Foto.</li><li>Die KI macht daraus eine Karikatur – 1 Credit pro Foto (zentrale KI).</li>
+            <ol style="margin:8px 0 6px;padding-left:20px;line-height:1.6"><li>Der Gast macht an der Fotobox ein Foto.</li><li>Die KI macht daraus eine Karikatur – je nach Bildqualität 1 Credit (1K) oder 2 Credits (2K) pro Foto (zentrale KI).</li>
             <li>Auf dem Bildschirm der Fotobox und auf dem zweiten Bildschirm (Fernseher/Beamer) wird sie Strich für Strich gezeichnet und eingefärbt.</li><li>Danach wie gewohnt: Drucken, QR-Code, Galerie.</li></ol>
             <p style="margin:0;color:#6b6b78;font-size:13px">Ist die Live-Karikatur an, entfällt die Stilauswahl der KI-Porträts. Den zweiten Bildschirm öffnest du an der Fotobox unter Menü → Live-Karikatur.</p></div>
           <div class="card"><b>Selfies vom Handy</b>
@@ -1554,13 +1583,14 @@
           <div class="card"><div class="between"><b>Einsendungen (${(cariT.list || []).length})</b><button class="ghost" data-a="cari-refresh">Aktualisieren</button></div>
             ${rows || '<p style="margin:8px 0 0;color:#6b6b78;font-size:13px">Noch keine Einsendungen vom Handy.</p>'}</div>
           <div class="card">${slider('x.caricature.secs', 'Dauer der Zeichnung', 8, 60, 1, 's')}
+            <label class="l">Bildqualität</label><select data-s="x.caricature.resolution" data-rerender="1"><option value="1k" ${k2 ? '' : 'selected'}>1K – 1 Credit (Standard)</option><option value="2k" ${k2 ? 'selected' : ''}>2K – 2 Credits</option></select>
             ${text('x.caricature.title', 'Überschrift beim Zeichnen', Caricature.TITLE)}
             <label class="l">Beschreibung für die KI</label><textarea rows="6" maxlength="1200" data-s="x.caricature.prompt">${esc(Caricature.promptOf(c))}</textarea>
             <div class="between" style="margin-top:6px"><small style="color:#6b6b78">Wichtig für die Zeichnung: kräftige schwarze Linien und weißer Hintergrund.</small><a href="#" data-a="cari-reset">Standard-Text einsetzen</a></div></div>
           <div class="card"><b>Ausprobieren</b><p style="margin:4px 0 10px;color:#6b6b78;font-size:13px">Mit dem Testfoto eine Karikatur erstellen und die Live-Zeichnung ansehen. Das Testfoto änderst du unter KI-Porträts.</p>
             <div class="row" style="gap:10px;align-items:center">${ai.photo ? `<img src="${ai.photo}" alt="Testfoto" style="height:120px;border-radius:8px">` : ''}${cariT.result ? `<span style="font-size:22px">→</span><img src="${cariT.result}" alt="Karikatur" data-a="cari-play" title="Zeichnung ansehen" style="height:120px;border-radius:8px;cursor:pointer;box-shadow:0 0 0 1px #e5e5ec">` : ''}</div>
             <label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0;font-size:13px"><input type="checkbox" data-cari-consent ${cariT.consent ? 'checked' : ''} style="margin-top:3px"> Dieses Foto darf zum Testen an den KI-Dienst (xAI) übertragen werden.</label>
-            <div class="row" style="gap:8px"><button class="btn pri" data-a="cari-test" ${cariT.busy || !c.on ? 'disabled' : ''}>${cariT.busy ? 'KI zeichnet … (10–40 Sekunden)' : '✨ Karikatur erstellen und zeichnen <small>(1 Credit)</small>'}</button>${cariT.result && !cariT.busy ? '<button class="ghost" data-a="cari-play">▶ Zeichnung nochmal ansehen</button>' : ''}</div>
+            <div class="row" style="gap:8px"><button class="btn pri" data-a="cari-test" ${cariT.busy || !c.on ? 'disabled' : ''}>${cariT.busy ? 'KI zeichnet … (10–40 Sekunden)' : `✨ Karikatur erstellen und zeichnen <small>(${k2 ? '2 Credits' : '1 Credit'})</small>`}</button>${cariT.result && !cariT.busy ? '<button class="ghost" data-a="cari-play">▶ Zeichnung nochmal ansehen</button>' : ''}</div>
             ${c.on ? '' : '<p style="margin:8px 0 0;color:#c98a00;font-size:13px">Zum Ausprobieren oben die Live-Karikatur einschalten.</p>'}</div>`;
       },
       videomsg() { // Zusatzfunktion: Gäste scannen den QR-Code auf dem Startbildschirm und nehmen mit dem eigenen Handy eine Videonachricht auf
@@ -1634,9 +1664,10 @@
             <div style="display:flex;flex-wrap:wrap;gap:10px 22px">${I18N.LANGS.map(l => `<label translate="no" style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" data-langl="${l.code}" ${list.includes(l.code) ? 'checked' : ''}>${I18N.flag(l.code, 16)} ${l.name}</label>`).join('')}</div></div>`;
       },
     };
-    function previewBox() {
+    function previewBox() { // zeigt das Layout, das die zugewiesene Fotobox (nach ihrer Ausrichtung) zuerst nimmt
+      const L = firstLayout(boxOrient());
       return `<div class="pv"><div class="frame"><canvas id="wsPv"></canvas><div class="row" style="justify-content:space-between;margin-top:12px">
-        <button class="btn pri" data-a="edit1">${ICON('pen', 15)} Bearbeiten</button><small style="color:#777">${S.layouts[0] ? esc(S.layouts[0].name) : 'Standard-Vorlage'}</small></div></div></div>`;
+        <button class="btn pri" data-a="edit1">${ICON('pen', 15)} Bearbeiten</button><small style="color:#777">${L ? esc(L.name) : 'Standard-Vorlage'}</small></div></div></div>`;
     }
     // Startbildschirm als frei gestaltbares „Layout“ in Bildschirmgröße (wie LumaBooth). Ohne Gestaltung: Vorschlag aus den bisherigen Angaben.
     // Startbildschirm je Ausrichtung: gestaltet (startScreen bzw. startScreen2), sonst aus der anderen umgerechnet, sonst Standard-Vorschlag
@@ -1719,11 +1750,11 @@
         const c = $(root, o === 'landscape' ? '#wsShareL' : '#wsShareP'), note = $(root, o === 'landscape' ? '#wsShareNoteL' : '#wsShareNoteP'); if (!c) continue;
         const gl = S.x.lang?.guest || window.PM_LANG || 'de', L = I18N.layout(FBR.shareSys(shareFor(o)), gl);
         if (note) note.textContent = shareOf(o) ? 'gestaltet' : S.shareScreen ? 'automatisch angepasst' : 'Standard-Vorschlag';
-        const go = () => { const big = FBR.renderLayout(L, { values: vals(), placeholders: true, off, photoAr: sharePhotoAr() }); c.width = Math.round(big.width / 4); c.height = Math.round(big.height / 4); c.getContext('2d').drawImage(big, 0, 0, c.width, c.height); };
+        const go = () => { const big = FBR.renderLayout(L, { values: vals(), placeholders: true, off, photoAr: sharePhotoAr(o) }); c.width = Math.round(big.width / 4); c.height = Math.round(big.height / 4); c.getContext('2d').drawImage(big, 0, 0, c.width, c.height); };
         FBR.preloadLayout(L).then(go);
       }
     }
-    const sharePhotoAr = () => { const L0 = S.layouts[0]; return L0 ? L0.w / L0.h : 1.5; }; // so groß wirkt das Foto der Gäste
+    const sharePhotoAr = o => { const L0 = firstLayout(o); return L0 ? L0.w / L0.h : 1.5; }; // so groß wirkt das Foto der Gäste (Layout dieser Ausrichtung)
     function storeShare(nl) { if (!S.shareScreen || S.shareScreen.orient === nl.orient) S.shareScreen = nl; else S.shareScreen2 = nl; save(); }
     async function dropShare(o) {
       if (!S.shareScreen) return false;
@@ -1734,7 +1765,7 @@
     }
     function editShare(o) {
       LayoutEditor.open({
-        layout: shareFor(o), layoutFor: o2 => structuredClone(shareFor(o2)), values: vals(), uploadImage: ctx.uploadFile, sys: shareSysOpts(), photoAr: sharePhotoAr(),
+        layout: shareFor(o), layoutFor: o2 => structuredClone(shareFor(o2)), values: vals(), uploadImage: ctx.uploadFile, sys: shareSysOpts(), photoAr: L => sharePhotoAr(L.orient), // folgt dem Umschalten Hoch/Quer im Editor
         onSave: async nl => storeShare(nl), onReset: dropShare, onClose: () => render()
       });
     }
@@ -1834,7 +1865,7 @@
     function drawPreview(fromRender) {
       const c = $(root, '#wsPv');
       if (c) {
-        const L = S.layouts[0];
+        const L = firstLayout(boxOrient());
         const img = L ? FBR.renderSheet(L, { placeholders: true, values: vals() })
           : FBR.render(FBR.LAYOUTS.single, [0, 1, 2, 3].map(i => FBR.placeholder(i)), { template: S.template, title: S.title || E.name, subtitle: S.subtitle });
         c.width = img.width / 3; c.height = img.height / 3; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
@@ -1892,7 +1923,7 @@
       } catch (e) { ctx.toast('Fehler: ' + e.message, 4000); status(''); }
     }
     function previewAll() {
-      const L = S.layouts[0];
+      const L = firstLayout(boxOrient());
       const img = L ? FBR.renderSheet(L, { placeholders: true, values: vals() }) : null;
       const m = modal(`<div class="mh"><h3>Vorschau</h3><button class="x" data-x="1">×</button></div><div class="bigpv" style="flex:1"><img src="${img ? img.toDataURL('image/jpeg', .85) : ''}"></div>`);
       if (!img) $(m, '.bigpv').innerHTML = '<p style="padding:30px">Noch kein Layout angelegt.</p>';
