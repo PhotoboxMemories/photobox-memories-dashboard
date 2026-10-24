@@ -2696,6 +2696,7 @@ I18N.add('it', {
 "Titel": "Titolo",
 "Titel für Haftungsausschluss": "Titolo della liberatoria",
 "Tokio": "Tokyo",
+"Ton an": "Attiva audio",
 "Ton aufnehmen": "Registra audio",
 "Touchscreen": "Touchscreen",
 "Trage als neueste Version ein …": "Registrazione come ultima versione …",
