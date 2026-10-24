@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261024-1';</script>
+<script>window.I18N_V = '20261024-2';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -15,15 +15,15 @@
 <script src="icons.js?v=20261021-5"></script>
 <script src="ad.js?v=20261022-1"></script>
 <script src="shop.js?v=20261023-2"></script>
-<script src="render.js?v=20261023-2"></script>
+<script src="render.js?v=20261024-1"></script>
 <script src="advisor-anim.js?v=20261021-6"></script>
 <script src="mosaic.js?v=20261017-2"></script>
 <script src="editor.js?v=20261021-4"></script>
 <script src="ai-event.js?v=20261019-3"></script>
 <script src="sketch-draw.js?v=20261018-8"></script>
-<script src="caricature.js?v=20261022-1"></script>
+<script src="caricature.js?v=20261024-1"></script>
 <script src="start-anim.js?v=20261020-1"></script>
-<script src="event.js?v=20261022-5"></script>
+<script src="event.js?v=20261024-1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -835,14 +835,24 @@ function deviceDetails(d, online, mine) {
   const ok = v => v === true ? '<span class="dot on"></span>bereit' : v === false ? '<span class="dot" style="background:#d23b3b"></span>nicht bereit' : '<span class="dot"></span>unbekannt';
   const scr = { home: 'Betreiber-Startseite', attract: 'Startbildschirm (wartet auf Gäste)', capture: 'Aufnahme läuft', review: 'Bildschirm zum Teilen', share: 'QR-Code', modes: 'Auswahl', login: 'Anmeldung', evpick: 'Ereignis-Auswahl' }[st.screen] || st.screen || '–';
   const cmd = d.command ? `<span class="badge">Befehl wartet auf die Fotobox …</span>` : '';
+  // Ausrichtung: was die Fotobox an ihrem Bildschirm erkannt hat (oder fest eingestellt ist) und wie die Kamera gedreht wird.
+  // Texte mit Varianten als ganze Sätze schreiben – die Übersetzung setzt eingefügte Wörter sonst unübersetzt ein.
+  const dp = st.display || null, cr = st.camera?.rotation, num = v => Math.round(+v) || 0, lay = typeof st.layout === 'string' ? st.layout : st.layout?.name || '';
+  const ori = dp ? `<div class="card"><b style="font-size:17px">${dp.orient === 'portrait' ? 'Hochformat' : dp.orient === 'landscape' ? 'Querformat' : '–'}${dp.w && dp.h ? ` · ${num(dp.w)}×${num(dp.h)}` : ''}</b><span>Ausrichtung</span>
+      <span class="small muted">${dp.forced ? 'an der Fotobox fest eingestellt' : 'automatisch erkannt'}${num(dp.rotation) ? ` · Windows-Drehung ${num(dp.rotation)}°` : ''}</span>
+      ${cr != null ? `<span class="small muted">${st.camera?.rotAuto ? `Kamera ${num(cr)}° (automatisch)` : `Kamera ${num(cr)}° (von Hand)`}</span>` : ''}${lay ? `<span class="small muted">Layout: ${esc(lay)}</span>` : ''}</div>` : '';
   const props = (st.camera?.props || []).map(p => `<div><label>${esc(p.label)}</label><select data-prop="${esc(p.id)}">${p.list.map(v => `<option ${v === p.cur ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>`
     + (p.canLive ? `<label class="small muted" style="margin-top:6px">Live-Ansicht</label><select data-live="${esc(p.id)}"><option value="">wie Foto</option>${p.list.map(v => `<option ${v === p.live ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>` : '') + '</div>').join('');
-  return `<div class="stats" style="margin:6px 0 14px">
+  return `<div class="stats" style="margin:6px 0 14px${ori ? ';grid-template-columns:repeat(auto-fit,minmax(170px,1fr))' : ''}">
       <div class="card"><b>${st.prints ?? 0}${st.printLimit ? ` <span style="font-size:16px">/ ${st.printLimit}</span>` : ''}</b><span>Ausdrucke bei diesem Ereignis</span><span class="small muted">${st.printLimit ? 'noch ' + Math.max(0, st.printLimit - (st.prints || 0)) + ' übrig' : 'kein Limit eingestellt'}</span></div>
       <div class="card"><b style="font-size:17px">${esc(st.camera?.name || '–')}</b><span>Kamera</span><span class="small">${ok(st.camera?.ready)}</span></div>
       <div class="card"><b style="font-size:17px">${esc(st.printer?.name || '–')}</b><span>Drucker</span><span class="small">${ok(st.printer?.ok)}${st.printer?.code ? ' · Windows-Statuscode ' + st.printer.code : ''}</span></div>
       <div class="card"><b style="font-size:17px">${esc(scr)}</b><span>Bildschirm</span><span class="small muted">${esc(st.event || 'kein Ereignis')} · gemeldet vor ${age < 120 ? age + ' s' : Math.round(age / 60) + ' min'}</span></div>
+      ${ori}
     </div>
+    ${dp?.forced ? `<p class="small" style="margin:-6px 0 12px;color:#b8860b">⚠️ ${dp.orient === 'portrait'
+      ? 'Die Ausrichtung ist an dieser Fotobox fest auf Hochformat eingestellt – sie folgt nicht dem Bildschirm. Ändern an der Fotobox unter Einstellungen → Allgemein.'
+      : 'Die Ausrichtung ist an dieser Fotobox fest auf Querformat eingestellt – sie folgt nicht dem Bildschirm. Ändern an der Fotobox unter Einstellungen → Allgemein.'}</p>` : ''}
     ${st.sync && !(st.sync.account && st.sync.event) ? `<p class="small" style="margin:-6px 0 12px;color:#b8860b">⚠️ ${!st.sync.account ? 'Diese Fotobox ist nur mit dem Lizenzschlüssel angemeldet – Änderungen an der Fotobox kommen nicht ins Dashboard. An der Fotobox unter Einstellungen → Allgemein mit E-Mail und Passwort anmelden.' : 'An dieser Fotobox ist kein Ereignis gewählt – Änderungen kommen nicht ins Dashboard.'}</p>`
       : st.sync?.pending ? `<p class="small muted" style="margin:-6px 0 12px">${st.sync.pending} Änderung(en) der Fotobox warten noch auf die Übertragung ins Dashboard.</p>` : ''}
     ${mine ? `<div class="card" style="margin-bottom:10px"><h2>Fernsteuerung</h2>
