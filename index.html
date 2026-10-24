@@ -634,8 +634,8 @@ async function boot() {
   $('#navAdmin').classList.toggle('hidden', !profile.is_admin);
   $$('.adminCol').forEach(e => e.classList.toggle('hidden', !profile.is_admin));
   await loadMyTier(); // zuerst: Kostenlos-Modus entscheidet, ob Tarife und Preise erscheinen
+  await welcomeCredits(); // vor den Lizenzen: kostenlose Lizenz sofort, neue Konten einmal 20 KI-Credits (der Server prüft, ob schon bekommen)
   await Promise.all([loadEvents(), loadDevices(), loadLicenses()]);
-  await welcomeCredits(); // neue Konten: einmal 20 KI-Credits zum Testen (der Server prüft, ob schon bekommen)
   loadMyCredits(); loadShop(); loadPlans();
   loadSoftware();
   dispatchEvent(new Event('pm-ready'));
