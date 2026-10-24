@@ -357,7 +357,8 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
             <div><label>Credits (Minus zieht ab)</label><input id="cAmount" type="number" step="1" value="100"></div>
             <div><label>Notiz (z.B. Rechnungsnummer)</label><input id="cNote" maxlength="200"></div>
           </div>
-          <div class="row" style="margin-top:14px"><button class="btn primary" id="cGrant">Guthaben buchen</button><span class="small muted">1 KI-Bild in 1K = 1 Credit, in 2K = 2 Credits. Der Kunde muss im Dashboard registriert sein. Tipp: Klick auf einen Kunden in der Liste übernimmt seine E-Mail.</span></div>
+          <label class="small" style="display:flex;gap:8px;align-items:center;margin-top:12px;cursor:pointer"><input type="checkbox" id="cMail" checked> Kunde per E-Mail benachrichtigen (nur bei Gutschriften)</label>
+          <div class="row" style="margin-top:10px"><button class="btn primary" id="cGrant">Guthaben buchen</button><span class="small muted">1 KI-Bild in 1K = 1 Credit, in 2K = 2 Credits. Der Kunde muss im Dashboard registriert sein. Tipp: Klick auf einen Kunden in der Liste übernimmt seine E-Mail.</span></div>
           <div class="tablewrap" style="margin-top:16px"><table>
             <thead><tr><th>Kunde</th><th>Guthaben</th><th>Letzte Buchung</th></tr></thead>
             <tbody id="creditList"><tr><td colspan="3" class="empty">Lädt …</td></tr></tbody>
@@ -634,6 +635,7 @@ async function boot() {
   $$('.adminCol').forEach(e => e.classList.toggle('hidden', !profile.is_admin));
   await loadMyTier(); // zuerst: Kostenlos-Modus entscheidet, ob Tarife und Preise erscheinen
   await Promise.all([loadEvents(), loadDevices(), loadLicenses()]);
+  await welcomeCredits(); // neue Konten: einmal 20 KI-Credits zum Testen (der Server prüft, ob schon bekommen)
   loadMyCredits(); loadShop(); loadPlans();
   loadSoftware();
   dispatchEvent(new Event('pm-ready'));
@@ -1324,7 +1326,15 @@ $('#cGrant').onclick = async () => {
   const { data, error } = await sb.rpc('ai_grant', { p_email: email, p_amount: amount, p_note: $('#cNote').value.trim() || null });
   $('#cGrant').disabled = false;
   if (error) return toast(/ai_grant|schema cache|does not exist/i.test(error.message) ? 'Die Guthaben-Funktion ist auf dem Server noch nicht eingerichtet (Migration fehlt).' : 'Fehler: ' + error.message, 6000);
-  toast(`Gebucht. Neues Guthaben von ${email}: ${data} Credits`, 5000); $('#cNote').value = ''; loadCredits(); loadOverview();
+  $('#cNote').value = ''; loadCredits(); loadOverview();
+  // Benachrichtigung an den Kunden (Funktion license-mail, Brevo) – nur bei Gutschriften und nicht an sich selbst
+  if (!(amount > 0 && $('#cMail').checked && email.toLowerCase() !== (me?.email || '').toLowerCase())) toast(`Gebucht. Neues Guthaben von ${email}: ${data} Credits`, 5000);
+  else {
+    const { data: m0, error: e } = await sb.functions.invoke('license-mail', { body: { action: 'credits', email } });
+    let m = m0; if (e?.context?.json) { try { m = await e.context.json(); } catch {} }
+    if (!m?.ok) toast('Gebucht – aber die Mail an den Kunden konnte nicht gesendet werden: ' + (m?.error || e?.message || 'unbekannter Fehler'), 7000);
+    else toast(`Gebucht und Mail an ${m.to} gesendet. Neues Guthaben: ${data} Credits`, 5000);
+  }
 };
 /* ---------- KI-Guthaben kaufen (Stripe) ---------- */
 const euro = c => (c / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
@@ -1333,6 +1343,9 @@ const euro = c => (c / 100).toLocaleString('de-DE', { style: 'currency', currenc
 const showCredits = () => { $('#nav [data-tab="licenses"]')?.click(); setTimeout(() => $('#creditCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150); };
 window.showCredits = showCredits; // auch aus dem Ereignis-Editor (KI-Porträts → „Credits kaufen“)
 $('#creditChip').onclick = showCredits;
+async function welcomeCredits() {
+  try { const { data } = await sb.rpc('welcome_credits'); if (data > 0) toast('Willkommen! Du hast 20 KI-Credits zum Testen bekommen.', 8000); } catch {}
+}
 async function loadMyCredits() {
   if (!me || !$('#creditCard')) return;
   const [w, jobs, led, pk] = await Promise.all([
@@ -1474,7 +1487,7 @@ function renderShop() {
   const trial = myTier?.trial_until && new Date(myTier.trial_until) > new Date() ? ` <span class="small muted">· <span>Test bis</span> ${fmtDate(myTier.trial_until)}</span>` : '';
   $('#shopTier').innerHTML = FREE ? `<span>Alle Funktionen sind kostenlos – mit deinem eigenen Logo. Nur KI-Bilder brauchen Credits.</span>${ext.length ? ` <span class="small muted">+ ${esc(ext.join(', '))}</span>` : ''}${trial}${mine.length ? '' : ' <button class="btn primary" data-free style="margin-left:8px">Kostenlos starten</button>'}`
     : cur ? `<span>Dein Tarif:</span> <b>${esc(TIER_NAME[cur])}</b>${ext.length ? ` <span class="small muted">+ ${esc(ext.join(', '))}</span>` : ''}${trial}`
-    : '<span>Du hast noch keine Lizenz. Starte kostenlos – oder teste 1 Monat die Zusatzfunktionen mit 10 KI-Credits.</span>';
+    : '<span>Du hast noch keine Lizenz. Starte kostenlos – oder teste 1 Monat die Zusatzfunktionen mit 20 KI-Credits.</span>';
   $('#shopHint').textContent = shop.ready ? 'Bezahlung sicher über Stripe. Der Tarif wird direkt nach der Zahlung freigeschaltet – deine Fotobox bleibt angemeldet.'
     : 'Der Kauf wird gerade eingerichtet und ist bald verfügbar.';
   $('#shopPlans').innerHTML = TIER_CARDS.map(t => {
@@ -1532,7 +1545,7 @@ $('#trialGo').onclick = async () => {
   const { error } = await sb.rpc('start_trial');
   $('#trialGo').disabled = false;
   if (error) return toast(error.message, 5000);
-  toast('Dein Test läuft 1 Monat: Fotomosaik, Live-Karikatur und Videonachricht sind freigeschaltet, dazu 10 KI-Credits. Melde dich in der Fotobox mit diesem Konto an.', 9000);
+  toast('Dein Test läuft 1 Monat: Fotomosaik, Live-Karikatur und Videonachricht sind freigeschaltet, dazu 20 KI-Credits. Melde dich in der Fotobox mit diesem Konto an.', 9000);
   await loadMyTier(); loadLicenses(); loadMyCredits();
 };
 { // Rückkehr von der Bezahlseite (Lizenz)
