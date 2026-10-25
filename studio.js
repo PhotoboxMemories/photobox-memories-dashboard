@@ -211,7 +211,7 @@
     if (b.dataset.a === 'filter') { filter = b.dataset.f; return render(); }
     if (b.dataset.a === 'fixopen') {
       const w = window.open('', '_blank'); // sofort öffnen, sonst blockiert der Browser das Fenster nach dem Warten
-      try { const t = await adminTicket(); if (w) w.location.href = `${studioUrl()}/studio/#admin=${encodeURIComponent(t)}`; else ctx.toast('Bitte Pop-ups für das Dashboard erlauben.', 6000); }
+      try { const t = await adminTicket(), url = `${studioUrl()}/studio/#admin=${encodeURIComponent(t)}`; if (w) w.location.href = url; else location.href = url; } // ohne Pop-up im selben Tab
       catch (err) { w?.close(); ctx.toast(err.message, 7000); }
       return;
     }
