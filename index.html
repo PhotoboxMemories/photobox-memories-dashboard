@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261025-1';</script>
+<script>window.I18N_V = '20261025-2';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -23,9 +23,10 @@
 <script src="sketch-draw.js?v=20261018-8"></script>
 <script src="caricature.js?v=20261024-1"></script>
 <script src="start-anim.js?v=20261020-1"></script>
-<script src="event.js?v=20261024-1"></script>
+<script src="admin-schutz.js?v=20261025-1"></script>
+<script src="event.js?v=20261025-3"></script>
 <script src="studio.js?v=20261025-1"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
 /* Wie bei LumaBooth immer hell – unabhängig vom Dunkelmodus des Geräts */
@@ -707,6 +708,8 @@ async function boot() {
   if (me.user_metadata?.pm_pw_temp && !DEMO) pwForce(); // Einmal-Passwort vom Betreiber: zuerst ein eigenes festlegen
   const { data } = await sb.from('profiles').select('*').eq('id', me.id).single();
   profile = data || {};
+  // Betreiber: zuerst der Code aus der Authenticator-App (Zwei-Faktor, admin-schutz.js) – vorher lädt das Dashboard nichts
+  if (profile.is_admin && !DEMO && !await AdminSchutz.ensure({ sb, esc, toast })) return;
   $('#navAdmin').classList.toggle('hidden', !profile.is_admin);
   $$('.adminCol').forEach(e => e.classList.toggle('hidden', !profile.is_admin));
   await loadMyTier(); // zuerst: Kostenlos-Modus entscheidet, ob Tarife und Preise erscheinen
@@ -915,7 +918,7 @@ $('#startClose').onclick = () => { try { localStorage.setItem(startKey(), '1'); 
 // Details eines Geräts: was die Fotobox zuletzt gemeldet hat, plus Fernbefehle (Testdruck, Kamerawerte)
 let openDev = null, devTimer = 0;
 function deviceDetails(d, online, mine) {
-  const st = d.status;
+  const st = d.status, N = v => Math.max(0, Math.round(+v) || 0); // Status meldet die Fotobox selbst: Zahlen nur als Zahl
   if (!st) return `<div class="empty">Diese Fotobox meldet noch keinen Status. Dafür braucht sie die Fotobox-Version 1.15 oder neuer.</div>`;
   const age = Math.round((Date.now() - new Date(st.at || d.last_seen)) / 1000), fresh = online && age < 90;
   const ok = v => v === true ? '<span class="dot on"></span>bereit' : v === false ? '<span class="dot" style="background:#d23b3b"></span>nicht bereit' : '<span class="dot"></span>unbekannt';
@@ -927,12 +930,12 @@ function deviceDetails(d, online, mine) {
   const ori = dp ? `<div class="card"><b style="font-size:17px">${dp.orient === 'portrait' ? 'Hochformat' : dp.orient === 'landscape' ? 'Querformat' : '–'}${dp.w && dp.h ? ` · ${num(dp.w)}×${num(dp.h)}` : ''}</b><span>Ausrichtung</span>
       <span class="small muted">${dp.forced ? 'an der Fotobox fest eingestellt' : 'automatisch erkannt'}${num(dp.rotation) ? ` · Windows-Drehung ${num(dp.rotation)}°` : ''}</span>
       ${cr != null ? `<span class="small muted">${st.camera?.rotAuto ? `Kamera ${num(cr)}° (automatisch)` : `Kamera ${num(cr)}° (von Hand)`}</span>` : ''}${lay ? `<span class="small muted">Layout: ${esc(lay)}</span>` : ''}</div>` : '';
-  const props = (st.camera?.props || []).map(p => `<div><label>${esc(p.label)}</label><select data-prop="${esc(p.id)}">${p.list.map(v => `<option ${v === p.cur ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>`
+  const props = [].concat(st.camera?.props || []).filter(p => p && Array.isArray(p.list)).map(p => `<div><label>${esc(p.label)}</label><select data-prop="${esc(p.id)}">${p.list.map(v => `<option ${v === p.cur ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>`
     + (p.canLive ? `<label class="small muted" style="margin-top:6px">Live-Ansicht</label><select data-live="${esc(p.id)}"><option value="">wie Foto</option>${p.list.map(v => `<option ${v === p.live ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>` : '') + '</div>').join('');
   return `<div class="stats" style="margin:6px 0 14px${ori ? ';grid-template-columns:repeat(auto-fit,minmax(170px,1fr))' : ''}">
-      <div class="card"><b>${st.prints ?? 0}${st.printLimit ? ` <span style="font-size:16px">/ ${st.printLimit}</span>` : ''}</b><span>Ausdrucke bei diesem Ereignis</span><span class="small muted">${st.printLimit ? 'noch ' + Math.max(0, st.printLimit - (st.prints || 0)) + ' übrig' : 'kein Limit eingestellt'}</span></div>
+      <div class="card"><b>${N(st.prints)}${N(st.printLimit) ? ` <span style="font-size:16px">/ ${N(st.printLimit)}</span>` : ''}</b><span>Ausdrucke bei diesem Ereignis</span><span class="small muted">${N(st.printLimit) ? 'noch ' + Math.max(0, N(st.printLimit) - N(st.prints)) + ' übrig' : 'kein Limit eingestellt'}</span></div>
       <div class="card"><b style="font-size:17px">${esc(st.camera?.name || '–')}</b><span>Kamera</span><span class="small">${ok(st.camera?.ready)}</span></div>
-      <div class="card"><b style="font-size:17px">${esc(st.printer?.name || '–')}</b><span>Drucker</span><span class="small">${ok(st.printer?.ok)}${st.printer?.code ? ' · Windows-Statuscode ' + st.printer.code : ''}</span></div>
+      <div class="card"><b style="font-size:17px">${esc(st.printer?.name || '–')}</b><span>Drucker</span><span class="small">${ok(st.printer?.ok)}${N(st.printer?.code) ? ' · Windows-Statuscode ' + N(st.printer.code) : ''}</span></div>
       <div class="card"><b style="font-size:17px">${esc(scr)}</b><span>Bildschirm</span><span class="small muted">${esc(st.event || 'kein Ereignis')} · gemeldet vor ${age < 120 ? age + ' s' : Math.round(age / 60) + ' min'}</span></div>
       ${ori}
     </div>
@@ -940,7 +943,7 @@ function deviceDetails(d, online, mine) {
       ? 'Die Ausrichtung ist an dieser Fotobox fest auf Hochformat eingestellt – sie folgt nicht dem Bildschirm. Ändern an der Fotobox unter Einstellungen → Allgemein.'
       : 'Die Ausrichtung ist an dieser Fotobox fest auf Querformat eingestellt – sie folgt nicht dem Bildschirm. Ändern an der Fotobox unter Einstellungen → Allgemein.'}</p>` : ''}
     ${st.sync && !(st.sync.account && st.sync.event) ? `<p class="small" style="margin:-6px 0 12px;color:#b8860b">⚠️ ${!st.sync.account ? 'Diese Fotobox ist nur mit dem Lizenzschlüssel angemeldet – Änderungen an der Fotobox kommen nicht ins Dashboard. An der Fotobox unter Einstellungen → Allgemein mit E-Mail und Passwort anmelden.' : 'An dieser Fotobox ist kein Ereignis gewählt – Änderungen kommen nicht ins Dashboard.'}</p>`
-      : st.sync?.pending ? `<p class="small muted" style="margin:-6px 0 12px">${st.sync.pending} Änderung(en) der Fotobox warten noch auf die Übertragung ins Dashboard.</p>` : ''}
+      : N(st.sync?.pending) ? `<p class="small muted" style="margin:-6px 0 12px">${N(st.sync.pending)} Änderung(en) der Fotobox warten noch auf die Übertragung ins Dashboard.</p>` : ''}
     ${mine ? `<div class="card" style="margin-bottom:10px"><h2>Fernsteuerung</h2>
       ${fresh ? '' : '<p class="small muted" style="margin-bottom:8px">Die Fotobox ist gerade nicht verbunden. Befehle werden ausgeführt, sobald sie sich wieder meldet (höchstens 10 Minuten lang).</p>'}
       <div class="row" style="margin-bottom:12px"><button class="btn primary" data-dev="${d.id}" data-act="testprint">🖨 Testdruck auslösen</button><button class="btn" data-dev="${d.id}" data-act="pinreset" title="Entfernt den Sicherheitspin an der Fotobox, falls er vergessen wurde">🔓 Sicherheitspin zurücksetzen${st.locked ? ' (gesperrt)' : ''}</button>${cmd}</div>
@@ -958,15 +961,15 @@ function renderDevices() {
   if (!devices.length) { el.innerHTML = `<tr><td colspan="8" class="empty">Noch keine Geräte. Trage deinen Lizenzschlüssel in der FotoBox-App ein.</td></tr>`; return; }
   el.innerHTML = devices.map(d => {
     const online = d.last_seen && Date.now() - new Date(d.last_seen) < 3 * 60 * 1000;
-    const mine = d.licenses?.owner_id === me.id, st = d.status || {}, open = openDev === d.id;
+    const mine = d.licenses?.owner_id === me.id, st = d.status || {}, open = openDev === d.id, N = v => Math.max(0, Math.round(+v) || 0);
     const opts = mine
       ? `<select data-dev="${d.id}" data-act="event"><option value="">– kein Event –</option>${events.map(e => `<option value="${e.id}" ${e.id === d.event_id ? 'selected' : ''}>${esc(e.name)}</option>`).join('')}</select>`
       : `<span class="muted small">${d.event_id ? 'zugewiesen' : '–'}</span>`;
     return `<tr>
       <td><input value="${esc(d.name || 'FotoBox')}" data-dev="${d.id}" data-act="name" style="max-width:200px"></td>
-      <td><span class="dot ${online ? 'on' : ''}"></span>${online ? 'Online' : d.last_seen ? 'zuletzt ' + new Date(d.last_seen).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : 'nie'}${st.uploads > 0 ? `<div class="small" style="color:#c98a00;margin-top:2px" title="Liegen sicher auf der Fotobox und werden automatisch hochgeladen, sobald der Foto-Speicher erreichbar ist">⏳ ${st.uploads} ${st.uploads === 1 ? 'Foto wartet' : 'Fotos warten'} auf den Upload</div>` : ''}</td>
+      <td><span class="dot ${online ? 'on' : ''}"></span>${online ? 'Online' : d.last_seen ? 'zuletzt ' + new Date(d.last_seen).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : 'nie'}${N(st.uploads) > 0 ? `<div class="small" style="color:#c98a00;margin-top:2px" title="Liegen sicher auf der Fotobox und werden automatisch hochgeladen, sobald der Foto-Speicher erreichbar ist">⏳ ${N(st.uploads)} ${N(st.uploads) === 1 ? 'Foto wartet' : 'Fotos warten'} auf den Upload</div>` : ''}</td>
       <td>${opts}</td>
-      <td>${st.prints != null ? `<b>${st.prints}</b>${st.printLimit ? ' / ' + st.printLimit : ''}` : '–'}</td>
+      <td>${st.prints != null ? `<b>${N(st.prints)}</b>${N(st.printLimit) ? ' / ' + N(st.printLimit) : ''}` : '–'}</td>
       <td>${d.photos_total}</td>
       <td class="small">${esc(d.app_version || '–')}</td>
       <td class="adminCol small ${profile.is_admin ? '' : 'hidden'}">${esc(d.licenses?.customer_name || d.licenses?.customer_email || '')}</td>
