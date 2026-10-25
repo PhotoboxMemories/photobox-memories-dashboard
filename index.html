@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261025-3';</script>
+<script>window.I18N_V = '20261025-4';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -23,7 +23,8 @@
 <script src="sketch-draw.js?v=20261018-8"></script>
 <script src="caricature.js?v=20261024-1"></script>
 <script src="start-anim.js?v=20261020-1"></script>
-<script src="admin-schutz.js?v=20261025-2"></script>
+<script src="admin-schutz.js?v=20261025-3"></script>
+<script src="admin-kunde.js?v=20261025-2"></script>
 <script src="event.js?v=20261025-5"></script>
 <script src="studio.js?v=20261025-8"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
@@ -381,7 +382,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <div class="card" style="margin-bottom:20px">
           <div class="pagehead" style="margin-bottom:10px"><h2 style="margin:0">Kunden</h2><div class="row" style="gap:8px"><button type="button" class="btn small" id="ovStoreScan" title="Belegten Speicher aller Kunden bei Hetzner neu zählen">Speicher neu berechnen</button><input id="ovSearch" placeholder="Suchen…" style="max-width:260px"></div></div>
           <div class="tablewrap"><table>
-            <thead><tr><th>Kunde</th><th>Registriert</th><th>Lizenz</th><th>Fotoboxen</th><th>Guthaben</th><th>Erhalten</th><th>KI-Bilder</th><th>Speicher</th><th>Passwort</th></tr></thead>
+            <thead><tr><th>Kunde</th><th>Registriert</th><th>Lizenz</th><th>Fotoboxen</th><th>Guthaben</th><th>Erhalten</th><th>KI-Bilder</th><th>Speicher</th><th>Aktionen</th></tr></thead>
             <tbody id="ovCustomers"><tr><td colspan="9" class="empty">Lädt …</td></tr></tbody>
           </table></div>
         </div>
@@ -1864,7 +1865,8 @@ function renderOverview() {
       <td>${got[x.id] || 0}</td>
       <td>${pics[x.id] || 0}${used[x.id] ? ` <span class="small muted">(${used[x.id]} Credits)</span>` : ''}</td>
       <td>${storeCell(x.id)}</td>
-      <td>${x.is_admin ? '<span class="small muted">–</span>' : `<div class="row" style="gap:6px"><button type="button" class="btn small" data-pw="temp" data-id="${esc(x.id)}" title="Neues Passwort zum Vorlesen am Telefon – der Kunde bekommt es auch per Mail">🔑 Einmal-Passwort vergeben</button>
+      <td>${x.is_admin ? '<span class="small muted">–</span>' : `<div class="row" style="gap:6px"><button type="button" class="btn small primary" data-kunde="${esc(x.id)}" title="Rabatt, Gratis-Zeitraum, VIP, Funktionen schenken, Fotoboxen und Speicher">✎ Bearbeiten</button>
+        <button type="button" class="btn small" data-pw="temp" data-id="${esc(x.id)}" title="Neues Passwort zum Vorlesen am Telefon – der Kunde bekommt es auch per Mail">🔑 Einmal-Passwort vergeben</button>
         <button type="button" class="btn small" data-pw="link" data-id="${esc(x.id)}" title="Mail mit einem Link, über den der Kunde selbst ein neues Passwort festlegt">✉ Passwort-Link senden</button></div>`}</td>
     </tr>`; }).join('') : '<tr><td colspan="9" class="empty">Keine Kunden gefunden</td></tr>';
   $('#ovLedger').innerHTML = ov.ledger.length ? ov.ledger.slice(0, 50).map(x => `<tr><td>${fmtDate(x.created_at)}</td><td>${esc(mail[x.owner_id] || x.owner_id)}</td>
@@ -1872,6 +1874,14 @@ function renderOverview() {
     : '<tr><td colspan="5" class="empty">Noch keine Buchungen</td></tr>';
 }
 $('#ovSearch').oninput = renderOverview;
+// Kunde bearbeiten (admin-kunde.js, nur Betreiber, 25.10.2026): Rabatt, Gratis-Zeitraum, VIP, Funktion schenken, Fotoboxen, Speicher
+$('#ovCustomers').addEventListener('click', async e => {
+  const b = e.target.closest('[data-kunde]'); if (!b) return;
+  if (!window.AdminKunde) return toast('Bitte die Seite neu laden (Strg + F5) – ein Programmteil fehlt noch.', 6000);
+  b.disabled = true;
+  try { if (await AdminKunde.open(b.dataset.kunde, { sb, esc, toast })) { await loadLicenses(); await loadOverview(); } }
+  finally { b.disabled = false; }
+});
 // Speicher je Kunde (Standard 5 GB, nur Hinweis): Zelle „1,2 / 5 GB“ – Klick ändert die Grenze; „Speicher neu berechnen“ zählt bei Hetzner
 const gbTxt = b => (b / 1e9).toLocaleString('de-DE', { maximumFractionDigits: b < 1e10 ? 1 : 0 });
 function storeCell(id) {
