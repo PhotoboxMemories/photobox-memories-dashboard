@@ -143,6 +143,7 @@
         <a href="mailto:${esc(s.customer_email)}">${esc(s.customer_email)}</a>
         <span class="muted">${esc(s.design_name || s.design)} · ${esc(s.layout_name || s.layout)}</span>
         <span class="muted">Veranstaltung: ${fmtDate(s.event_date)} · eingegangen ${fmtDate(s.created_at)}</span>
+        ${s.event_id ? `<span class="muted">Ereignis: ${esc((ctx.events() || []).find(e => e.id === s.event_id)?.name || 'gelöscht')}${s.auto_layout ? ' · als Fotolayout übernommen' : ''}</span>` : ''}
         ${s.message ? `<div class="msg">${esc(s.message)}</div>` : ''}
         <select data-a="status" style="margin-top:4px">${STATUS.map(([k, l]) => `<option value="${k}"${s.status === k ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
       <div class="acts">
@@ -194,7 +195,7 @@
     if (b.dataset.a === 'copy') { try { await navigator.clipboard.writeText(b.dataset.v); ctx.toast('Kopiert'); } catch { ctx.toast(b.dataset.v, 8000); } return; }
     if (b.dataset.a === 'nologo') { e.preventDefault(); await saveSite({ logo_url: null }); return; }
     if (b.dataset.a === 'del' && s) {
-      if (!await (G.pmConfirm || (async t => confirm(t)))(`Einsendung von ${s.customer_name} endgültig löschen? Druckvorlage und Angaben werden entfernt.`, 'Löschen')) return;
+      if (!await (G.pmConfirm || (async t => confirm(t)))(`Einsendung von ${s.customer_name} endgültig löschen? Druckvorlage und Angaben werden entfernt – auch das daraus übernommene Fotolayout in den Ereignissen.`, 'Löschen')) return;
       b.disabled = true;
       try { await call({ action: 'delete', id: s.id }); subs = subs.filter(x => x.id !== s.id); render(); ctx.toast('Gelöscht'); }
       catch (err) { ctx.toast(err.message, 6000); b.disabled = false; }
@@ -279,5 +280,54 @@
     } catch (err) { ctx.toast('Übernehmen fehlgeschlagen: ' + (err.message || err), 7000); }
   }
 
-  G.StudioPage = { open, CATS: STUDIO_CATS };
+  // ---------- Im Ereignis (Fotolayout): BoothDesigner-Link nur für dieses Ereignis ----------
+  // Was der Kunde über diesen Link abschickt, legt die Serverfunktion „studio“ sofort als erstes Fotolayout ins Ereignis.
+  // eventLink(box, ev, c) – box = Platzhalter im Ereignis, ev = { id, name }, c = Kontext des Ereignisses (sb, me, extra, toast, demo)
+  const evCache = {};
+  async function eventLink(box, ev, c) {
+    if (!box || !ev?.id) return;
+    const card = inner => `<h2>BoothDesigner-Link</h2><div class="card">${inner}</div>`;
+    if (!c.extra('studio')) {
+      box.innerHTML = card(`<p style="margin:0">Lass deine Kunden ihr Fotolayout selbst gestalten: Sie bekommen einen Link, suchen ein Design aus und schicken es ab – es landet direkt hier im Ereignis.</p>
+        <p style="margin:12px 0 0"><button class="ghost" data-sl="page">BoothDesigner ansehen</button></p>`);
+    } else {
+      let st = evCache[ev.id];
+      if (!st || Date.now() - st.at > 60000) {
+        if (c.demo) st = { slug: 'fotobox-mueller', code: null, last: null };
+        else {
+          const [a, b, d] = await Promise.all([c.sb.from('studio_sites').select('slug,active').eq('owner_id', c.me.id).maybeSingle(),
+            c.sb.from('events').select('studio_code').eq('id', ev.id).maybeSingle(),
+            c.sb.from('studio_submissions').select('customer_name,created_at,auto_layout').eq('event_id', ev.id).order('created_at', { ascending: false }).limit(1)]);
+          st = { slug: a.data?.slug || null, active: a.data?.active, code: b.data?.studio_code || null, last: d.data?.[0] || null };
+        }
+        evCache[ev.id] = { ...st, at: Date.now() };
+      }
+      const url = st.slug && st.code && studioUrl() ? `${studioUrl()}/studio/?b=${encodeURIComponent(st.slug)}&e=${encodeURIComponent(st.code)}` : '';
+      box.innerHTML = card(!st.slug
+        ? `<p style="margin:0">Richte zuerst dein Studio ein – danach bekommst du hier einen Link nur für dieses Ereignis.</p>
+          <p style="margin:12px 0 0"><button class="btn pri" data-sl="page">Studio einrichten</button></p>`
+        : `<p style="margin:0 0 10px">Schick deinem Kunden diesen Link: Das Design, das er abschickt, liegt sofort als erstes Fotolayout in diesem Ereignis – ein neueres Design ersetzt das vorige.</p>
+          ${st.active === false ? '<p class="small" style="background:#FFF3C4;border-radius:10px;padding:8px 12px;margin:0 0 10px">Dein Studio ist gerade ausgeschaltet – Kunden sehen „nicht verfügbar“.</p>' : ''}
+          ${url ? `<div style="background:#f6f6f9;border:1px solid #eee;border-radius:10px;padding:10px 12px;word-break:break-all;font-size:13.5px">${esc(url)}</div>
+            <div class="row" style="margin-top:10px;flex-wrap:wrap;gap:8px"><button class="btn pri" data-sl="copy" data-v="${esc(url)}">Link kopieren</button>
+              <a class="ghost" href="${esc(url)}" target="_blank" rel="noopener" style="text-decoration:none">Öffnen</a><button class="ghost" data-sl="renew">Neuer Link</button></div>`
+            : '<button class="btn pri" data-sl="make">Link erstellen</button>'}
+          ${st.last ? `<p class="small" style="margin:12px 0 0;color:#6b6b78">Zuletzt: Design von ${esc(st.last.customer_name)} am ${fmtDate(st.last.created_at)}${st.last.auto_layout ? ' – als Fotolayout übernommen' : ''}.</p>` : ''}`);
+    }
+    box.onclick = async e => {
+      const b = e.target.closest('[data-sl]'); if (!b) return;
+      const a = b.dataset.sl;
+      if (a === 'page') return $('#nav [data-tab="studio"]')?.click();
+      if (a === 'copy') { try { await navigator.clipboard.writeText(b.dataset.v); c.toast('Link kopiert'); } catch { c.toast(b.dataset.v, 8000); } return; }
+      if (a === 'renew' && !await (G.pmConfirm || (async t => confirm(t)))('Neuen Link erzeugen? Der bisherige Link funktioniert danach nicht mehr.', 'Neuer Link')) return;
+      if (c.demo) return c.toast('In der Vorführung nicht möglich.');
+      b.disabled = true;
+      const { data, error } = await c.sb.rpc('studio_event_code', { p_event: ev.id, p_new: a === 'renew' });
+      if (error) { b.disabled = false; return c.toast(error.message, 6000); }
+      evCache[ev.id] = { ...evCache[ev.id], code: data }; eventLink(box, ev, c);
+      if (a === 'renew') c.toast('Neuer Link erstellt');
+    };
+  }
+
+  G.StudioPage = { open, eventLink, CATS: STUDIO_CATS };
 })(window);

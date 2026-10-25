@@ -1305,6 +1305,7 @@
           <section id="sec-layout-layouts"></section><h2>Fotolayout</h2><div class="card"><div style="margin-bottom:12px">Wird für Foto- oder Drucksitzungen verwendet</div>
             ${layoutCards()}${S.layouts.length > 1 ? sw('guestLayouts', 'Gäste wählen das Layout', 'Bei mehreren Layouts wählen die Gäste vor der Aufnahme') : ''}
             ${sw('gifFromPhotos', 'Auch ein GIF aus den Fotos erstellen')}</div>
+          <div id="studioEvLink"></div>
           <section id="sec-layout-countdown"></section><h2>Countdown</h2><div class="card">${slider('countdown', 'Countdown vor Foto 1', 1, 10)}${slider('countdownNext', 'Countdown vor weiteren Fotos', 1, 10)}${slider('between', 'Anzeigedauer des Fotos', 0, 10, .5)}</div></div>
           ${sel ? `<div class="pv"><div class="frame"><div style="position:relative;text-align:center;background:#f6f6f9;border:1px solid #eee;border-radius:8px"><img id="wsLayImg" src="${layoutThumb(sel, 760)}" alt="" style="max-width:100%;max-height:58vh;display:inline-block;vertical-align:top">
             <small style="position:absolute;right:8px;bottom:8px;background:rgba(255,255,255,.92);border-radius:6px;padding:3px 8px;color:#333">${inch} | ${sel.w}px x ${sel.h}px</small></div>
@@ -1881,6 +1882,7 @@
       if (page === 'start') startAnimPreview();
       vaStops.splice(0).forEach(f => f()); // Animations-Kacheln des Virtuellen Beraters
       if (page === 'voice') main.querySelectorAll('.vatile').forEach(t => vaStops.push(AdvisorAnim.tile(t, t.dataset.anim, S.x.voice?.anim || 'neon', I18N.t(AdvisorAnim.byId(t.dataset.anim).text, S.x.lang?.guest || window.PM_LANG || 'de'))));
+      if (page === 'layout') G.StudioPage?.eventLink(main.querySelector('#studioEvLink'), { id: ev.id, name: E.name }, ctx); // BoothDesigner-Link (studio.js)
       if (page === 'layout') S.layouts.forEach(L => FBR.preloadLayout(L).then(() => { const img = main.querySelector(`.lay[data-id="${L.id}"] img`); if (img) img.src = layoutThumb(L);
         const big = L.id === sub.laySel && main.querySelector('#wsLayImg'); if (big) big.src = layoutThumb(L, 760); }));
     }
