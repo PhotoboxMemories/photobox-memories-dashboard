@@ -9,7 +9,7 @@ window.FOTOBOX_CONFIG = {
   releasesRepo: '',
   // Adresse der BoothDesigner-Webseite (template-studio/public auf dem eigenen Server);
   // leer = im Dashboard erscheinen noch kein Link und kein Einbettungscode
-  studioUrl: 'https://boothdesigner.de'
+  studioUrl: 'http://boothdesigner.de' // vorübergehend http (Wunsch des Betreibers 25.10.), bis GitHub das HTTPS-Zertifikat ausstellt – danach wieder https
 };
 
 // Fotos im Online-Speicher: Pfade mit „hz/“ liegen bei Hetzner (photoStore), alle anderen bei Supabase.
