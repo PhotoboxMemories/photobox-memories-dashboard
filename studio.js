@@ -131,10 +131,13 @@
       <div><b>Designs korrigieren</b> <span class="badge">nur Admin</span><p class="small muted" style="margin:4px 0 0">Öffnet das Studio im Admin-Modus: Design und Format wählen, im erweiterten Modus Texte, Deko und Fotofelder anpassen, unten „Für dieses Format speichern“. Alle Kunden sehen danach die korrigierte Fassung; eingetippte Texte bleiben.</p></div>
       <button class="btn primary" data-a="fixopen">Studio als Admin öffnen</button></div>
       ${fixes.length ? `<div style="margin-top:12px;display:grid;gap:6px">${fixes.map(f => `<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:6px">
-        <span class="small"><b>${esc(f.design)}</b> · ${f.layout === '*' ? 'Schrift &amp; Farben für alle Formate' : esc(f.layout)} <span class="muted">· ${fmtDate(f.updated_at)}</span></span>
+        <span class="small"><b>${esc(f.design)}</b> · ${f.layout === '*' ? 'Schrift &amp; Farben für alle Formate' : f.layout.startsWith('size-') ? esc(fixSize(f.layout)) : esc(f.layout)} <span class="muted">· ${fmtDate(f.updated_at)}</span></span>
         <button class="btn small danger" data-a="fixdel" data-d="${esc(f.design)}" data-l="${esc(f.layout)}">Entfernen</button></div>`).join('')}</div>` : '<p class="small muted" style="margin:10px 0 0">Noch keine Korrekturen.</p>'}
     </div>`;
   }
+  // „size-1200x1800“ → „alle 4×6-Formate (hoch)“ (Pixelmaße des Studios bei 300 dpi)
+  const fixSize = k => { const [w, h] = k.slice(5).split('x').map(Number), a = Math.min(w, h) / 300, b = Math.max(w, h) / 300;
+    return `alle ${a === b ? a + '×' + b : w < h ? a + '×' + b : b + '×' + a}-Formate${a === b ? '' : w < h ? ' (hoch)' : ' (quer)'}`; };
   async function adminTicket() { return (await call({ action: 'admin-ticket' })).ticket; }
 
   function linkCard() {
