@@ -1238,7 +1238,7 @@
         const perDay = days.map(d => S0.filter(x => { const t = new Date(x.created_at); return t >= d && t < new Date(+d + 864e5); }).length), maxD = Math.max(1, ...perDay);
         const perHour = [...Array(24)].map((_, h) => S0.filter(x => new Date(x.created_at).getHours() === h).length), maxH = Math.max(1, ...perHour);
         const kinds = [['Fotos', P.filter(x => x.kind === 'photo' && !isExtra(x)).length], ['Originalfotos', P.filter(x => x.kind === 'photo' && isExtra(x)).length], ['GIFs', P.filter(x => x.kind === 'gif').length], ['Videos', P.filter(x => x.kind === 'video').length]], maxK = Math.max(1, ...kinds.map(k => k[1]));
-        const devs = (ctx.devices || []).filter(d => d.event_id === ev.id), prints = devs.reduce((n, d) => n + (d.status?.prints || 0), 0), limit = +S.printLimit || 0;
+        const devs = (ctx.devices || []).filter(d => d.event_id === ev.id), prints = devs.reduce((n, d) => n + (+d.status?.prints || 0), 0), limit = +S.printLimit || 0;
         const hb = (n, v, max) => `<div class="hbar"><span>${n}</span><span><i style="width:${Math.round(v / max * 100)}%"></i></span><b>${v}</b></div>`;
         return `<button class="backl" data-a="go" data-pg="dash">${ICON('chevronLeft', 14)} Zurück zum Dashboard</button>
           <h1>${esc(E.name)}</h1><p style="margin:-8px 0 14px;color:#555">${E.event_date ? new Date(E.event_date).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }) : ''} · Letzte 30 Tage</p>
@@ -1264,7 +1264,7 @@
       },
       dash() {
         const devs = (ctx.devices || []).filter(d => d.event_id === ev.id);
-        const prints = devs.reduce((n, d) => n + (d.status?.prints || 0), 0), P = gal.list || [];
+        const prints = devs.reduce((n, d) => n + (+d.status?.prints || 0), 0), P = gal.list || []; // Status meldet die Fotobox selbst: nur als Zahl
         loadGallery();
         const link = shareLink(), n = v => gal.list ? v : '…', sessions = P.filter(x => !isExtra(x)).length;
         const act = (a, ic, label, extra = '') => `<button data-a="${a}" ${extra}>${ICON(ic, 26)}<span>${label}</span></button>`;
@@ -1275,7 +1275,7 @@
               <div class="foot"><span></span><button class="more" data-a="go" data-pg="analytics">Analysen →</button></div></div>
             <div class="dcard"><div class="nums"><span>Uploads<b>${n(P.length)}</b></span><span>Ausdrucke<b>${prints}</b></span><span>Gäste-Daten<b>${ctx.leadsCount?.(ev.id) ?? '–'}</b></span><span>Fotoboxen<b>${devs.length}</b></span></div>
               <div class="foot"><span>${n(P.length)} Shares insgesamt</span><button class="more" data-a="go" data-pg="shares">Shares →</button></div></div>
-            <div class="dcard boxes"><b class="dt">Zugewiesene Fotoboxen</b>${devs.length ? devs.map(d => `<div class="between"><span>📸 ${esc(d.name || 'FotoBox')}${d.status?.uploads ? ` <small style="display:inline">· ${d.status.uploads} Foto(s) warten auf den Upload</small>` : ''}${devOrientWarn(d) ? `<small style="color:#b26a00">⚠️ ${esc(devOrientWarn(d))}</small>` : ''}</span><small>${d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? '🟢 online' : 'offline'}</small></div>`).join('')
+            <div class="dcard boxes"><b class="dt">Zugewiesene Fotoboxen</b>${devs.length ? devs.map(d => `<div class="between"><span>📸 ${esc(d.name || 'FotoBox')}${+d.status?.uploads > 0 ? ` <small style="display:inline">· ${+d.status.uploads} Foto(s) warten auf den Upload</small>` : ''}${devOrientWarn(d) ? `<small style="color:#b26a00">⚠️ ${esc(devOrientWarn(d))}</small>` : ''}</span><small>${d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? '🟢 online' : 'offline'}</small></div>`).join('')
             : '<p style="color:#777">Noch keine. In der FotoBox anmelden und dieses Event auswählen – oder oben unter „Geräte“ zuweisen.</p>'}</div>
             <div class="dcard share"><b class="dt">Online-Galerie</b>
               ${sw('x.gallery.link', 'Freigabe von Links', 'Jeder mit dem Link zum Ereignis darf dieses Ereignis sehen')}
@@ -1562,7 +1562,7 @@
         const stTxt = { review: 'wartet auf Freigabe', new: 'in der Reihe', processing: 'wird gezeichnet', done: 'fertig', rejected: 'abgelehnt', failed: 'fehlgeschlagen' };
         const rows = (cariT.list || []).map(r => `<div class="between" style="gap:10px;padding:8px 0;border-top:1px solid #eee">
             ${r.url ? `<img src="${esc(r.url)}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex:none">` : '<span style="width:64px;flex:none"></span>'}
-            <div style="flex:1;min-width:0"><b>${esc(r.name || 'Ohne Namen')}</b> <small style="color:#6b6b78">· ${new Date(r.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} · ${stTxt[r.status] || r.status}</small>
+            <div style="flex:1;min-width:0"><b>${esc(r.name || 'Ohne Namen')}</b> <small style="color:#6b6b78">· ${new Date(r.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} · ${stTxt[r.status] || esc(r.status)}</small>
               ${r.message ? `<div style="font-size:13px;color:#444;overflow-wrap:anywhere">„${esc(r.message)}“</div>` : ''}${r.error ? `<div style="font-size:12px;color:#c0392b">${esc(r.error)}</div>` : ''}</div>
             <div class="row" style="gap:6px;flex:none">${r.status === 'review' ? `<button class="btn pri" data-a="cari-ok" data-id="${r.id}">Freigeben</button><button class="ghost" data-a="cari-no" data-id="${r.id}">Ablehnen</button>` : ''}
               <button class="ghost" data-a="cari-del" data-id="${r.id}" title="Einsendung und Selfie löschen">🗑</button></div></div>`).join('');
