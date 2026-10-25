@@ -185,7 +185,7 @@
   <button class="nav l" id="lPrev" aria-label="Vorheriges">‹</button><button class="nav r" id="lNext" aria-label="Nächstes">›</button></div>
 <footer>Diese Seite ist nur über den persönlichen Link erreichbar. Bitte den Link nur an Gäste dieser Veranstaltung weitergeben.</footer>
 
-<script src="config.js?v=20261018-9"></script>
+<script src="config.js?v=20261025-1"></script>
 <script src="icons.js?v=20261017-2"></script>
 <script src="ad.js?v=20261022-1"></script>
 <script src="shop.js?v=20261023-2"></script>
@@ -206,7 +206,9 @@
   const url = path => window.FOTOBOX_PHOTOS ? FOTOBOX_PHOTOS.url(path) : CFG.supabaseUrl + '/storage/v1/object/public/photos/' + String(path).split('/').map(encodeURIComponent).join('/');
   // Notfall-Kopie: antwortet der Foto-Speicher (Hetzner) nicht, das Bild bzw. Video von der Ersatzadresse laden
   // data-big: zuletzt dieses Bild nehmen (Fotoauswahl im Shop: das Original, solange seine Vorschau fehlt)
-  document.addEventListener('error', e => { const el = e.target; if (!/^(IMG|VIDEO)$/.test(el?.tagName)) return; const a = !el.dataset.alt && window.FOTOBOX_PHOTOS?.altSrc?.(el.currentSrc || el.src);
+  document.addEventListener('error', e => { const el = e.target; if (!/^(IMG|VIDEO)$/.test(el?.tagName)) return;
+    if (window.FOTOBOX_PHOTOS?.retry?.(el)) return; // erst erneut beim Foto-Speicher, dann Notfall-Kopie (config.js)
+    const a = !el.dataset.alt && window.FOTOBOX_PHOTOS?.altSrc?.(el.currentSrc || el.src);
     if (a) { el.dataset.alt = '1'; el.src = a; } else if (el.dataset.big) { el.src = el.dataset.big; el.dataset.big = ''; } }, true);
   const fetchAny = async path => { // Herunterladen: erst Hetzner, sonst die Notfall-Kopie
     try { const r = await fetch(url(path)); if (r.ok) return r; } catch {}
