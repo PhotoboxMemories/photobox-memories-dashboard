@@ -3,6 +3,7 @@
 // Vorschau, Druckvorlage herunterladen, im Studio öffnen, als Fotolayout in ein Ereignis übernehmen, löschen.
 // Daten: public.studio_sites / public.studio_submissions; Löschen über die Serverfunktion „studio“ (Dateien bei Hetzner).
 // StudioPage.open(ctx) – ctx = { sb, me, toast, uploadFile, extra(k), tier(), reloadTier(), events(), reloadEvents(), admin, demo }
+// standalone: true im eigenen Bereich auf boothdesigner.de/konto (ohne Fotobox-Software: kein „In Ereignis übernehmen“)
 (function (G) {
   'use strict';
   // wie CATEGORIES im Template-Studio (template-studio/editor/template-studio.src.html)
@@ -165,7 +166,7 @@
       <div class="acts">
         <a class="btn small" href="${esc(fileUrl(s, 'print.png'))}" download target="_blank" rel="noopener">⬇ Druckvorlage</a>
         ${link() ? `<a class="btn small" href="${esc(link('&s=' + s.folder))}" target="_blank" rel="noopener">Im Studio öffnen</a>` : ''}
-        ${fmt ? '<button class="btn small primary" data-a="adopt">In Ereignis übernehmen</button>' : '<span class="small muted" title="Startbildschirme werden als Bild heruntergeladen">Startbildschirm</span>'}
+        ${!fmt ? '<span class="small muted" title="Startbildschirme werden als Bild heruntergeladen">Startbildschirm</span>' : ctx.standalone ? '' : '<button class="btn small primary" data-a="adopt">In Ereignis übernehmen</button>'}
         <button class="btn small danger" data-a="del">Löschen</button>
       </div></div>`;
   }
