@@ -21,8 +21,11 @@ window.AdminSchutz = (() => {
     if (error) throw error;
     return { verified: (data?.totp || []).filter(f => f.status === 'verified'), all: data?.all || [] };
   };
+  // Anmeldung abgelaufen oder in einem anderen Tab abgemeldet – dann keine Fehlermeldung, sondern die normale Anmeldeseite
+  const noSession = e => e?.name === 'AuthSessionMissingError' || /session missing|refresh token|jwt expired|not authenticated/i.test(String(e?.message || ''));
   const errText = e => {
     const m = String(e?.message || e || '');
+    if (noSession(e)) return 'Deine Anmeldung ist abgelaufen. Bitte melde dich neu an.';
     if (/invalid|expired|code/i.test(m) && !/disabled|enroll/i.test(m)) return 'Der Code stimmt nicht. Bitte den aktuellen Code aus der App eingeben – er wechselt alle 30 Sekunden.';
     if (/disabled|not enabled/i.test(m)) return 'Die Zwei-Faktor-Anmeldung ist in Supabase ausgeschaltet: Supabase → Authentication → Multi-Factor → „TOTP (App Authenticator)“ einschalten.';
     if (/rate|too many/i.test(m)) return 'Zu viele Versuche. Bitte eine Minute warten.';
@@ -88,6 +91,7 @@ window.AdminSchutz = (() => {
       if (error) throw error;
       en = data;
     } catch (e) {
+      if (noSession(e)) { o.remove(); sb.auth.signOut({ scope: 'local' }).catch(() => {}); return; }
       $('.card', o).innerHTML = `<h2 style="margin:0">Zwei-Faktor-Anmeldung</h2><div class="msg err">${esc(errText(e))}</div>
         <div class="row" style="justify-content:space-between"><button type="button" class="btn" data-mfa="out">Abmelden</button>${add ? '<button type="button" class="btn" data-mfa="close">Schließen</button>' : ''}</div>`;
       $('[data-mfa="close"]', o)?.addEventListener('click', () => o.remove());
@@ -119,7 +123,6 @@ window.AdminSchutz = (() => {
   function startIdle() {
     armed = true;
     if (idleOn) return; idleOn = true;
-    sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') armed = false; });
     let last = Date.now(), saved = 0;
     const touch = () => { last = Date.now(); if (last - saved > 15e3) { saved = last; try { localStorage.setItem(ACTIVE_KEY, String(last)); } catch {} } };
     touch();
@@ -221,12 +224,25 @@ window.AdminSchutz = (() => {
   }
 
   // true: Betreiber ist mit Zwei-Faktor angemeldet (Dashboard darf laden). Sonst kommt die Code-Abfrage bzw. die Einrichtung.
+  let watching = false;
   async function ensure(o) {
     ({ sb, esc, toast } = o);
-    let lv = null; try { lv = (await sb.auth.mfa.getAuthenticatorAssuranceLevel()).data?.currentLevel; } catch {}
+    // Abgemeldet (auch in einem anderen Tab oder weil die Anmeldung abgelaufen ist): Code-Fenster weg, Abmelde-Uhr aus
+    if (!watching) { watching = true; sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') { $('#pmMfa')?.remove(); armed = false; } }); }
+    const out = () => { sb.auth.signOut({ scope: 'local' }).catch(() => {}); return false; };
+    let lv = null;
+    try {
+      const { data, error } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (error && noSession(error)) return out();
+      lv = data?.currentLevel;
+      if (!lv) return out(); // keine gültige Sitzung mehr – die Anmeldeseite kommt von selbst
+    } catch (e) { if (noSession(e)) return out(); }
     if (lv === 'aal2') { startIdle(); addPage(); return true; }
     try { const f = await factors(); f.verified.length ? verifyOverlay(f.verified) : enrollOverlay(false); }
-    catch (e) { overlay(`<h2 style="margin:0">Admin-Anmeldung</h2><div class="msg err">${esc(errText(e))}</div><div class="row"><button type="button" class="btn" data-mfa="out">Abmelden</button></div>`); }
+    catch (e) {
+      if (noSession(e)) return out();
+      overlay(`<h2 style="margin:0">Admin-Anmeldung</h2><div class="msg err">${esc(errText(e))}</div><div class="row"><button type="button" class="btn" data-mfa="out">Neu anmelden</button></div>`);
+    }
     return false;
   }
   return { ensure };
