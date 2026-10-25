@@ -137,9 +137,9 @@
 
   function subCard(s) {
     const fmt = FORMAT_OF[`${s.w}x${s.h}`];
-    return `<div class="sub" data-id="${s.id}">
+    return `<div class="sub" data-id="${esc(s.id)}">
       <a class="pv" href="${esc(fileUrl(s, 'preview.jpg'))}" target="_blank" rel="noopener"><img loading="lazy" alt="Vorschau" src="${esc(fileUrl(s, 'preview.jpg'))}"></a>
-      <div class="bd"><div class="row" style="justify-content:space-between"><b>${esc(s.customer_name)}</b><span class="badge ${s.status}">${esc((STATUS.find(x => x[0] === s.status) || [, s.status])[1])}</span></div>
+      <div class="bd"><div class="row" style="justify-content:space-between"><b>${esc(s.customer_name)}</b><span class="badge ${esc(s.status)}">${esc((STATUS.find(x => x[0] === s.status) || [, s.status])[1])}</span></div>
         <a href="mailto:${esc(s.customer_email)}">${esc(s.customer_email)}</a>
         <span class="muted">${esc(s.design_name || s.design)} · ${esc(s.layout_name || s.layout)}</span>
         <span class="muted">Veranstaltung: ${fmtDate(s.event_date)} · eingegangen ${fmtDate(s.created_at)}</span>
