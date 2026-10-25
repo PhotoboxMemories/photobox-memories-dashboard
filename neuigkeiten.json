@@ -5,22 +5,22 @@
       "date": "2026-10-25",
       "notes": {
         "de": [
-          "Zusatzfunktionen (Fotomosaik, Live-Karikatur, Videonachricht) laufen nur noch mit angemeldetem Konto und Freischaltung – ohne Anmeldung sind sie gesperrt."
+          "Neue Version."
         ],
         "en": [
-          "Add-ons (photo mosaic, live caricature, video message) now only work with a signed-in account and activation – without signing in they are locked."
+          "New version."
         ],
         "tr": [
-          "Ek işlevler (fotoğraf mozaiği, canlı karikatür, video mesaj) artık yalnızca giriş yapılmış hesap ve etkinleştirme ile çalışır – giriş yapılmadan kilitlidir."
+          "Yeni sürüm."
         ],
         "fr": [
-          "Les fonctions supplémentaires (mosaïque photo, caricature en direct, message vidéo) ne fonctionnent plus qu’avec un compte connecté et une activation – sans connexion, elles sont bloquées."
+          "Nouvelle version."
         ],
         "es": [
-          "Las funciones adicionales (mosaico de fotos, caricatura en directo, videomensaje) solo funcionan ya con una cuenta con sesión iniciada y activación; sin iniciar sesión están bloqueadas."
+          "Nueva versión."
         ],
         "it": [
-          "Le funzioni aggiuntive (mosaico fotografico, caricatura dal vivo, videomessaggio) ora funzionano solo con un account collegato e lo sblocco – senza accesso sono bloccate."
+          "Nuova versione."
         ]
       }
     },
@@ -28,22 +28,22 @@
       "date": "2026-10-25",
       "notes": {
         "de": [
-          "Online-Pflicht: Eine angemeldete Fotobox muss mindestens alle 14 Tage einmal mit dem Internet verbunden sein. 3 Tage vorher warnt die Startseite, danach ist der Gäste-Betrieb gesperrt, bis sie wieder verbunden war. Ereignisse ohne Internet (z. B. übers Wochenende) sind kein Problem."
+          "Neue Version."
         ],
         "en": [
-          "Online requirement: a signed-in photo booth must be connected to the internet at least once every 14 days. The start page warns 3 days in advance; after that, guest mode is locked until it has been connected again. Events without internet (e.g. over a weekend) are no problem."
+          "New version."
         ],
         "tr": [
-          "Çevrimiçi zorunluluğu: Giriş yapılmış bir fotoğraf kabini en az 14 günde bir internete bağlanmalıdır. Başlangıç sayfası 3 gün önceden uyarır, sonrasında yeniden bağlanana kadar misafir modu kilitlenir. İnternetsiz etkinlikler (ör. hafta sonu boyunca) sorun değildir."
+          "Yeni sürüm."
         ],
         "fr": [
-          "Obligation en ligne : une photobooth connectée à un compte doit être reliée à internet au moins une fois tous les 14 jours. La page d’accueil prévient 3 jours avant, ensuite le mode invités est bloqué jusqu’à la prochaine connexion. Les événements sans internet (p. ex. un week-end) ne posent aucun problème."
+          "Nouvelle version."
         ],
         "es": [
-          "Obligación de conexión: un fotomatón con sesión iniciada debe conectarse a internet al menos una vez cada 14 días. La página de inicio avisa 3 días antes; después se bloquea el modo invitados hasta que vuelva a conectarse. Los eventos sin internet (p. ej. un fin de semana) no son problema."
+          "Nueva versión."
         ],
         "it": [
-          "Obbligo online: una photobooth collegata a un account deve connettersi a internet almeno una volta ogni 14 giorni. La pagina iniziale avvisa 3 giorni prima, poi la modalità ospiti è bloccata finché non si ricollega. Gli eventi senza internet (ad es. nel fine settimana) non sono un problema."
+          "Nuova versione."
         ]
       }
     },
@@ -51,22 +51,22 @@
       "date": "2026-10-25",
       "notes": {
         "de": [
-          "Ohne Internet: Fotos werden nur noch mit Freischaltung für später gemerkt und automatisch nachgeladen (dabei bei jeder freigeschalteten Zusatzfunktion und im 1-Monats-Test). Ohne Freischaltung werden Fotos ohne Internet gedruckt, aber nicht in die Online-Galerie hochgeladen – kurze Aussetzer bis 15 Minuten holt die Fotobox noch nach."
+          "Neue Version."
         ],
         "en": [
-          "Without internet: photos are only kept for later and uploaded automatically with the offline queue unlocked (included with every unlocked add-on and in the 1-month trial). Without it, photos taken offline are printed but not uploaded to the online gallery – short dropouts of up to 15 minutes are still caught up."
+          "New version."
         ],
         "tr": [
-          "İnternetsiz: Fotoğraflar artık yalnızca kilit açıldığında sonrası için saklanır ve otomatik yüklenir (her açılmış ek işlevde ve 1 aylık denemede dahil). Kilit açılmamışsa internetsiz çekilen fotoğraflar basılır ama çevrimiçi galeriye yüklenmez – 15 dakikaya kadar kısa kesintiler yine telafi edilir."
+          "Yeni sürüm."
         ],
         "fr": [
-          "Sans internet : les photos ne sont gardées pour plus tard et envoyées automatiquement qu’avec la file hors ligne débloquée (incluse avec chaque fonction supplémentaire débloquée et dans l’essai d’un mois). Sans elle, les photos prises hors ligne sont imprimées mais pas envoyées dans la galerie en ligne – les courtes coupures jusqu’à 15 minutes sont encore rattrapées."
+          "Nouvelle version."
         ],
         "es": [
-          "Sin internet: las fotos solo se guardan para más tarde y se suben automáticamente con la cola sin conexión desbloqueada (incluida con cada función adicional desbloqueada y en la prueba de 1 mes). Sin ella, las fotos hechas sin conexión se imprimen pero no se suben a la galería online; los cortes breves de hasta 15 minutos se siguen recuperando."
+          "Nueva versión."
         ],
         "it": [
-          "Senza internet: le foto vengono conservate per dopo e caricate automaticamente solo con la coda offline sbloccata (inclusa con ogni funzione aggiuntiva sbloccata e nella prova di 1 mese). Senza, le foto scattate offline vengono stampate ma non caricate nella galleria online – le brevi interruzioni fino a 15 minuti vengono ancora recuperate."
+          "Nuova versione."
         ]
       }
     },
