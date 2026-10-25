@@ -32,7 +32,7 @@
   #studioRoot .msg{background:#f6f4ee;border-radius:8px;padding:6px 9px;white-space:pre-wrap}
   @media (max-width:760px){#studioRoot .grid2{grid-template-columns:1fr}}`;
 
-  let ctx = null, site = null, subs = [], plans = [], shopReady = false, filter = 'offen';
+  let ctx = null, site = null, subs = [], plans = [], shopReady = false, filter = 'offen', fixes = [];
   const $ = s => document.querySelector(s);
   const root = () => $('#studioRoot');
   const studioUrl = () => String(G.FOTOBOX_CONFIG?.studioUrl || '').replace(/\/+$/, '');
@@ -61,6 +61,7 @@
       ctx.sb.from('studio_sites').select('*').eq('owner_id', ctx.me.id).maybeSingle(),
       ctx.sb.from('studio_submissions').select('*').eq('owner_id', ctx.me.id).order('created_at', { ascending: false }).limit(500)]);
     site = (Array.isArray(a.data) ? a.data[0] : a.data) || null; subs = Array.isArray(b.data) ? b.data : []; // Vorführung: Listen statt Einzelzeile
+    if (ctx.admin && !ctx.demo) fixes = (await ctx.sb.from('studio_design_fixes').select('design,layout,updated_at').order('updated_at', { ascending: false })).data || [];
   }
 
   // ---------- Noch nicht freigeschaltet: testen oder buchen ----------
@@ -111,6 +112,7 @@
     root().innerHTML = `<div class="pagehead"><h1>BoothDesigner</h1>
         <span class="small muted">${ctx.admin ? 'Betreiber-Konto' : until && until.getFullYear() < 2100 ? `Freigeschaltet bis ${until.toLocaleDateString('de-DE')}` : ''}</span></div>
       ${site ? linkCard() : ''}
+      ${ctx.admin && !ctx.demo ? fixCard() : ''}
       <h2 style="margin:26px 0 12px">Einsendungen ${n ? `<span class="badge">${n} neu</span>` : ''}</h2>
       ${site ? `<div class="row" style="margin-bottom:12px">${[['offen', 'Offen'], ['erledigt', 'Erledigt'], ['alle', 'Alle']].map(([k, l]) =>
         `<button class="btn small${filter === k ? ' primary' : ''}" data-a="filter" data-f="${k}">${l}</button>`).join('')}</div>
@@ -120,6 +122,19 @@
       ${settingsCard()}`;
     root().onclick = onClick; root().onchange = onChange;
   }
+
+  // ---------- Nur Betreiber: Designs für alle Kunden korrigieren ----------
+  // Öffnet das Studio mit einem Admin-Zugang (2 Stunden, Serverfunktion „studio“ → admin-ticket); dort unten „Für dieses Format speichern“.
+  function fixCard() {
+    return `<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px">
+      <div><b>Designs korrigieren</b> <span class="badge">nur Admin</span><p class="small muted" style="margin:4px 0 0">Öffnet das Studio im Admin-Modus: Design und Format wählen, im erweiterten Modus Texte, Deko und Fotofelder anpassen, unten „Für dieses Format speichern“. Alle Kunden sehen danach die korrigierte Fassung; eingetippte Texte bleiben.</p></div>
+      <button class="btn primary" data-a="fixopen">Studio als Admin öffnen</button></div>
+      ${fixes.length ? `<div style="margin-top:12px;display:grid;gap:6px">${fixes.map(f => `<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:6px">
+        <span class="small"><b>${esc(f.design)}</b> · ${f.layout === '*' ? 'Schrift &amp; Farben für alle Formate' : esc(f.layout)} <span class="muted">· ${fmtDate(f.updated_at)}</span></span>
+        <button class="btn small danger" data-a="fixdel" data-d="${esc(f.design)}" data-l="${esc(f.layout)}">Entfernen</button></div>`).join('')}</div>` : '<p class="small muted" style="margin:10px 0 0">Noch keine Korrekturen.</p>'}
+    </div>`;
+  }
+  async function adminTicket() { return (await call({ action: 'admin-ticket' })).ticket; }
 
   function linkCard() {
     const url = link();
@@ -194,6 +209,18 @@
     const b = e.target.closest('[data-a]'); if (!b || b.tagName === 'SELECT') return;
     const card = b.closest('.sub'), s = card && subs.find(x => x.id === card.dataset.id);
     if (b.dataset.a === 'filter') { filter = b.dataset.f; return render(); }
+    if (b.dataset.a === 'fixopen') {
+      const w = window.open('', '_blank'); // sofort öffnen, sonst blockiert der Browser das Fenster nach dem Warten
+      try { const t = await adminTicket(); if (w) w.location.href = `${studioUrl()}/studio/#admin=${encodeURIComponent(t)}`; else ctx.toast('Bitte Pop-ups für das Dashboard erlauben.', 6000); }
+      catch (err) { w?.close(); ctx.toast(err.message, 7000); }
+      return;
+    }
+    if (b.dataset.a === 'fixdel') {
+      if (!await (G.pmConfirm || (async t => confirm(t)))(`Korrektur für „${b.dataset.d}“ (${b.dataset.l === '*' ? 'alle Formate' : b.dataset.l}) entfernen? Danach gilt wieder das Original.`, 'Entfernen')) return;
+      try { await call({ action: 'fix-delete', ticket: await adminTicket(), design: b.dataset.d, layout: b.dataset.l }); fixes = fixes.filter(f => !(f.design === b.dataset.d && f.layout === b.dataset.l)); render(); ctx.toast('Entfernt'); }
+      catch (err) { ctx.toast(err.message, 7000); }
+      return;
+    }
     if (b.dataset.a === 'copy') { try { await navigator.clipboard.writeText(b.dataset.v); ctx.toast('Kopiert'); } catch { ctx.toast(b.dataset.v, 8000); } return; }
     if (b.dataset.a === 'nologo') { e.preventDefault(); await saveSite({ logo_url: null }); return; }
     if (b.dataset.a === 'del' && s) {
