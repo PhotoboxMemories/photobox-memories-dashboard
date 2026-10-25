@@ -143,7 +143,8 @@
         <a href="mailto:${esc(s.customer_email)}">${esc(s.customer_email)}</a>
         <span class="muted">${esc(s.design_name || s.design)} · ${esc(s.layout_name || s.layout)}</span>
         <span class="muted">Veranstaltung: ${fmtDate(s.event_date)} · eingegangen ${fmtDate(s.created_at)}</span>
-        ${s.event_id ? `<span class="muted">Ereignis: ${esc((ctx.events() || []).find(e => e.id === s.event_id)?.name || 'gelöscht')}${s.auto_layout ? ' · als Fotolayout übernommen' : ''}</span>` : ''}
+        ${s.event_id ? `<span class="muted">Ereignis: ${esc((ctx.events() || []).find(e => e.id === s.event_id)?.name || 'gelöscht')}${s.event_created ? ' · automatisch angelegt' : s.auto_layout ? ' · als Fotolayout übernommen' : ''}</span>` : ''}
+        ${s.start_kind ? `<span class="muted">Startbildschirm als ${s.start_kind === 'image' ? 'Bild' : 'Animation'}: ${['p', 'l'].map(o => `<a href="${esc(fileUrl(s, `start-${o}.${({ image: 'jpg', video: 'mp4', webm: 'webm' })[s.start_kind]}`))}" target="_blank" rel="noopener">${o === 'p' ? 'hoch' : 'quer'}</a>`).join(' · ')}</span>` : ''}
         ${s.message ? `<div class="msg">${esc(s.message)}</div>` : ''}
         <select data-a="status" style="margin-top:4px">${STATUS.map(([k, l]) => `<option value="${k}"${s.status === k ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
       <div class="acts">
@@ -155,7 +156,7 @@
   }
 
   function settingsCard() {
-    const s = site || { slug: toSlug(ctx.me?.email?.split('@')[0] || ''), name: '', accent: '#b08d57', intro: '', cats: [], allow_download: false, keep_days: 180, active: true };
+    const s = site || { slug: toSlug(ctx.me?.email?.split('@')[0] || ''), name: '', accent: '#b08d57', intro: '', cats: [], allow_download: false, keep_days: 180, active: true, auto_event: true };
     return `<form class="card" id="studioForm" style="display:grid;gap:14px;max-width:900px">
       <div class="grid2">
         <div><label>Name deiner Firma</label><input name="name" maxlength="80" value="${esc(s.name)}" placeholder="z. B. Fotobox Müller" required></div>
@@ -181,6 +182,7 @@
       </div>
       <p class="small muted" style="margin:0">Datenschutz: Du bist für die Daten deiner Kunden verantwortlich, wir verarbeiten sie in deinem Auftrag (AVV). Ergänze in deiner
         Datenschutzerklärung einen Absatz zu BoothDesigner – eine Vorlage bekommst du von uns.</p>
+      <label class="row" style="font-weight:500;margin:0"><input type="checkbox" name="auto_event"${s.auto_event !== false ? ' checked' : ''}> Für jede Einsendung gleich ein Ereignis anlegen – mit Fotolayout und Startbildschirm des Kunden (änderbar und löschbar)</label>
       <label class="row" style="font-weight:500;margin:0"><input type="checkbox" name="allow_download"${s.allow_download ? ' checked' : ''}> Kunden dürfen ihr Design auch selbst als PNG herunterladen</label>
       <label class="row" style="font-weight:500;margin:0"><input type="checkbox" name="active"${s.active ? ' checked' : ''}> Studio ist online (aus = Kunden sehen „nicht verfügbar“)</label>
       <div class="row"><button class="btn primary" type="submit">${site ? 'Speichern' : 'Studio einrichten'}</button><span class="small muted" id="studioSaveMsg"></span></div>
@@ -224,7 +226,7 @@
     const row = {
       slug, name: String(f.get('name') || '').trim().slice(0, 80), accent: String(f.get('accent') || '#b08d57'), intro: String(f.get('intro') || '').trim().slice(0, 300),
       cats: f.getAll('cats').map(String), notify_email: String(f.get('notify_email') || '').trim() || null, keep_days: +f.get('keep_days') || 180,
-      privacy_url: priv, imprint_url: imp || null, allow_download: !!f.get('allow_download'), active: !!f.get('active')
+      privacy_url: priv, imprint_url: imp || null, allow_download: !!f.get('allow_download'), active: !!f.get('active'), auto_event: !!f.get('auto_event')
     };
     const logo = f.get('logo');
     msg.textContent = 'Speichert …';
