@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.99": {
+      "date": "2026-10-25",
+      "notes": {
+        "de": [
+          "Online-Pflicht: Eine angemeldete Fotobox muss mindestens alle 14 Tage einmal mit dem Internet verbunden sein. 3 Tage vorher warnt die Startseite, danach ist der Gäste-Betrieb gesperrt, bis sie wieder verbunden war. Ereignisse ohne Internet (z. B. übers Wochenende) sind kein Problem."
+        ],
+        "en": [
+          "Online requirement: a signed-in photo booth must be connected to the internet at least once every 14 days. The start page warns 3 days in advance; after that, guest mode is locked until it has been connected again. Events without internet (e.g. over a weekend) are no problem."
+        ],
+        "tr": [
+          "Çevrimiçi zorunluluğu: Giriş yapılmış bir fotoğraf kabini en az 14 günde bir internete bağlanmalıdır. Başlangıç sayfası 3 gün önceden uyarır, sonrasında yeniden bağlanana kadar misafir modu kilitlenir. İnternetsiz etkinlikler (ör. hafta sonu boyunca) sorun değildir."
+        ],
+        "fr": [
+          "Obligation en ligne : une photobooth connectée à un compte doit être reliée à internet au moins une fois tous les 14 jours. La page d’accueil prévient 3 jours avant, ensuite le mode invités est bloqué jusqu’à la prochaine connexion. Les événements sans internet (p. ex. un week-end) ne posent aucun problème."
+        ],
+        "es": [
+          "Obligación de conexión: un fotomatón con sesión iniciada debe conectarse a internet al menos una vez cada 14 días. La página de inicio avisa 3 días antes; después se bloquea el modo invitados hasta que vuelva a conectarse. Los eventos sin internet (p. ej. un fin de semana) no son problema."
+        ],
+        "it": [
+          "Obbligo online: una photobooth collegata a un account deve connettersi a internet almeno una volta ogni 14 giorni. La pagina iniziale avvisa 3 giorni prima, poi la modalità ospiti è bloccata finché non si ricollega. Gli eventi senza internet (ad es. nel fine settimana) non sono un problema."
+        ]
+      }
+    },
     "1.17.98": {
       "date": "2026-10-25",
       "notes": {
