@@ -7,7 +7,7 @@
 (function (G) {
   'use strict';
   // wie CATEGORIES im Template-Studio (template-studio/editor/template-studio.src.html)
-  const STUDIO_CATS = ['Hochzeit', 'Geburtstag & Party', 'Abschluss', 'JGA', 'Babyparty', 'Taufe', 'Kommunion & Konfirmation', 'Firmenfeier', 'Weihnachten', 'Feiertage'];
+  const STUDIO_CATS = ['Hochzeit', 'Geburtstag & Party', 'Sommerfest', 'Abschluss', 'JGA', 'Babyparty', 'Taufe', 'Kommunion & Konfirmation', 'Firmenfeier', 'Weihnachten', 'Feiertage'];
   const STATUS = [['neu', 'Neu'], ['in_arbeit', 'In Arbeit'], ['erledigt', 'Erledigt']];
   // Formate des Studios (Breite × Höhe) → Papierformat der Fotobox (FBR.FORMATS)
   const FORMAT_OF = { '600x1800': '2x6', '1200x1800': '4x6p', '1800x1200': '4x6l', '1500x1500': '5x5' };
