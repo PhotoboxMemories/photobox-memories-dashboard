@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261024-4';</script>
+<script>window.I18N_V = '20261025-1';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -1739,6 +1739,7 @@ function renderOverview() {
   for (const x of ov.ledger) if (x.amount > 0) got[x.owner_id] = (got[x.owner_id] || 0) + x.amount;
   for (const x of ov.jobs) { pics[x.owner_id] = (pics[x.owner_id] || 0) + 1; used[x.owner_id] = (used[x.owner_id] || 0) + x.cost; }
   const lic = o => licenses.filter(x => x.owner_id === o), boxes = o => sum(lic(o), x => x.dev_count || 0);
+  const maxDev = o => sum(lic(o).filter(x => x.active), x => x.max_devices || 0); // erlaubte Fotoboxen (Höchstzahl je Lizenz)
   const live = licenses.filter(x => x.active && (x.kind === 'lifetime' || !x.valid_until || new Date(x.valid_until) > Date.now()));
   const ending = live.filter(x => x.kind === 'subscription' && x.valid_until && new Date(x.valid_until) < soon);
   const online = devices.filter(d => d.last_seen && Date.now() - new Date(d.last_seen) < 3 * 60 * 1000).length;
@@ -1760,7 +1761,7 @@ function renderOverview() {
       <td><b>${esc(x.name || x.email)}</b>${x.is_admin ? ' <span class="badge">Betreiber</span>' : ''}${x.name ? `<br><span class="small muted">${esc(x.email)}</span>` : ''}</td>
       <td>${fmtDate(x.created_at)}</td>
       <td>${ls.length ? ls.map(l => freeMode() ? (l.active ? '<span class="badge ok">aktiv</span>' : '<span class="badge bad">gesperrt</span>') : licStatus(l)).join('<br>') : '<span class="small muted">keine</span>'}</td>
-      <td>${boxes(x.id)}</td>
+      <td>${x.is_admin ? boxes(x.id) : `<a href="#" data-maxdev="${esc(x.id)}" title="Höchstzahl ändern" style="white-space:nowrap${boxes(x.id) > maxDev(x.id) ? ';color:var(--bad,#e5484d)' : ''}">${boxes(x.id)} von ${maxDev(x.id) || '–'}</a>`}</td>
       <td><b>${bal[x.id] ?? 0}</b></td>
       <td>${got[x.id] || 0}</td>
       <td>${pics[x.id] || 0}${used[x.id] ? ` <span class="small muted">(${used[x.id]} Credits)</span>` : ''}</td>
@@ -1787,6 +1788,18 @@ $('#ovCustomers').addEventListener('click', async e => {
   const { error } = await sb.rpc('set_storage_gb', { p_owner: x.id, p_gb: gb });
   if (error) return toast(/set_storage_gb|schema cache/i.test(error.message) ? 'Die Speicher-Funktion ist auf dem Server noch nicht eingerichtet.' : 'Fehler: ' + error.message, 6000);
   toast(`Speicher für ${x.email}: ${gb} GB`); loadOverview();
+});
+// Anzahl Fotoboxen je Kunde (Standard 1): Klick auf „2 von 3“ ändert die Höchstzahl. Gilt nur für neu verbundene PCs –
+// schon verbundene Fotoboxen laufen weiter (set_max_devices, app_sync prüft beim Anmelden eines neuen PCs).
+$('#ovCustomers').addEventListener('click', async e => {
+  const a = e.target.closest('[data-maxdev]'), x = a && ov?.profiles.find(p => p.id === a.dataset.maxdev); if (!x) return;
+  e.preventDefault();
+  const cur = licenses.filter(l => l.owner_id === x.id && l.active).reduce((n, l) => Math.max(n, l.max_devices || 0), 0) || 1;
+  const v = prompt(`Wie viele Fotoboxen darf ${x.email} nutzen?`, String(cur)); if (v === null) return;
+  const n = Math.round(+v); if (!(n >= 1 && n <= 1000)) return toast('Bitte eine Zahl von 1 bis 1000 eingeben.');
+  const { error } = await sb.rpc('set_max_devices', { p_owner: x.id, p_n: n });
+  if (error) return toast(/set_max_devices|schema cache/i.test(error.message) ? 'Die Funktion ist auf dem Server noch nicht eingerichtet.' : 'Fehler: ' + error.message, 6000);
+  toast(`${x.email}: bis zu ${n} Fotoboxen`); await loadLicenses(); renderOverview();
 });
 $('#ovStoreScan').onclick = async () => {
   const b = $('#ovStoreScan'); b.disabled = true;
