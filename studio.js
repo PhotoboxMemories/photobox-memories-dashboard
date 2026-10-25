@@ -159,7 +159,7 @@
         <a href="mailto:${esc(s.customer_email)}">${esc(s.customer_email)}</a>
         <span class="muted">${esc(s.design_name || s.design)} · ${esc(s.layout_name || s.layout)}</span>
         <span class="muted">Veranstaltung: ${fmtDate(s.event_date)} · eingegangen ${fmtDate(s.created_at)}</span>
-        ${s.event_id ? `<span class="muted">Ereignis: ${esc((ctx.events() || []).find(e => e.id === s.event_id)?.name || 'gelöscht')}${s.event_created ? ' · automatisch angelegt' : s.auto_layout ? ' · als Fotolayout übernommen' : ''}</span>` : ''}
+        ${s.event_id ? `<span class="muted">Ereignis: ${esc((ctx.events() || []).find(e => e.id === s.event_id)?.name || (ctx.standalone ? 'im Dashboard von Photobox Memories' : 'gelöscht'))}${s.event_created ? ' · automatisch angelegt' : s.auto_layout ? ' · als Fotolayout übernommen' : ''}</span>` : ''}
         ${s.start_kind ? `<span class="muted">Startbildschirm als ${s.start_kind === 'image' ? 'Bild' : 'Animation'}: ${['p', 'l'].map(o => `<a href="${esc(fileUrl(s, `start-${o}.${({ image: 'jpg', video: 'mp4', webm: 'webm' })[s.start_kind]}`))}" target="_blank" rel="noopener">${o === 'p' ? 'hoch' : 'quer'}</a>`).join(' · ')}</span>` : ''}
         ${s.message ? `<div class="msg">${esc(s.message)}</div>` : ''}
         <select data-a="status" style="margin-top:4px">${STATUS.map(([k, l]) => `<option value="${k}"${s.status === k ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
@@ -172,7 +172,7 @@
   }
 
   function settingsCard() {
-    const s = site || { slug: toSlug(ctx.me?.email?.split('@')[0] || ''), name: '', accent: '#b08d57', intro: '', cats: [], allow_download: false, keep_days: 180, active: true, auto_event: true };
+    const s = site || { slug: toSlug(ctx.me?.email?.split('@')[0] || ''), name: '', accent: '#b08d57', intro: '', cats: [], allow_download: false, keep_days: 180, active: true, auto_event: !ctx.standalone }; // ohne Fotobox-Software: keine Ereignisse
     return `<form class="card" id="studioForm" style="display:grid;gap:14px;max-width:900px">
       <div class="grid2">
         <div><label>Name deiner Firma</label><input name="name" maxlength="80" value="${esc(s.name)}" placeholder="z. B. Fotobox Müller" required></div>
