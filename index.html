@@ -316,14 +316,15 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <p id="shopTier" style="margin:0 0 6px"></p>
         <p class="small muted" id="shopHint" style="margin-bottom:14px" data-paid></p>
         <div class="plans" id="shopPlans" data-paid></div>
-        <div class="row hidden" id="trialRow" style="margin-top:16px"><button class="btn primary" id="trialGo">1 Monat Zusatzfunktionen kostenlos testen</button><span class="small muted">Ohne Zahlungsdaten · Fotomosaik, Live-Karikatur, Videonachricht und 10 KI-Credits · endet von selbst, danach geht es kostenlos weiter</span></div>
+        <div class="row hidden" id="trialRow" style="margin-top:16px"><button class="btn primary" id="trialGo"><span data-freemode class="hidden">1 Monat Zusatzfunktionen kostenlos testen</span><span data-paid>30 Tage alles kostenlos testen</span></button><span class="small muted hidden" data-freemode>Ohne Zahlungsdaten · Fotomosaik, Live-Karikatur, Videonachricht und 10 KI-Credits · endet von selbst, danach geht es kostenlos weiter</span><span class="small muted" data-paid>Fotobox-Abo und alle Zusatzfunktionen · ohne Zahlungsdaten · endet nach 30 Tagen von selbst, danach geht es kostenlos weiter</span></div>
         <h3 style="margin:22px 0 6px">Zusatzfunktionen</h3>
-        <p class="small muted" style="margin:0 0 10px" data-paid>Zu Pro dazubuchbar – oder alle zusammen im Paket „Alles inklusive“.</p>
+        <p class="small muted" style="margin:0 0 10px" data-paid>Einzeln dazubuchbar – monatlich oder jährlich.</p>
         <p class="small muted hidden" style="margin:0 0 10px" data-freemode>Fotomosaik, Live-Karikatur und Videonachricht schaltet Photobox Memories auf Anfrage frei – oder du testest sie 1 Monat kostenlos.</p>
         <div class="plans" id="shopAddons" data-paid></div>
+        <p class="small muted" style="margin:16px 0 0" data-paid><a href="agb.html" target="_blank" rel="noopener">AGB</a> · <span>Nur für Unternehmer. Abos verlängern sich automatisch und sind jederzeit zum Ende der Laufzeit kündbar.</span></p>
       </div>
       <div class="card hidden" id="adCard" style="margin-top:20px">
-        <p class="small" id="adFreeNote" hidden style="background:#FFFAEA;border-radius:10px;padding:8px 12px;margin:0 0 10px">Im Tarif Kostenlos zeigen die Fotobox und die Gäste-Seiten das Logo und die Werbung von Photobox Memories. Ab Basis erscheint hier deine eigene.</p>
+        <p class="small" id="adFreeNote" hidden style="background:#FFFAEA;border-radius:10px;padding:8px 12px;margin:0 0 10px">In der kostenlosen Version zeigen die Fotobox und die Gäste-Seiten das Logo und die Werbung von Photobox Memories. Mit dem Fotobox-Abo erscheint hier deine eigene.</p>
         <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Deine Werbung in der Galerie</h2><label class="row" style="gap:8px;margin:0;font-size:14px"><input type="checkbox" id="adOn" checked> anzeigen</label></div>
         <p class="small muted" style="margin-bottom:14px">Erscheint oben auf jeder Foto- und Galerieseite deiner Gäste (QR-Code an der Fotobox und Freigabe-Link der Galerie). Leere Felder werden nicht gezeigt.</p>
         <div class="grid2">
@@ -396,7 +397,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
             <div id="lValidWrap"><label>Abo bezahlt bis</label><input id="lValid" type="date"></div>
             <div id="lUpdWrap" class="hidden"><label>Updates inklusive bis (leer = immer)</label><input id="lUpd" type="date"></div>
             <div id="lMaxWrap"><label>Anzahl Geräte</label><input id="lMax" type="number" min="1" value="1"></div>
-            <div id="lTierWrap"><label>Tarif</label><select id="lTier"><option value="pro">Pro (alle Funktionen)</option><option value="basis">Basis (nur Fotobox, eigenes Logo)</option><option value="free">Kostenlos (mit Werbung von Photobox Memories)</option></select></div>
+            <div id="lTierWrap"><label>Tarif</label><select id="lTier"><option value="pro">Fotobox-Abo (alle Funktionen, eigenes Logo)</option><option value="basis">Basis (alter Tarif)</option><option value="free">Kostenlos (1 Layout, Logo von Photobox Memories)</option></select></div>
             <div id="lCreditsWrap" class="hidden"><label>KI-Credits dazu (für KI-Porträts)</label><input id="lCredits" type="number" min="0" max="1000" value="20"></div>
             <div><label>Freigaben</label><div class="row" style="margin-top:10px;gap:16px"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMosaic" style="width:auto"> Fotomosaik</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lCari" style="width:auto"> Live-Karikatur</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lVideo" style="width:auto"> Videonachricht</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lStudio" style="width:auto"> BoothDesigner</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lOffline" style="width:auto"> Offline-Warteschlange</label></div></div>
             <div style="grid-column:1/-1"><label>Notiz (z.B. Rechnungsnummer)</label><input id="lNotes"></div>
@@ -436,6 +437,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <div class="card" style="margin-bottom:20px" id="planCard">
           <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Tarife (Lizenz-Shop)</h2><button class="btn" id="planAdd">+ Tarif</button></div>
           <p class="small muted" style="margin:0 0 12px">Preise pro Fotobox, brutto. Kunden sehen nur eingeschaltete Tarife unter „Meine Lizenzen“ und kaufen über Stripe – die Lizenz entsteht nach der Zahlung von selbst. Abos verlängern sich automatisch; gekündigte laufen bis zum Ende der bezahlten Zeit.</p>
+          <p class="small hidden" id="planFreeNote" style="background:#FFFAEA;border-radius:10px;padding:8px 12px;margin:0 0 12px">Kostenlos-Modus aktiv – Kunden sehen die Tarife erst nach dem Umschalten (SQL 202610250005). Hier kannst du sie schon vorbereiten.</p>
           <div id="planList"><p class="small muted">Lädt …</p></div>
         </div>
         <div class="card" style="margin-bottom:20px" id="photoShopCard">
@@ -1109,7 +1111,27 @@ async function loadMyTier() {
 const curTier = () => profile?.is_admin ? 'pro' : myTier?.tier || 'pro';
 // „Alles kostenlos“ (Server pm_free_mode): alle Funktionen frei, keine Tarife und Preise – Geld kosten nur KI-Credits
 const freeMode = () => !!myTier?.free_mode;
-const licKind = l => l.trial ? 'Testphase' : isTestLic(l) ? 'Testversion' : kindName(l.kind);
+const licKind = l => l.trial ? 'Testphase' : isTestLic(l) ? 'Testversion' : l.tier === 'free' && l.kind === 'lifetime' ? 'Kostenlose Version' : kindName(l.kind);
+// Neues Preismodell (nur außerhalb des Kostenlos-Modus sichtbar): 30-Tage-Test je Konto (my_tier.trial_until, auch abgelaufen),
+// Anzeige „Test bis TT.MM. · noch X Tage“ bzw. „Test beendet“
+const dayMonth = d => new Date(d).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+const trialOn = () => !!myTier?.trial_until && new Date(myTier.trial_until) > Date.now();
+function trialBadge() {
+  if (!myTier?.trial_until) return '';
+  if (!trialOn()) return '<span class="badge">Test beendet</span>';
+  const n = Math.max(1, Math.ceil((new Date(myTier.trial_until) - Date.now()) / 864e5));
+  return `<span class="badge ok"><span>Test bis</span> ${dayMonth(myTier.trial_until)} · <span>${n === 1 ? 'noch 1 Tag' : `noch ${n} Tage`}</span></span>`;
+}
+// Bezahlte Lizenz (Fotobox-Abo oder vom Betreiber eingetragen): Tarif nicht kostenlos und noch gültig
+const paidLic = l => l.active && !l.trial && (l.tier || 'pro') !== 'free' && (l.kind === 'lifetime' || new Date(l.valid_until || 0) > Date.now());
+const boxN = n => n === 1 ? '1 Fotobox' : `${n} Fotoboxen`;
+function licTitle(l) {
+  if (freeMode()) return 'Kostenlose Lizenz';
+  if (l.tier === 'free' && !l.trial) return 'Kostenlose Version';
+  if (l.tier === 'pro' && l.kind === 'subscription' && !l.trial && !isTestLic(l)) // Fotobox-Abo: Abrechnung aus der Plan-Kennung (fotobox-monat/-jahr)
+    return `Fotobox-Abo${/-jahr$/.test(l.plan || '') ? ' · jährlich' : /-monat$/.test(l.plan || '') ? ' · monatlich' : ''} · ${boxN(l.max_devices || 1)}`;
+  return `${licKind(l)}${'tier' in l ? ` · ${esc(TIER_NAME[l.tier] || l.tier)}` : ''}${l.plan && !l.trial ? ` <span class="small muted">· ${esc(l.plan)}</span>` : ''}`;
+}
 async function loadLicenses() {
   const { data, error } = await sb.from('licenses').select('*, devices(id)').order('created_at', { ascending: false });
   if (error) return toast('Fehler: ' + error.message);
@@ -1119,12 +1141,13 @@ async function loadLicenses() {
   licenses = data;
   const mine = licenses.filter(l => l.owner_id === me.id);
   $('#myLicenses').innerHTML = mine.length ? mine.map(l => `<div class="card" style="display:flex;flex-direction:column;gap:8px">
-      <b>${freeMode() ? 'Kostenlose Lizenz' : `${licKind(l)}${'tier' in l ? ` · ${esc(TIER_NAME[l.tier] || l.tier)}` : ''}${l.plan && !l.trial ? ` <span class="small muted">· ${esc(l.plan)}</span>` : ''}`}</b>
+      <b>${licTitle(l)}</b>
       <div><code class="key" data-copy="${esc(l.key)}" title="Klicken zum Kopieren">${esc(l.key)}</code></div>
-      <div>${freeMode() && l.active ? '<span class="badge ok">aktiv · alle Funktionen</span>' : licStatus(l)}</div>
+      <div>${freeMode() && l.active ? '<span class="badge ok">aktiv · alle Funktionen</span>'
+        : !freeMode() && l.tier === 'free' && !l.trial ? `${l.active ? '<span class="badge ok">aktiv</span>' : '<span class="badge bad">deaktiviert</span>'} ${trialBadge()}` : licStatus(l)}</div>
       <div class="small muted">${freeMode() ? `<span>Geräte:</span> ${l.dev_count}` : `Geräte: ${l.dev_count} von ${l.max_devices}`}</div>
       ${EXTRAS.filter(([k]) => (l.extras || []).includes(k)).map(([, n]) => `<div class="small">✓ ${n} freigeschaltet</div>`).join('')}
-    </div>`).join('') : `<div class="card empty" style="grid-column:1/-1">${freeMode() ? 'Noch keine Lizenz. Starte unten kostenlos – alle Funktionen inklusive.' : shop.plans.length ? 'Noch keine Lizenz. Starte kostenlos, teste 1 Monat die Zusatzfunktionen oder kaufe unten eine Lizenz.' : 'Keine Lizenz mit deiner E-Mail gefunden. Bitte melde dich beim Verkäufer.'}</div>`;
+    </div>`).join('') : `<div class="card empty" style="grid-column:1/-1">${freeMode() ? 'Noch keine Lizenz. Starte unten kostenlos – alle Funktionen inklusive.' : shop.plans.length ? 'Noch keine Lizenz. Starte kostenlos, teste 30 Tage alles oder buche unten das Fotobox-Abo.' : 'Keine Lizenz mit deiner E-Mail gefunden. Bitte melde dich beim Verkäufer.'}</div>`;
   renderShop();
   $('#adCard').classList.toggle('hidden', !(mine.length || profile.is_admin)); if (!adData && (mine.length || profile.is_admin)) loadAd();
   if (profile.is_admin) { renderAdmin(); renderOverview(); }
@@ -1363,10 +1386,11 @@ async function sendLicenseMail(id) {
     return '⚠️ Mail nicht gesendet: ' + (r?.error || error?.message || 'unbekannter Fehler');
   } catch (e) { return '⚠️ Mail nicht gesendet: ' + e.message; }
 }
-// Kostenlos-Modus in der Verwaltung: keine Tarife, Abos oder Laufzeiten – neue Lizenzen sind kostenlos und unbegrenzt
+// Kostenlos-Modus in der Verwaltung: keine Abos oder Laufzeiten – neue Lizenzen sind kostenlos und unbegrenzt. Die Tarife bleiben
+// für den Betreiber sichtbar (mit Hinweis), damit er sie vor dem Umschalten vorbereiten kann – Kunden sehen sie erst danach.
 function adminFree() {
   const free = freeMode();
-  $('#planCard').classList.toggle('hidden', free);
+  $('#planFreeNote').classList.toggle('hidden', !free);
   $$('[data-admpaid]').forEach(e => e.classList.toggle('hidden', free)); $$('[data-admfree]').forEach(e => e.classList.toggle('hidden', !free));
   if (free && $('#lKind').value !== 'lifetime') { $('#lKind').value = 'lifetime'; $('#lKind').onchange(); }
   if (free) $('#lTier').value = 'pro';
@@ -1479,6 +1503,8 @@ window.showCredits = showCredits; // auch aus dem Ereignis-Editor (KI-Porträts 
 $('#creditChip').onclick = showCredits;
 async function welcomeCredits() {
   try { const { data } = await sb.rpc('welcome_credits'); if (data > 0) toast('Willkommen! Du hast 20 KI-Credits zum Testen bekommen.', 8000); } catch {}
+  // Außerhalb des Kostenlos-Modus startet welcome_credits beim ersten Anmelden auch den 30-Tage-Test → Tarif neu laden, sonst erst beim nächsten Besuch sichtbar
+  if (!DEMO && myTier && !myTier.free_mode && !myTier.trial_until && !profile?.is_admin) await loadMyTier();
 }
 // Neues Konto (bis 7 Tage alt): einmal eine Willkommens-Mail mit Download-Link zur Fotobox-Software (Funktion license-mail,
 // action 'welcome'). Der Server prüft und setzt den Merker pm_welcome_mail (app_metadata) selbst – hier wird nur unnötiges Fragen gespart.
@@ -1542,30 +1568,30 @@ $('#creditPacks').addEventListener('click', async e => {
     if (k === 'ok') for (const s of [5, 15, 40]) setTimeout(() => me && loadMyCredits(), s * 1000); } // Gutschrift kommt über den Stripe-Webhook
   if (k || location.hash === '#guthaben') addEventListener('pm-ready', showCredits, { once: true }); // nach der Anmeldung gleich zum Guthaben
 }
-/* ---------- Lizenz kaufen (Stripe): Tarife, 1 Monat Zusatzfunktionen testen, Abo verwalten ---------- */
-let shop = { plans: [], ready: false }, shopBill = 'month';
+/* ---------- Lizenz kaufen (Stripe): Kostenlos, Fotobox-Abo, Zusatzfunktionen, 30 Tage testen, Abo verwalten ---------- */
+let shop = { plans: [], ready: false, addons: [] }, shopBill = 'month';
 const PER = { month: 'pro Monat', year: 'pro Jahr', once: 'einmalig' };
-const TIER_NAME = { free: 'Kostenlos', basis: 'Basis', pro: 'Pro' };
+const TIER_NAME = { free: 'Kostenlos', basis: 'Basis', pro: 'Fotobox' };
+// AGB-Fassung, die der Kunde vor dem Kauf bestätigt – gleich in supabase/functions/license-shop (sonst lehnt der Server den Kauf ab)
+const AGB_V = '2026-10-25';
 // Karten der Preisübersicht. Preise und Kauf kommen aus der Tabelle plans (Kennung <tarif>-monat bzw. -jahr); solange ein Tarif
-// noch nicht eingeschaltet ist, zeigt die Karte den geplanten Preis und „bald buchbar“.
+// noch nicht eingeschaltet ist, zeigt die Karte den geplanten Preis und „bald buchbar“. Fotobox-Abo: Preis je Fotobox
+// (1 Fotobox enthalten, jede weitere zum gleichen Preis) – jährlich 10 % günstiger.
 const TIER_CARDS = [
-  { key: 'free', name: 'Kostenlos', lines: ['Fotobox-Funktionen: Foto, Collage, Fotostreifen, Drucken, QR-Code, Online-Galerie', 'Logo und Werbung von Photobox Memories auf Fotos und Gäste-Seiten', '1 Fotobox · Online-Galerie 30 Tage'] },
-  { key: 'basis', name: 'Basis', plan: 'basis', price: { month: 900, year: 7900 }, incl: 1, extra: { month: 500, year: 4900 },
-    lines: ['Fotobox-Funktionen wie Kostenlos', 'Dein eigenes Logo statt Photobox Memories', 'Online-Galerie 1 Jahr'] },
-  { key: 'pro', name: 'Pro', plan: 'pro', price: { month: 2400, year: 19900 }, incl: 2, extra: { month: 800, year: 7900 },
-    lines: ['Alle Funktionen: GIF, Boomerang, Video, Filter, Hintergrund entfernen, Virtueller Berater', 'Eigene Vorlagen und Bildschirme, Umfrage, Galerie mit Passwort, Fernsteuerung', '2 Fotoboxen inklusive'] },
-  { key: 'alles', name: 'Alles inklusive', plan: 'alles', price: { month: 3900, year: 34900 }, incl: 2, extra: { month: 800, year: 7900 },
-    lines: ['Pro mit allen Zusatzfunktionen', 'Fotomosaik, Live-Karikatur, Videonachricht', '2 Fotoboxen inklusive'] },
+  { key: 'free', name: 'Kostenlos', lines: ['Einfache Fotobox: Fotos, Drucken, QR-Code, Online-Galerie', '1 Fotobox · 1 Layout', 'Logo von Photobox Memories auf dem Startbildschirm und klein auf jedem Foto', 'Ohne Offline-Warteschlange'] },
+  { key: 'pro', name: 'Fotobox', plan: 'fotobox', price: { month: 500, year: 5400 }, incl: 1, extra: { month: 500, year: 5400 },
+    lines: ['Alle Fotobox-Funktionen: GIF, Boomerang, Video, Filter, Hintergrund entfernen, Virtueller Berater, Umfrage, Fernsteuerung', 'Beliebig viele Layouts, eigene Vorlagen und Bildschirme', 'Dein eigenes Logo, keine Wasserzeichen', 'Offline-Warteschlange inklusive'] },
 ];
-const ADDON_CARDS = [['mosaik', 'mosaic', 'Fotomosaik', { month: 900, year: 7900 }], ['karikatur', 'caricature', 'Live-Karikatur', { month: 900, year: 7900 }], ['videonachricht', 'videomsg', 'Videonachricht', { month: 500, year: 4900 }]];
+const ADDON_CARDS = [['mosaik', 'mosaic', 'Fotomosaik', { month: 500, year: 5400 }], ['karikatur', 'caricature', 'Live-Karikatur', { month: 500, year: 5400 }], ['videonachricht', 'videomsg', 'Videonachricht', { month: 500, year: 5400 }]];
+const yearOff = (m, y) => m > 0 && y > 0 ? Math.round(100 - y / (m * 12) * 100) : 0; // Rabatt des Jahrespreises in Prozent
 const showTarife = () => { $('#nav [data-tab="licenses"]')?.click(); setTimeout(() => $('#shopCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150); };
 window.showTarife = showTarife; // auch aus dem Ereignis-Editor („Tarife ansehen“)
 if (location.hash === '#tarife') addEventListener('pm-ready', showTarife, { once: true }); // Link aus der Fotobox
 // Links von der Webseite (photobox-memories.de/software):
 //   ?konto=neu  → Anmeldeseite gleich auf „Neues Konto erstellen“
 //   ?tarif=kostenlos|test|<tarif>-monat|-jahr|<zusatz>-monat|-jahr → nach der Anmeldung Meine Lizenzen: kostenlose Lizenz holen,
-//   Zusatzfunktionen testen bzw. den Kauf starten (Anzahl Fotoboxen kurz abfragen). Der Tarif wird einen Tag gemerkt – auch über
-//   Registrierung und Bestätigungs-Mail hinweg.
+//   Zusatzfunktionen testen bzw. den Kauf starten (Anzahl Fotoboxen und AGB kurz abfragen). Der Tarif wird einen Tag gemerkt – auch über
+//   Registrierung und Bestätigungs-Mail hinweg. Alte Links (basis-, pro-, alles-…) führen zum Fotobox-Abo.
 let shopPick = null;
 {
   const sp = new URLSearchParams(location.search), q = sp.get('tarif'), neu = sp.get('konto') === 'neu';
@@ -1583,26 +1609,34 @@ let shopPick = null;
   }
   if (w) addEventListener('pm-ready', () => { try { localStorage.removeItem('pm.tarif'); } catch {} pickTarif(w.q); }, { once: true });
 }
-// Rückfrage vor dem Kauf: Anzahl Fotoboxen (Vorgabe = im Preis enthaltene) mit Gesamtpreis
-const askDevices = c => new Promise(res => {
-  const cents = +c.dataset.cents, incl = +c.dataset.incl, extra = +c.dataset.extra, per = PER[shopBill];
+// Rückfrage vor jedem Kauf: Anzahl Fotoboxen (nur Tarife, Vorgabe = Eingabe auf der Karte) mit Gesamtpreis und Pflicht-Häkchen
+// für die AGB (nur für Unternehmer) → Anzahl oder null
+const askBuy = c => new Promise(res => {
+  const addon = !!c.dataset.addon, cents = +c.dataset.cents, incl = +c.dataset.incl || 1, extra = +c.dataset.extra || 0, per = PER[shopBill];
+  const perBox = !addon && incl === 1 && extra === cents, dev = c.querySelector('[data-dev]');
   const o = document.createElement('div');
   o.style.cssText = 'position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px';
   o.innerHTML = `<div style="background:#fff;color:#1d1d24;border-radius:14px;padding:22px;width:min(420px,100%);font:15px/1.5 system-ui,sans-serif">
     <b style="font-size:18px">${esc(c.querySelector('b')?.textContent)}</b>
-    <p style="margin:10px 0 6px;font-weight:600">Für wie viele Fotoboxen?</p>
-    <input type="number" min="1" max="50" value="${incl}" style="width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:10px;font:16px system-ui,sans-serif;margin-bottom:8px">
-    <p style="margin:0 0 4px;color:#666;font-size:13px"><span>${incl > 1 ? `${incl} Fotoboxen inklusive` : '1 Fotobox inklusive'}</span>${extra ? ` · <span>je weitere Fotobox</span> ${euro(extra)}` : ''}</p>
-    <p style="margin:0 0 16px"><span>Zusammen</span> <b data-s></b> <span>${per}</span></p>
-    <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn" data-r="0">Abbrechen</button><button class="btn primary" data-r="1">Weiter zur Bezahlung</button></div></div>`;
-  const inp = o.querySelector('input'), sum = () => { o.querySelector('[data-s]').textContent = euro(planSum(cents, incl, extra, devN(inp.value))); };
-  inp.oninput = sum; sum();
+    ${addon ? '<p style="margin:10px 0 6px;color:#666;font-size:13px">Zusatzfunktion für dein ganzes Konto</p>' : `<p style="margin:10px 0 6px;font-weight:600">Für wie viele Fotoboxen?</p>
+    <input type="number" min="1" max="50" value="${devN(dev?.value || incl)}" style="width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:10px;font:16px system-ui,sans-serif;margin-bottom:8px">
+    <p style="margin:0 0 4px;color:#666;font-size:13px">${perBox ? `<span>je Fotobox</span> ${euro(cents)}` : `<span>${incl > 1 ? `${incl} Fotoboxen inklusive` : '1 Fotobox inklusive'}</span>${extra ? ` · <span>je weitere Fotobox</span> ${euro(extra)}` : ''}`}</p>`}
+    <p style="margin:0 0 12px"><span>Zusammen</span> <b data-s></b> <span>${per}</span></p>
+    <label style="display:flex;gap:8px;align-items:flex-start;margin:0 0 4px;font-size:14px;font-weight:400;color:#1d1d24;cursor:pointer"><input type="checkbox" data-agb style="width:auto;margin-top:4px"> <span>Ich habe die AGB gelesen und akzeptiere sie. Ich buche als Unternehmer.</span></label>
+    <p style="margin:0 0 16px 24px;font-size:13px"><a href="agb.html" target="_blank" rel="noopener">AGB öffnen</a></p>
+    <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn" data-r="0">Abbrechen</button><button class="btn primary" data-r="1" disabled>Weiter zur Bezahlung</button></div></div>`;
+  const inp = o.querySelector('input[type="number"]'), agb = o.querySelector('[data-agb]'), go = o.querySelector('[data-r="1"]');
+  const n = () => inp ? devN(inp.value) : 1, sum = () => { o.querySelector('[data-s]').textContent = euro(addon ? cents : planSum(cents, incl, extra, n())); };
+  if (inp) inp.oninput = sum; sum();
+  agb.onchange = () => { go.disabled = !agb.checked; };
   const done = v => { o.remove(); document.removeEventListener('keydown', key); res(v); };
-  const key = e => { if (e.key === 'Escape') done(null); else if (e.key === 'Enter') done(devN(inp.value)); };
-  o.addEventListener('click', e => { if (e.target === o) done(null); const r = e.target.closest('[data-r]'); if (r) done(r.dataset.r === '1' ? devN(inp.value) : null); });
-  document.addEventListener('keydown', key); document.body.appendChild(o); setTimeout(() => inp.select(), 50);
+  // Enter = weiter, aber nicht auf „Abbrechen“ oder dem Link „AGB öffnen“ (die lösen ihren eigenen Klick aus)
+  const key = e => { if (e.key === 'Escape') done(null); else if (e.key === 'Enter' && agb.checked && !e.target.closest?.('button, a')) done(n()); };
+  o.addEventListener('click', e => { if (e.target === o) done(null); const r = e.target.closest('[data-r]'); if (r && !r.disabled) done(r.dataset.r === '1' ? n() : null); });
+  document.addEventListener('keydown', key); document.body.appendChild(o); setTimeout(() => inp ? inp.select() : agb.focus(), 50);
 });
 async function pickTarif(q) {
+  q = String(q).replace(/^(basis|pro|alles)-(monat|jahr)$/, 'fotobox-$2'); // alte Tarife der Webseite → Fotobox-Abo
   shopPick = q; shopBill = /-jahr$/.test(q) ? 'year' : /-monat$/.test(q) ? 'month' : shopBill;
   $('#nav [data-tab="licenses"]')?.click();
   await loadShop(); // Preise und Kauf-Bereitschaft sicher geladen
@@ -1611,21 +1645,23 @@ async function pickTarif(q) {
   if (q === 'kostenlos' || (freeMode() && q !== 'test')) { // im Kostenlos-Modus führt jeder Tarif-Link zur kostenlosen Lizenz
     if (q !== 'kostenlos') toast('Alle Funktionen sind zurzeit kostenlos.', 6000);
     const b = $(freeMode() ? '#shopTier [data-free]' : '#shopPlans [data-free]'); return b ? b.click() : q === 'kostenlos' && toast('Du hast schon eine Lizenz – sie steht oben unter „Meine Lizenzen“.', 7000); }
+  if (q === 'test' && !freeMode() && trialOn()) // nach dem Umschalten startet der Test schon beim ersten Anmelden
+    return toast(`Dein 30-Tage-Test läuft bis ${dayMonth(myTier.trial_until)} Melde dich in der Fotobox mit diesem Konto an.`, 8000);
   if (q === 'test') return $('#trialRow').classList.contains('hidden') ? toast('Für dieses Konto gibt es schon eine Lizenz oder einen Test.', 7000) : $('#trialGo').click();
   const c = $(`#shopCard [data-plan="${q}"]`), b = c?.querySelector('[data-buy]'), p = shop.plans.find(x => x.id === q);
   if (!c) return toast('Diesen Tarif gibt es nicht – hier sind alle Tarife.', 6000);
   if (!b) return toast(!p ? 'Dieser Tarif ist bald buchbar.' : c.querySelector('.tag') ? 'Diese Zusatzfunktion hast du schon gebucht.'
-    : 'Zusatzfunktionen gibt es zum Tarif Pro – buche zuerst Pro.', 7000);
+    : 'Hole dir zuerst deine kostenlose Lizenz – danach kannst du Zusatzfunktionen dazubuchen.', 7000);
   if (b.disabled) return toast('Der Kauf wird gerade eingerichtet und ist bald verfügbar.', 6000);
-  const dev = c.querySelector('[data-dev]');
-  if (dev) { const n = await askDevices(c); if (!n) return; dev.value = n; dev.dispatchEvent(new Event('input', { bubbles: true })); }
-  b.click(); // weiter wie „Jetzt buchen“: Bezahlseite von Stripe
+  b.click(); // weiter wie „Jetzt buchen“: Rückfrage (Anzahl, AGB), dann Bezahlseite von Stripe
 }
 const devN = v => Math.max(1, Math.min(50, Math.round(+v || 1)));
 async function loadShop() {
   if (!me || !$('#shopCard')) return;
-  const [p, st] = await Promise.all([sb.from('plans').select('*').eq('active', true).order('sort'), sb.functions.invoke('license-shop', { body: { action: 'status' } })]);
-  shop = { plans: p.error ? [] : [].concat(p.data || []).filter(x => x.active !== false && x.cents > 0), ready: !st.error && !!st.data?.ready };
+  const [p, st, ad] = await Promise.all([sb.from('plans').select('*').eq('active', true).order('sort'), sb.functions.invoke('license-shop', { body: { action: 'status' } }),
+    freeMode() ? null : sb.from('license_addons').select('extra,plan,valid_until').eq('owner_id', me.id)]); // gebuchte Zusatzfunktionen (Test = plan 'test')
+  shop = { plans: p.error ? [] : [].concat(p.data || []).filter(x => x.active !== false && x.cents > 0), ready: !st.error && !!st.data?.ready,
+    addons: ad && !ad.error ? [].concat(ad.data || []) : [] };
   renderShop();
 }
 // Preis eines Tarifs für n Fotoboxen: Grundpreis (enthält incl Fotoboxen) plus Aufpreis je weitere Fotobox
@@ -1640,34 +1676,46 @@ function renderShop() {
   $('#shopPortal').classList.toggle('hidden', FREE || !bought || !shop.ready);
   $$('#shopBill button').forEach(b => b.classList.toggle('on', b.dataset.bill === shopBill));
   $('#adFreeNote').hidden = cur !== 'free';
-  $('#trialRow').classList.toggle('hidden', !!myTier?.trial_until || mine.some(l => l.trial || (l.tier && l.tier !== 'free') || !('tier' in l)));
+  // Neues Preismodell: bezahlt (Fotobox-Abo bzw. eingetragene Lizenz, Betreiber immer), Test läuft oder kostenlos → Karte „Dein Tarif“
+  const testOn = trialOn(), paid = !!profile?.is_admin || mine.some(paidLic) || new Date(myTier?.paid_until || 0) > Date.now();
+  const shown = !cur ? null : paid ? 'pro' : testOn ? 'test' : 'free', boxes = mine.filter(paidLic).reduce((n, l) => n + (l.max_devices || 1), 0);
+  $('#trialRow').classList.toggle('hidden', !!myTier?.trial_until || mine.some(l => l.trial || (l.tier && l.tier !== 'free') || !('tier' in l)) || (!FREE && (!!myTier?.trial_used || paid)));
   const ext = (myTier?.extras || []).map(k => ({ mosaic: 'Fotomosaik', caricature: 'Live-Karikatur', videomsg: 'Videonachricht', studio: 'BoothDesigner', offline: 'Offline-Warteschlange' })[k]).filter(Boolean);
   const trial = myTier?.trial_until && new Date(myTier.trial_until) > new Date() ? ` <span class="small muted">· <span>Test bis</span> ${fmtDate(myTier.trial_until)}</span>` : '';
   $('#shopTier').innerHTML = FREE ? `<span>Alle Funktionen sind kostenlos – mit deinem eigenen Logo. Nur KI-Bilder brauchen Credits.</span>${ext.length ? ` <span class="small muted">+ ${esc(ext.join(', '))}</span>` : ''}${trial}${mine.length ? '' : ' <button class="btn primary" data-free style="margin-left:8px">Kostenlos starten</button>'}`
-    : cur ? `<span>Dein Tarif:</span> <b>${esc(TIER_NAME[cur])}</b>${ext.length ? ` <span class="small muted">+ ${esc(ext.join(', '))}</span>` : ''}${trial}`
-    : '<span>Du hast noch keine Lizenz. Starte kostenlos – oder teste 1 Monat die Zusatzfunktionen mit 20 KI-Credits.</span>';
+    : cur ? `<span>Dein Tarif:</span> <b>${shown === 'test' ? 'Test' : esc(TIER_NAME[shown])}</b>${shown === 'pro' && boxes > 1 ? ` <span class="small muted">· ${boxN(boxes)}</span>` : ''}${ext.length ? ` <span class="small muted">+ ${esc(ext.join(', '))}</span>` : ''}${paid ? '' : ' ' + trialBadge()}${shown === 'test'
+      ? '<br><span class="small muted">Nach dem Test läuft deine Fotobox kostenlos weiter (1 Layout, mit Photobox-Memories-Logo).</span>' : ''}`
+    : '<span>Du hast noch keine Lizenz. Starte kostenlos – oder teste 30 Tage alles kostenlos.</span>';
   $('#shopHint').textContent = shop.ready ? 'Bezahlung sicher über Stripe. Der Tarif wird direkt nach der Zahlung freigeschaltet – deine Fotobox bleibt angemeldet.'
     : 'Der Kauf wird gerade eingerichtet und ist bald verfügbar.';
+  // Rabatt beim Jahrespreis: aus den eingeschalteten Plänen, sonst aus den geplanten Preisen (nie gemischt)
+  const off = (m, y, price) => shopBill !== 'year' ? 0 : m && y ? yearOff(m.cents, y.cents) : !m && !y ? yearOff(price.month, price.year) : 0;
   $('#shopPlans').innerHTML = TIER_CARDS.map(t => {
-    const isCur = cur === t.key || (t.key === 'alles' && cur === 'pro' && ext.length === 3) ? true : false;
-    if (t.key === 'free') return `<div class="card plan ${cur === 'free' ? 'cur' : ''}" data-tier="free">${cur === 'free' ? '<span class="tag">Dein Tarif</span>' : ''}
+    const isCur = shown === t.key;
+    if (t.key === 'free') return `<div class="card plan ${isCur ? 'cur' : ''}" data-tier="free">${isCur ? '<span class="tag">Dein Tarif</span>' : ''}
       <b>${t.name}</b><div class="price">0 €<small>für immer</small></div><ul>${t.lines.map(l => `<li>${esc(l)}</li>`).join('')}</ul>
       ${mine.length ? '' : '<button class="btn primary" data-free>Kostenlos starten</button>'}</div>`;
     const p = live(`${t.plan}-${sfx}`), cents = p ? p.cents : t.price[shopBill], incl = p ? Math.max(1, p.devices_included || 1) : t.incl, extra = p ? p.extra_cents : t.extra[shopBill];
     const lines = p ? String(p.features || '').split('\n').map(f => f.trim()).filter(Boolean) : t.lines;
-    return `<div class="card plan ${isCur ? 'cur' : ''}" data-plan="${esc(`${t.plan}-${sfx}`)}" data-cents="${cents}" data-incl="${incl}" data-extra="${extra || 0}">${isCur ? '<span class="tag">Dein Tarif</span>' : ''}
-      <b>${esc(t.name)}</b><div class="price">${euro(cents)}<small><span>${per}</span> · <span>${incl > 1 ? `${incl} Fotoboxen inklusive` : '1 Fotobox inklusive'}</span></small></div>
+    const perBox = incl === 1 && extra === cents, save = off(live(`${t.plan}-monat`), live(`${t.plan}-jahr`), t.price); // Preis je Fotobox: jede Fotobox kostet gleich
+    return `<div class="card plan ${isCur ? 'cur' : ''}" data-plan="${esc(`${t.plan}-${sfx}`)}" data-cents="${cents}" data-incl="${incl}" data-extra="${extra || 0}">${isCur ? '<span class="tag">Dein Tarif</span>' : shown === 'test' ? '<span class="tag">Im Test</span>' : ''}
+      <b>${esc(t.name)}</b><div class="price">${euro(cents)}<small><span>${per}</span> · <span>${perBox ? 'je Fotobox' : incl > 1 ? `${incl} Fotoboxen inklusive` : '1 Fotobox inklusive'}</span>${save > 0 ? ` · <span>${save} % gespart</span>` : ''}</small></div>
       <ul>${lines.map(l => `<li>${esc(l)}</li>`).join('')}</ul>
       <label>Anzahl Fotoboxen</label><input type="number" min="1" max="50" value="${incl}" data-dev>
-      <div class="small muted">${extra ? `<span>je weitere Fotobox</span> ${euro(extra)}` : ''}</div>
+      <div class="small muted">${extra && !perBox ? `<span>je weitere Fotobox</span> ${euro(extra)}` : ''}</div>
       <div class="small muted" data-sum><span>Zusammen</span> <b>${euro(cents)}</b> <span>${per}</span></div>
-      ${p ? `<button class="btn primary" data-buy ${shop.ready ? '' : 'disabled'}>${isCur ? 'Verlängern' : 'Jetzt buchen'}</button>` : '<button class="btn" disabled>Bald buchbar</button>'}</div>`;
+      ${p ? `<button class="btn primary" data-buy ${shop.ready ? '' : 'disabled'}>${isCur ? 'Weitere Fotoboxen buchen' : 'Jetzt buchen'}</button>` : '<button class="btn" disabled>Bald buchbar</button>'}</div>`;
   }).join('');
+  // Zusatzfunktionen einzeln, auch ohne Fotobox-Abo (eine Lizenz reicht). Nur im Test freigeschaltet (keine gebuchte Zeile, keine
+  // Freigabe des Betreibers) → trotzdem dazubuchbar, damit sie nach dem Test weiterläuft.
+  const addonPaid = k => shop.addons.some(a => a.extra === k && a.plan !== 'test' && (!a.valid_until || new Date(a.valid_until) > Date.now()))
+    || mine.some(l => l.active && (l.extras || []).includes(k));
   $('#shopAddons').innerHTML = ADDON_CARDS.map(([id, k, name, price]) => {
     const p = shop.plans.find(x => x.id === `${id}-${sfx}` && x.addon), has = (myTier?.extras || []).includes(k), cents = p ? p.cents : price[shopBill];
-    return `<div class="card plan" data-plan="${esc(`${id}-${sfx}`)}" data-addon="1"><b>${esc(name)}</b><div class="price">${euro(cents)}<small>${per}</small></div>
-      ${has ? '<span class="tag">Gebucht</span>' : p && cur === 'pro' ? `<button class="btn primary" data-buy ${shop.ready ? '' : 'disabled'}>Dazubuchen</button>`
-        : `<button class="btn" disabled>${p ? 'Zu Pro buchbar' : 'Bald buchbar'}</button>`}</div>`;
+    const testOnly = !FREE && has && testOn && !addonPaid(k), plan = s => shop.plans.find(x => x.id === `${id}-${s}` && x.addon), save = off(plan('monat'), plan('jahr'), price);
+    return `<div class="card plan" data-plan="${esc(`${id}-${sfx}`)}" data-addon="1" data-cents="${cents}"><b>${esc(name)}</b><div class="price">${euro(cents)}<small><span>${per}</span>${save > 0 ? ` · <span>${save} % gespart</span>` : ''}</small></div>
+      ${has && !testOnly ? '<span class="tag">Gebucht</span>' : `${testOnly ? '<span class="tag">Im Test</span>' : ''}${p && (FREE ? cur === 'pro' : mine.length || profile?.is_admin)
+        ? `<button class="btn primary" data-buy ${shop.ready ? '' : 'disabled'}>Dazubuchen</button>` : `<button class="btn" disabled>${!p ? 'Bald buchbar' : FREE ? 'Zu Pro buchbar' : 'Mit Lizenz buchbar'}</button>`}`}</div>`;
   }).join('');
   if (shopPick) (shopPick === 'test' ? $('#trialRow') : shopPick === 'kostenlos' ? $('#shopPlans [data-tier="free"]') : $(`#shopCard [data-plan="${shopPick}"]`))?.classList.add('pick');
 }
@@ -1686,8 +1734,11 @@ $('#shopCard').addEventListener('click', async e => {
     await Promise.all([loadLicenses(), loadMyTier()]); renderShop(); return;
   }
   const b = e.target.closest('[data-buy]'); if (!b) return;
-  const c = b.closest('.plan'), dev = c.querySelector('[data-dev]'); b.disabled = true;
-  const { data, error } = await sb.functions.invoke('license-shop', { body: { action: 'checkout', plan: c.dataset.plan, devices: dev ? devN(dev.value) : 1 } });
+  const c = b.closest('.plan'), dev = c.querySelector('[data-dev]');
+  const n = await askBuy(c); if (!n) return; // Anzahl Fotoboxen, Gesamtpreis und AGB bestätigen
+  if (dev) { dev.value = n; dev.dispatchEvent(new Event('input', { bubbles: true })); }
+  b.disabled = true;
+  const { data, error } = await sb.functions.invoke('license-shop', { body: { action: 'checkout', plan: c.dataset.plan, devices: n, agb: AGB_V } });
   if (error || !/^https:\/\/checkout\.stripe\.com\//.test(data?.url || '')) { b.disabled = false; return toast(data?.error || 'Die Bezahlseite konnte nicht geöffnet werden.', 5000); }
   location.href = data.url;
 });
@@ -1703,13 +1754,14 @@ $('#trialGo').onclick = async () => {
   const { error } = await sb.rpc('start_trial');
   $('#trialGo').disabled = false;
   if (error) return toast(error.message, 5000);
-  toast('Dein Test läuft 1 Monat: Fotomosaik, Live-Karikatur und Videonachricht sind freigeschaltet, dazu 20 KI-Credits. Melde dich in der Fotobox mit diesem Konto an.', 9000);
+  toast(freeMode() ? 'Dein Test läuft 1 Monat: Fotomosaik, Live-Karikatur und Videonachricht sind freigeschaltet, dazu 20 KI-Credits. Melde dich in der Fotobox mit diesem Konto an.'
+    : 'Dein Test läuft 30 Tage: alle Fotobox-Funktionen und alle Zusatzfunktionen sind freigeschaltet. Melde dich in der Fotobox mit diesem Konto an.', 9000);
   await loadMyTier(); loadLicenses(); loadMyCredits();
 };
 { // Rückkehr von der Bezahlseite (Lizenz)
   const k = new URLSearchParams(location.search).get('lizenz');
   if (k) { history.replaceState(null, '', location.pathname); setTimeout(() => toast(k === 'ok' ? 'Danke! Die Zahlung ist eingegangen – deine Lizenz wird in wenigen Sekunden freigeschaltet.' : 'Kauf abgebrochen – es wurde nichts berechnet.', 7000), 800);
-    if (k === 'ok') setTimeout(() => me && Promise.all([loadLicenses(), loadMyTier()]).then(renderShop), 6000); }
+    if (k === 'ok') setTimeout(() => me && Promise.all([loadLicenses(), loadMyTier()]).then(loadShop), 6000); } // loadShop: auch gebuchte Zusatzfunktionen neu
 }
 // Verwaltung: Tarife pflegen
 const BILLING = [['month', 'Abo monatlich'], ['year', 'Abo jährlich'], ['once', 'Einmalkauf']];
@@ -1729,7 +1781,7 @@ async function loadPlans() {
           <label class="row" style="margin:0;gap:6px;font-weight:400;font-size:14px"><input type="checkbox" data-f="addon" ${p.addon ? 'checked' : ''}> Einzeln buchbare Zusatzfunktion (kein eigener Tarif)</label></div></div>` : ''}
         <div style="grid-column:1/-1"><label>Vorteile (eine Zeile pro Vorteil)</label><textarea data-f="features" rows="3">${esc(p.features)}</textarea></div></div>
       <div class="row" style="margin-top:10px"><label class="row" style="margin:0;color:var(--fg);font-weight:400;font-size:14px"><input type="checkbox" data-f="active" ${p.active ? 'checked' : ''}> Für Kunden sichtbar</label>
-        <span style="flex:1"></span><span class="small muted">Kennung ${esc(p.id)}</span><button class="btn small danger" data-plan-del>Löschen</button><button class="btn small primary" data-plan-save>Speichern</button></div></div>`).join('')
+        <span style="flex:1"></span>${!p.addon && 'extra_cents' in p && (p.devices_included || 1) === 1 && p.extra_cents === p.cents && p.cents > 0 ? '<span class="small muted">Preis je Fotobox</span>' : ''}<span class="small muted">Kennung ${esc(p.id)}</span><button class="btn small danger" data-plan-del>Löschen</button><button class="btn small primary" data-plan-save>Speichern</button></div></div>`).join('')
     : '<p class="small muted">Noch keine Tarife – mit „+ Tarif“ anlegen.</p>';
 }
 $('#planList').addEventListener('click', async e => {
