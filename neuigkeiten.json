@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.18.0": {
+      "date": "2026-10-25",
+      "notes": {
+        "de": [
+          "Zusatzfunktionen (Fotomosaik, Live-Karikatur, Videonachricht) laufen nur noch mit angemeldetem Konto und Freischaltung – ohne Anmeldung sind sie gesperrt."
+        ],
+        "en": [
+          "Add-ons (photo mosaic, live caricature, video message) now only work with a signed-in account and activation – without signing in they are locked."
+        ],
+        "tr": [
+          "Ek işlevler (fotoğraf mozaiği, canlı karikatür, video mesaj) artık yalnızca giriş yapılmış hesap ve etkinleştirme ile çalışır – giriş yapılmadan kilitlidir."
+        ],
+        "fr": [
+          "Les fonctions supplémentaires (mosaïque photo, caricature en direct, message vidéo) ne fonctionnent plus qu’avec un compte connecté et une activation – sans connexion, elles sont bloquées."
+        ],
+        "es": [
+          "Las funciones adicionales (mosaico de fotos, caricatura en directo, videomensaje) solo funcionan ya con una cuenta con sesión iniciada y activación; sin iniciar sesión están bloqueadas."
+        ],
+        "it": [
+          "Le funzioni aggiuntive (mosaico fotografico, caricatura dal vivo, videomessaggio) ora funzionano solo con un account collegato e lo sblocco – senza accesso sono bloccate."
+        ]
+      }
+    },
     "1.17.99": {
       "date": "2026-10-25",
       "notes": {
