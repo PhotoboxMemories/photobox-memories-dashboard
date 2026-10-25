@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.17.98": {
+      "date": "2026-10-25",
+      "notes": {
+        "de": [
+          "Ohne Internet: Fotos werden nur noch mit Freischaltung für später gemerkt und automatisch nachgeladen (dabei bei jeder freigeschalteten Zusatzfunktion und im 1-Monats-Test). Ohne Freischaltung werden Fotos ohne Internet gedruckt, aber nicht in die Online-Galerie hochgeladen – kurze Aussetzer bis 15 Minuten holt die Fotobox noch nach."
+        ],
+        "en": [
+          "Without internet: photos are only kept for later and uploaded automatically with the offline queue unlocked (included with every unlocked add-on and in the 1-month trial). Without it, photos taken offline are printed but not uploaded to the online gallery – short dropouts of up to 15 minutes are still caught up."
+        ],
+        "tr": [
+          "İnternetsiz: Fotoğraflar artık yalnızca kilit açıldığında sonrası için saklanır ve otomatik yüklenir (her açılmış ek işlevde ve 1 aylık denemede dahil). Kilit açılmamışsa internetsiz çekilen fotoğraflar basılır ama çevrimiçi galeriye yüklenmez – 15 dakikaya kadar kısa kesintiler yine telafi edilir."
+        ],
+        "fr": [
+          "Sans internet : les photos ne sont gardées pour plus tard et envoyées automatiquement qu’avec la file hors ligne débloquée (incluse avec chaque fonction supplémentaire débloquée et dans l’essai d’un mois). Sans elle, les photos prises hors ligne sont imprimées mais pas envoyées dans la galerie en ligne – les courtes coupures jusqu’à 15 minutes sont encore rattrapées."
+        ],
+        "es": [
+          "Sin internet: las fotos solo se guardan para más tarde y se suben automáticamente con la cola sin conexión desbloqueada (incluida con cada función adicional desbloqueada y en la prueba de 1 mes). Sin ella, las fotos hechas sin conexión se imprimen pero no se suben a la galería online; los cortes breves de hasta 15 minutos se siguen recuperando."
+        ],
+        "it": [
+          "Senza internet: le foto vengono conservate per dopo e caricate automaticamente solo con la coda offline sbloccata (inclusa con ogni funzione aggiuntiva sbloccata e nella prova di 1 mese). Senza, le foto scattate offline vengono stampate ma non caricate nella galleria online – le brevi interruzioni fino a 15 minuti vengono ancora recuperate."
+        ]
+      }
+    },
     "1.17.97": {
       "date": "2026-10-24",
       "notes": {
