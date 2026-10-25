@@ -147,7 +147,9 @@ window.AdminSchutz = (() => {
     'storage_usage.insert': 'Speicher-Grenze gesetzt', 'storage_usage.update': 'Speicher-Grenze geändert', 'storage_usage.delete': 'Speicher-Eintrag gelöscht',
     'ai_wallets.insert': 'KI-Guthaben angelegt', 'ai_wallets.update': 'KI-Guthaben geändert', 'ai_wallets.delete': 'KI-Guthaben gelöscht',
     'temp-password': 'Einmal-Passwort vergeben', 'password-link': 'Passwort-Link geschickt', 'credits-mail': 'Guthaben-Mail geschickt',
-    'license-mail': 'Lizenz-Mail geschickt', 'admin-login': 'Admin-Anmeldung'
+    'license-mail': 'Lizenz-Mail geschickt', 'admin-login': 'Admin-Anmeldung',
+    'customer_deals.insert': 'Rabatt/VIP angelegt', 'customer_deals.update': 'Rabatt/VIP geändert', 'customer_deals.delete': 'Rabatt/VIP gelöscht',
+    'stripe-discount': 'Rabatt bei Stripe übernommen'
   };
   const FIELD = { max_devices: 'Fotoboxen', valid_until: 'gültig bis', tier: 'Tarif', kind: 'Art', active: 'aktiv', extras: 'Zusatzfunktionen', extra: 'Zusatzfunktion',
     quota_gb: 'Speicher (GB)', balance: 'Guthaben', notes: 'Notiz', customer_email: 'E-Mail', customer_name: 'Name', cents: 'Preis (Cent)', name: 'Name',
