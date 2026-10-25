@@ -1,0 +1,283 @@
+// Dashboard → „Template-Studio“ (Zusatzfunktion 'studio'): Der Fotobox-Vermieter richtet sein Studio ein (Adresse, Logo, Farbe,
+// Kategorien, Datenschutz-Link), kopiert Link bzw. Einbettungscode für seine Webseite und bearbeitet die Einsendungen seiner Kunden:
+// Vorschau, Druckvorlage herunterladen, im Studio öffnen, als Fotolayout in ein Ereignis übernehmen, löschen.
+// Daten: public.studio_sites / public.studio_submissions; Löschen über die Serverfunktion „studio“ (Dateien bei Hetzner).
+// StudioPage.open(ctx) – ctx = { sb, me, toast, uploadFile, extra(k), tier(), reloadTier(), events(), reloadEvents(), admin, demo }
+(function (G) {
+  'use strict';
+  // wie CATEGORIES im Template-Studio (template-studio/editor/template-studio.src.html)
+  const STUDIO_CATS = ['Hochzeit', 'Geburtstag & Party', 'Abschluss', 'JGA', 'Babyparty', 'Taufe', 'Kommunion & Konfirmation', 'Firmenfeier', 'Weihnachten', 'Feiertage'];
+  const STATUS = [['neu', 'Neu'], ['in_arbeit', 'In Arbeit'], ['erledigt', 'Erledigt']];
+  // Formate des Studios (Breite × Höhe) → Papierformat der Fotobox (FBR.FORMATS)
+  const FORMAT_OF = { '600x1800': '2x6', '1200x1800': '4x6p', '1800x1200': '4x6l', '1500x1500': '5x5' };
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const SLUG = /^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/;
+  const toSlug = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+  const fmtDate = d => d ? new Date(d.length === 10 ? d + 'T12:00:00' : d).toLocaleDateString('de-DE') : '–';
+  const CSS = `
+  #studioRoot .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  #studioRoot .chips{display:flex;flex-wrap:wrap;gap:8px}
+  #studioRoot .chips label{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:5px 11px;margin:0;font-weight:500;cursor:pointer}
+  #studioRoot .code{background:#1d1d24;color:#f2f2f2;border-radius:10px;padding:12px 14px;font:12.5px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all}
+  #studioRoot .subs{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+  #studioRoot .sub{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  #studioRoot .sub .pv{background:#eceae4;aspect-ratio:4/3;display:grid;place-items:center}
+  #studioRoot .sub .pv img{max-width:100%;max-height:100%;object-fit:contain}
+  #studioRoot .sub .bd{padding:12px 14px;display:grid;gap:6px;font-size:13.5px}
+  #studioRoot .sub .bd b{font-size:15px}
+  #studioRoot .sub .acts{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 14px}
+  #studioRoot .badge{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700;background:#FFF3C4;color:#8a6400}
+  #studioRoot .badge.erledigt{background:#e3f4e6;color:#1f7a35} #studioRoot .badge.in_arbeit{background:#e5eefc;color:#2456a6}
+  #studioRoot .msg{background:#f6f4ee;border-radius:8px;padding:6px 9px;white-space:pre-wrap}
+  @media (max-width:760px){#studioRoot .grid2{grid-template-columns:1fr}}`;
+
+  let ctx = null, site = null, subs = [], plans = [], shopReady = false, filter = 'offen';
+  const $ = s => document.querySelector(s);
+  const root = () => $('#studioRoot');
+  const studioUrl = () => String(G.FOTOBOX_CONFIG?.studioUrl || '').replace(/\/+$/, '');
+  const fileUrl = (s, f) => `${String(G.FOTOBOX_CONFIG?.photoStore || '').replace(/\/$/, '')}/${s.owner_id}/studio/${s.folder}/${f}`;
+  const link = (extra = '') => studioUrl() && site ? `${studioUrl()}/studio/?b=${encodeURIComponent(site.slug)}${extra}` : '';
+
+  async function open(c) {
+    ctx = c;
+    if (!$('#studioCss')) { const st = document.createElement('style'); st.id = 'studioCss'; st.textContent = CSS; document.head.appendChild(st); }
+    root().innerHTML = '<p class="muted">Lädt …</p>';
+    if (!ctx.extra('studio')) return locked();
+    await load();
+    render();
+    // abgelaufene Einsendungen (Frist nach der Veranstaltung) im Hintergrund löschen
+    if (!ctx.demo) call({ action: 'cleanup' }).then(r => { if (r?.deleted) { subs = subs.filter(s => new Date(s.delete_after) > new Date()); render(); } }).catch(() => {});
+  }
+
+  async function call(body) {
+    const { data, error } = await ctx.sb.functions.invoke('studio', { body });
+    if (error) { let m = error.message; try { m = (await error.context.json()).error || m; } catch {} throw new Error(m); }
+    return data;
+  }
+
+  async function load() {
+    const [a, b] = await Promise.all([
+      ctx.sb.from('studio_sites').select('*').eq('owner_id', ctx.me.id).maybeSingle(),
+      ctx.sb.from('studio_submissions').select('*').eq('owner_id', ctx.me.id).order('created_at', { ascending: false }).limit(500)]);
+    site = (Array.isArray(a.data) ? a.data[0] : a.data) || null; subs = Array.isArray(b.data) ? b.data : []; // Vorführung: Listen statt Einzelzeile
+  }
+
+  // ---------- Noch nicht freigeschaltet: testen oder buchen ----------
+  async function locked() {
+    const t = ctx.tier() || {};
+    if (!ctx.demo) {
+      const [p, st] = await Promise.all([ctx.sb.from('plans').select('*').in('id', ['studio-monat', 'studio-jahr']).eq('active', true).order('sort'),
+        ctx.sb.functions.invoke('license-shop', { body: { action: 'status' } })]);
+      plans = p.data || []; shopReady = !!st.data?.ready;
+    }
+    const ended = t.studio_until && new Date(t.studio_until) < new Date();
+    root().innerHTML = `<div class="pagehead"><h1>BoothDesigner</h1></div>
+      <div class="card" style="max-width:820px">
+        <h2 style="margin-top:0">Deine Kunden gestalten ihr Fotolayout selbst</h2>
+        <p>Über 100 Designs für Hochzeit, Geburtstag, Taufe, Firmenfeier und mehr – auf deiner eigenen Webseite, mit deinem Logo und deinen Farben.
+          Deine Kunden tragen Namen und Datum ein, passen das Design an und schicken es ab. Du bekommst eine Mail und übernimmst das Design mit einem Klick als Fotolayout in dein Ereignis.</p>
+        ${ended ? '<p class="small" style="background:#FFF3C4;border-radius:10px;padding:8px 12px">Dein Test bzw. Abo ist abgelaufen. Deine Einstellungen und Einsendungen bleiben erhalten, bis du weitermachst.</p>' : ''}
+        <div class="row" style="margin-top:14px">
+          ${!t.studio_trial_used ? '<button class="btn primary" data-a="trial">14 Tage kostenlos testen</button>' : ''}
+          ${plans.map(p => `<button class="btn${t.studio_trial_used ? ' primary' : ''}" data-a="buy" data-plan="${esc(p.id)}" ${shopReady ? '' : 'disabled title="Der Kauf ist noch nicht freigeschaltet"'}>${esc(p.name)} · ${(p.cents / 100).toLocaleString('de-DE')} € / ${p.billing === 'year' ? 'Jahr' : 'Monat'}</button>`).join('')}
+        </div>
+        ${!t.studio_trial_used ? '<p class="small muted" style="margin-top:10px">Ohne Zahlungsdaten. Der Test endet nach 14 Tagen von selbst.</p>' : ''}
+        ${!plans.length && t.studio_trial_used ? '<p class="small muted" style="margin-top:10px">Zum Buchen melde dich bitte bei uns – der Online-Kauf wird gerade eingerichtet.</p>' : ''}
+      </div>`;
+    root().onclick = async e => {
+      const b = e.target.closest('[data-a]'); if (!b) return;
+      b.disabled = true;
+      try {
+        if (b.dataset.a === 'trial') {
+          const { error } = await ctx.sb.rpc('studio_trial'); if (error) throw error;
+          await ctx.reloadTier(); ctx.toast('BoothDesigner freigeschaltet – viel Spaß beim Testen!'); return open(ctx);
+        }
+        if (b.dataset.a === 'buy') {
+          const { data, error } = await ctx.sb.functions.invoke('license-shop', { body: { action: 'checkout', plan: b.dataset.plan, devices: 1 } });
+          if (error || !data?.url) throw new Error(data?.error || 'Die Bezahlseite konnte nicht geöffnet werden.');
+          location.href = data.url; return;
+        }
+      } catch (err) { ctx.toast(err.message || String(err), 6000); }
+      b.disabled = false;
+    };
+  }
+
+  // ---------- Seite ----------
+  function render() {
+    const t = ctx.tier() || {}, until = t.studio_until ? new Date(t.studio_until) : null;
+    const shown = subs.filter(s => filter === 'alle' || (filter === 'offen' ? s.status !== 'erledigt' : s.status === 'erledigt'));
+    const n = subs.filter(s => s.status === 'neu').length;
+    root().innerHTML = `<div class="pagehead"><h1>BoothDesigner</h1>
+        <span class="small muted">${ctx.admin ? 'Betreiber-Konto' : until && until.getFullYear() < 2100 ? `Freigeschaltet bis ${until.toLocaleDateString('de-DE')}` : ''}</span></div>
+      ${site ? linkCard() : ''}
+      <h2 style="margin:26px 0 12px">Einsendungen ${n ? `<span class="badge">${n} neu</span>` : ''}</h2>
+      ${site ? `<div class="row" style="margin-bottom:12px">${[['offen', 'Offen'], ['erledigt', 'Erledigt'], ['alle', 'Alle']].map(([k, l]) =>
+        `<button class="btn small${filter === k ? ' primary' : ''}" data-a="filter" data-f="${k}">${l}</button>`).join('')}</div>
+        <div class="subs">${shown.length ? shown.map(subCard).join('') : '<p class="muted">Noch keine Einsendungen. Schick deinen Kunden den Link oder baue das Studio auf deiner Webseite ein.</p>'}</div>`
+        : '<p class="muted">Richte zuerst unten dein Studio ein – danach erscheinen hier die Designs deiner Kunden.</p>'}
+      <h2 style="margin:30px 0 12px">Einstellungen</h2>
+      ${settingsCard()}`;
+    root().onclick = onClick; root().onchange = onChange;
+  }
+
+  function linkCard() {
+    const url = link();
+    if (!url) return `<div class="card"><b>Link zu deinem Studio</b><p class="small muted" style="margin:6px 0 0">Die Adresse von BoothDesigner ist noch nicht eingetragen (config.js → studioUrl). Sobald die Domain eingerichtet ist, erscheinen hier Link und Einbettungscode.</p></div>`;
+    const code = `<iframe src="${url}" style="width:100%;height:90vh;min-height:640px;border:0" title="Fotobox-Design gestalten" loading="lazy"></iframe>`;
+    return `<div class="card"><div class="grid2">
+      <div><b>Link für deine Kunden</b><p class="small muted" style="margin:4px 0 8px">Z. B. in die Buchungsbestätigung oder per WhatsApp.</p>
+        <div class="code">${esc(url)}</div>
+        <div class="row" style="margin-top:8px"><button class="btn small" data-a="copy" data-v="${esc(url)}">Link kopieren</button><a class="btn small" href="${esc(url)}" target="_blank" rel="noopener">Studio öffnen</a></div></div>
+      <div><b>Einbettungscode für deine Webseite</b><p class="small muted" style="margin:4px 0 8px">In WordPress, Wix, Jimdo, Shopware … als „HTML“-Block einfügen.</p>
+        <div class="code">${esc(code)}</div>
+        <div class="row" style="margin-top:8px"><button class="btn small" data-a="copy" data-v="${esc(code)}">Code kopieren</button></div></div>
+    </div></div>`;
+  }
+
+  function subCard(s) {
+    const fmt = FORMAT_OF[`${s.w}x${s.h}`];
+    return `<div class="sub" data-id="${s.id}">
+      <a class="pv" href="${esc(fileUrl(s, 'preview.jpg'))}" target="_blank" rel="noopener"><img loading="lazy" alt="Vorschau" src="${esc(fileUrl(s, 'preview.jpg'))}"></a>
+      <div class="bd"><div class="row" style="justify-content:space-between"><b>${esc(s.customer_name)}</b><span class="badge ${s.status}">${esc((STATUS.find(x => x[0] === s.status) || [, s.status])[1])}</span></div>
+        <a href="mailto:${esc(s.customer_email)}">${esc(s.customer_email)}</a>
+        <span class="muted">${esc(s.design_name || s.design)} · ${esc(s.layout_name || s.layout)}</span>
+        <span class="muted">Veranstaltung: ${fmtDate(s.event_date)} · eingegangen ${fmtDate(s.created_at)}</span>
+        ${s.message ? `<div class="msg">${esc(s.message)}</div>` : ''}
+        <select data-a="status" style="margin-top:4px">${STATUS.map(([k, l]) => `<option value="${k}"${s.status === k ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="acts">
+        <a class="btn small" href="${esc(fileUrl(s, 'print.png'))}" download target="_blank" rel="noopener">⬇ Druckvorlage</a>
+        ${link() ? `<a class="btn small" href="${esc(link('&s=' + s.folder))}" target="_blank" rel="noopener">Im Studio öffnen</a>` : ''}
+        ${fmt ? '<button class="btn small primary" data-a="adopt">In Ereignis übernehmen</button>' : '<span class="small muted" title="Startbildschirme werden als Bild heruntergeladen">Startbildschirm</span>'}
+        <button class="btn small danger" data-a="del">Löschen</button>
+      </div></div>`;
+  }
+
+  function settingsCard() {
+    const s = site || { slug: toSlug(ctx.me?.email?.split('@')[0] || ''), name: '', accent: '#b08d57', intro: '', cats: [], allow_download: false, keep_days: 180, active: true };
+    return `<form class="card" id="studioForm" style="display:grid;gap:14px;max-width:900px">
+      <div class="grid2">
+        <div><label>Name deiner Firma</label><input name="name" maxlength="80" value="${esc(s.name)}" placeholder="z. B. Fotobox Müller" required></div>
+        <div><label>Adresse deines Studios</label><input name="slug" maxlength="40" value="${esc(s.slug)}" placeholder="z. B. fotobox-mueller" pattern="[a-z0-9][a-z0-9-]{1,38}[a-z0-9]" required>
+          <p class="small muted" style="margin:4px 0 0">Nur Kleinbuchstaben, Zahlen und Bindestriche. ${studioUrl() ? `Wird zu ${esc(studioUrl())}/studio/?b=…` : ''}</p></div>
+      </div>
+      <div class="grid2">
+        <div><label>Logo</label><div class="row">${s.logo_url ? `<img src="${esc(s.logo_url)}" alt="" style="height:40px;max-width:140px;object-fit:contain;background:#f4f4f6;border-radius:8px;padding:4px">` : ''}
+          <input type="file" name="logo" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="flex:1">${s.logo_url ? '<button class="btn small" type="button" data-a="nologo">Entfernen</button>' : ''}</div></div>
+        <div><label>Farbe für Knöpfe</label><input type="color" name="accent" value="${esc(s.accent)}"></div>
+      </div>
+      <div><label>Hinweis für deine Kunden (freiwillig)</label><input name="intro" maxlength="300" value="${esc(s.intro)}" placeholder="z. B. Schick uns dein Design bis spätestens 2 Wochen vor der Feier."></div>
+      <div><label>Angebotene Kategorien (keine ausgewählt = alle)</label><div class="chips">${STUDIO_CATS.map(c =>
+        `<label><input type="checkbox" name="cats" value="${esc(c)}"${(s.cats || []).includes(c) ? ' checked' : ''}> ${esc(c)}</label>`).join('')}</div></div>
+      <div class="grid2">
+        <div><label>Benachrichtigung an (E-Mail)</label><input type="email" name="notify_email" maxlength="200" value="${esc(s.notify_email || '')}" placeholder="${esc(ctx.me?.email || '')}"></div>
+        <div><label>Einsendungen löschen nach der Veranstaltung</label><select name="keep_days">${[30, 90, 180, 365, 730].map(d =>
+          `<option value="${d}"${+s.keep_days === d ? ' selected' : ''}>nach ${d < 365 ? d + ' Tagen' : d === 365 ? '1 Jahr' : '2 Jahren'}</option>`).join('')}</select></div>
+      </div>
+      <div class="grid2">
+        <div><label>Link zu deiner Datenschutzerklärung (Pflicht)</label><input type="url" name="privacy_url" maxlength="600" value="${esc(s.privacy_url || '')}" placeholder="https://deine-seite.de/datenschutz" required></div>
+        <div><label>Link zu deinem Impressum</label><input type="url" name="imprint_url" maxlength="600" value="${esc(s.imprint_url || '')}" placeholder="https://deine-seite.de/impressum"></div>
+      </div>
+      <p class="small muted" style="margin:0">Datenschutz: Du bist für die Daten deiner Kunden verantwortlich, wir verarbeiten sie in deinem Auftrag (AVV). Ergänze in deiner
+        Datenschutzerklärung einen Absatz zu BoothDesigner – eine Vorlage bekommst du von uns.</p>
+      <label class="row" style="font-weight:500;margin:0"><input type="checkbox" name="allow_download"${s.allow_download ? ' checked' : ''}> Kunden dürfen ihr Design auch selbst als PNG herunterladen</label>
+      <label class="row" style="font-weight:500;margin:0"><input type="checkbox" name="active"${s.active ? ' checked' : ''}> Studio ist online (aus = Kunden sehen „nicht verfügbar“)</label>
+      <div class="row"><button class="btn primary" type="submit">${site ? 'Speichern' : 'Studio einrichten'}</button><span class="small muted" id="studioSaveMsg"></span></div>
+    </form>`;
+  }
+
+  // ---------- Bedienung ----------
+  async function onClick(e) {
+    const b = e.target.closest('[data-a]'); if (!b || b.tagName === 'SELECT') return;
+    const card = b.closest('.sub'), s = card && subs.find(x => x.id === card.dataset.id);
+    if (b.dataset.a === 'filter') { filter = b.dataset.f; return render(); }
+    if (b.dataset.a === 'copy') { try { await navigator.clipboard.writeText(b.dataset.v); ctx.toast('Kopiert'); } catch { ctx.toast(b.dataset.v, 8000); } return; }
+    if (b.dataset.a === 'nologo') { e.preventDefault(); await saveSite({ logo_url: null }); return; }
+    if (b.dataset.a === 'del' && s) {
+      if (!await (G.pmConfirm || (async t => confirm(t)))(`Einsendung von ${s.customer_name} endgültig löschen? Druckvorlage und Angaben werden entfernt.`, 'Löschen')) return;
+      b.disabled = true;
+      try { await call({ action: 'delete', id: s.id }); subs = subs.filter(x => x.id !== s.id); render(); ctx.toast('Gelöscht'); }
+      catch (err) { ctx.toast(err.message, 6000); b.disabled = false; }
+      return;
+    }
+    if (b.dataset.a === 'adopt' && s) return adopt(s);
+  }
+  async function onChange(e) {
+    const t = e.target;
+    if (t.dataset.a === 'status') {
+      const card = t.closest('.sub'), s = subs.find(x => x.id === card.dataset.id);
+      const { error } = await ctx.sb.from('studio_submissions').update({ status: t.value }).eq('id', s.id);
+      if (error) return ctx.toast('Speichern fehlgeschlagen: ' + error.message, 6000);
+      s.status = t.value; render();
+    }
+  }
+  document.addEventListener('submit', async e => {
+    if (e.target.id !== 'studioForm') return;
+    e.preventDefault();
+    const f = new FormData(e.target), msg = $('#studioSaveMsg');
+    const slug = toSlug(f.get('slug'));
+    if (!SLUG.test(slug)) { msg.textContent = 'Bitte eine Adresse mit 3 bis 40 Zeichen wählen (a–z, 0–9, Bindestrich).'; return; }
+    const priv = String(f.get('privacy_url') || '').trim(), imp = String(f.get('imprint_url') || '').trim();
+    if (!/^https:\/\//.test(priv)) { msg.textContent = 'Bitte den Link zu deiner Datenschutzerklärung angeben (beginnt mit https://).'; return; }
+    if (imp && !/^https:\/\//.test(imp)) { msg.textContent = 'Der Link zum Impressum muss mit https:// beginnen.'; return; }
+    const row = {
+      slug, name: String(f.get('name') || '').trim().slice(0, 80), accent: String(f.get('accent') || '#b08d57'), intro: String(f.get('intro') || '').trim().slice(0, 300),
+      cats: f.getAll('cats').map(String), notify_email: String(f.get('notify_email') || '').trim() || null, keep_days: +f.get('keep_days') || 180,
+      privacy_url: priv, imprint_url: imp || null, allow_download: !!f.get('allow_download'), active: !!f.get('active')
+    };
+    const logo = f.get('logo');
+    msg.textContent = 'Speichert …';
+    try { if (logo && logo.size) row.logo_url = await ctx.uploadFile(logo); } catch (err) { msg.textContent = 'Logo konnte nicht hochgeladen werden: ' + (err.message || err); return; }
+    await saveSite(row);
+  });
+  async function saveSite(patch) {
+    const row = { ...(site || {}), ...patch, owner_id: ctx.me.id };
+    delete row.created_at; delete row.updated_at;
+    const { data, error } = await ctx.sb.from('studio_sites').upsert(row, { onConflict: 'owner_id' }).select().maybeSingle();
+    if (error) {
+      const m = /duplicate|unique/i.test(error.message) ? 'Diese Adresse ist schon vergeben – bitte eine andere wählen.' : 'Speichern fehlgeschlagen: ' + error.message;
+      const el = $('#studioSaveMsg'); if (el) el.textContent = m; else ctx.toast(m, 6000);
+      return;
+    }
+    site = data; render(); ctx.toast('Gespeichert');
+  }
+
+  // ---------- In ein Ereignis übernehmen: Fotofelder unter der Druckvorlage (wie „Layout aus Bild“ im Layout-Editor) ----------
+  async function adopt(s) {
+    const evs = (ctx.events() || []).filter(e => !e.archived);
+    if (!evs.length) return ctx.toast('Lege zuerst ein Ereignis an – dann kannst du das Design dort als Fotolayout übernehmen.', 6000);
+    const dlg = document.createElement('div');
+    dlg.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(20,20,26,.55);display:grid;place-items:center;padding:16px';
+    dlg.innerHTML = `<div class="card" style="width:min(460px,100%);display:grid;gap:12px"><h3 style="margin:0">Design übernehmen</h3>
+      <p class="small muted" style="margin:0">${esc(s.design_name)} · ${esc(s.layout_name)} von ${esc(s.customer_name)} wird als neues Fotolayout in das Ereignis gelegt. Die Fotos der Gäste erscheinen in den Fotofeldern.</p>
+      <div><label>Ereignis</label><select id="adEv">${evs.map(e => `<option value="${e.id}">${esc(e.name)}${e.event_date ? ' · ' + fmtDate(e.event_date) : ''}</option>`).join('')}</select></div>
+      <div class="row" style="justify-content:flex-end"><button class="btn" data-x>Abbrechen</button><button class="btn primary" data-ok>Übernehmen</button></div></div>`;
+    document.body.appendChild(dlg);
+    const ok = await new Promise(r => { dlg.onclick = e => { if (e.target === dlg || e.target.closest('[data-x]')) r(false); if (e.target.closest('[data-ok]')) r(true); }; });
+    const evId = dlg.querySelector('#adEv').value; dlg.remove();
+    if (!ok) return;
+    try {
+      const fmt = FORMAT_OF[`${s.w}x${s.h}`], F = G.FBR.FORMATS[fmt], kx = F.w / s.w, ky = F.h / s.h, src = fileUrl(s, 'print.png');
+      // Foto etwas größer als die Öffnung, damit an den Kanten nie der Hintergrund durchscheint
+      const boxes = (s.slots || []).map(b => [b[0] - 2, b[1] - 2, b[2] + 4, b[3] + 4]);
+      const band = s.h * .06; boxes.sort((a, b) => Math.abs(a[1] - b[1]) > band ? a[1] - b[1] : a[0] - b[0]);
+      const els = boxes.slice(0, 12).map((b, i) => ({ id: G.FBR.uid(), type: 'photo', n: i + 1, x: Math.round(b[0] * kx), y: Math.round(b[1] * ky),
+        w: Math.round(b[2] * kx), h: Math.round(b[3] * ky), rot: 0, radius: 0, stroke: '', strokeW: 0, shadow: false }));
+      els.push({ id: G.FBR.uid(), type: 'image', src, fit: 'stretch', opacity: 1, x: 0, y: 0, w: F.w, h: F.h, rot: 0, locked: true });
+      const L = { id: G.FBR.uid(), name: `${s.design_name || 'BoothDesigner'} · ${s.customer_name}`, format: fmt, w: F.w, h: F.h, bg: '#ffffff',
+        twoPerPage: fmt === '2x6', secondary: false, elements: els, studio: s.folder };
+      const { data: cur, error: e1 } = await ctx.sb.from('events').select('settings').eq('id', evId).maybeSingle();
+      if (e1 || !cur) throw e1 || new Error('Ereignis nicht gefunden.');
+      const settings = { ...(cur.settings || {}) };
+      settings.layouts = [...(settings.layouts || []).filter(l => l.studio !== s.folder), L];
+      const { error } = await ctx.sb.from('events').update({ settings }).eq('id', evId);
+      if (error) throw error;
+      if (s.status === 'neu') { await ctx.sb.from('studio_submissions').update({ status: 'in_arbeit' }).eq('id', s.id); s.status = 'in_arbeit'; }
+      await ctx.reloadEvents?.();
+      render();
+      ctx.toast('Übernommen – du findest das Layout im Ereignis unter „Fotolayout“.', 6000);
+    } catch (err) { ctx.toast('Übernehmen fehlgeschlagen: ' + (err.message || err), 7000); }
+  }
+
+  G.StudioPage = { open, CATS: STUDIO_CATS };
+})(window);

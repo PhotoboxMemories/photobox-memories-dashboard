@@ -6,7 +6,10 @@ window.FOTOBOX_CONFIG = {
   // Foto-Speicher bei Hetzner (Bucket-Adresse + /p, dort liegen die Fotos; software/ ist privat); leer = Fotos bei Supabase
   photoStore: 'https://photobox-memories-fotos.fsn1.your-objectstorage.com/p',
   // GitHub-Repository mit den Update-Dateien, z.B. 'photobox-memories/fotobox-releases'
-  releasesRepo: ''
+  releasesRepo: '',
+  // Adresse der BoothDesigner-Webseite (template-studio/public auf dem eigenen Server);
+  // leer = im Dashboard erscheinen noch kein Link und kein Einbettungscode
+  studioUrl: 'https://boothdesigner.de'
 };
 
 // Fotos im Online-Speicher: Pfade mit „hz/“ liegen bei Hetzner (photoStore), alle anderen bei Supabase.

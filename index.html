@@ -24,6 +24,7 @@
 <script src="caricature.js?v=20261024-1"></script>
 <script src="start-anim.js?v=20261020-1"></script>
 <script src="event.js?v=20261024-1"></script>
+<script src="studio.js?v=20261025-1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -216,6 +217,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <button data-tab="events" class="on" data-ic="calendar">Ereignisse</button>
       <button data-tab="devices" data-ic="monitor">Geräte</button>
       <button data-tab="leads" data-ic="users">Gäste-Daten</button>
+      <button data-tab="studio" data-ic="image">BoothDesigner</button>
       <button data-tab="licenses" data-ic="key">Meine Lizenzen</button>
       <button data-tab="help" data-ic="play" class="hidden">Anleitungen</button><!-- erst sichtbar, wenn die Anleitungs-Videos freigegeben sind -->
       <button data-tab="admin" class="hidden" id="navAdmin" data-ic="settings">Verwaltung</button>
@@ -277,6 +279,9 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <div class="helpgrid" id="helpList"></div>
     </div>
     <div id="helpDlg" class="hidden"><div class="hbox"><button class="hx" id="helpClose" title="Schließen">×</button><video id="helpVid" controls playsinline preload="metadata"></video><b id="helpTitle"></b></div></div>
+
+    <!-- Template-Studio (studio.js): Einstellungen, Link/Einbettungscode und Einsendungen der Kunden -->
+    <div data-page="studio" class="hidden"><div id="studioRoot"></div></div>
 
     <!-- Meine Lizenzen -->
     <div data-page="licenses" class="hidden">
@@ -370,7 +375,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
             <div id="lMaxWrap"><label>Anzahl Geräte</label><input id="lMax" type="number" min="1" value="1"></div>
             <div id="lTierWrap"><label>Tarif</label><select id="lTier"><option value="pro">Pro (alle Funktionen)</option><option value="basis">Basis (nur Fotobox, eigenes Logo)</option><option value="free">Kostenlos (mit Werbung von Photobox Memories)</option></select></div>
             <div id="lCreditsWrap" class="hidden"><label>KI-Credits dazu (für KI-Porträts)</label><input id="lCredits" type="number" min="0" max="1000" value="20"></div>
-            <div><label>Freigaben</label><div class="row" style="margin-top:10px;gap:16px"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMosaic" style="width:auto"> Fotomosaik</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lCari" style="width:auto"> Live-Karikatur</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lVideo" style="width:auto"> Videonachricht</label></div></div>
+            <div><label>Freigaben</label><div class="row" style="margin-top:10px;gap:16px"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMosaic" style="width:auto"> Fotomosaik</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lCari" style="width:auto"> Live-Karikatur</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lVideo" style="width:auto"> Videonachricht</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lStudio" style="width:auto"> BoothDesigner</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lOffline" style="width:auto"> Offline-Warteschlange</label></div></div>
             <div style="grid-column:1/-1"><label>Notiz (z.B. Rechnungsnummer)</label><input id="lNotes"></div>
             <div style="grid-column:1/-1"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMail" checked style="width:auto"> Willkommens-Mail an den Kunden senden (Lizenzschlüssel, Dashboard-Link und Anleitung)</label></div>
           </div>
@@ -558,6 +563,8 @@ function demoClient() {
       { id: 'jahr', name: 'Jährlich', billing: 'year', cents: 39000, features: 'Alle Funktionen inklusive\n2 Monate geschenkt\nUpdates inklusive', sort: 2, active: true },
       { id: 'kauf', name: 'Einmalkauf', billing: 'once', cents: 69000, features: 'Dauerhaft nutzbar\n1 Jahr Updates inklusive\nDanach Updates optional', sort: 3, active: true }
     ],
+    studio_sites: [{ owner_id: 'demo', slug: 'fotobox-mueller', name: 'Fotobox Müller', accent: '#b08d57', intro: '', cats: ['Hochzeit', 'Taufe'], notify_email: null,
+      privacy_url: 'https://example.com/datenschutz', imprint_url: 'https://example.com/impressum', allow_download: false, keep_days: 180, active: true }],
     leads: [
       { id: 'g1', captured_at: iso(-0.1), event_name: 'Hochzeit Anna & Tim', events: { name: 'Hochzeit Anna & Tim' }, name: 'Lisa Berger', email: 'lisa@example.de', phone: '', newsletter: true, photo_name: 'fotobox_20261010_2011.jpg' },
       { id: 'g2', captured_at: iso(-0.12), event_name: 'Hochzeit Anna & Tim', events: { name: 'Hochzeit Anna & Tim' }, name: 'Jonas Weber', email: 'jonas@example.de', phone: '0170 1234567', newsletter: false, photo_name: 'fotobox_20261010_2004.jpg' }
@@ -723,6 +730,7 @@ $('#nav').onclick = e => {
   if (t === 'devices') loadDevices();
   if (t === 'leads') loadLeads();
   if (t === 'help') loadHelp();
+  if (t === 'studio') openStudio();
 };
 
 /* ---------- Verwaltung: Unterseiten (Übersicht, Lizenzen, KI-Guthaben, Tarife & Foto-Shop, Software & Speicher) ---------- */
@@ -1050,7 +1058,11 @@ function licStatus(l) {
 }
 const kindName = k => k === 'lifetime' ? 'Einmalkauf' : 'Abo';
 // Zusatzfunktionen, die der Betreiber je Lizenz freischaltet (Spalte licenses.extras); der Betreiber selbst hat immer alle
-const EXTRAS = [['mosaic', 'Fotomosaik'], ['caricature', 'Live-Karikatur'], ['videomsg', 'Videonachricht']];
+const EXTRAS = [['mosaic', 'Fotomosaik'], ['caricature', 'Live-Karikatur'], ['videomsg', 'Videonachricht'], ['studio', 'BoothDesigner'], ['offline', 'Offline-Warteschlange']];
+// Template-Studio (studio.js): eigene Seite im Menü; #studio springt nach der Anmeldung dorthin (Link von der Studio-Webseite)
+const openStudio = () => StudioPage.open({ sb, me, toast, uploadFile, extra: hasExtra, tier: () => myTier, reloadTier: loadMyTier,
+  events: () => events, reloadEvents: loadEvents, admin: !!profile?.is_admin, demo: DEMO });
+if (location.hash === '#studio') addEventListener('pm-ready', () => $('#nav [data-tab="studio"]')?.click(), { once: true });
 const hasExtra = k => DEMO || !!profile?.is_admin || (myTier?.extras || []).includes(k) || licenses.some(l => l.owner_id === me?.id && l.active && (l.extras || []).includes(k));
 // Tarif des eigenen Kontos (Server my_tier: 'free' | 'basis' | 'pro' und gebuchte Zusatzfunktionen). Ohne Antwort (Datenbank noch ohne
 // Tarife) gilt alles wie bisher. Steuert die Schlösser im Ereignis-Editor und die Preisübersicht.
@@ -1291,7 +1303,7 @@ $('#lCreate').onclick = async () => {
     updates_until: life && $('#lUpd').value ? new Date($('#lUpd').value + 'T23:59:59').toISOString() : null,
     max_devices: Math.max(1, +$('#lMax').value || 1), notes: $('#lNotes').value.trim() || (test ? 'Testversion' : null)
   };
-  const extras = [$('#lMosaic').checked && 'mosaic', $('#lCari').checked && 'caricature', $('#lVideo').checked && 'videomsg'].filter(Boolean); if (extras.length) row.extras = extras;
+  const extras = [$('#lMosaic').checked && 'mosaic', $('#lCari').checked && 'caricature', $('#lVideo').checked && 'videomsg', $('#lStudio').checked && 'studio', $('#lOffline').checked && 'offline'].filter(Boolean); if (extras.length) row.extras = extras;
   if ($('#lTier').value !== 'pro') row.tier = $('#lTier').value; // Pro ist Standard (auch ohne Tarif-Spalte in der Datenbank)
   const credits = test ? Math.max(0, Math.min(1000, Math.round(+$('#lCredits').value || 0))) : 0;
   const { data, error } = await sb.from('licenses').insert(row).select().single();
@@ -1304,7 +1316,7 @@ $('#lCreate').onclick = async () => {
   }
   if ($('#lMail').checked && !DEMO) extra += ' · ' + await sendLicenseMail(data.id);
   toast('Lizenz erstellt – Schlüssel kopiert: ' + data.key + extra, 9000);
-  ['#lName', '#lEmail', '#lNotes'].forEach(s => $(s).value = ''); $('#lMosaic').checked = $('#lCari').checked = $('#lVideo').checked = false;
+  ['#lName', '#lEmail', '#lNotes'].forEach(s => $(s).value = ''); $('#lMosaic').checked = $('#lCari').checked = $('#lVideo').checked = $('#lStudio').checked = $('#lOffline').checked = false;
   loadLicenses();
 };
 $('#lSearch').oninput = renderAdmin;
@@ -1595,7 +1607,7 @@ function renderShop() {
   $$('#shopBill button').forEach(b => b.classList.toggle('on', b.dataset.bill === shopBill));
   $('#adFreeNote').hidden = cur !== 'free';
   $('#trialRow').classList.toggle('hidden', !!myTier?.trial_until || mine.some(l => l.trial || (l.tier && l.tier !== 'free') || !('tier' in l)));
-  const ext = (myTier?.extras || []).map(k => ({ mosaic: 'Fotomosaik', caricature: 'Live-Karikatur', videomsg: 'Videonachricht' })[k]).filter(Boolean);
+  const ext = (myTier?.extras || []).map(k => ({ mosaic: 'Fotomosaik', caricature: 'Live-Karikatur', videomsg: 'Videonachricht', studio: 'BoothDesigner', offline: 'Offline-Warteschlange' })[k]).filter(Boolean);
   const trial = myTier?.trial_until && new Date(myTier.trial_until) > new Date() ? ` <span class="small muted">· <span>Test bis</span> ${fmtDate(myTier.trial_until)}</span>` : '';
   $('#shopTier').innerHTML = FREE ? `<span>Alle Funktionen sind kostenlos – mit deinem eigenen Logo. Nur KI-Bilder brauchen Credits.</span>${ext.length ? ` <span class="small muted">+ ${esc(ext.join(', '))}</span>` : ''}${trial}${mine.length ? '' : ' <button class="btn primary" data-free style="margin-left:8px">Kostenlos starten</button>'}`
     : cur ? `<span>Dein Tarif:</span> <b>${esc(TIER_NAME[cur])}</b>${ext.length ? ` <span class="small muted">+ ${esc(ext.join(', '))}</span>` : ''}${trial}`
