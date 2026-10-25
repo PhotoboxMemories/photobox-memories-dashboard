@@ -201,6 +201,9 @@
   #ws .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:14px}
   #ws .gal figure{margin:0;position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#ececf1;cursor:zoom-in}
   #ws .gal img{width:100%;height:100%;object-fit:cover;display:block}
+  #ws .gal figure.kaputt{outline:3px solid #d23b3b;outline-offset:-3px;background:#fdecec}
+  #ws .gal .kap{display:none}
+  #ws .gal figure.kaputt .kap{display:block;position:absolute;inset:auto 0 0 0;background:#d23b3b;color:#fff;font:600 11px/1.3 system-ui,sans-serif;padding:5px 6px;text-align:center}
   #ws .gal .tag{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;border-radius:6px;padding:2px 6px}
   #ws .linkbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
   #ws .linkbox input{flex:1;min-width:220px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
@@ -1110,6 +1113,11 @@
     const gal = { list: null, error: '', loading: false, at: 0 };
     const galUrl = path => G.FOTOBOX_PHOTOS ? G.FOTOBOX_PHOTOS.url(path) : ctx.sb.storage.from('photos').getPublicUrl(path).data?.publicUrl || '';
     const sbToken = async () => (await ctx.sb.auth.getSession()).data.session?.access_token || '';
+    // Ersetzte Fotos (Foto ersetzen) mit neuer Adresse laden – der kaputte alte Stand liegt sonst noch im Browser-Speicher
+    const galSrc = (x, path) => galUrl(path) + (gal.bust?.[x.id] ? '?r=' + gal.bust[x.id] : '');
+    // Foto lädt auch nach allen neuen Versuchen nicht (FOTOBOX_PHOTOS.retry, z. B. leere Datei vom Hochladen): Kachel rot markieren
+    if (!G.__pmGalKaputt) { G.__pmGalKaputt = true; document.addEventListener('error', e => { const el = e.target;
+      if (el?.tagName === 'IMG' && el.closest('#ws .gal figure') && (+el.dataset.tries >= 5 || !G.FOTOBOX_PHOTOS?.retry)) el.closest('figure').classList.add('kaputt'); }, true); }
     const shareLink = () => E.share_token ? location.origin + location.pathname.replace(/[^/]*$/, '') + 'galerie.html?g=' + E.share_token : '';
     async function loadGallery(force) {
       if (gal.loading || (!force && gal.list && Date.now() - gal.at < 30000)) return;
@@ -1156,9 +1164,9 @@
       const L = gal.list || []; let n = i;
       const o = document.createElement('div'); o.id = 'wsLight';
       const draw = () => { const x = L[n]; if (!x) return o.remove();
-        o.innerHTML = `${x.kind === 'video' ? `<video src="${esc(galUrl(x.path))}" controls autoplay loop playsinline></video>` : `<img src="${esc(galUrl(x.path))}" alt="">`}
-          <div class="bar"><button data-k="dl">${ICON('download', 15)} Herunterladen</button><button data-k="del" style="color:#d23b3b">${ICON('trash', 15)} Löschen</button><button data-k="x">Schließen</button></div>
-          <div style="color:#bbb;font:13px system-ui,sans-serif">${n + 1} von ${L.length} · ${esc(new Date(x.created_at).toLocaleString('de-DE'))}</div>
+        o.innerHTML = `${x.kind === 'video' ? `<video src="${esc(galSrc(x, x.path))}" controls autoplay loop playsinline></video>` : `<img src="${esc(galSrc(x, x.path))}" alt="">`}
+          <div class="bar"><button data-k="dl">${ICON('download', 15)} Herunterladen</button>${x.kind !== 'video' ? `<button data-k="rep">${ICON('upload', 15)} Foto ersetzen</button>` : ''}<button data-k="del" style="color:#d23b3b">${ICON('trash', 15)} Löschen</button><button data-k="x">Schließen</button></div>
+          <div style="color:#bbb;font:13px system-ui,sans-serif">${n + 1} von ${L.length} · ${esc(new Date(x.created_at).toLocaleString('de-DE'))}${x.name ? ` · <span translate="no">${esc(x.name)}</span>` : ''}</div>
           ${L.length > 1 ? '<button class="nav l" data-k="prev">‹</button><button class="nav r" data-k="next">›</button>' : ''}`; };
       const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') { n = (n + L.length - 1) % L.length; draw(); } if (e.key === 'ArrowRight') { n = (n + 1) % L.length; draw(); } };
       const close = () => { o.remove(); document.removeEventListener('keydown', key); };
@@ -1169,6 +1177,7 @@
         if (k === 'prev') { n = (n + L.length - 1) % L.length; return draw(); }
         if (k === 'next') { n = (n + 1) % L.length; return draw(); }
         if (k === 'dl') { try { saveBlob(await fetchBlob(x.path), galName(x)); } catch (err) { ctx.toast('Herunterladen fehlgeschlagen: ' + err.message, 4000); } return; }
+        if (k === 'rep') { if (await replacePhoto(x)) { draw(); render(); } return; }
         if (k === 'del') {
           if (!await (G.pmConfirm || (async t => confirm(t)))('Dieses Foto endgültig aus der Online-Galerie löschen? Auf der Fotobox bleibt es gespeichert.')) return;
           const files = [x.path, x.thumb].filter(Boolean), ext = files.filter(f => f.startsWith(G.FOTOBOX_PHOTOS?.prefix || '\u0000')), sbf = files.filter(f => !ext.includes(f));
@@ -1192,6 +1201,34 @@
         status('Packe ZIP-Datei …');
         saveBlob(await zip.generateAsync({ type: 'blob', compression: 'STORE' }), (E.name || 'Ereignis').replace(/[^\w\-äöüÄÖÜß ]/g, '_') + '-Fotos.zip'); status('');
       } catch (e) { status(''); ctx.toast('Herunterladen fehlgeschlagen: ' + e.message, 5000); }
+    }
+    // Foto ersetzen (25.10.2026: Fotos kamen nach einem Absturz der Fotobox leer im Online-Speicher an – das Original liegt im
+    // Fotobox-Ordner auf dem PC, Dateiname steht in der Großansicht). Gleiche Adresse wie vorher: Galerie und QR-Codes der Gäste
+    // zeigen danach das neue Bild. Vorschau wird neu erzeugt.
+    function replacePhoto(x) {
+      return new Promise(done => {
+        const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+        inp.onchange = async () => {
+          const f = inp.files[0]; if (!f) return done(false);
+          const pre = G.FOTOBOX_PHOTOS?.prefix || 'hz/';
+          if (!G.FOTOBOX_PHOTOS?.external || !String(x.path).startsWith(pre)) { ctx.toast('Nur Fotos aus dem Foto-Speicher lassen sich ersetzen.', 5000); return done(false); }
+          let bmp; try { bmp = await createImageBitmap(f); } catch { ctx.toast('Diese Datei ist kein Bild.', 5000); return done(false); }
+          try {
+            status('Foto wird ersetzt …');
+            const canvasBlob = (w, h, q) => { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(bmp, 0, 0, w, h); return new Promise(r => c.toBlob(r, 'image/jpeg', q)); };
+            // Pfad endet auf .jpg: andere Bildformate (PNG, HEIC aus dem Handy …) als JPEG speichern
+            const main = /\.jpe?g$/i.test(x.path) && f.type !== 'image/jpeg' ? await canvasBlob(bmp.width, bmp.height, .95) : f;
+            const k = Math.min(1, 480 / Math.max(bmp.width, bmp.height)), thumb = await canvasBlob(Math.round(bmp.width * k), Math.round(bmp.height * k), .8);
+            const t = await sbToken();
+            await G.FOTOBOX_PHOTOS.put(x.path.slice(pre.length), main, t);
+            if (x.thumb && String(x.thumb).startsWith(pre)) await G.FOTOBOX_PHOTOS.put(x.thumb.slice(pre.length), thumb, t);
+            await ctx.sb.from('photos').update({ bytes: main.size }).eq('id', x.id).then(() => {}, () => {});
+            (gal.bust ||= {})[x.id] = Date.now(); x.bytes = main.size;
+            status(''); ctx.toast('Foto ersetzt – Galerie und QR-Codes zeigen jetzt das neue Bild.', 6000); done(true);
+          } catch (e) { status(''); ctx.toast('Ersetzen fehlgeschlagen: ' + (e.message || e), 6000); done(false); }
+        };
+        inp.click();
+      });
     }
     // Fotos von Hand in die Online-Galerie laden (z. B. Bilder vom Fotografen)
     async function uploadToGallery() {
@@ -1295,7 +1332,7 @@
             <textarea rows="3" readonly onclick="this.select()">&lt;iframe src="${esc(link)}" style="width:100%;height:900px;border:0" loading="lazy"&gt;&lt;/iframe&gt;</textarea></div>` : ''}
           ${gal.error ? `<div class="dempty">${esc(gal.error)}</div>`
             : !gal.list ? '<div class="dempty">Lädt …</div>'
-            : P.length ? `<div class="gal wide">${P.map((x, i) => `<figure data-a="gal-open" data-i="${i}" title="${esc(new Date(x.created_at).toLocaleString('de-DE'))}"><img loading="lazy" src="${esc(galUrl(x.thumb || x.path))}" alt="">${x.kind !== 'photo' ? `<span class="tag">${x.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}</figure>`).join('')}</div>`
+            : P.length ? `<div class="gal wide">${P.map((x, i) => `<figure data-a="gal-open" data-i="${i}" title="${esc(new Date(x.created_at).toLocaleString('de-DE'))}"><img loading="lazy" src="${esc(galSrc(x, x.thumb || x.path))}" alt=""><span class="kap">Foto kaputt – antippen und ersetzen</span>${x.kind !== 'photo' ? `<span class="tag">${x.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}</figure>`).join('')}</div>`
             : `<div class="dempty">Noch keine Fotos oder Videos.<br><small style="font-size:15px">${S.x.share.cloud ? 'Die Galerie füllt sich, sobald an der Fotobox Sitzungen durchgeführt werden.' : 'Schalte rechts oben „Fotos hochladen“ ein – dann füllt sich die Galerie, sobald an der Fotobox Sitzungen durchgeführt werden.'}</small></div>`}`;
       },
       layout() {
