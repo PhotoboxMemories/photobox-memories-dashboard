@@ -30,6 +30,22 @@ window.FOTOBOX_PHOTOS = {
     const C = window.FOTOBOX_CONFIG, base = String(C.photoStore || '').replace(/\/$/, '') + '/', s = String(src || '').split('?')[0];
     return C.photoStore && s.startsWith(base) ? C.supabaseUrl + '/storage/v1/object/public/photos/' + s.slice(base.length) : '';
   },
+  // Bild bzw. Video nicht geladen (Fehler-Ereignis der Seite): Lädt eine Galerie sehr viele Bilder auf einmal, antwortet der
+  // Foto-Speicher manchmal kurz nicht. Dann erst zweimal beim Foto-Speicher nachfassen, danach die Notfall-Kopie, dann noch zweimal
+  // den Foto-Speicher. Vorher sprang die Seite sofort auf die Notfall-Kopie – die gibt es meist nicht mehr, und das Bild fehlte.
+  // true = neuer Versuch läuft (Aufrufer macht nichts weiter); false = aufgegeben bzw. nicht zuständig.
+  retry(el) {
+    const d = el.dataset, n = +d.tries || 0, src = String(el.currentSrc || el.src || '');
+    if (!src || /^(blob|data):/.test(src)) return false;
+    const orig = d.orig || (d.orig = src.replace(/[?&]r=\d+(?=#|$)/, '')), alt = this.altSrc(orig);
+    const plan = d.big ? (alt ? [[alt, 0]] : []) // Shop-Vorschau mit Ersatzbild: nicht lange warten
+      : alt ? [[orig, 700], [orig, 2000], [alt, 0], [orig, 4000], [orig, 8000]] : [[orig, 1000], [orig, 3000]];
+    if (n >= plan.length) return false;
+    const [u, wait] = plan[n]; d.tries = n + 1; if (u === alt) d.alt = '1';
+    const [base, hash] = u.split('#'), again = u === alt ? u : base + (base.includes('?') ? '&' : '?') + 'r=' + (n + 1) + (hash ? '#' + hash : '');
+    setTimeout(() => { el.src = again; }, wait);
+    return true;
+  },
   async call(body, token) {
     const C = window.FOTOBOX_CONFIG;
     const r = await fetch(C.supabaseUrl + '/functions/v1/photo-store', { method: 'POST', body: JSON.stringify(body),
