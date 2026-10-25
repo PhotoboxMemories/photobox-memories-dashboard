@@ -33,7 +33,7 @@
   #studioRoot .msg{background:#f6f4ee;border-radius:8px;padding:6px 9px;white-space:pre-wrap}
   @media (max-width:760px){#studioRoot .grid2{grid-template-columns:1fr}}`;
 
-  let ctx = null, site = null, subs = [], plans = [], shopReady = false, filter = 'offen', fixes = [];
+  let ctx = null, site = null, subs = [], plans = [], shopReady = false, abo = null, filter = 'offen', fixes = [];
   const $ = s => document.querySelector(s);
   const root = () => $('#studioRoot');
   const studioUrl = () => String(G.FOTOBOX_CONFIG?.studioUrl || '').replace(/\/+$/, '');
@@ -44,6 +44,15 @@
     ctx = c;
     if (!$('#studioCss')) { const st = document.createElement('style'); st.id = 'studioCss'; st.textContent = CSS; document.head.appendChild(st); }
     root().innerHTML = '<p class="muted">Lädt …</p>';
+    // Rückkehr von der Stripe-Bezahlseite (nur boothdesigner.de/konto, im Dashboard kehrt Stripe ins Dashboard zurück)
+    const paid = ctx.standalone && new URLSearchParams(location.search).get('lizenz');
+    if (paid) {
+      const q = new URLSearchParams(location.search); q.delete('lizenz');
+      history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash);
+      if (paid === 'ok') { ctx.toast('Danke für deine Buchung! BoothDesigner wird freigeschaltet …', 8000); await waitAbo(); }
+      else ctx.toast('Bezahlung abgebrochen – es wurde nichts gebucht.', 6000);
+    }
+    await loadShop();
     if (!ctx.extra('studio')) return locked();
     await load();
     render();
@@ -65,14 +74,54 @@
     if (ctx.admin && !ctx.demo) fixes = (await ctx.sb.from('studio_design_fixes').select('design,layout,updated_at').order('updated_at', { ascending: false })).data || [];
   }
 
+  // ---------- Abo über Stripe (Serverfunktion license-shop) ----------
+  // Tarife studio-monat/-jahr; abo = bezahltes Abo des Kontos (license_addons mit Stripe-Abo). Auf boothdesigner.de/konto
+  // schickt site: 'boothdesigner' Bezahlseite und Kundenportal dorthin zurück.
+  async function loadShop() {
+    if (ctx.demo) return;
+    const [p, st, a] = await Promise.all([ctx.sb.from('plans').select('*').in('id', ['studio-monat', 'studio-jahr']).eq('active', true).order('sort'),
+      ctx.sb.functions.invoke('license-shop', { body: { action: 'status' } }),
+      ctx.sb.from('license_addons').select('valid_until,stripe_subscription').eq('owner_id', ctx.me.id).eq('extra', 'studio')
+        .not('stripe_subscription', 'is', null).order('valid_until', { ascending: false }).limit(1)]);
+    plans = p.data || []; shopReady = !!st.data?.ready; abo = (a.data || [])[0] || null;
+  }
+  const aboLive = () => !!abo && new Date(abo.valid_until) > new Date();
+  // Stripe meldet die Zahlung ein paar Sekunden nach der Rückkehr (stripe-webhook) – so lange warten
+  async function waitAbo() {
+    for (let i = 0; i < 15; i++) {
+      await loadShop(); if (aboLive()) { await ctx.reloadTier(); return ctx.toast('BoothDesigner-Abo ist aktiv – danke!', 6000); }
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    await ctx.reloadTier(); ctx.toast('Die Zahlung wird noch bearbeitet. Lade die Seite in einer Minute neu.', 8000);
+  }
+  async function shop(body) {
+    const { data, error } = await ctx.sb.functions.invoke('license-shop', { body: ctx.standalone ? { ...body, site: 'boothdesigner' } : body });
+    if (error || !data?.url) { let m = data?.error; try { m = m || (await error.context.json()).error; } catch {} throw new Error(m || 'Stripe ist momentan nicht erreichbar.'); }
+    location.href = data.url;
+  }
+  const buyButtons = primary => plans.map(p => `<button class="btn${primary ? ' primary' : ''}" data-a="buy" data-plan="${esc(p.id)}" ${shopReady ? '' : 'disabled title="Der Kauf ist noch nicht freigeschaltet"'}>${esc(p.name)} · ${(p.cents / 100).toLocaleString('de-DE')} € / ${p.billing === 'year' ? 'Jahr' : 'Monat'}</button>`).join('');
+  const agbNote = () => plans.length ? `<p class="small muted" style="margin-top:10px">Bezahlung über Stripe. Das Abo verlängert sich automatisch und ist jederzeit zum Ende der Laufzeit kündbar. Es gelten die <a href="${esc(studioUrl() || 'https://boothdesigner.de')}/agb.html" target="_blank" rel="noopener">AGB von BoothDesigner</a>.</p>` : '';
+  async function onShop(b) {
+    b.disabled = true;
+    try { await shop(b.dataset.a === 'buy' ? { action: 'checkout', plan: b.dataset.plan, devices: 1 } : { action: 'portal' }); }
+    catch (err) { ctx.toast(err.message || String(err), 6000); b.disabled = false; }
+  }
+  // Testzeitraum läuft bzw. Abo aktiv: Buchen bzw. „Abo & Rechnungen verwalten“ (nicht für Betreiber und dauerhaft freigeschaltete Konten)
+  function aboCard() {
+    const t = ctx.tier() || {}, until = t.studio_until ? new Date(t.studio_until) : null;
+    if (ctx.admin || ctx.demo || !until || until.getFullYear() >= 2100) return '';
+    if (aboLive()) return `<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between;align-items:center;gap:12px">
+        <span><b>BoothDesigner-Abo aktiv</b> <span class="small muted">· verlängert sich am ${fmtDate(abo.valid_until)} automatisch, solange du nicht kündigst</span></span>
+        <button class="btn small" data-a="portal">Abo &amp; Rechnungen verwalten</button></div></div>`;
+    if (!plans.length) return '';
+    return `<div class="card" style="margin-top:14px"><b>Jetzt das BoothDesigner-Abo buchen</b> <span class="small muted">· freigeschaltet bis ${fmtDate(t.studio_until)}</span>
+        <p class="small" style="margin:6px 0 10px">Damit deine Kunden das Studio danach weiter nutzen können, buche jetzt das Abo – deine Einstellungen und Einsendungen bleiben.</p>
+        <div class="row">${buyButtons(true)}</div>${agbNote()}</div>`;
+  }
+
   // ---------- Noch nicht freigeschaltet: testen oder buchen ----------
   async function locked() {
     const t = ctx.tier() || {};
-    if (!ctx.demo) {
-      const [p, st] = await Promise.all([ctx.sb.from('plans').select('*').in('id', ['studio-monat', 'studio-jahr']).eq('active', true).order('sort'),
-        ctx.sb.functions.invoke('license-shop', { body: { action: 'status' } })]);
-      plans = p.data || []; shopReady = !!st.data?.ready;
-    }
     const ended = t.studio_until && new Date(t.studio_until) < new Date();
     root().innerHTML = `<div class="pagehead"><h1>BoothDesigner</h1></div>
       <div class="card" style="max-width:820px">
@@ -82,23 +131,21 @@
         ${ended ? '<p class="small" style="background:#FFF3C4;border-radius:10px;padding:8px 12px">Dein Test bzw. Abo ist abgelaufen. Deine Einstellungen und Einsendungen bleiben erhalten, bis du weitermachst.</p>' : ''}
         <div class="row" style="margin-top:14px">
           ${!t.studio_trial_used ? '<button class="btn primary" data-a="trial">14 Tage kostenlos testen</button>' : ''}
-          ${plans.map(p => `<button class="btn${t.studio_trial_used ? ' primary' : ''}" data-a="buy" data-plan="${esc(p.id)}" ${shopReady ? '' : 'disabled title="Der Kauf ist noch nicht freigeschaltet"'}>${esc(p.name)} · ${(p.cents / 100).toLocaleString('de-DE')} € / ${p.billing === 'year' ? 'Jahr' : 'Monat'}</button>`).join('')}
+          ${buyButtons(t.studio_trial_used)}
+          ${abo ? '<button class="btn" data-a="portal">Rechnungen ansehen</button>' : ''}
         </div>
+        ${agbNote()}
         ${!t.studio_trial_used ? '<p class="small muted" style="margin-top:10px">Ohne Zahlungsdaten. Der Test endet nach 14 Tagen von selbst.</p>' : ''}
         ${!plans.length && t.studio_trial_used ? '<p class="small muted" style="margin-top:10px">Zum Buchen melde dich bitte bei uns – der Online-Kauf wird gerade eingerichtet.</p>' : ''}
       </div>`;
     root().onclick = async e => {
       const b = e.target.closest('[data-a]'); if (!b) return;
+      if (b.dataset.a === 'buy' || b.dataset.a === 'portal') return onShop(b);
       b.disabled = true;
       try {
         if (b.dataset.a === 'trial') {
           const { error } = await ctx.sb.rpc('studio_trial'); if (error) throw error;
           await ctx.reloadTier(); ctx.toast('BoothDesigner freigeschaltet – viel Spaß beim Testen!'); return open(ctx);
-        }
-        if (b.dataset.a === 'buy') {
-          const { data, error } = await ctx.sb.functions.invoke('license-shop', { body: { action: 'checkout', plan: b.dataset.plan, devices: 1 } });
-          if (error || !data?.url) throw new Error(data?.error || 'Die Bezahlseite konnte nicht geöffnet werden.');
-          location.href = data.url; return;
         }
       } catch (err) { ctx.toast(err.message || String(err), 6000); }
       b.disabled = false;
@@ -112,6 +159,7 @@
     const n = subs.filter(s => s.status === 'neu').length;
     root().innerHTML = `<div class="pagehead"><h1>BoothDesigner</h1>
         <span class="small muted">${ctx.admin ? 'Betreiber-Konto' : until && until.getFullYear() < 2100 ? `Freigeschaltet bis ${until.toLocaleDateString('de-DE')}` : ''}</span></div>
+      ${aboCard()}
       ${site ? linkCard() : ''}
       ${ctx.admin && !ctx.demo ? fixCard() : ''}
       <h2 style="margin:26px 0 12px">Einsendungen ${n ? `<span class="badge">${n} neu</span>` : ''}</h2>
@@ -213,6 +261,7 @@
     const b = e.target.closest('[data-a]'); if (!b || b.tagName === 'SELECT') return;
     const card = b.closest('.sub'), s = card && subs.find(x => x.id === card.dataset.id);
     if (b.dataset.a === 'filter') { filter = b.dataset.f; return render(); }
+    if (b.dataset.a === 'buy' || b.dataset.a === 'portal') return onShop(b);
     if (b.dataset.a === 'fixopen') {
       const w = window.open('', '_blank'); // sofort öffnen, sonst blockiert der Browser das Fenster nach dem Warten
       try { const t = await adminTicket(), url = `${studioUrl()}/studio/#admin=${encodeURIComponent(t)}`; if (w) w.location.href = url; else location.href = url; } // ohne Pop-up im selben Tab
