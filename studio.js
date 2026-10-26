@@ -365,6 +365,7 @@
       if (e1 || !cur) throw e1 || new Error('Ereignis nicht gefunden.');
       const settings = { ...(cur.settings || {}) };
       settings.layouts = [...(settings.layouts || []).filter(l => l.studio !== s.folder), ...Ls];
+      if (Ls.length > 1) settings.guestLayouts = true; // mehrere Formate: die Gäste wählen an der Fotobox
       const { error } = await ctx.sb.from('events').update({ settings }).eq('id', evId);
       if (error) throw error;
       if (s.status === 'neu') { await ctx.sb.from('studio_submissions').update({ status: 'in_arbeit' }).eq('id', s.id); s.status = 'in_arbeit'; }
