@@ -195,7 +195,8 @@
     return `<div class="card"><div class="grid2">
       <div><b>Link für deine Kunden</b><p class="small muted" style="margin:4px 0 8px">Z. B. in die Buchungsbestätigung oder per WhatsApp.</p>
         <div class="code">${esc(url)}</div>
-        <div class="row" style="margin-top:8px"><button class="btn small" data-a="copy" data-v="${esc(url)}">Link kopieren</button><a class="btn small" href="${esc(url)}" target="_blank" rel="noopener">Studio öffnen</a></div></div>
+        <div class="row" style="margin-top:8px"><button class="btn small" data-a="copy" data-v="${esc(url)}">Link kopieren</button><a class="btn small" href="${esc(url)}" target="_blank" rel="noopener">${ctx.standalone ? 'Selbst gestalten' : 'Studio öffnen'}</a></div>
+        ${ctx.standalone ? '<p class="small muted" style="margin:8px 0 0">„Selbst gestalten“: Angemeldet kannst du im Studio auch eigene Vorlagen erstellen und als PNG herunterladen – ohne Einsendung.</p>' : ''}</div>
       <div><b>Einbettungscode für deine Webseite</b><p class="small muted" style="margin:4px 0 8px">In WordPress, Wix, Jimdo, Shopware … als „HTML“-Block einfügen.</p>
         <div class="code">${esc(code)}</div>
         <div class="row" style="margin-top:8px"><button class="btn small" data-a="copy" data-v="${esc(code)}">Code kopieren</button></div></div>
@@ -208,7 +209,8 @@
       <a class="pv" href="${esc(fileUrl(s, 'preview.jpg'))}" target="_blank" rel="noopener"><img loading="lazy" alt="Vorschau" src="${esc(fileUrl(s, 'preview.jpg'))}"></a>
       <div class="bd"><div class="row" style="justify-content:space-between"><b>${esc(s.customer_name)}</b><span class="badge ${esc(s.status)}">${esc((STATUS.find(x => x[0] === s.status) || [, s.status])[1])}</span></div>
         <a href="mailto:${esc(s.customer_email)}">${esc(s.customer_email)}</a>
-        <span class="muted">${esc(s.design_name || s.design)} · ${esc(s.layout_name || s.layout)}</span>
+        <span class="muted">${esc(s.design_name || s.design)} · ${esc(s.layout_name || s.layout)}${variantsOf(s).length ? ` · plus ${variantsOf(s).length} ${variantsOf(s).length === 1 ? 'Variante' : 'Varianten'}` : ''}</span>
+        ${variantsOf(s).length ? `<span class="muted">Druckvorlagen der Varianten: ${variantsOf(s).map(v => `<a href="${esc(fileUrl(s, v.file))}" download target="_blank" rel="noopener">${esc(v.layout_name || v.layout)}</a>`).join(' · ')}</span>` : ''}
         <span class="muted">Veranstaltung: ${fmtDate(s.event_date)} · eingegangen ${fmtDate(s.created_at)}</span>
         ${s.event_id ? `<span class="muted">Ereignis: ${esc((ctx.events() || []).find(e => e.id === s.event_id)?.name || (ctx.standalone ? 'im Dashboard von Photobox Memories' : 'gelöscht'))}${s.event_created ? ' · automatisch angelegt' : s.auto_layout ? ' · als Fotolayout übernommen' : ''}</span>` : ''}
         ${s.start_kind ? `<span class="muted">Startbildschirm als ${s.start_kind === 'image' ? 'Bild' : 'Animation'}: ${['p', 'l'].map(o => `<a href="${esc(fileUrl(s, `start-${o}.${({ image: 'jpg', video: 'mp4', webm: 'webm' })[s.start_kind]}`))}" target="_blank" rel="noopener">${o === 'p' ? 'hoch' : 'quer'}</a>`).join(' · ')}</span>` : ''}
@@ -325,6 +327,9 @@
     site = data; render(); ctx.toast('Gespeichert');
   }
 
+  // Varianten einer Einsendung: dasselbe Design in weiteren Druckformaten (print-<n>.png), nur mit Fotobox-Papierformat
+  const variantsOf = s => (Array.isArray(s.variants) ? s.variants : []).filter(v => v && v.file && FORMAT_OF[`${v.w}x${v.h}`]);
+
   // ---------- In ein Ereignis übernehmen: Fotofelder unter der Druckvorlage (wie „Layout aus Bild“ im Layout-Editor) ----------
   async function adopt(s) {
     const evs = (ctx.events() || []).filter(e => !e.archived);
@@ -333,32 +338,39 @@
     dlg.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(20,20,26,.55);display:grid;place-items:center;padding:16px';
     dlg.innerHTML = `<div class="card" style="width:min(460px,100%);display:grid;gap:12px"><h3 style="margin:0">Design übernehmen</h3>
       <p class="small muted" style="margin:0">${esc(s.design_name)} · ${esc(s.layout_name)} von ${esc(s.customer_name)} wird als neues Fotolayout in das Ereignis gelegt. Die Fotos der Gäste erscheinen in den Fotofeldern.</p>
+      ${variantsOf(s).length ? `<div><label>Formate</label><div style="display:grid;gap:4px">${[{ file: 'print.png', layout_name: s.layout_name || s.layout }, ...variantsOf(s)].map(v =>
+        `<label class="small" style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" data-v="${esc(v.file)}" checked> ${esc(v.layout_name || v.layout)}</label>`).join('')}</div></div>` : ''}
       <div><label>Ereignis</label><select id="adEv">${evs.map(e => `<option value="${e.id}">${esc(e.name)}${e.event_date ? ' · ' + fmtDate(e.event_date) : ''}</option>`).join('')}</select></div>
       <div class="row" style="justify-content:flex-end"><button class="btn" data-x>Abbrechen</button><button class="btn primary" data-ok>Übernehmen</button></div></div>`;
     document.body.appendChild(dlg);
     const ok = await new Promise(r => { dlg.onclick = e => { if (e.target === dlg || e.target.closest('[data-x]')) r(false); if (e.target.closest('[data-ok]')) r(true); }; });
-    const evId = dlg.querySelector('#adEv').value; dlg.remove();
+    const evId = dlg.querySelector('#adEv').value, pick = [...dlg.querySelectorAll('[data-v]')].filter(i => i.checked).map(i => i.dataset.v); dlg.remove();
     if (!ok) return;
+    const parts = [{ file: 'print.png', w: s.w, h: s.h, slots: s.slots, layout_name: '' }, ...variantsOf(s).map(v => ({ ...v, layout_name: v.layout_name || v.layout }))]
+      .filter(v => !pick.length && v.file === 'print.png' || pick.includes(v.file));
+    if (!parts.length) return ctx.toast('Bitte mindestens ein Format wählen.');
     try {
-      const fmt = FORMAT_OF[`${s.w}x${s.h}`], F = G.FBR.FORMATS[fmt], kx = F.w / s.w, ky = F.h / s.h, src = fileUrl(s, 'print.png');
-      // Foto etwas größer als die Öffnung, damit an den Kanten nie der Hintergrund durchscheint
-      const boxes = (s.slots || []).map(b => [b[0] - 2, b[1] - 2, b[2] + 4, b[3] + 4]);
-      const band = s.h * .06; boxes.sort((a, b) => Math.abs(a[1] - b[1]) > band ? a[1] - b[1] : a[0] - b[0]);
-      const els = boxes.slice(0, 12).map((b, i) => ({ id: G.FBR.uid(), type: 'photo', n: i + 1, x: Math.round(b[0] * kx), y: Math.round(b[1] * ky),
-        w: Math.round(b[2] * kx), h: Math.round(b[3] * ky), rot: 0, radius: 0, stroke: '', strokeW: 0, shadow: false }));
-      els.push({ id: G.FBR.uid(), type: 'image', src, fit: 'stretch', opacity: 1, x: 0, y: 0, w: F.w, h: F.h, rot: 0, locked: true });
-      const L = { id: G.FBR.uid(), name: `${s.design_name || 'BoothDesigner'} · ${s.customer_name}`, format: fmt, w: F.w, h: F.h, bg: '#ffffff',
-        twoPerPage: fmt === '2x6', secondary: false, elements: els, studio: s.folder };
+      const Ls = parts.map(p => {
+        const fmt = FORMAT_OF[`${p.w}x${p.h}`], F = G.FBR.FORMATS[fmt], kx = F.w / p.w, ky = F.h / p.h, src = fileUrl(s, p.file);
+        // Foto etwas größer als die Öffnung, damit an den Kanten nie der Hintergrund durchscheint
+        const boxes = (p.slots || []).map(b => [b[0] - 2, b[1] - 2, b[2] + 4, b[3] + 4]);
+        const band = p.h * .06; boxes.sort((a, b) => Math.abs(a[1] - b[1]) > band ? a[1] - b[1] : a[0] - b[0]);
+        const els = boxes.slice(0, 12).map((b, i) => ({ id: G.FBR.uid(), type: 'photo', n: i + 1, x: Math.round(b[0] * kx), y: Math.round(b[1] * ky),
+          w: Math.round(b[2] * kx), h: Math.round(b[3] * ky), rot: 0, radius: 0, stroke: '', strokeW: 0, shadow: false }));
+        els.push({ id: G.FBR.uid(), type: 'image', src, fit: 'stretch', opacity: 1, x: 0, y: 0, w: F.w, h: F.h, rot: 0, locked: true });
+        return { id: G.FBR.uid(), name: `${s.design_name || 'BoothDesigner'} · ${s.customer_name}${p.layout_name ? ' · ' + p.layout_name : ''}`, format: fmt, w: F.w, h: F.h, bg: '#ffffff',
+          twoPerPage: fmt === '2x6', secondary: false, elements: els, studio: s.folder };
+      });
       const { data: cur, error: e1 } = await ctx.sb.from('events').select('settings').eq('id', evId).maybeSingle();
       if (e1 || !cur) throw e1 || new Error('Ereignis nicht gefunden.');
       const settings = { ...(cur.settings || {}) };
-      settings.layouts = [...(settings.layouts || []).filter(l => l.studio !== s.folder), L];
+      settings.layouts = [...(settings.layouts || []).filter(l => l.studio !== s.folder), ...Ls];
       const { error } = await ctx.sb.from('events').update({ settings }).eq('id', evId);
       if (error) throw error;
       if (s.status === 'neu') { await ctx.sb.from('studio_submissions').update({ status: 'in_arbeit' }).eq('id', s.id); s.status = 'in_arbeit'; }
       await ctx.reloadEvents?.();
       render();
-      ctx.toast('Übernommen – du findest das Layout im Ereignis unter „Fotolayout“.', 6000);
+      ctx.toast(Ls.length > 1 ? `Übernommen – ${Ls.length} Layouts liegen im Ereignis unter „Fotolayout“.` : 'Übernommen – du findest das Layout im Ereignis unter „Fotolayout“.', 6000);
     } catch (err) { ctx.toast('Übernehmen fehlgeschlagen: ' + (err.message || err), 7000); }
   }
 
