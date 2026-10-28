@@ -118,13 +118,18 @@
   #ws .tb{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit}
   #ws .sp{flex:1}
   #ws .wbody{flex:1;display:flex;min-height:0}
-  #ws nav.side{display:block;width:250px;background:#fff;border-right:1px solid #e6e6ec;overflow:auto;padding:12px 0;flex:none}
+  #ws nav.side{display:block;width:262px;background:#fff;border-right:1px solid #e6e6ec;overflow:auto;padding:12px 0 18px;flex:none}
   #ws nav.side .back{display:flex;align-items:center;gap:4px;margin:0 10px 6px;padding:8px 10px;border-radius:10px;color:#555;cursor:pointer;font-size:13px}
   #ws nav.side .back:hover{background:var(--soft);color:var(--ink)}
-  #ws nav.side h6{margin:20px 20px 6px;font-size:11px;font-weight:700;letter-spacing:.09em;color:#9a9aa6;text-transform:uppercase}
-  #ws nav.side a{display:flex;gap:10px;align-items:center;margin:1px 10px;padding:9px 10px;border-radius:10px;color:#3a3a44;cursor:pointer;text-decoration:none}
+  #ws nav.side h6{margin:16px 20px 4px;font:600 14px Fredoka,system-ui,sans-serif;color:var(--ink);display:flex;align-items:center;gap:8px}
+  #ws nav.side h6::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--c,var(--y));flex:none}
+  #ws nav.side a{display:flex;gap:11px;align-items:center;margin:1px 10px;padding:5px 8px;border-radius:12px;color:#2f2f36;cursor:pointer;text-decoration:none}
+  #ws nav.side a .mchip{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:#fff;flex:none;background:linear-gradient(140deg,color-mix(in srgb,var(--c,#F7C838) 72%,#fff),var(--c,#F7C838));box-shadow:0 2px 6px color-mix(in srgb,var(--c,#F7C838) 30%,transparent)}
+  #ws nav.side a .ml{min-width:0}
+  #ws nav.side a .tag{margin-left:auto;font-size:11px;color:#8a6d00;border:1px solid #F0D27A;border-radius:99px;padding:1px 7px;white-space:nowrap}
   #ws nav.side a:hover{background:#FFFAEA;color:var(--ink)}
-  #ws nav.side a.on{background:#FFF3C4;color:var(--ink);font-weight:600;box-shadow:inset 3px 0 0 var(--y)}
+  #ws nav.side a.on{background:#FFF3C4;color:var(--ink);font-weight:600}
+  #ws nav.side a.on{box-shadow:inset 3px 0 0 var(--c,var(--y))}
   #ws main.wm{flex:1;overflow:auto;padding:28px 36px 80px}
   /* Inhalt mittig: Seiten mit Vorschau oder Übersicht breit, reine Einstellungsseiten als eine ruhige Spalte */
   #ws .wpage{max-width:1100px;margin:0 auto}
@@ -458,12 +463,15 @@
   const NEEDSRV_S = '<span class="soon" title="Braucht zusätzlich einen Online-Dienst, der noch nicht eingerichtet ist.">Dienst folgt</span>';
   const NEEDSRV = '<p style="background:#FFF3C4;color:#8a6400;border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:8px">Die Einstellungen werden gespeichert. Damit es an der Fotobox funktioniert, muss noch ein Online-Dienst angebunden und die Fotobox aktualisiert werden.</p>';
   const NAV = [
-    ['dash', 'dashboard', 'Dashboard'],
-    ['h', 'Grundlagen'], ['layout', 'aperture', 'Photo booth experience'], ['capture', 'sliders', 'Aufnahmeeinstellungen'], ['voice', 'mic', 'Virtueller Berater'], ['lang', 'globe', 'Sprache'],
-    ['h', 'Erweiterte Einstellungen'], ['start', 'monitor', 'Startbildschirm'], ['fx', 'sparkles', 'Filter & Effekte'], ['bg', 'wand', 'Hintergrundentfernung'],
-    ['ai', 'user', 'KI-Porträts'], ['survey', 'clipboard', 'Umfrage & Haftungsausschluss'],
-    ['h', 'Drucken & Teilen'], ['share', 'share', 'Einstellungen für Teilen'], ['print', 'printer', 'Druckeinstellungen'], ['mosaic', 'mosaic', 'Fotomosaik'], ['cari', 'pen', 'Live-Karikatur'], ['videomsg', 'video', 'Videonachricht']
+    // Gruppen wie im Menü der Fotobox (eigene Optik seit 28.10.2026): Symbole in gelben Kacheln, Zusatzfunktionen markiert
+    ['dash', 'dashboard', 'Übersicht'],
+    ['h', 'Aussehen'], ['start', 'monitor', 'Startbildschirm'], ['layout', 'aperture', 'Fotolayout & Countdown'], ['fx', 'sparkles', 'Filter & Effekte'], ['bg', 'wand', 'Hintergrund entfernen'],
+    ['h', 'Aufnahme'], ['capture', 'sliders', 'Aufnahme-Arten'], ['voice', 'mic', 'Virtueller Berater'], ['ai', 'user', 'KI-Porträts'],
+    ['h', 'Gäste'], ['survey', 'clipboard', 'Umfrage & Haftungsausschluss'], ['lang', 'globe', 'Sprache'],
+    ['h', 'Teilen & Drucken'], ['share', 'share', 'Teilen'], ['print', 'printer', 'Drucken'],
+    ['h', 'Extras'], ['mosaic', 'mosaic', 'Fotomosaik', 1], ['cari', 'smile', 'Live-Karikatur', 1], ['videomsg', 'video', 'Videonachricht', 1]
   ];
+  const GROUP_C = { 'Aussehen': '#EC5FA6', 'Aufnahme': '#3D8BFF', 'Gäste': '#22B573', 'Teilen & Drucken': '#FF8A3D', 'Extras': '#F2B705' }; // Farben wie im Menü der Fotobox
 
   function open(ev, ctx) {
     if (!document.getElementById('ws-css')) { const s = document.createElement('style'); s.id = 'ws-css'; s.textContent = CSS; document.head.appendChild(s); }
@@ -521,7 +529,7 @@
       <p style="margin:0;color:#6b6b78">Zum Freischalten melden Sie sich bitte bei Photobox Memories.</p></div>`;
     // Tarif (ctx.tier aus my_tier: 'free' | 'basis' | 'pro'; ohne Angabe wie Pro): diese Seiten und Teile gibt es erst ab Pro
     const pro = () => !ctx.tier || ctx.tier() === 'pro', freeTier = () => !!ctx.tier && ctx.tier() === 'free';
-    const PRO_PAGES = { fx: 'Filter & Effekte', bg: 'Hintergrundentfernung', voice: 'Virtueller Berater', survey: 'Umfrage & Haftungsausschluss' };
+    const PRO_PAGES = { fx: 'Filter & Effekte', bg: 'Hintergrund entfernen', voice: 'Virtueller Berater', survey: 'Umfrage & Haftungsausschluss' };
     const proPage = title => `<h1>${title} 🔒</h1><div class="card" style="background:#FFFAEA;max-width:640px">
       <b>Diese Funktion gibt es ab dem Tarif Pro.</b><p style="margin:10px 0">Im Tarif Pro sind alle Funktionen dabei: GIF, Boomerang und Video, Filter und Schönheitsfilter, Hintergrund entfernen, Virtueller Berater, eigene Vorlagen und Bildschirme, Umfrage und mehr.</p>
       <button class="btn pri" data-a="tarife">Tarife ansehen</button></div>`;
@@ -633,8 +641,10 @@
       }, 600);
     }
     function renderNav() {
+      const lock = k => (LOCKS[k] && !allowed(LOCKS[k])) || (PRO_PAGES[k] && !pro());
+      let c = '#F7C838'; // Farbe der Gruppe (wie in der Fotobox), gilt für die Einträge darunter
       side.innerHTML = `<span class="back" data-a="back">${ICON('chevronLeft', 14)} Zurück zu den Ereignissen</span>` + NAV.map(n => n[0] === 'h'
-        ? `<h6>${n[1]}</h6>` : `<a data-p="${n[0]}" class="${n[0] === page ? 'on' : ''}">${ICON(n[1], 18)}${n[2]}${(LOCKS[n[0]] && !allowed(LOCKS[n[0]])) || (PRO_PAGES[n[0]] && !pro()) ? ' 🔒' : ''}</a>`).join('');
+        ? `<h6 style="--c:${c = GROUP_C[n[1]] || c}">${n[1]}</h6>` : `<a data-p="${n[0]}" class="${n[0] === page ? 'on' : ''}" style="--c:${c}"><span class="mchip">${ICON(n[1], 18)}</span><span class="ml">${n[2]}</span>${n[3] ? `<span class="tag">${lock(n[0]) ? '🔒 ' : ''}Zusatz</span>` : lock(n[0]) ? ' 🔒' : ''}</a>`).join('');
       $(root, '.en').textContent = E.name;
     }
     side.addEventListener('click', e => {
@@ -1351,7 +1361,7 @@
         loadGallery();
         const link = shareLink(), n = v => gal.list ? v : '…', sessions = P.filter(x => !isExtra(x)).length;
         const act = (a, ic, label, extra = '') => `<button data-a="${a}" ${extra}>${ICON(ic, 26)}<span>${label}</span></button>`;
-        return `<h1>Dashboard</h1>
+        return `<h1>Übersicht</h1>
           <div class="evhead"><input type="text" data-e="name" value="${esc(E.name)}" size="${Math.max(8, Math.min(40, (E.name || '').length + 1))}" title="Name des Ereignisses ändern"><span class="sep"></span><input type="date" data-e="event_date" value="${E.event_date || ''}" title="Datum ändern"></div>
           <div class="dcards split">
             <div class="dcard"><div class="nums"><span>Sitzungen<b>${n(sessions)}</b></span><span>Bilder<b>${n(P.filter(x => x.kind !== 'video').length)}</b></span><span>Videos<b>${n(P.filter(x => x.kind === 'video').length)}</b></span></div>
@@ -1385,7 +1395,7 @@
       layout() {
         const sel = S.layouts.find(l => l.id === sub.laySel), F = sel && FBR.FORMATS[sel.format];
         const inch = F ? (F.in || [sel.w / 300, sel.h / 300]).map(n => String(n).replace('.', ',') + ' in').join(' x ') : '';
-        return `<h1>Photo booth experience</h1>${tabs('layout', [['layouts', 'Photo layout'], ['countdown', 'Countdown']])}<div class="cols"><div class="left">
+        return `<h1>Fotolayout & Countdown</h1>${tabs('layout', [['layouts', 'Fotolayout'], ['countdown', 'Countdown']])}<div class="cols"><div class="left">
           <section id="sec-layout-layouts"></section><h2>Fotolayout</h2><div class="card"><div style="margin-bottom:12px">Wird für Foto- oder Drucksitzungen verwendet</div>
             ${layoutCards()}${S.layouts.length > 1 ? sw('guestLayouts', 'Gäste wählen das Layout', 'Bei mehreren Layouts wählen die Gäste vor der Aufnahme') : ''}
             ${sw('gifFromPhotos', 'Auch ein GIF aus den Fotos erstellen')}</div>
@@ -1402,7 +1412,7 @@
         const isOn = (k, key) => k === 'photo' ? photoOn : k === 'slowmo' ? S.x.slowmo.enabled : S.modes[key];
         const sizes = [['720p-16:9', 'Rechteck 720p 16:9'], ['1080p-16:9', 'Rechteck 1080p 16:9'], ['720p-9:16', 'Hochformat 720p 9:16'], ['1080p-9:16', 'Hochformat 1080p 9:16'], ['square-720', 'Quadrat 720 1:1'], ['square-1080', 'Quadrat 1080 1:1']];
         const body = sub.mode === 'photo' ? `<div class="card">${sw('modes.single', 'Fotomodus aktivieren', 'Nehmen Sie Fotos für den Druck oder die digitale Weitergabe auf')}
-              <p style="color:#777;font-size:13px">Das Aussehen der Ausdrucke legst du unter „Photo booth experience → Fotolayout“ fest.</p>
+              <p style="color:#777;font-size:13px">Das Aussehen der Ausdrucke legst du unter „Fotolayout & Countdown“ fest.</p>
               ${!S.layouts.length ? `${sw('modes.strip', 'Standard-Fotostreifen anbieten')}${sw('modes.grid', 'Standard-Collage anbieten')}` : ''}</div>
             <h2>Countdown</h2><div class="card">${slider('countdown', 'Countdown vor Foto 1', 0, 30)}${slider('countdownNext', 'Countdown vor weiteren Fotos', 0, 30)}${slider('between', 'Anzeigedauer des Fotos', 0, 30)}</div>`
           : sub.mode === 'gif' ? `<div class="card">${sw('modes.gif', 'GIF-Modus aktivieren', 'Nehmen Sie Fotos auf, um ein GIF zu erstellen')}</div>
@@ -1421,7 +1431,7 @@
           : `<div class="card">${sw('modes.video', 'Videomodus aktivieren', 'Nehmen Sie ein Video mit Ton auf')}</div>
             <h2>Allgemein</h2><div class="card">${slider('x.video.countdown', 'Countdown', 0, 30)}${slider('x.video.quality', 'Ausgabequalität', 1, 8, 1, 'mbps')}${slider('videoSecs', 'Aufnahmedauer', 1, 60, 1)}
               ${sw('videoAudio', 'Ton aufnehmen')}${sw('x.video.saveOriginal', 'Originalvideo speichern')}${sw('x.video.preTextOn', 'Text vor der Aufnahme anzeigen')}${text('x.video.preText', 'Text', 'Bereit machen')}</div>`;
-        return `<h1>Aufnahmeeinstellungen</h1><div class="cols"><div class="left">
+        return `<h1>Aufnahme-Arten</h1><div class="cols"><div class="left">
           <div class="modes">${M.map(([k, ic, n, key]) => `<div class="mode ${sub.mode === k ? 'on' : ''}" data-mode="${k}"><span class="ic">${ICON(ic, 22)}</span>${n}${k !== 'photo' && !pro() ? ' 🔒' : ''}<span class="dot ${isOn(k, key) ? 'a' : ''}"></span></div>`).join('')}</div>
           ${sub.mode !== 'photo' && !pro() ? '<div class="card" style="background:#FFFAEA"><b>GIF, Boomerang und Video gibt es ab dem Tarif Pro.</b><p style="margin:8px 0 0"><button class="btn pri" data-a="tarife">Tarife ansehen</button></p></div>' : body}
           <h2>Live-Ansicht</h2><div class="card"><div class="between"><div><b>Live-Ansicht in der Vorlage</b><br><small style="color:#6b6b78">Gäste sehen sich beim Countdown im Fotolayout – so wie das fertige Foto. Aus: nur das Kamerabild.</small></div>
@@ -1502,7 +1512,7 @@
 </div>`)}`; // eigene Aufkleber (x.fx.stickers) kann die Fotobox noch nicht – nur der Standard-Stil
       },
       bg() {
-        return `<h1>Hintergrundentfernung <label class="sw"><input type="checkbox" data-a="bgon" ${S.bgMode !== 'off' ? 'checked' : ''}><i></i></label><span class="swl">${S.bgMode !== 'off' ? 'Ein' : 'Aus'}</span></h1><div class="card"><b>Ersetzen Sie den Hintergrund Ihrer Fotos</b>
+        return `<h1>Hintergrund entfernen <label class="sw"><input type="checkbox" data-a="bgon" ${S.bgMode !== 'off' ? 'checked' : ''}><i></i></label><span class="swl">${S.bgMode !== 'off' ? 'Ein' : 'Aus'}</span></h1><div class="card"><b>Ersetzen Sie den Hintergrund Ihrer Fotos</b>
           <label class="l">Modus</label><div class="row">${[['ai', 'KI-Hintergrundentfernung'], ['green', 'Greenscreen']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="bgm" data-rerender="1" data-s="bgMode" value="${k}" ${S.bgMode === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
           ${S.bgMode === 'green' ? slider('keyStrength', 'Empfindlichkeit', 0, 100, 1, '') : ''}
           <label class="l">Hintergründe</label><div class="row">${[[false, 'Automatisch durchwechseln'], [true, 'Gäste wählen das Hintergrundbild']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="bgc" data-a="bgchoice" data-v="${k ? 1 : 0}" ${!!S.bgGuestChoice === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
@@ -1606,7 +1616,7 @@
       },
       share() {
         const X = S.x.share;
-        return `<h1>Einstellungen für Teilen</h1>${tabs('sh', [['mail', 'E-Mail'], ['sms', 'SMS'], ['wa', 'WhatsApp'], ['screen', 'Bildschirm zum Teilen'], ['more', 'Weitere Optionen']])}
+        return `<h1>Teilen</h1>${tabs('sh', [['mail', 'E-Mail'], ['sms', 'SMS'], ['wa', 'WhatsApp'], ['screen', 'Bildschirm zum Teilen'], ['more', 'Weitere Optionen']])}
           ${allTabs('sh', () => sub.sh === 'mail' ? `${titleSw('E-Mail', 'x.share.email.on')}<div class="card">${NEEDSRV}
               <label class="l">Von (Antwort an)</label><input type="email" data-s="x.share.email.from" value="${esc(X.email.from)}" placeholder="name@deinefirma.de">
               ${text('x.share.email.subject', 'Betreff')}<label class="l">HTML-Text</label><textarea rows="6" data-s="x.share.email.body">${esc(X.email.body)}</textarea>
@@ -1625,7 +1635,7 @@
               ${sw('share', 'QR Code', 'Teilen Sie Fotos über einen QR-Code, den Gäste scannen können. Aktuell muss das Handy im selben WLAN wie die Fotobox sein.')}</div>`)}`;
       },
       print() {
-        return `<h1>Druckeinstellungen</h1>${tabs('pr', [['gen', 'Allgemein'], ['lim', 'Drucklimits']])}
+        return `<h1>Drucken</h1>${tabs('pr', [['gen', 'Allgemein'], ['lim', 'Drucklimits']])}
           ${allTabs('pr', () => sub.pr === 'gen' ? `<div class="card">${sw('autoPrint', 'Automatisch drucken', 'Automatisches Drucken jeder Session')}${sw('printButton', 'Schaltfläche „Drucken“ anzeigen', 'Fügt dem Freigabebildschirm eine Schaltfläche zum Drucken einer oder mehrerer zusätzlicher Kopien hinzu')}
               ${sw('askCopies', '„Wie viele Kopien?“ fragen', 'Der Gast wählt selbst – die Auswahl startet bei 1 und geht bis „Kopien pro Gast“ (Reiter Drucklimits).')}
               ${S.askCopies ? '' : `<label class="l">Kopien pro Ausdruck</label><input type="number" min="1" max="10" data-s="copies" data-num="1" value="${S.copies}">
