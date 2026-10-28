@@ -3359,6 +3359,7 @@ I18N.add('es', {
 "Wann kommt ein Foto ins Mosaik?": "¿Cuándo entra una foto en el mosaico?",
 "Wann und wie die Canon scharfstellt – im Countdown schnell, leise oder gar nicht.": "Cuándo y cómo enfoca la Canon – rápido en la cuenta atrás, silencioso o nada.",
 "Wann und wie die Canon scharfstellt. Am schärfsten: „Direkt beim Auslösen“ – die Kamera stellt beim Auslösen noch einmal scharf.": "Cuándo y cómo enfoca la Canon. Lo más nítido: «Justo al disparar»: la cámara vuelve a enfocar al disparar.",
+"Wann und wie die Canon scharfstellt. Die Fotobox stellt schon im Countdown scharf – beim weißen Bildschirm löst die Kamera sofort aus.": "Cuándo y cómo enfoca la Canon. El fotomatón ya enfoca durante la cuenta atrás: cuando aparece la pantalla blanca, la cámara dispara al instante.",
 "Warm": "Cálido",
 "Warnung": "Advertencia",
 "Warten auf den Upload …": "Esperando la subida …",
