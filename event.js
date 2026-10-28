@@ -205,6 +205,14 @@
   #ws .gal .kap{display:none}
   #ws .gal figure.kaputt .kap{display:block;position:absolute;inset:auto 0 0 0;background:#d23b3b;color:#fff;font:600 11px/1.3 system-ui,sans-serif;padding:5px 6px;text-align:center}
   #ws .gal .tag{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;border-radius:6px;padding:2px 6px}
+  #ws .galpick{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px;max-width:1120px}
+  #ws .galpick.on{position:sticky;top:0;z-index:5;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;box-shadow:0 2px 10px rgba(16,16,24,.08)}
+  #ws .galpick .n{font-weight:600;margin-right:auto}
+  #ws .galpick .del{color:#d23b3b}#ws .galpick button:disabled{opacity:.4;cursor:default}
+  #ws .gal .ck{display:none;position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.3);box-shadow:0 1px 3px rgba(0,0,0,.35);align-items:center;justify-content:center;color:transparent}
+  #ws .gal.picking figure{cursor:pointer}#ws .gal.picking .ck{display:flex}
+  #ws .gal figure.sel{outline:3px solid var(--y);outline-offset:-3px}#ws .gal figure.sel img{opacity:.8}
+  #ws .gal figure.sel .ck{background:var(--y);border-color:var(--y);color:var(--ink)}
   #ws .linkbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
   #ws .linkbox input{flex:1;min-width:220px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
   #wsLight{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px}
@@ -1051,7 +1059,11 @@
       if (a === 'gal-slide') return openSlideshow();
       if (a === 'gal-upload') return uploadToGallery();
       if (a === 'shares-csv') return sharesCsv();
-      if (a === 'gal-open') return openLightbox(+t.dataset.i);
+      if (a === 'gal-open') return sub.pick ? galPickToggle(+t.dataset.i, e.shiftKey) : openLightbox(+t.dataset.i);
+      if (a === 'gal-pick') { sub.pick = sub.pick ? null : new Set(); sub.pickLast = null; render(); return; }
+      if (a === 'gal-pickall') { const L = gal.list || []; sub.pick = new Set(sub.pick?.size === L.length ? [] : L.map(x => x.id)); galPickSync(); return; }
+      if (a === 'gal-pickdel') return delPicked();
+      if (a === 'gal-pickzip') return downloadAll((gal.list || []).filter(x => sub.pick?.has(x.id)));
       if (a === 'gal-reload') { gal.list = null; render(); return loadGallery(true); }
       if (a === 'gal-zip') return downloadAll();
       if (a === 'gal-copy') { const link = shareLink(); try { await navigator.clipboard.writeText(link); ctx.toast('Link kopiert'); } catch { ctx.toast(link, 8000); } return; }
@@ -1179,20 +1191,54 @@
         if (k === 'dl') { try { saveBlob(await fetchBlob(x.path), galName(x)); } catch (err) { ctx.toast('Herunterladen fehlgeschlagen: ' + err.message, 4000); } return; }
         if (k === 'rep') { if (await replacePhoto(x)) { draw(); render(); } return; }
         if (k === 'del') {
-          if (!await (G.pmConfirm || (async t => confirm(t)))('Dieses Foto endgültig aus der Online-Galerie löschen? Auf der Fotobox bleibt es gespeichert.')) return;
-          const files = [x.path, x.thumb].filter(Boolean), ext = files.filter(f => f.startsWith(G.FOTOBOX_PHOTOS?.prefix || '\u0000')), sbf = files.filter(f => !ext.includes(f));
-          let r1 = null;
-          try { if (ext.length) { const t = await sbToken(); for (const f of ext) await G.FOTOBOX_PHOTOS.del(f, t); } } catch (err) { r1 = { error: err }; }
-          if (!r1 && sbf.length) r1 = await ctx.sb.storage.from('photos').remove(sbf);
-          const r2 = r1?.error ? null : await ctx.sb.from('photos').delete().eq('id', x.id);
-          if (r1?.error || r2?.error) return ctx.toast('Löschen fehlgeschlagen: ' + (r1?.error || r2?.error).message, 5000);
-          L.splice(n, 1); if (!L.length) close(); else { n = Math.min(n, L.length - 1); draw(); } render();
+          o.style.zIndex = 90; // Rückfrage (z-index 100) lag sonst unsichtbar hinter der Großansicht
+          const ok = await (G.pmConfirm || (async t => confirm(t)))('Dieses Foto endgültig aus der Online-Galerie löschen? Auf der Fotobox bleibt es gespeichert.');
+          o.style.zIndex = ''; if (!ok) return;
+          try { await delPhoto(x, await sbToken()); } catch (err) { return ctx.toast('Löschen fehlgeschlagen: ' + err.message, 5000); }
+          L.splice(n, 1); sub.pick?.delete(x.id); if (!L.length) close(); else { n = Math.min(n, L.length - 1); draw(); } render();
         }
       });
       document.addEventListener('keydown', key); draw(); document.body.appendChild(o);
     }
-    async function downloadAll() {
-      const L = gal.list || []; if (!L.length) return;
+    // Ein Foto/Video endgültig aus der Online-Galerie löschen: Dateien im Foto-Speicher (samt Vorschau und Originalen) bzw. bei
+    // Supabase, danach die Zeile. Auf der Fotobox bleibt es gespeichert.
+    async function delPhoto(x, token) {
+      const files = [x.path, x.thumb].filter(Boolean), ext = files.filter(f => f.startsWith(G.FOTOBOX_PHOTOS?.prefix || '\u0000')), sbf = files.filter(f => !ext.includes(f));
+      for (const f of ext) await G.FOTOBOX_PHOTOS.del(f, token);
+      if (sbf.length) { const { error } = await ctx.sb.storage.from('photos').remove(sbf); if (error) throw error; }
+      const { error } = await ctx.sb.from('photos').delete().eq('id', x.id); if (error) throw error;
+    }
+    // Mehrere Fotos auswählen (Galerie im Ereignis-Dashboard): antippen markiert, mit Umschalt-Taste einen ganzen Bereich.
+    // Nur Kacheln und Leiste werden angepasst – kein neues Zeichnen der ganzen Seite (bei 2000 Fotos sonst spürbar).
+    const galPickBar = () => { const N = (gal.list || []).length, k = sub.pick?.size || 0;
+      return !sub.pick ? `<button class="ghost" data-a="gal-pick">${ICON('check', 15)} Mehrere auswählen</button>`
+        : `<span class="n">${k} ausgewählt</span><button class="ghost" data-a="gal-pickall">${k === N ? 'Keine auswählen' : 'Alle auswählen'}</button>
+          <button class="ghost" data-a="gal-pickzip" ${k ? '' : 'disabled'}>${ICON('download', 15)} Herunterladen</button>
+          <button class="ghost del" data-a="gal-pickdel" ${k ? '' : 'disabled'}>${ICON('trash', 15)} Löschen</button><button class="btn sm" data-a="gal-pick">Fertig</button>`; };
+    function galPickSync() {
+      const L = gal.list || [];
+      main.querySelectorAll('.gal figure[data-i]').forEach(f => f.classList.toggle('sel', !!sub.pick?.has(L[+f.dataset.i]?.id)));
+      const bar = main.querySelector('.galpick'); if (bar) bar.innerHTML = galPickBar();
+    }
+    function galPickToggle(i, range) {
+      const L = gal.list || [], x = L[i]; if (!x) return;
+      const on = !sub.pick.has(x.id), from = range && sub.pickLast != null ? Math.min(sub.pickLast, i) : i, to = range && sub.pickLast != null ? Math.max(sub.pickLast, i) : i;
+      for (let j = from; j <= to; j++) if (L[j]) on ? sub.pick.add(L[j].id) : sub.pick.delete(L[j].id);
+      sub.pickLast = i; galPickSync();
+    }
+    async function delPicked() {
+      const L = (gal.list || []).filter(x => sub.pick?.has(x.id)); if (!L.length) return;
+      if (!await (G.pmConfirm || (async t => confirm(t)))(`${L.length} ausgewählte Fotos und Videos endgültig aus der Online-Galerie löschen? Auf der Fotobox bleiben sie gespeichert.`, 'Löschen')) return;
+      const token = await sbToken(), todo = L.slice(); let done = 0, failed = 0, msg = '';
+      await Promise.all(Array.from({ length: 4 }, async () => { while (todo.length) { const x = todo.shift();
+        try { await delPhoto(x, token); sub.pick.delete(x.id); gal.list = gal.list.filter(y => y !== x); } catch (err) { failed++; msg = err.message; }
+        status(`Lösche … ${++done} von ${L.length}`); } }));
+      status(''); sub.pickLast = null; if (!gal.list.length) sub.pick = null;
+      ctx.toast(failed ? `${L.length - failed} gelöscht, ${failed} nicht gelöscht (${msg}) – sie bleiben ausgewählt, bitte noch einmal versuchen.` : `${L.length} gelöscht`, failed ? 7000 : 3000);
+      render();
+    }
+    async function downloadAll(L = gal.list || []) {
+      if (!L.length) return;
       if (L.length > 400 && !await (G.pmConfirm || (async t => confirm(t)))(`${L.length} Dateien in eine ZIP-Datei packen? Das kann einige Minuten dauern und braucht viel Arbeitsspeicher.`, 'Herunterladen')) return;
       try {
         if (!G.JSZip) await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; sc.onload = ok; sc.onerror = () => no(new Error('ZIP-Baustein nicht ladbar')); document.head.appendChild(sc); });
@@ -1332,7 +1378,8 @@
             <textarea rows="3" readonly onclick="this.select()">&lt;iframe src="${esc(link)}" style="width:100%;height:900px;border:0" loading="lazy"&gt;&lt;/iframe&gt;</textarea></div>` : ''}
           ${gal.error ? `<div class="dempty">${esc(gal.error)}</div>`
             : !gal.list ? '<div class="dempty">Lädt …</div>'
-            : P.length ? `<div class="gal wide">${P.map((x, i) => `<figure data-a="gal-open" data-i="${i}" title="${esc(new Date(x.created_at).toLocaleString('de-DE'))}"><img loading="lazy" src="${esc(galSrc(x, x.thumb || x.path))}" alt=""><span class="kap">Foto kaputt – antippen und ersetzen</span>${x.kind !== 'photo' ? `<span class="tag">${x.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}</figure>`).join('')}</div>`
+            : P.length ? `<div class="galpick${sub.pick ? ' on' : ''}">${galPickBar()}</div>
+              <div class="gal wide${sub.pick ? ' picking' : ''}">${P.map((x, i) => `<figure data-a="gal-open" data-i="${i}" class="${sub.pick?.has(x.id) ? 'sel' : ''}" title="${esc(new Date(x.created_at).toLocaleString('de-DE'))}"><img loading="lazy" src="${esc(galSrc(x, x.thumb || x.path))}" alt=""><span class="kap">Foto kaputt – antippen und ersetzen</span>${x.kind !== 'photo' ? `<span class="tag">${x.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}<span class="ck">${ICON('check', 15)}</span></figure>`).join('')}</div>`
             : `<div class="dempty">Noch keine Fotos oder Videos.<br><small style="font-size:15px">${S.x.share.cloud ? 'Die Galerie füllt sich, sobald an der Fotobox Sitzungen durchgeführt werden.' : 'Schalte rechts oben „Fotos hochladen“ ein – dann füllt sich die Galerie, sobald an der Fotobox Sitzungen durchgeführt werden.'}</small></div>`}`;
       },
       layout() {
