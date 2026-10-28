@@ -195,7 +195,7 @@ window.AdminKunde = (() => {
       <div class="row"><button type="button" class="btn primary" data-k="disc-save">Rabatt speichern</button>${pct > 0 ? '<button type="button" class="btn danger" data-k="disc-off">Rabatt entfernen</button>' : ''}
         ${hs ? '<button type="button" class="btn" data-k="stripe-sync" title="Rabatt bzw. VIP noch einmal auf die laufenden Abos bei Stripe übertragen">Bei Stripe übernehmen</button>' : ''}</div>
       <p class="small muted" style="margin:0">Gilt für alle Käufe des Kunden (Fotobox, Zusatzfunktionen und BoothDesigner) über Stripe. 0 % = kein Rabatt. Soll er gar nichts zahlen, ist VIP einfacher.${vip ? ' Solange VIP an ist, zahlt der Kunde ohnehin nichts – der Rabatt zählt erst nach „VIP aus“.' : ''}${hs ? ' Laufende Abos bei Stripe werden beim Speichern von Rabatt und VIP automatisch angepasst (ab der nächsten Rechnung). „Bei Stripe übernehmen“ wiederholt das, falls es nicht geklappt hat.' : ''}</p>
-      <p class="small muted" style="margin:0">Hat der Kunde am BoothDesigner-Glücksrad Prozente gewonnen, gilt beim ersten BoothDesigner-Abo der größere Vorteil (beides zusammen geht bei Stripe nicht). Gewonnene Gratis-Monate kommen zuerst, danach gilt der Rabatt.</p>`);
+      <p class="small muted" style="margin:0">Hat der Kunde am BoothDesigner-Glücksrad etwas gewonnen (Prozente oder Gratis-Monate), gilt beim ersten BoothDesigner-Abo nur eins von beiden: der größere Vorteil im ersten Jahr.</p>`);
 
     const giftRows = EXTRAS.map(([k, name]) => {
       const srcs = ex.filter(e => e.extra === k), gift = srcs.find(e => e.src === 'geschenk');
