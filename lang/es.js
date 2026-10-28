@@ -598,6 +598,8 @@ I18N.add('es', {
 "Boomerang aktivieren": "Activar Boomerang",
 "BoothDesigner ansehen": "Ver BoothDesigner",
 "BoothDesigner freigeschaltet – viel Spaß beim Testen!": "BoothDesigner activado – ¡disfruta probándolo!",
+"BoothDesigner läuft mit deinem Fotobox-Abo bis {x} und verlängert sich mit ihm": "BoothDesigner funciona con tu suscripción del fotomatón hasta el {x} y se renueva con ella",
+"BoothDesigner läuft mit deinem Fotobox-Abo und verlängert sich mit ihm": "BoothDesigner funciona con tu suscripción del fotomatón y se renueva con ella",
 "BoothDesigner läuft mit deinem Fotobox-Abo{x} und verlängert sich mit ihm": "BoothDesigner funciona con tu suscripción del fotomatón{x} y se renueva con ella",
 "BoothDesigner-Abo aktiv": "Suscripción a BoothDesigner activa",
 "BoothDesigner-Abo ist aktiv – danke!": "La suscripción a BoothDesigner está activa – ¡gracias!",
