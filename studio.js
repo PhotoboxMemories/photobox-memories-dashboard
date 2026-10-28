@@ -336,6 +336,8 @@
   const variantsOf = s => (Array.isArray(s.variants) ? s.variants : []).filter(v => v && v.file && FORMAT_OF[`${v.w}x${v.h}`]);
 
   // ---------- In ein Ereignis übernehmen: Fotofelder unter der Druckvorlage (wie „Layout aus Bild“ im Layout-Editor) ----------
+  // Startbildschirm des Kunden (Bild oder Animation, hoch und quer) kommt mit – wie beim Absenden über den Ereignis-Link (Serverfunktion „studio“)
+  const START_EXT = { image: 'jpg', video: 'mp4', webm: 'webm' };
   async function adopt(s) {
     const evs = (ctx.events() || []).filter(e => !e.archived);
     if (!evs.length) return ctx.toast('Lege zuerst ein Ereignis an – dann kannst du das Design dort als Fotolayout übernehmen.', 6000);
@@ -345,11 +347,14 @@
       <p class="small muted" style="margin:0">${esc(s.design_name)} · ${esc(s.layout_name)} von ${esc(s.customer_name)} wird als neues Fotolayout in das Ereignis gelegt. Die Fotos der Gäste erscheinen in den Fotofeldern.</p>
       ${variantsOf(s).length ? `<div><label>Formate</label><div style="display:grid;gap:4px">${[{ file: 'print.png', layout_name: s.layout_name || s.layout }, ...variantsOf(s)].map(v =>
         `<label class="small" style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" data-v="${esc(v.file)}" checked> ${esc(v.layout_name || v.layout)}</label>`).join('')}</div></div>` : ''}
+      ${START_EXT[s.start_kind] ? `<label class="small" style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" data-start checked> ${s.start_kind === 'image'
+        ? 'Passenden Startbildschirm übernehmen (Bild)' : 'Passenden Startbildschirm übernehmen (Animation)'}</label>` : ''}
       <div><label>Ereignis</label><select id="adEv">${evs.map(e => `<option value="${e.id}">${esc(e.name)}${e.event_date ? ' · ' + fmtDate(e.event_date) : ''}</option>`).join('')}</select></div>
       <div class="row" style="justify-content:flex-end"><button class="btn" data-x>Abbrechen</button><button class="btn primary" data-ok>Übernehmen</button></div></div>`;
     document.body.appendChild(dlg);
     const ok = await new Promise(r => { dlg.onclick = e => { if (e.target === dlg || e.target.closest('[data-x]')) r(false); if (e.target.closest('[data-ok]')) r(true); }; });
-    const evId = dlg.querySelector('#adEv').value, pick = [...dlg.querySelectorAll('[data-v]')].filter(i => i.checked).map(i => i.dataset.v); dlg.remove();
+    const evId = dlg.querySelector('#adEv').value, pick = [...dlg.querySelectorAll('[data-v]')].filter(i => i.checked).map(i => i.dataset.v);
+    const withStart = !!dlg.querySelector('[data-start]')?.checked; dlg.remove();
     if (!ok) return;
     const parts = [{ file: 'print.png', w: s.w, h: s.h, slots: s.slots, layout_name: '' }, ...variantsOf(s).map(v => ({ ...v, layout_name: v.layout_name || v.layout }))]
       .filter(v => !pick.length && v.file === 'print.png' || pick.includes(v.file));
@@ -383,12 +388,17 @@
       if (own.length && !Array.isArray(settings.layoutsVorBoothDesigner)) settings.layoutsVorBoothDesigner = own;
       settings.layouts = [...(settings.layouts || []).filter(l => l.studio && l.studio !== s.folder), ...Ls];
       if (Ls.length > 1) settings.guestLayouts = true; // mehrere Formate: die Gäste wählen an der Fotobox
+      // Startbildschirm je Ausrichtung, ohne zusätzlichen Start-Knopf und Titel der Fotobox (stehen im Design)
+      if (withStart) { const x = START_EXT[s.start_kind], type = s.start_kind === 'image' ? 'image' : 'video';
+        Object.assign(settings, { startDisplay: 'media', startText: '', title: '', subtitle: '',
+          attractP: { url: fileUrl(s, `start-p.${x}`), type }, attractL: { url: fileUrl(s, `start-l.${x}`), type } }); }
       const { error } = await ctx.sb.from('events').update({ settings }).eq('id', evId);
       if (error) throw error;
       if (s.status === 'neu') { await ctx.sb.from('studio_submissions').update({ status: 'in_arbeit' }).eq('id', s.id); s.status = 'in_arbeit'; }
       await ctx.reloadEvents?.();
       render();
-      ctx.toast(Ls.length > 1 ? `Übernommen – ${Ls.length} Layouts liegen im Ereignis unter „Fotolayout“.` : 'Übernommen – du findest das Layout im Ereignis unter „Fotolayout“.', 6000);
+      ctx.toast(withStart ? (Ls.length > 1 ? `Übernommen – ${Ls.length} Layouts und der Startbildschirm liegen im Ereignis.` : 'Übernommen – Layout und Startbildschirm liegen im Ereignis.')
+        : Ls.length > 1 ? `Übernommen – ${Ls.length} Layouts liegen im Ereignis unter „Fotolayout“.` : 'Übernommen – du findest das Layout im Ereignis unter „Fotolayout“.', 6000);
     } catch (err) { ctx.toast('Übernehmen fehlgeschlagen: ' + (err.message || err), 7000); }
   }
 
