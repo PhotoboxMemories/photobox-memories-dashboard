@@ -1190,6 +1190,7 @@ I18N.add('es', {
 "Eine angemeldete Fotobox muss mindestens alle 14 Tage einmal mit dem Internet verbunden sein. 3 Tage vorher warnt die Startseite; danach ist der Gäste-Betrieb gesperrt, bis sie wieder verbunden war – Einstellungen bleiben bedienbar. Ein Ereignis ohne Internet (z. B. übers Wochenende) ist kein Problem. Tipp: vor jedem Ereignis kurz verbinden.": "Un fotomatón con sesión iniciada debe conectarse a internet al menos una vez cada 14 días. La página de inicio avisa 3 días antes; después se bloquea el modo invitados hasta que vuelva a conectarse; los ajustes siguen disponibles. Un evento sin internet (p. ej. un fin de semana) no es problema. Consejo: conéctate un momento antes de cada evento.",
 "Einen Moment": "Un momento",
 "Einen Moment bitte …": "Un momento, por favor …",
+"Einen Moment – die Kamera wird verbunden …": "Un momento: conectando la cámara …",
 "Einen Moment …": "Un momento …",
 "Einfache Fotobox: Fotos, Drucken, QR-Code, Online-Galerie": "Fotomatón básico: fotos, impresión, código QR, galería en línea",
 "eingerichtet {x}": "configurado el {x}",
