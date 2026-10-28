@@ -1,4 +1,4 @@
-// FotoBox – Layout-Editor, Aufbau wie bei LumaBooth: links „Hinzufügen“ (und Layout- bzw. Video-Einstellungen), in der Mitte direkt
+// FotoBox – Layout-Editor, Aufbau wie bei Profi-Software: links „Hinzufügen“ (und Layout- bzw. Video-Einstellungen), in der Mitte direkt
 // auf der Seite verschieben, Größe ziehen, drehen; rechts „Ausgewähltes Objekt“ (X/Y/B/H, Seitenverhältnis, Drehen, Stil, Schlagschatten),
 // Ausrichten, Ebene anheben/absenken und die Ebenen-Liste (Auge, Schloss, an ⋮⋮ ziehen = Reihenfolge).
 // Benutzt FBR (render.js) für die exakte Vorschau. Gleiche Datei in der Fotobox und im Dashboard.
@@ -40,7 +40,7 @@
   ${P} .tool{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;background:none;border:0;font:inherit;color:var(--fg);font-size:11.5px;line-height:1.2;padding:2px 0;text-align:center}
   ${P} .tool i{width:42px;height:42px;border-radius:50%;background:#F7C838;color:#1D1D1B;display:flex;align-items:center;justify-content:center;font-style:normal;box-shadow:0 4px 12px rgba(247,200,56,.4);transition:transform .12s}
   ${P} .tool:hover i{transform:scale(1.07)}
-  /* Fotolayout: „Hinzufügen“ als Liste wie bei LumaBooth */
+  /* Fotolayout: „Hinzufügen“ als Liste wie bei Profi-Software */
   ${P} .add.list{display:flex;flex-direction:column;gap:2px}
   ${P} .add.list .tool{flex-direction:row;justify-content:flex-start;gap:10px;font-size:13px;padding:5px 6px;border-radius:8px;text-align:left}
   ${P} .add.list .tool:hover{background:rgba(127,127,127,.12)}
@@ -93,7 +93,7 @@
   ${P} .guide{position:absolute;background:#F7C838;pointer-events:none}
   #le .hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:12px;color:#888;white-space:nowrap}
   #leL .side{height:100%;overflow:auto} #leL .sec{padding:12px 14px 14px}
-  /* Vorlagen-Leiste (Fotolayout wie LumaBooth): Auswahl, Hinzufügen, Speichern unter, Import/Export, Rückgängig, Testdruck, Löschen */
+  /* Vorlagen-Leiste (Fotolayout wie Profi-Software): Auswahl, Hinzufügen, Speichern unter, Import/Export, Rückgängig, Testdruck, Löschen */
   #le .lib{display:flex;align-items:center;gap:6px;flex:none;padding:7px 14px;background:#2a2a2e;border-top:1px solid rgba(255,255,255,.08);overflow-x:auto}
   #le .lib .tb{padding:6px 10px;font-size:13px}
   #le .lib select{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:6px 8px;font:inherit;width:auto;min-width:180px;max-width:260px;margin-right:6px}
@@ -518,7 +518,7 @@
     const U = () => L && !L.screen ? unit : 'px';
     const toU = v => U() === 'mm' ? +(v / 300 * 25.4).toFixed(1) : U() === 'in' ? +(v / 300).toFixed(2) : Math.round(v);
     const fromU = v => U() === 'mm' ? Math.round(v / 25.4 * 300) : U() === 'in' ? Math.round(v * 300) : Math.round(v);
-    // Layout-Bereich wie bei LumaBooth: Papierformat (klein → groß), Ausrichtung, 2 pro Seite, Zweitdrucker, Maße
+    // Layout-Bereich wie bei Profi-Software: Papierformat (klein → groß), Ausrichtung, 2 pro Seite, Zweitdrucker, Maße
     function printSec() {
       const F = FBR.FORMATS[L.format] || {}, inch = n => String(n).replace('.', ',');
       const opt = FBR.SIZE_LIST.map(s => `<option value="${s.size}" ${F.size === s.size ? 'selected' : ''}>${s.label}${s.square && !/Quadrat/.test(s.label) ? ' (quadratisch)' : ''}</option>`).join('');
