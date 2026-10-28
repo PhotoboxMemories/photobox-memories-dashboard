@@ -6,7 +6,7 @@
 <title>Photobox Memories – Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>window.I18N_V = '20261026-1';</script>
+<script>window.I18N_V = '20261028-1';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -24,7 +24,7 @@
 <script src="caricature.js?v=20261024-1"></script>
 <script src="start-anim.js?v=20261020-1"></script>
 <script src="admin-schutz.js?v=20261025-3"></script>
-<script src="admin-kunde.js?v=20261025-2"></script>
+<script src="admin-kunde.js?v=20261028-1"></script>
 <script src="event.js?v=20261025-5"></script>
 <script src="studio.js?v=20261028-1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
@@ -380,7 +380,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <div data-admp="overview">
         <div class="stats" id="ovStats"></div>
         <div class="card" style="margin-bottom:20px">
-          <div class="pagehead" style="margin-bottom:10px"><h2 style="margin:0">Kunden</h2><div class="row" style="gap:8px"><button type="button" class="btn small" id="ovStoreScan" title="Belegten Speicher aller Kunden bei Hetzner neu zählen">Speicher neu berechnen</button><input id="ovSearch" placeholder="Suchen…" style="max-width:260px"></div></div>
+          <div class="pagehead" style="margin-bottom:10px"><h2 style="margin:0">Kunden</h2><div class="row" style="gap:8px"><button type="button" class="btn small" id="ovStoreScan" title="Belegten Speicher aller Kunden bei Hetzner neu zählen">Speicher neu berechnen</button><select id="ovFilter" style="width:auto;max-width:220px" title="Kunden filtern"><option value="">Alle Kunden</option><option value="bd">Nur BoothDesigner</option></select><input id="ovSearch" placeholder="Suchen…" style="max-width:260px"></div></div>
           <div class="tablewrap"><table>
             <thead><tr><th>Kunde</th><th>Registriert</th><th>Lizenz</th><th>Fotoboxen</th><th>Guthaben</th><th>Erhalten</th><th>KI-Bilder</th><th>Speicher</th><th>Aktionen</th></tr></thead>
             <tbody id="ovCustomers"><tr><td colspan="9" class="empty">Lädt …</td></tr></tbody>
@@ -1816,7 +1816,7 @@ $('#planAdd').onclick = async () => {
 let ov = null;
 async function loadOverview() {
   if (!profile?.is_admin || !$('#ovStats')) return;
-  const [p, w, l, j, st] = await Promise.all([
+  const [p, w, l, j, st, mk] = await Promise.all([
     sb.from('profiles').select('id,email,name,is_admin,created_at').order('created_at', { ascending: false }),
     sb.from('ai_wallets').select('owner_id,balance'),
     (async () => { // Spalte „cents“ gibt es erst nach der Stripe-Migration
@@ -1824,10 +1824,12 @@ async function loadOverview() {
       return r.error ? sb.from('ai_ledger').select('owner_id,amount,note,created_at').order('created_at', { ascending: false }).limit(1000) : r;
     })(),
     sb.from('ai_jobs').select('owner_id,cost,status,created_at').order('created_at', { ascending: false }).limit(5000),
-    sb.from('storage_usage').select('owner_id,quota_gb,bytes,updated_at') // erst nach SQL 202610240002
+    sb.from('storage_usage').select('owner_id,quota_gb,bytes,updated_at'), // erst nach SQL 202610240002
+    sb.rpc('admin_customer_marks') // BoothDesigner-Kennzeichen, erst nach SQL 202610280010
   ]);
   ov = { profiles: [].concat(p.data || []), wallets: [].concat(w.data || []), ledger: [].concat(l.data || []), jobs: [].concat(j.data || []).filter(x => x.status === 'succeeded'),
-    storage: Object.fromEntries([].concat(st.data || []).map(x => [x.owner_id, x])) };
+    storage: Object.fromEntries([].concat(st.data || []).map(x => [x.owner_id, x])),
+    marks: Object.fromEntries([].concat(mk?.data || []).filter(x => x && x.id).map(x => [x.id, x])) };
   renderOverview();
 }
 function renderOverview() {
@@ -1855,9 +1857,10 @@ function renderOverview() {
     tile(sum(ov.wallets, x => x.balance), 'Offenes Guthaben', 'Credits aller Kunden zusammen') +
     tile(euro(sum(ov.ledger.filter(inMonth), x => x.cents || 0)), 'Umsatz Guthaben', `diesen Monat über Stripe · gesamt ${euro(sum(ov.ledger, x => x.cents || 0))}`);
   const q = $('#ovSearch').value.toLowerCase(), mail = Object.fromEntries(ov.profiles.map(x => [x.id, x.email]));
-  const rows = ov.profiles.filter(x => !q || [x.email, x.name].some(v => (v || '').toLowerCase().includes(q)));
+  const onlyBd = $('#ovFilter')?.value === 'bd';
+  const rows = ov.profiles.filter(x => (!q || [x.email, x.name].some(v => (v || '').toLowerCase().includes(q))) && (!onlyBd || bdOf(x.id)));
   $('#ovCustomers').innerHTML = rows.length ? rows.map(x => { const ls = lic(x.id); return `<tr>
-      <td><b>${esc(x.name || x.email)}</b>${x.is_admin ? ' <span class="badge">Betreiber</span>' : ''}${x.name ? `<br><span class="small muted">${esc(x.email)}</span>` : ''}</td>
+      <td><b>${esc(x.name || x.email)}</b>${x.is_admin ? ' <span class="badge">Betreiber</span>' : ''}${bdBadge(x.id)}${x.name ? `<br><span class="small muted">${esc(x.email)}</span>` : ''}</td>
       <td>${fmtDate(x.created_at)}</td>
       <td>${ls.length ? ls.map(l => freeMode() ? (l.active ? '<span class="badge ok">aktiv</span>' : '<span class="badge bad">gesperrt</span>') : licStatus(l)).join('<br>') : '<span class="small muted">keine</span>'}</td>
       <td>${x.is_admin ? boxes(x.id) : `<a href="#" data-maxdev="${esc(x.id)}" title="Höchstzahl ändern" style="white-space:nowrap${boxes(x.id) > maxDev(x.id) ? ';color:var(--bad,#e5484d)' : ''}">${boxes(x.id)} von ${maxDev(x.id) || '–'}</a>`}</td>
@@ -1874,6 +1877,16 @@ function renderOverview() {
     : '<tr><td colspan="5" class="empty">Noch keine Buchungen</td></tr>';
 }
 $('#ovSearch').oninput = renderOverview;
+if ($('#ovFilter')) $('#ovFilter').onchange = renderOverview;
+// BoothDesigner-Kunden (admin_customer_marks, SQL 202610280010): Konto von boothdesigner.de (bd) bzw. Stand des BoothDesigners (studio:
+// vip, abo, geschenk, freigabe, test, frei, abgelaufen; until ab 2100 = dauerhaft). „ · “-Teile übersetzt i18n.js einzeln.
+function bdOf(id) { const m = ov?.marks?.[id]; return !!m && (m.bd || !!m.studio); }
+function bdBadge(id) {
+  const BD_STAND = { vip: 'VIP', abo: 'Abo', geschenk: 'Geschenk', freigabe: 'Freigabe', test: 'Test', frei: 'frei', abgelaufen: 'abgelaufen' };
+  const m = ov?.marks?.[id]; if (!m || !(m.bd || m.studio)) return '';
+  const on = m.studio && m.studio !== 'abgelaufen', end = on && m.until && new Date(m.until).getFullYear() < 2100 ? `bis ${fmtDate(m.until)}` : '';
+  return ` <span class="badge${on ? ' ok' : ''}" title="${m.bd ? 'Konto auf boothdesigner.de erstellt' : 'Nutzt den BoothDesigner'}">${esc(['BoothDesigner', BD_STAND[m.studio], end].filter(Boolean).join(' · '))}</span>`;
+}
 // Kunde bearbeiten (admin-kunde.js, nur Betreiber, 25.10.2026): Rabatt, Gratis-Zeitraum, VIP, Funktion schenken, Fotoboxen, Speicher
 $('#ovCustomers').addEventListener('click', async e => {
   const b = e.target.closest('[data-kunde]'); if (!b) return;
