@@ -1,8 +1,8 @@
-// Photobox Memories – Event-Arbeitsbereich (Aufbau wie bei LumaBooth: Seitenleiste mit allen Bereichen)
+// Photobox Memories – Event-Arbeitsbereich (Aufbau: Seitenleiste mit allen Bereichen)
 // EventWS.open(eventRow, { sb, me, admin, toast, uploadFile(file) → url, devices, leadsCount, onClose, onDelete })
 (function (G) {
   'use strict';
-  // KI-Stil-Bibliothek (Aufbau wie bei LumaBooth): ein Stil = Motiv („Porträtstil“) und/oder Kunststil.
+  // KI-Stil-Bibliothek: ein Stil = Motiv („Porträtstil“) und/oder Kunststil.
   // Beispielbilder liegen optional unter ai-styles/<key>.jpg; ohne Bild erscheint die farbige Kachel.
   const AI_KEEP = 'Bearbeite das Gästefoto. Behalte die Anzahl der Personen, ihre erkennbaren Gesichter, Frisuren und ihre Pose bei. Keine zusätzliche Person, kein Schriftzug. ';
   const aiGroup = (kind, list) => list.flatMap(([cat, colors, items]) => items.map(([key, name, icon, text]) => ({ kind, cat, colors, key, name, icon, text })));
@@ -220,7 +220,7 @@
   #wsLight .nav{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;padding:0;font-size:24px}
   #wsLight .nav.l{left:14px}#wsLight .nav.r{right:14px}
   #ws .stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;text-align:center;box-shadow:var(--shadow)}
-  /* Übersicht eines Ereignisses im LumaBooth-Aufbau: Name und Datum, drei Karten, Symbolleiste, Galerie */
+  /* Übersicht eines Ereignisses im gewohnten Aufbau: Name und Datum, drei Karten, Symbolleiste, Galerie */
   #ws .evhead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:-4px 0 14px}
   #ws .evhead input{border:0;background:transparent;font:600 18px system-ui,sans-serif;padding:4px 6px;border-radius:8px;min-width:0;width:auto;color:#1D1D1B}
   #ws .evhead input:hover,#ws .evhead input:focus{background:#fff;outline:0;box-shadow:0 0 0 2px #F9CB38}
@@ -424,7 +424,7 @@
     form: { enabled: false, name: true, email: true, phone: false, newsletter: false, text: 'Ich bin einverstanden, dass meine Fotos gespeichert und für dieses Event verwendet werden.' },
     share: true, autoPrint: false, printButton: true, askCopies: false, maxCopies: 3, printLimit: 0, showPrintsLeft: false, copies: 1
   };
-  // Erweiterte Einstellungen nach LumaBooth-Vorbild. Liegen unter settings.x, damit ältere Fotobox-Versionen sie einfach ignorieren.
+  // Erweiterte Einstellungen im vollen Umfang. Liegen unter settings.x, damit ältere Fotobox-Versionen sie einfach ignorieren.
   const X_DEF = {
     gif: { size: '720p-16:9', reverse: false, overlays: [], delay: 300 },
     slowmo: { enabled: false, countdown: 5, quality: 4, motion: false, flash: true, saveOriginal: true, preTextOn: false, preText: 'Bereit machen', length: 1, reverse: true, clipLen: 2, speed: '0.5x', soundtracks: [], overlays: [], size: '720p-16:9', intro: '', outro: '' },
@@ -1382,7 +1382,7 @@
           <h2>Spiegeln</h2><div class="card">${sw('mirror', 'Gespiegelte Live-Ansicht')}${sw('mirrorPhoto', 'Aufgenommene Fotos und Videos spiegeln', 'Spiegelt das gespeicherte und gedruckte Ergebnis')}${sw('cropLive', 'Live-Ansicht auf das Fotofeld zuschneiden')}</div>
         </div>${previewBox()}</div>`;
       },
-      voice() { // wie bei LumaBooth: Stil, je Schritt Animationen aus der Bibliothek (Live-Vorschau) und eigene Dateien
+      voice() { // Stil, je Schritt Animationen aus der Bibliothek (Live-Vorschau) und eigene Dateien
         const V = S.x.voice || {}, style = V.anim || 'neon', steps = { ...AdvisorAnim.DEFAULT_STEPS, ...(V.steps || {}) };
         const rnd = k => V.rnd?.[k] ?? (k === 'pre' || k === 'post');
         const cards = AdvisorAnim.STEPS.map(([k, name, multi]) => {
@@ -1707,7 +1707,7 @@
       return `<div class="pv"><div class="frame"><canvas id="wsPv"></canvas><div class="row" style="justify-content:space-between;margin-top:12px">
         <button class="btn pri" data-a="edit1">${ICON('pen', 15)} Bearbeiten</button><small style="color:#777">${L ? esc(L.name) : 'Standard-Vorlage'}</small></div></div></div>`;
     }
-    // Startbildschirm als frei gestaltbares „Layout“ in Bildschirmgröße (wie LumaBooth). Ohne Gestaltung: Vorschlag aus den bisherigen Angaben.
+    // Startbildschirm als frei gestaltbares „Layout“ in Bildschirmgröße. Ohne Gestaltung: Vorschlag aus den bisherigen Angaben.
     // Startbildschirm je Ausrichtung: gestaltet (startScreen bzw. startScreen2), sonst aus der anderen umgerechnet, sonst Standard-Vorschlag
     const screenOf = o => [S.startScreen, S.startScreen2].find(L => L && L.screen && L.orient === o) || null;
     const screenFor = o => screenOf(o) || (S.startScreen ? FBR.adaptScreen(S.startScreen, o) : FBR.createScreen(o, { logo: E.logo_url, startText: S.startText, theme: 'night' }));
@@ -1925,7 +1925,7 @@
     }
 
     // ---------- Layouts ----------
-    // Fotolayouts im Editor verwalten wie bei LumaBooth: Auswahl, Vorlage hinzufügen, Speichern unter, Import/Export, Testdruck, Löschen
+    // Fotolayouts im Editor verwalten: Auswahl, Vorlage hinzufügen, Speichern unter, Import/Export, Testdruck, Löschen
     const layLib = {
       list: () => S.layouts.map(l => ({ id: l.id, name: l.name })),
       get: id => { const l = S.layouts.find(x => x.id === id); return l ? structuredClone(l) : null; },
