@@ -1190,6 +1190,7 @@ I18N.add('it', {
 "Eine angemeldete Fotobox muss mindestens alle 14 Tage einmal mit dem Internet verbunden sein. 3 Tage vorher warnt die Startseite; danach ist der Gäste-Betrieb gesperrt, bis sie wieder verbunden war – Einstellungen bleiben bedienbar. Ein Ereignis ohne Internet (z. B. übers Wochenende) ist kein Problem. Tipp: vor jedem Ereignis kurz verbinden.": "Una photobooth collegata a un account deve connettersi a internet almeno una volta ogni 14 giorni. La pagina iniziale avvisa 3 giorni prima; poi la modalità ospiti è bloccata finché non si ricollega – le impostazioni restano utilizzabili. Un evento senza internet (ad es. nel fine settimana) non è un problema. Consiglio: collegati brevemente prima di ogni evento.",
 "Einen Moment": "Un momento",
 "Einen Moment bitte …": "Un momento, per favore …",
+"Einen Moment – die Kamera wird verbunden …": "Un momento – collegamento della fotocamera …",
 "Einen Moment …": "Un momento …",
 "Einfache Fotobox: Fotos, Drucken, QR-Code, Online-Galerie": "Photobooth semplice: foto, stampa, codice QR, galleria online",
 "eingerichtet {x}": "configurato il {x}",
