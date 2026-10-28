@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.18.6": {
+      "date": "2026-10-28",
+      "notes": {
+        "de": [
+          "Neue Version."
+        ],
+        "en": [
+          "New version."
+        ],
+        "tr": [
+          "Yeni sürüm."
+        ],
+        "fr": [
+          "Nouvelle version."
+        ],
+        "es": [
+          "Nueva versión."
+        ],
+        "it": [
+          "Nuova versione."
+        ]
+      }
+    },
     "1.18.5": {
       "date": "2026-10-28",
       "notes": {
