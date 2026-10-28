@@ -3359,6 +3359,7 @@ I18N.add('tr', {
 "Wann kommt ein Foto ins Mosaik?": "Bir fotoğraf mozaiğe ne zaman girer?",
 "Wann und wie die Canon scharfstellt – im Countdown schnell, leise oder gar nicht.": "Canon’un ne zaman ve nasıl odaklandığı – geri sayımda hızlı, sessiz ya da hiç.",
 "Wann und wie die Canon scharfstellt. Am schärfsten: „Direkt beim Auslösen“ – die Kamera stellt beim Auslösen noch einmal scharf.": "Canon'un ne zaman ve nasıl netleme yaptığı. En net: „Çekim anında“ – fotoğraf makinesi çekim anında bir kez daha netler.",
+"Wann und wie die Canon scharfstellt. Die Fotobox stellt schon im Countdown scharf – beim weißen Bildschirm löst die Kamera sofort aus.": "Canon'un ne zaman ve nasıl netleme yaptığı. Fotoğraf kabini geri sayım sırasında netlemeyi yapar – beyaz ekran gelince fotoğraf makinesi hemen çeker.",
 "Warm": "Sıcak",
 "Warnung": "Uyarı",
 "Warten auf den Upload …": "Yükleme bekleniyor …",
