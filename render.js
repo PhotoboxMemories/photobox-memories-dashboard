@@ -9,10 +9,27 @@
     script: '"Snell Roundhand","Brush Script MT","Segoe Script","Lucida Handwriting",cursive',
     typewriter: '"American Typewriter","Courier New",Courier,monospace',
     arial: 'Arial,Helvetica,sans-serif', georgia: 'Georgia,"Times New Roman",serif', impact: 'Impact,"Arial Black",sans-serif',
-    verdana: 'Verdana,Geneva,sans-serif', trebuchet: '"Trebuchet MS",Tahoma,sans-serif', times: '"Times New Roman",Times,serif'
+    verdana: 'Verdana,Geneva,sans-serif', trebuchet: '"Trebuchet MS",Tahoma,sans-serif', times: '"Times New Roman",Times,serif',
+    // Schriften des BoothDesigners (Dateien in fonts-bd/, offline mitgeliefert) – damit übernommene Designs gleich aussehen und die Texte bearbeitbar bleiben
+    greatvibes: '"Great Vibes",cursive', dancing: '"Dancing Script",cursive', pacifico: '"Pacifico",cursive', shrikhand: '"Shrikhand",serif',
+    righteous: '"Righteous",sans-serif', playfair: '"Playfair Display",Georgia,serif', bodoni: '"Bodoni Moda",Didot,serif',
+    cormorant: '"Cormorant Garamond",Georgia,serif', cinzel: '"Cinzel",serif', montserrat: '"Montserrat",sans-serif', manrope: '"Manrope",sans-serif'
   };
   const FONT_NAMES = { modern: 'Modern', elegant: 'Elegant', script: 'Handschrift', typewriter: 'Schreibmaschine',
-    arial: 'Arial', georgia: 'Georgia', impact: 'Impact', verdana: 'Verdana', trebuchet: 'Trebuchet', times: 'Times' };
+    arial: 'Arial', georgia: 'Georgia', impact: 'Impact', verdana: 'Verdana', trebuchet: 'Trebuchet', times: 'Times',
+    greatvibes: 'Great Vibes', dancing: 'Dancing Script', pacifico: 'Pacifico', shrikhand: 'Shrikhand', righteous: 'Righteous',
+    playfair: 'Playfair Display', bodoni: 'Bodoni Moda', cormorant: 'Cormorant Garamond', cinzel: 'Cinzel', montserrat: 'Montserrat', manrope: 'Manrope' };
+  // BoothDesigner-Schriften einbinden (neben render.js liegt fonts-bd/fonts.css) und vorladen, damit schon der erste Druck sie hat
+  (function loadBdFonts() {
+    if (!G.document || !document.head) return;
+    const me = document.currentScript && document.currentScript.src;
+    if (!me || document.querySelector('link[data-bd-fonts]')) return;
+    const l = document.createElement('link'); l.rel = 'stylesheet'; l.dataset.bdFonts = '1'; l.href = new URL('fonts-bd/fonts.css', me).href;
+    l.onload = () => { if (!document.fonts) return;
+      for (const f of ['Great Vibes', 'Dancing Script', 'Pacifico', 'Shrikhand', 'Righteous', 'Playfair Display', 'Bodoni Moda', 'Cormorant Garamond', 'Cinzel', 'Montserrat', 'Manrope'])
+        for (const w of [400, 600, 700]) document.fonts.load(`${w} 40px "${f}"`).catch(() => {}); };
+    document.head.appendChild(l);
+  })();
 
   // Maße in Pixel bei 300 dpi (10×15 cm)
   const LAYOUTS = {
@@ -541,18 +558,33 @@
   function fillText(t, v) {
     return String(t || '').replace(/\{(\w+)\}/g, (m, k) => v && v[k] != null ? v[k] : m);
   }
+  // Text: e.spacing = Buchstabenabstand in px, e.bg = { color, opacity, pad } Fläche hinter dem Text, e.grad = [Farben] Verlauf
+  // von oben nach unten (z. B. Gold) – kommen aus übernommenen BoothDesigner-Designs, bleiben beim Bearbeiten erhalten
   function drawTextEl(x, e, vals) {
     const lines = fillText(e.text, vals).split('\n');
     const fam = FONTS[e.font] || FONTS.modern, w = e.w, h = e.h;
     let size = e.size === 'auto' || !e.size ? h / lines.length / 1.15 : +e.size;
     const setF = () => { x.font = `${e.italic ? 'italic ' : ''}${e.weight || 400} ${size}px ${fam}`; };
+    const sp = +e.spacing || 0;
+    if ('letterSpacing' in x) x.letterSpacing = sp ? sp + 'px' : '0px';
     setF();
     if (e.size === 'auto' || !e.size) while (size > 6 && Math.max(...lines.map(l => x.measureText(l).width)) > w) { size -= 1; setF(); }
-    x.fillStyle = e.color || '#222'; x.textBaseline = 'middle';
+    x.textBaseline = 'middle';
     x.textAlign = e.align || 'center';
     const ax = e.align === 'left' ? -w / 2 : e.align === 'right' ? w / 2 : 0;
     const lh = size * 1.15, y0 = -((lines.length - 1) * lh) / 2;
+    if (e.bg && e.bg.color) {
+      const tw = Math.max(...lines.map(l => x.measureText(l).width)), pad = +e.bg.pad || size * .3, bw = tw + pad * 2, bh = lines.length * lh + pad * 2;
+      const bx = e.align === 'left' ? ax - pad : e.align === 'right' ? ax - tw - pad : -bw / 2;
+      x.save(); x.shadowColor = 'transparent'; x.globalAlpha *= e.bg.opacity ?? 1; x.fillStyle = e.bg.color;
+      rr(x, bx, y0 - lh / 2 - pad, bw, bh, Math.min(pad, bh / 2)); x.fill(); x.restore();
+    }
+    if (Array.isArray(e.grad) && e.grad.length > 1) {
+      const g = x.createLinearGradient(0, y0 - lh / 2, 0, y0 + (lines.length - .5) * lh);
+      e.grad.forEach((c, i) => g.addColorStop(i / (e.grad.length - 1), c)); x.fillStyle = g;
+    } else x.fillStyle = e.color || '#222';
     lines.forEach((l, i) => x.fillText(l, ax, y0 + i * lh));
+    if ('letterSpacing' in x) x.letterSpacing = '0px';
   }
   function placeholderPhoto(x, e, w, h) {
     const hues = [150, 205, 45, 330, 270, 20];

@@ -350,21 +350,33 @@
       .filter(v => !pick.length && v.file === 'print.png' || pick.includes(v.file));
     if (!parts.length) return ctx.toast('Bitte mindestens ein Format wählen.');
     try {
+      // Bearbeitbare Texte (neuere Einsendungen): Vorlage ohne Texte (base*.png) und Textebenen aus ebenen.json
+      let eb = null;
+      try { const r = await fetch(fileUrl(s, 'ebenen.json'), { cache: 'no-store' }); if (r.ok) eb = await r.json(); } catch { /* ältere Einsendung */ }
+      const textsOf = file => !eb ? [] : file === 'print.png' ? (eb.texts || []) : ((eb.variants || []).find(v => v.file === file) || {}).texts || [];
       const Ls = parts.map(p => {
-        const fmt = FORMAT_OF[`${p.w}x${p.h}`], F = G.FBR.FORMATS[fmt], kx = F.w / p.w, ky = F.h / p.h, src = fileUrl(s, p.file);
+        const tx = textsOf(p.file), fmt = FORMAT_OF[`${p.w}x${p.h}`], F = G.FBR.FORMATS[fmt], kx = F.w / p.w, ky = F.h / p.h,
+          src = fileUrl(s, tx.length ? p.file.replace('print', 'base') : p.file);
         // Foto etwas größer als die Öffnung, damit an den Kanten nie der Hintergrund durchscheint
         const boxes = (p.slots || []).map(b => [b[0] - 2, b[1] - 2, b[2] + 4, b[3] + 4]);
         const band = p.h * .06; boxes.sort((a, b) => Math.abs(a[1] - b[1]) > band ? a[1] - b[1] : a[0] - b[0]);
         const els = boxes.slice(0, 12).map((b, i) => ({ id: G.FBR.uid(), type: 'photo', n: i + 1, x: Math.round(b[0] * kx), y: Math.round(b[1] * ky),
           w: Math.round(b[2] * kx), h: Math.round(b[3] * ky), rot: 0, radius: 0, stroke: '', strokeW: 0, shadow: false }));
         els.push({ id: G.FBR.uid(), type: 'image', src, fit: 'stretch', opacity: 1, x: 0, y: 0, w: F.w, h: F.h, rot: 0, locked: true });
+        // Texte über der Vorlage als eigene Ebenen – im Fotolayout-Editor änderbar (Tippfehler im Namen o. Ä.)
+        els.push(...tx.filter(t => t && t.type === 'text').map(t => ({ ...t, id: G.FBR.uid(), x: Math.round(t.x * kx), y: Math.round(t.y * ky),
+          w: Math.round(t.w * kx), h: Math.round(t.h * ky), size: t.size ? Math.round(t.size * ky * 10) / 10 : t.size,
+          ...(t.bg ? { bg: { ...t.bg, pad: Math.round((t.bg.pad || 0) * ky) } } : {}), studioText: true })));
         return { id: G.FBR.uid(), name: `${s.design_name || 'BoothDesigner'} · ${s.customer_name}${p.layout_name ? ' · ' + p.layout_name : ''}`, format: fmt, w: F.w, h: F.h, bg: '#ffffff',
           twoPerPage: fmt === '2x6', secondary: false, elements: els, studio: s.folder };
       });
       const { data: cur, error: e1 } = await ctx.sb.from('events').select('settings').eq('id', evId).maybeSingle();
       if (e1 || !cur) throw e1 || new Error('Ereignis nicht gefunden.');
       const settings = { ...(cur.settings || {}) };
-      settings.layouts = [...(settings.layouts || []).filter(l => l.studio !== s.folder), ...Ls];
+      // Wunsch des Betreibers: im Ereignis nur noch die BoothDesigner-Layouts – die eigenen werden einmalig unter layoutsVorBoothDesigner aufgehoben
+      const own = (settings.layouts || []).filter(l => !l.studio);
+      if (own.length && !Array.isArray(settings.layoutsVorBoothDesigner)) settings.layoutsVorBoothDesigner = own;
+      settings.layouts = [...(settings.layouts || []).filter(l => l.studio && l.studio !== s.folder), ...Ls];
       if (Ls.length > 1) settings.guestLayouts = true; // mehrere Formate: die Gäste wählen an der Fotobox
       const { error } = await ctx.sb.from('events').update({ settings }).eq('id', evId);
       if (error) throw error;
