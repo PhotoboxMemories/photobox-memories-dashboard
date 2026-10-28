@@ -1314,6 +1314,7 @@ I18N.add('en', {
 "Event geändert": "Event changed",
 "Event konnte nicht gespeichert werden": "Event could not be saved",
 "Event konnte nicht zugewiesen werden": "Event could not be assigned",
+"Event starten": "Start event",
 "Event zugewiesen – die Box übernimmt es in Kürze": "Event assigned – the box will take it over shortly",
 "Event zugewiesen – die Fotobox übernimmt es in etwa 15 Sekunden, sobald keine Aufnahme läuft und ihr Menü geschlossen ist": "Event assigned – the photo booth applies it in about 15 seconds, as soon as no session is running and its menu is closed",
 "Exportereignis": "Export event",
