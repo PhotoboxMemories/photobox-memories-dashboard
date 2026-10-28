@@ -1314,6 +1314,7 @@ I18N.add('it', {
 "Event geändert": "Evento modificato",
 "Event konnte nicht gespeichert werden": "Impossibile salvare l'evento",
 "Event konnte nicht zugewiesen werden": "Impossibile assegnare l'evento",
+"Event starten": "Avvia evento",
 "Event zugewiesen – die Box übernimmt es in Kürze": "Evento assegnato – la box lo applicherà a breve",
 "Event zugewiesen – die Fotobox übernimmt es in etwa 15 Sekunden, sobald keine Aufnahme läuft und ihr Menü geschlossen ist": "Evento assegnato – il photo booth lo applica in circa 15 secondi, appena non c’è uno scatto in corso e il suo menu è chiuso",
 "Exportereignis": "Esporta evento",
