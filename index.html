@@ -30,7 +30,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
-/* Wie bei LumaBooth immer hell – unabhängig vom Dunkelmodus des Geräts */
+/* Immer hell – unabhängig vom Dunkelmodus des Geräts */
 :root{color-scheme:light}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
@@ -812,7 +812,7 @@ async function loadEvents() {
   events = data; renderEvents();
   loadPhotoCovers();
 }
-// Wie bei LumaBooth zeigt die Kachel das neueste Foto des Ereignisses, sobald es Fotos in der Online-Galerie gibt
+// Die Kachel zeigt das neueste Foto des Ereignisses, sobald es Fotos in der Online-Galerie gibt
 let photoCovers = {};
 async function loadPhotoCovers() {
   if (DEMO) return;
