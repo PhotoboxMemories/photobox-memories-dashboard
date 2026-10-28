@@ -57,6 +57,9 @@
     { t: 'Scharfstellen (Autofokus)', k: 'scharf_scharfstellen_autofokus_fokus_unscharf_af_verschwommen',
       x: 'Wann und wie die Canon scharfstellt. Die Fotobox stellt schon im Countdown scharf – beim weißen Bildschirm löst die Kamera sofort aus.',
       a: 'camera#sAfMode', d: '' },
+    { t: 'Kamera-Schonung (Livebild ruht)', k: 'schonung_schonen_lebensdauer_sensor_spiegel_verschleiss_dauerbetrieb_warm_hitze_ruht_schlaf_livebild_aus',
+      x: 'Sehen die Gäste kein Livebild (Startvideo, Foto-Ansicht, Teilen), schaltet die Fotobox das Livebild der Canon nach einer Minute ohne Gäste aus – Sensor und Spiegel ruhen. Beim nächsten Tippen ist es in 1–2 Sekunden wieder da. Ein Fotospiegel auf dem Startbildschirm ruht nach 5 Minuten ohne Berührung. Tipp: Netzteil statt Akku und an der Kamera „Automatisch aus“ ausschalten.',
+      a: 'camera', d: 'capture' },
     { t: 'Belichtung: ISO, Blende, Verschlusszeit', k: 'iso_blende_verschlusszeit_belichtung_hell_dunkel_zu_weissabgleich_kamerawerte_werte_blitz',
       x: 'Bei der Canon in den Kameraeinstellungen. Für das Livebild kannst du eigene, hellere Werte setzen. „Testfoto aufnehmen“ zeigt das Ergebnis.',
       a: 'camera', d: '' },
@@ -171,6 +174,9 @@
     { t: 'Fernsteuerung und Geräte', k: 'fernsteuerung_geraete_status_fernbedienung_testdruck_ferne_online_offline',
       x: 'Im Dashboard unter „Geräte“ siehst du jede Fotobox mit Kamera, Drucker und Ausdrucken – mit Testdruck aus der Ferne.',
       a: 'remote', d: 'tab:devices' },
+    { t: 'Windows für die Fotobox einrichten', k: 'windows_einrichten_optimieren_energiesparen_standby_usb_trennt_benachrichtigungen_update_neustart_wischgesten_sperrbildschirm_bildschirmschoner',
+      x: 'An der Fotobox unter Menü → Mehr → „Windows einrichten“: Standby, USB-Energiesparen, Meldungen, Wischgesten und Update-Neustarts mit einem Klick aus – jede Einstellung einzeln und wieder rücknehmbar.',
+      a: 'windows', d: '' },
     { t: 'Dein Logo auf den Gäste-Seiten', k: 'logo_werbung_download_seite_downloadseite_white_label_firmenname_link_mein_logo_galerie',
       x: 'Auf der Download-Seite und in der Galerie sehen die Gäste dein Logo, deinen Text und deinen Link.',
       a: '', d: 'tab:licenses' },
@@ -190,7 +196,7 @@
   const APP_PAGES = { design: 'Bildschirm-Editor', templates: 'Fotolayout', general: 'Allgemein', modes: 'Aufnahmeeinstellungen', camera: 'Kameraeinstellungen',
     voice: 'Virtueller Berater', effects: 'Effekte', ai: 'KI-Porträts', bg: 'Hintergrundentfernung', guests: 'Umfrage', disc: 'Haftungsausschluss',
     share: 'Einstellungen für Teilen', print: 'Druckeinstellungen', mosaic: 'Fotomosaik', cari: 'Live-Karikatur', videomsg: 'Videonachricht',
-    status: 'Status zum Teilen', remote: 'Fernsteuerung', lang: 'Sprache' };
+    status: 'Status zum Teilen', remote: 'Fernsteuerung', lang: 'Sprache', windows: 'Windows einrichten' };
   const APP_SUBS = { start: 'Startbildschirm', cap: 'Aufnahmebildschirm', share: 'Bildschirm zum Teilen' }, APP_PANELS = { design: 'Design', set: 'Einstellungen' };
   const APP_ACTS = { switch: 'Ereignis wechseln', update: 'Nach Updates suchen', slideshow: 'Slideshow', export: 'Exportereignis' };
   const DASH_PAGES = { dash: 'Dashboard', analytics: 'Analysen', layout: 'Photo booth experience', capture: 'Aufnahmeeinstellungen', voice: 'Virtueller Berater', lang: 'Sprache',
