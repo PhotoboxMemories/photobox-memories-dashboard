@@ -1314,6 +1314,7 @@ I18N.add('tr', {
 "Event geändert": "Etkinlik değiştirildi",
 "Event konnte nicht gespeichert werden": "Etkinlik kaydedilemedi",
 "Event konnte nicht zugewiesen werden": "Etkinlik atanamadı",
+"Event starten": "Etkinliği başlat",
 "Event zugewiesen – die Box übernimmt es in Kürze": "Etkinlik atandı – kabin kısa süre içinde alacak",
 "Event zugewiesen – die Fotobox übernimmt es in etwa 15 Sekunden, sobald keine Aufnahme läuft und ihr Menü geschlossen ist": "Etkinlik atandı – fotoğraf kabini, çekim yapılmadığında ve menüsü kapalıyken yaklaşık 15 saniye içinde uygular",
 "Exportereignis": "Etkinliği dışa aktar",
