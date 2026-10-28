@@ -1314,6 +1314,7 @@ I18N.add('es', {
 "Event geändert": "Evento modificado",
 "Event konnte nicht gespeichert werden": "No se pudo guardar el evento",
 "Event konnte nicht zugewiesen werden": "No se pudo asignar el evento",
+"Event starten": "Iniciar evento",
 "Event zugewiesen – die Box übernimmt es in Kürze": "Evento asignado: el fotomatón lo aplicará en breve",
 "Event zugewiesen – die Fotobox übernimmt es in etwa 15 Sekunden, sobald keine Aufnahme läuft und ihr Menü geschlossen ist": "Evento asignado – el fotomatón lo aplica en unos 15 segundos, en cuanto no haya ninguna sesión en curso y su menú esté cerrado",
 "Exportereignis": "Exportar evento",
