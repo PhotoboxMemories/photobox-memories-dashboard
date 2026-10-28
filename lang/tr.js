@@ -1754,6 +1754,7 @@ I18N.add('tr', {
 "Handy muss im selben WLAN sein": "Telefon aynı Wi-Fi ağında olmalı",
 "Handy verloren oder neu?": "Telefon kayıp ya da yeni mi?",
 "Handy-Seite öffnen": "Telefon sayfasını aç",
+"Hat der Kunde am BoothDesigner-Glücksrad etwas gewonnen (Prozente oder Gratis-Monate), gilt beim ersten BoothDesigner-Abo nur eins von beiden: der größere Vorteil im ersten Jahr.": "Müşteri BoothDesigner çarkıfeleğinde bir şey kazandıysa (yüzde veya ücretsiz aylar), ilk BoothDesigner aboneliğinde ikisinden yalnızca biri geçerli olur: ilk yıldaki daha büyük avantaj.",
 "Hat der Kunde am BoothDesigner-Glücksrad Prozente gewonnen, gilt beim ersten BoothDesigner-Abo der größere Vorteil (beides zusammen geht bei Stripe nicht). Gewonnene Gratis-Monate kommen zuerst, danach gilt der Rabatt.": "Müşteri BoothDesigner çarkıfeleğinde yüzde kazandıysa, ilk BoothDesigner aboneliğinde daha büyük avantaj geçerli olur (Stripe ikisine birden izin vermez). Kazanılan ücretsiz aylar önce gelir, ardından indirim geçerli olur.",
 "Hauptbild": "Ana görsel",
 "Hauptbild lädt …": "Ana görsel yükleniyor …",
