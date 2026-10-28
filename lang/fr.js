@@ -1314,6 +1314,7 @@ I18N.add('fr', {
 "Event geändert": "Événement modifié",
 "Event konnte nicht gespeichert werden": "Impossible d'enregistrer l'événement",
 "Event konnte nicht zugewiesen werden": "Impossible d'affecter l'événement",
+"Event starten": "Démarrer l'événement",
 "Event zugewiesen – die Box übernimmt es in Kürze": "Événement affecté – la borne le reprendra sous peu",
 "Event zugewiesen – die Fotobox übernimmt es in etwa 15 Sekunden, sobald keine Aufnahme läuft und ihr Menü geschlossen ist": "Événement attribué – le photobooth l’applique dans environ 15 secondes, dès qu’aucune prise de vue n’est en cours et que son menu est fermé",
 "Exportereignis": "Exporter l'événement",
