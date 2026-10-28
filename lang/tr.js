@@ -1190,6 +1190,7 @@ I18N.add('tr', {
 "Eine angemeldete Fotobox muss mindestens alle 14 Tage einmal mit dem Internet verbunden sein. 3 Tage vorher warnt die Startseite; danach ist der Gäste-Betrieb gesperrt, bis sie wieder verbunden war – Einstellungen bleiben bedienbar. Ein Ereignis ohne Internet (z. B. übers Wochenende) ist kein Problem. Tipp: vor jedem Ereignis kurz verbinden.": "Giriş yapılmış bir fotoğraf kabini en az 14 günde bir internete bağlanmalıdır. Başlangıç sayfası 3 gün önceden uyarır; sonrasında yeniden bağlanana kadar misafir modu kilitlenir – ayarlar kullanılabilir kalır. İnternetsiz bir etkinlik (ör. hafta sonu boyunca) sorun değildir. İpucu: her etkinlikten önce kısaca bağlan.",
 "Einen Moment": "Bir saniye",
 "Einen Moment bitte …": "Bir dakika lütfen …",
+"Einen Moment – die Kamera wird verbunden …": "Bir dakika – kamera bağlanıyor …",
 "Einen Moment …": "Bir dakika …",
 "Einfache Fotobox: Fotos, Drucken, QR-Code, Online-Galerie": "Basit fotoğraf kabini: fotoğraflar, yazdırma, QR kodu, çevrimiçi galeri",
 "eingerichtet {x}": "kuruldu {x}",
