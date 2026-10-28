@@ -55,7 +55,7 @@
       x: 'Steht die Kamera hochkant, hier 90 oder 270 Grad einstellen. Das Druckformat richtet sich danach.',
       a: 'camera#sRot', d: '' },
     { t: 'Scharfstellen (Autofokus)', k: 'scharf_scharfstellen_autofokus_fokus_unscharf_af_verschwommen',
-      x: 'Wann und wie die Canon scharfstellt. Am schärfsten: „Direkt beim Auslösen“ – die Kamera stellt beim Auslösen noch einmal scharf.',
+      x: 'Wann und wie die Canon scharfstellt. Die Fotobox stellt schon im Countdown scharf – beim weißen Bildschirm löst die Kamera sofort aus.',
       a: 'camera#sAfMode', d: '' },
     { t: 'Belichtung: ISO, Blende, Verschlusszeit', k: 'iso_blende_verschlusszeit_belichtung_hell_dunkel_zu_weissabgleich_kamerawerte_werte_blitz',
       x: 'Bei der Canon in den Kameraeinstellungen. Für das Livebild kannst du eigene, hellere Werte setzen. „Testfoto aufnehmen“ zeigt das Ergebnis.',
