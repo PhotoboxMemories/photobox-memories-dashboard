@@ -1190,6 +1190,7 @@ I18N.add('en', {
 "Eine angemeldete Fotobox muss mindestens alle 14 Tage einmal mit dem Internet verbunden sein. 3 Tage vorher warnt die Startseite; danach ist der Gäste-Betrieb gesperrt, bis sie wieder verbunden war – Einstellungen bleiben bedienbar. Ein Ereignis ohne Internet (z. B. übers Wochenende) ist kein Problem. Tipp: vor jedem Ereignis kurz verbinden.": "A signed-in photo booth must be connected to the internet at least once every 14 days. The start page warns 3 days in advance; after that, guest mode is locked until it has been connected again – settings remain usable. An event without internet (e.g. over a weekend) is no problem. Tip: connect briefly before every event.",
 "Einen Moment": "One moment",
 "Einen Moment bitte …": "One moment please …",
+"Einen Moment – die Kamera wird verbunden …": "One moment – connecting the camera …",
 "Einen Moment …": "One moment …",
 "Einfache Fotobox: Fotos, Drucken, QR-Code, Online-Galerie": "Simple photo booth: photos, printing, QR code, online gallery",
 "eingerichtet {x}": "set up {x}",
