@@ -1,4 +1,4 @@
-// Photobox Memories – Virtueller Berater: Animationsbibliothek (wie die „Shop-Medien“ bei LumaBooth).
+// Photobox Memories – Virtueller Berater: Animationsbibliothek (wie die „Shop-Medien“ bei Profi-Software).
 // Die Animationen werden live gezeichnet statt als Video abgespielt: Sie passen sich jedem Bildschirm an (Hoch- und Querformat),
 // sprechen die Sprache der Gäste und brauchen keine Dateien. Gleiche Datei in der Fotobox und im Dashboard (Vorschau).
 // AdvisorAnim.play(canvas, id, { style, text, loop, preview, solid }) → { done: Promise<boolean>, stop() }
@@ -29,7 +29,7 @@
     { id: 'neon', name: 'Neon-Party' }, { id: 'gold', name: 'Elegant Gold' }, { id: 'pop', name: 'Pop-Art' },
     { id: 'clean', name: 'Modern' }, { id: 'confetti', name: 'Konfetti' },
   ];
-  // Schritte wie bei LumaBooth: [Schlüssel, Name, mehrere Dateien/Animationen erlaubt (Randomisieren)]
+  // Schritte wie bei Profi-Software: [Schlüssel, Name, mehrere Dateien/Animationen erlaubt (Randomisieren)]
   const STEPS = [['touch', 'Startbildschirm', 0], ['countdown', 'Countdown', 0], ['effect', 'Wähle einen Effekt aus', 0], ['sign', 'Vor der Unterschrift', 0],
     ['pre', 'Vor dem Countdown', 1], ['post', 'Nach der Aufnahme', 1], ['proc', 'Während der Verarbeitung', 0], ['done', 'Nach der Verarbeitung', 0], ['end', 'Ende der Session', 0]];
   // Vorschlag, solange im Ereignis nichts gewählt ist
