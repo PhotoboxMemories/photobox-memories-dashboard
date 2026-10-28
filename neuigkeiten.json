@@ -1,6 +1,29 @@
 {
   "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
   "versions": {
+    "1.18.7": {
+      "date": "2026-10-28",
+      "notes": {
+        "de": [
+          "Neue Version."
+        ],
+        "en": [
+          "New version."
+        ],
+        "tr": [
+          "Yeni sürüm."
+        ],
+        "fr": [
+          "Nouvelle version."
+        ],
+        "es": [
+          "Nueva versión."
+        ],
+        "it": [
+          "Nuova versione."
+        ]
+      }
+    },
     "1.18.6": {
       "date": "2026-10-28",
       "notes": {
@@ -356,22 +379,22 @@
       "date": "2026-10-22",
       "notes": {
         "de": [
-          "Schärfere Fotos mit Canon: Neue Einstellung „Scharfstellen: Direkt beim Auslösen, wie LumaBooth“ (Standard) – die Kamera stellt beim Auslösen noch einmal scharf und löst sofort aus. Bisher wurde nur im Countdown scharfgestellt; bewegte sich jemand, wurde das Foto unscharf."
+          "Schärfere Fotos mit Canon: Neue Einstellung „Scharfstellen: Direkt beim Auslösen“ (Standard) – die Kamera stellt beim Auslösen noch einmal scharf und löst sofort aus. Bisher wurde nur im Countdown scharfgestellt; bewegte sich jemand, wurde das Foto unscharf."
         ],
         "en": [
-          "Sharper photos with Canon: new setting “Focus: right when shooting, like LumaBooth” (default) – the camera focuses once more and fires immediately. Before, it only focused during the countdown; if someone moved, the photo was blurry."
+          "Sharper photos with Canon: new setting “Focus: right when shooting” (default) – the camera focuses once more and fires immediately. Before, it only focused during the countdown; if someone moved, the photo was blurry."
         ],
         "tr": [
-          "Canon ile daha net fotoğraflar: Yeni ayar „Netleme: Çekim anında, LumaBooth gibi“ (varsayılan) – fotoğraf makinesi çekimde bir kez daha netler ve hemen çeker. Önceden yalnızca geri sayımda netleme yapılıyordu; biri hareket ederse fotoğraf bulanık oluyordu."
+          "Canon ile daha net fotoğraflar: Yeni ayar „Netleme: Çekim anında“ (varsayılan) – fotoğraf makinesi çekimde bir kez daha netler ve hemen çeker. Önceden yalnızca geri sayımda netleme yapılıyordu; biri hareket ederse fotoğraf bulanık oluyordu."
         ],
         "fr": [
-          "Photos plus nettes avec Canon : nouveau réglage « Mise au point : juste au déclenchement, comme LumaBooth » (par défaut) – l’appareil refait la mise au point et déclenche aussitôt. Avant, la mise au point se faisait seulement pendant le compte à rebours ; si quelqu’un bougeait, la photo était floue."
+          "Photos plus nettes avec Canon : nouveau réglage « Mise au point : juste au déclenchement » (par défaut) – l’appareil refait la mise au point et déclenche aussitôt. Avant, la mise au point se faisait seulement pendant le compte à rebours ; si quelqu’un bougeait, la photo était floue."
         ],
         "es": [
-          "Fotos más nítidas con Canon: nuevo ajuste «Enfoque: justo al disparar, como LumaBooth» (predeterminado): la cámara vuelve a enfocar y dispara al instante. Antes solo enfocaba durante la cuenta atrás; si alguien se movía, la foto salía borrosa."
+          "Fotos más nítidas con Canon: nuevo ajuste «Enfoque: justo al disparar» (predeterminado): la cámara vuelve a enfocar y dispara al instante. Antes solo enfocaba durante la cuenta atrás; si alguien se movía, la foto salía borrosa."
         ],
         "it": [
-          "Foto più nitide con Canon: nuova impostazione «Messa a fuoco: subito allo scatto, come LumaBooth» (predefinita) – la fotocamera rimette a fuoco e scatta subito. Prima metteva a fuoco solo durante il conto alla rovescia; se qualcuno si muoveva, la foto era sfocata."
+          "Foto più nitide con Canon: nuova impostazione «Messa a fuoco: subito allo scatto» (predefinita) – la fotocamera rimette a fuoco e scatta subito. Prima metteva a fuoco solo durante il conto alla rovescia; se qualcuno si muoveva, la foto era sfocata."
         ]
       }
     },
@@ -725,33 +748,33 @@
       "date": "2026-10-21",
       "notes": {
         "de": [
-          "Bildschirm zum Teilen wie bei LumaBooth frei gestalten: Schaltflächen (Drucken, QR-Code, Wiederholen, Fertig …), Foto und Filter-Leiste verschieben, Größe ändern, eigene Symbole und Farben, dazu Text, Bild, Form und ein QR-Code direkt auf dem Bildschirm – in der Fotobox und im Dashboard, je Hoch- und Querformat.",
-          "Fotolayout wie bei LumaBooth direkt auf der Seite bearbeiten: Vorlagen-Leiste (Vorlage hinzufügen, Speichern unter, Importieren, Exportieren, Testdruck, Löschen), Sessiondaten, Formen, QR-Code auf dem Ausdruck und Maße in Pixel, Millimeter oder Zoll.",
+          "Bildschirm zum Teilen frei gestalten: Schaltflächen (Drucken, QR-Code, Wiederholen, Fertig …), Foto und Filter-Leiste verschieben, Größe ändern, eigene Symbole und Farben, dazu Text, Bild, Form und ein QR-Code direkt auf dem Bildschirm – in der Fotobox und im Dashboard, je Hoch- und Querformat.",
+          "Fotolayout direkt auf der Seite bearbeiten: Vorlagen-Leiste (Vorlage hinzufügen, Speichern unter, Importieren, Exportieren, Testdruck, Löschen), Sessiondaten, Formen, QR-Code auf dem Ausdruck und Maße in Pixel, Millimeter oder Zoll.",
           "Virtueller Berater mit Animationsbibliothek: 17 Animationen in 5 Stilen (Neon-Party, Elegant Gold, Pop-Art, Modern, Konfetti) für jeden Schritt, auch gemischt – passt sich Hoch- und Querformat an und spricht die Sprache der Gäste. Aufnahmebildschirm: Live-Ansicht in der Vorlage ein- und ausschaltbar."
         ],
         "en": [
-          "Design the sharing screen freely like in LumaBooth: move and resize buttons (print, QR code, retake, done …), photo and filter bar, own icons and colours, plus text, image, shape and a QR code directly on the screen – on the photo booth and in the dashboard, for portrait and landscape.",
-          "Edit the photo layout directly on the page like in LumaBooth: template bar (add template, save as, import, export, test print, delete), session data, shapes, QR code on the print and dimensions in pixels, millimetres or inches.",
+          "Design the sharing screen freely: move and resize buttons (print, QR code, retake, done …), photo and filter bar, own icons and colours, plus text, image, shape and a QR code directly on the screen – on the photo booth and in the dashboard, for portrait and landscape.",
+          "Edit the photo layout directly on the page: template bar (add template, save as, import, export, test print, delete), session data, shapes, QR code on the print and dimensions in pixels, millimetres or inches.",
           "Virtual assistant with an animation library: 17 animations in 5 styles (neon party, elegant gold, pop art, modern, confetti) for every step, also mixed – adapts to portrait and landscape and speaks the guests' language. Capture screen: live view in the template can be switched on and off."
         ],
         "tr": [
-          "Paylaşım ekranını LumaBooth'taki gibi serbestçe tasarlayın: düğmeleri (yazdır, QR kod, tekrarla, bitti …), fotoğrafı ve filtre çubuğunu taşıyın ve boyutlandırın, kendi simgeleriniz ve renkleriniz, ayrıca ekranda doğrudan metin, resim, şekil ve QR kod – fotoğraf kabininde ve kontrol panelinde, dikey ve yatay için.",
-          "Fotoğraf düzenini LumaBooth'taki gibi doğrudan sayfada düzenleyin: şablon çubuğu (şablon ekle, farklı kaydet, içe aktar, dışa aktar, deneme baskısı, sil), oturum verileri, şekiller, baskıda QR kod ve piksel, milimetre veya inç cinsinden ölçüler.",
+          "Paylaşım ekranını serbestçe tasarlayın: düğmeleri (yazdır, QR kod, tekrarla, bitti …), fotoğrafı ve filtre çubuğunu taşıyın ve boyutlandırın, kendi simgeleriniz ve renkleriniz, ayrıca ekranda doğrudan metin, resim, şekil ve QR kod – fotoğraf kabininde ve kontrol panelinde, dikey ve yatay için.",
+          "Fotoğraf düzenini doğrudan sayfada düzenleyin: şablon çubuğu (şablon ekle, farklı kaydet, içe aktar, dışa aktar, deneme baskısı, sil), oturum verileri, şekiller, baskıda QR kod ve piksel, milimetre veya inç cinsinden ölçüler.",
           "Animasyon kütüphanesiyle sanal asistan: her adım için 5 stilde (neon parti, zarif altın, pop art, modern, konfeti) 17 animasyon, karışık da olabilir – dikey ve yataya uyum sağlar, misafirlerin dilini konuşur. Çekim ekranı: şablonda canlı görüntü açılıp kapatılabilir."
         ],
         "fr": [
-          "Concevez librement l'écran de partage comme dans LumaBooth : déplacez et redimensionnez boutons (imprimer, QR code, refaire, terminé …), photo et barre de filtres, icônes et couleurs personnelles, plus texte, image, forme et un QR code directement à l'écran – sur le photobooth et dans le tableau de bord, en portrait et en paysage.",
-          "Modifiez la mise en page photo directement sur la page comme dans LumaBooth : barre de modèles (ajouter, enregistrer sous, importer, exporter, impression test, supprimer), données de session, formes, QR code sur l'impression et dimensions en pixels, millimètres ou pouces.",
+          "Concevez librement l'écran de partage : déplacez et redimensionnez boutons (imprimer, QR code, refaire, terminé …), photo et barre de filtres, icônes et couleurs personnelles, plus texte, image, forme et un QR code directement à l'écran – sur le photobooth et dans le tableau de bord, en portrait et en paysage.",
+          "Modifiez la mise en page photo directement sur la page : barre de modèles (ajouter, enregistrer sous, importer, exporter, impression test, supprimer), données de session, formes, QR code sur l'impression et dimensions en pixels, millimètres ou pouces.",
           "Assistant virtuel avec bibliothèque d'animations : 17 animations en 5 styles (néon, or élégant, pop art, moderne, confettis) pour chaque étape, aussi en mélange – s'adapte au portrait et au paysage et parle la langue des invités. Écran de prise de vue : vue en direct dans le modèle activable."
         ],
         "es": [
-          "Diseña libremente la pantalla para compartir como en LumaBooth: mueve y cambia el tamaño de los botones (imprimir, código QR, repetir, listo …), la foto y la barra de filtros, iconos y colores propios, además de texto, imagen, forma y un código QR directamente en pantalla – en el fotomatón y en el panel, en vertical y horizontal.",
-          "Edita el diseño de foto directamente en la página como en LumaBooth: barra de plantillas (añadir, guardar como, importar, exportar, impresión de prueba, eliminar), datos de sesión, formas, código QR en la impresión y medidas en píxeles, milímetros o pulgadas.",
+          "Diseña libremente la pantalla para compartir: mueve y cambia el tamaño de los botones (imprimir, código QR, repetir, listo …), la foto y la barra de filtros, iconos y colores propios, además de texto, imagen, forma y un código QR directamente en pantalla – en el fotomatón y en el panel, en vertical y horizontal.",
+          "Edita el diseño de foto directamente en la página: barra de plantillas (añadir, guardar como, importar, exportar, impresión de prueba, eliminar), datos de sesión, formas, código QR en la impresión y medidas en píxeles, milímetros o pulgadas.",
           "Asistente virtual con biblioteca de animaciones: 17 animaciones en 5 estilos (fiesta neón, oro elegante, pop art, moderno, confeti) para cada paso, también mezcladas; se adapta a vertical y horizontal y habla el idioma de los invitados. Pantalla de captura: vista en directo en la plantilla activable."
         ],
         "it": [
-          "Progetta liberamente la schermata di condivisione come in LumaBooth: sposta e ridimensiona pulsanti (stampa, codice QR, ripeti, fatto …), foto e barra dei filtri, icone e colori propri, più testo, immagine, forma e un codice QR direttamente sullo schermo – sulla photo booth e nella dashboard, in verticale e orizzontale.",
-          "Modifica il layout foto direttamente nella pagina come in LumaBooth: barra dei modelli (aggiungi, salva come, importa, esporta, stampa di prova, elimina), dati della sessione, forme, codice QR sulla stampa e misure in pixel, millimetri o pollici.",
+          "Progetta liberamente la schermata di condivisione: sposta e ridimensiona pulsanti (stampa, codice QR, ripeti, fatto …), foto e barra dei filtri, icone e colori propri, più testo, immagine, forma e un codice QR direttamente sullo schermo – sulla photo booth e nella dashboard, in verticale e orizzontale.",
+          "Modifica il layout foto direttamente nella pagina: barra dei modelli (aggiungi, salva come, importa, esporta, stampa di prova, elimina), dati della sessione, forme, codice QR sulla stampa e misure in pixel, millimetri o pollici.",
           "Assistente virtuale con libreria di animazioni: 17 animazioni in 5 stili (neon party, oro elegante, pop art, moderno, coriandoli) per ogni passo, anche mescolate – si adatta a verticale e orizzontale e parla la lingua degli ospiti. Schermata di scatto: anteprima live nel modello attivabile."
         ]
       }
@@ -760,32 +783,32 @@
       "date": "2026-10-21",
       "notes": {
         "de": [
-          "Neuer Startbildschirm-Editor wie bei LumaBooth: direkt in der Vorschau anklicken, verschieben, Größe ändern und drehen. Rechts stehen „Ausgewähltes Objekt“ (X/Y/Breite/Höhe, Seitenverhältnis, Drehen), Ausrichten, Ebene anheben/absenken und die Ebenen mit Auge, Schloss und Sortieren per Ziehen.",
+          "Neuer Startbildschirm-Editor: direkt in der Vorschau anklicken, verschieben, Größe ändern und drehen. Rechts stehen „Ausgewähltes Objekt“ (X/Y/Breite/Höhe, Seitenverhältnis, Drehen), Ausrichten, Ebene anheben/absenken und die Ebenen mit Auge, Schloss und Sortieren per Ziehen.",
           "Galerie-Stapel und Videonachricht-Karte sind jetzt eigene Ebenen: frei verschieben, vergrößern oder ausblenden. Hoch- und Querformat lassen sich im Editor umschalten.",
           "Fotolayouts und Startbildschirm: Schlagschatten mit Farbe, Winkel, Abstand und Weichheit. Alles stellst du an der Fotobox oder im Dashboard ein – beide zeigen dieselbe Gestaltung."
         ],
         "en": [
-          "New start screen editor like LumaBooth: click, move, resize and rotate directly in the preview. On the right you find “Selected object” (X/Y/width/height, aspect ratio, rotation), align, bring forward/send backward and the layers with eye, lock and drag-to-reorder.",
+          "New start screen editor: click, move, resize and rotate directly in the preview. On the right you find “Selected object” (X/Y/width/height, aspect ratio, rotation), align, bring forward/send backward and the layers with eye, lock and drag-to-reorder.",
           "The gallery stack and the video message card are now layers of their own: move, enlarge or hide them freely. Portrait and landscape can be switched in the editor.",
           "Photo layouts and start screen: drop shadow with colour, angle, distance and softness. You can set everything on the photo booth or in the dashboard – both show the same design."
         ],
         "tr": [
-          "LumaBooth gibi yeni başlangıç ekranı düzenleyicisi: önizlemede doğrudan tıklayın, taşıyın, boyutlandırın ve döndürün. Sağda „Seçili nesne“ (X/Y/genişlik/yükseklik, en boy oranı, döndürme), hizalama, öne getir/geri gönder ve göz, kilit ve sürükleyerek sıralama içeren katmanlar bulunur.",
+          "yeni başlangıç ekranı düzenleyicisi: önizlemede doğrudan tıklayın, taşıyın, boyutlandırın ve döndürün. Sağda „Seçili nesne“ (X/Y/genişlik/yükseklik, en boy oranı, döndürme), hizalama, öne getir/geri gönder ve göz, kilit ve sürükleyerek sıralama içeren katmanlar bulunur.",
           "Galeri yığını ve video mesaj kartı artık ayrı katmanlar: serbestçe taşıyın, büyütün veya gizleyin. Dikey ve yatay format düzenleyicide değiştirilebilir.",
           "Fotoğraf düzenleri ve başlangıç ekranı: renk, açı, mesafe ve yumuşaklık ayarlı gölge. Her şeyi fotoğraf kabininde veya kontrol panelinde ayarlarsınız – ikisi de aynı tasarımı gösterir."
         ],
         "fr": [
-          "Nouvel éditeur d’écran d’accueil comme LumaBooth : cliquez, déplacez, redimensionnez et faites pivoter directement dans l’aperçu. À droite : « Objet sélectionné » (X/Y/largeur/hauteur, proportions, rotation), aligner, avancer/reculer et les calques avec œil, cadenas et tri par glisser.",
+          "Nouvel éditeur d’écran d’accueil : cliquez, déplacez, redimensionnez et faites pivoter directement dans l’aperçu. À droite : « Objet sélectionné » (X/Y/largeur/hauteur, proportions, rotation), aligner, avancer/reculer et les calques avec œil, cadenas et tri par glisser.",
           "La pile de la galerie et la carte du message vidéo sont désormais des calques à part entière : déplacez-les, agrandissez-les ou masquez-les librement. Portrait et paysage se changent dans l’éditeur.",
           "Mises en page photo et écran d’accueil : ombre portée avec couleur, angle, distance et flou. Tout se règle sur le photobooth ou dans le tableau de bord – les deux affichent la même mise en page."
         ],
         "es": [
-          "Nuevo editor de pantalla de inicio como LumaBooth: haz clic, mueve, cambia el tamaño y gira directamente en la vista previa. A la derecha encontrarás «Objeto seleccionado» (X/Y/ancho/alto, relación de aspecto, giro), alinear, traer adelante/enviar atrás y las capas con ojo, candado y ordenar arrastrando.",
+          "Nuevo editor de pantalla de inicio: haz clic, mueve, cambia el tamaño y gira directamente en la vista previa. A la derecha encontrarás «Objeto seleccionado» (X/Y/ancho/alto, relación de aspecto, giro), alinear, traer adelante/enviar atrás y las capas con ojo, candado y ordenar arrastrando.",
           "La pila de la galería y la tarjeta del mensaje de vídeo son ahora capas propias: muévelas, amplíalas u ocúltalas libremente. Vertical y horizontal se cambian en el editor.",
           "Diseños de foto y pantalla de inicio: sombra paralela con color, ángulo, distancia y difuminado. Todo se ajusta en el fotomatón o en el panel – ambos muestran el mismo diseño."
         ],
         "it": [
-          "Nuovo editor della schermata iniziale come LumaBooth: fai clic, sposta, ridimensiona e ruota direttamente nell’anteprima. A destra trovi «Oggetto selezionato» (X/Y/larghezza/altezza, proporzioni, rotazione), allinea, porta avanti/indietro e i livelli con occhio, lucchetto e riordino trascinando.",
+          "Nuovo editor della schermata iniziale: fai clic, sposta, ridimensiona e ruota direttamente nell’anteprima. A destra trovi «Oggetto selezionato» (X/Y/larghezza/altezza, proporzioni, rotazione), allinea, porta avanti/indietro e i livelli con occhio, lucchetto e riordino trascinando.",
           "La pila della galleria e la scheda del videomessaggio ora sono livelli propri: spostali, ingrandiscili o nascondili liberamente. Verticale e orizzontale si cambiano nell’editor.",
           "Layout foto e schermata iniziale: ombra con colore, angolo, distanza e morbidezza. Imposti tutto sulla photo booth o nella dashboard – entrambe mostrano lo stesso design."
         ]
