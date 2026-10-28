@@ -1754,6 +1754,7 @@ I18N.add('fr', {
 "Handy muss im selben WLAN sein": "Le téléphone doit être sur le même Wi-Fi",
 "Handy verloren oder neu?": "Téléphone perdu ou nouveau ?",
 "Handy-Seite öffnen": "Ouvrir la page mobile",
+"Hat der Kunde am BoothDesigner-Glücksrad etwas gewonnen (Prozente oder Gratis-Monate), gilt beim ersten BoothDesigner-Abo nur eins von beiden: der größere Vorteil im ersten Jahr.": "Si le client a gagné quelque chose à la roue de la fortune BoothDesigner (un pourcentage ou des mois gratuits), un seul des deux s'applique au premier abonnement BoothDesigner : l'avantage le plus important sur la première année.",
 "Hat der Kunde am BoothDesigner-Glücksrad Prozente gewonnen, gilt beim ersten BoothDesigner-Abo der größere Vorteil (beides zusammen geht bei Stripe nicht). Gewonnene Gratis-Monate kommen zuerst, danach gilt der Rabatt.": "Si le client a gagné un pourcentage à la roue de la fortune BoothDesigner, l'avantage le plus important s'applique au premier abonnement BoothDesigner (Stripe n'accepte pas les deux). Les mois gratuits gagnés passent en premier, puis la remise s'applique.",
 "Hauptbild": "Image principale",
 "Hauptbild lädt …": "Image principale en cours de chargement …",
