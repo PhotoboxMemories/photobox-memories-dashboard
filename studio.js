@@ -110,6 +110,11 @@
   function aboCard() {
     const t = ctx.tier() || {}, until = t.studio_until ? new Date(t.studio_until) : null;
     if (ctx.admin || ctx.demo || !until || until.getFullYear() >= 2100) return '';
+    // Neues Abo-Modell: BoothDesigner ist im bezahlten Fotobox-Abo enthalten (my_tier.studio_in_abo) – dann kein eigenes Abo anbieten
+    if (t.studio_in_abo) return `<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between;align-items:center;gap:12px">
+        <span><b>Im Fotobox-Abo enthalten</b> <span class="small muted">· BoothDesigner läuft mit deinem Fotobox-Abo${t.studio_until ? ` bis ${fmtDate(t.studio_until)}` : ''} und verlängert sich mit ihm</span></span>
+        ${aboLive() ? '<button class="btn small" data-a="portal">Abo &amp; Rechnungen verwalten</button>' : ''}</div>
+        ${aboLive() ? '<p class="small" style="margin:8px 0 0">Du hast zusätzlich noch ein eigenes BoothDesigner-Abo. Das brauchst du nicht mehr – du kannst es unter „Abo &amp; Rechnungen verwalten“ kündigen.</p>' : ''}</div>`;
     if (aboLive()) return `<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between;align-items:center;gap:12px">
         <span><b>BoothDesigner-Abo aktiv</b> <span class="small muted">· verlängert sich am ${fmtDate(abo.valid_until)} automatisch, solange du nicht kündigst</span></span>
         <button class="btn small" data-a="portal">Abo &amp; Rechnungen verwalten</button></div></div>`;
