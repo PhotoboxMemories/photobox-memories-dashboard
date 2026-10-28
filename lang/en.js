@@ -3359,6 +3359,7 @@ I18N.add('en', {
 "Wann kommt ein Foto ins Mosaik?": "When does a photo go into the mosaic?",
 "Wann und wie die Canon scharfstellt – im Countdown schnell, leise oder gar nicht.": "When and how the Canon focuses – fast during the countdown, quiet or not at all.",
 "Wann und wie die Canon scharfstellt. Am schärfsten: „Direkt beim Auslösen“ – die Kamera stellt beim Auslösen noch einmal scharf.": "When and how the Canon focuses. Sharpest: “Right when shooting” – the camera focuses once more when taking the photo.",
+"Wann und wie die Canon scharfstellt. Die Fotobox stellt schon im Countdown scharf – beim weißen Bildschirm löst die Kamera sofort aus.": "When and how the Canon focuses. The photo booth already focuses during the countdown – when the white screen appears, the camera takes the photo immediately.",
 "Warm": "Warm",
 "Warnung": "Warning",
 "Warten auf den Upload …": "Waiting for upload …",
