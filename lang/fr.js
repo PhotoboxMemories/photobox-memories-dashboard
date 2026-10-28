@@ -3359,6 +3359,7 @@ I18N.add('fr', {
 "Wann kommt ein Foto ins Mosaik?": "Quand une photo entre-t-elle dans la mosaïque ?",
 "Wann und wie die Canon scharfstellt – im Countdown schnell, leise oder gar nicht.": "Quand et comment le Canon fait la mise au point – rapide pendant le compte à rebours, silencieuse ou pas du tout.",
 "Wann und wie die Canon scharfstellt. Am schärfsten: „Direkt beim Auslösen“ – die Kamera stellt beim Auslösen noch einmal scharf.": "Quand et comment le Canon fait la mise au point. Le plus net : « Juste au déclenchement » – l’appareil refait la mise au point au déclenchement.",
+"Wann und wie die Canon scharfstellt. Die Fotobox stellt schon im Countdown scharf – beim weißen Bildschirm löst die Kamera sofort aus.": "Quand et comment le Canon fait la mise au point. Le photobooth fait la mise au point pendant le compte à rebours – quand l’écran blanc apparaît, l’appareil déclenche aussitôt.",
 "Warm": "Chaud",
 "Warnung": "Avertissement",
 "Warten auf den Upload …": "En attente d'envoi …",
