@@ -6,10 +6,13 @@
 // - Gratis-Zeitraum (alles wie im Test) um 1/3/12 Monate verlängern, auf ein Datum setzen oder beenden
 // - Rabatt in Prozent (optional mit Ende und Notiz) – gilt beim nächsten Kauf; laufende Abos über license-shop 'admin-discount':
 //   nach JEDER Rabatt- und VIP-Änderung automatisch, dazu der Knopf „Bei Stripe übernehmen“ zum Wiederholen
-// - Zusatzfunktion einzeln schenken (dauerhaft oder bis Datum) oder das Geschenk entfernen
+// - Zusatzfunktion einzeln schenken (dauerhaft oder bis Datum) oder das Geschenk entfernen – seit 28.10.2026 auch den BoothDesigner
+//   (boothdesigner.de; „dauerhaft“ steht dort als 31.12.2999, alles ab 2100 heißt hier „dauerhaft“). VIP umfasst seit 28.10.2026
+//   auch den BoothDesigner (Zeile plan 'vip', SQL 202610280010). Kennzeichen „BoothDesigner-Konto“ aus admin_customer_marks.
 // - Anzahl Fotoboxen (set_max_devices) und Speicher-Grenze (set_storage_gb)
 // Alles läuft über Server-Funktionen, die selbst prüfen, ob der Betreiber mit Zwei-Faktor angemeldet ist (is_admin() = aal2):
-// admin_customer, admin_set_discount, admin_free_until, admin_set_vip, admin_gift_extra, admin_remove_gift, set_max_devices, set_storage_gb.
+// admin_customer, admin_customer_marks, admin_set_discount, admin_free_until, admin_set_vip, admin_gift_extra, admin_remove_gift,
+// set_max_devices, set_storage_gb.
 // Alle Daten (Anzeige, Datumsfelder, „bis Ende des Tages“) rechnen in deutscher Zeit (Europe/Berlin), egal wo das Gerät steht.
 // Aufruf: if (await AdminKunde.open(kundenId, { sb, esc, toast })) { …Liste neu laden… } – true, wenn etwas geändert wurde.
 //
@@ -22,19 +25,24 @@
 //     storage: { bytes, quota_gb, updated_at }, credits: { balance, received, images, spent }, free_mode (bool),
 //     stripe_active (nur Abos mit Laufzeit in der Zukunft – taugt nur für die Anzeige),
 //     stripe: { customer, subscriptions: [{ sub, what, plan, until, running }] } (alle Abos aus der Datenbank, auch mit offener Zahlung) }
-// Antwort von license-shop 'admin-discount': { ok, changed, unchanged, failed, subs: [{ id, plan, result: 'gesetzt'|'entfernt'|'unverändert'|'fehler', error }] }
-// (ok = false, wenn bei einem Abo Stripe abgelehnt hat). Kennt der Server die Aktion noch nicht, wird das freundlich übergangen.
+// Antwort von license-shop 'admin-discount': { ok, pct, until, vip, coupons, changed, unchanged, failed, skipped,
+//   subs: [{ id, plan, result: 'gesetzt'|'entfernt'|'unverändert'|'fehler', coupon?, error?, hinweis? }] }
+// (ok = false, wenn bei einem Abo Stripe abgelehnt hat; hinweis z. B. „keine Zahlungsart hinterlegt“ – wird immer mit angezeigt).
+// Kennt der Server die Aktion noch nicht, wird das freundlich übergangen.
+// admin_customer_marks(p_owner) (202610280010): [{ id, bd (Konto von boothdesigner.de), studio: 'vip'|'abo'|'geschenk'|'freigabe'|'test'|
+//   'frei'|'abgelaufen'|null, until, abo }] – fehlt die Funktion noch, gibt es eben keine Kennzeichen.
 window.AdminKunde = (() => {
-  const EXTRAS = [['mosaic', 'Fotomosaik'], ['caricature', 'Live-Karikatur'], ['videomsg', 'Videonachricht']];
+  const EXTRAS = [['mosaic', 'Fotomosaik'], ['caricature', 'Live-Karikatur'], ['videomsg', 'Videonachricht'], ['studio', 'BoothDesigner']];
   const NAME = { mosaic: 'Fotomosaik', caricature: 'Live-Karikatur', videomsg: 'Videonachricht', offline: 'Offline-Warteschlange', studio: 'BoothDesigner' };
   const SRC = { test: 'Gratis/Test', geschenk: 'Geschenk', vip: 'VIP', abo: 'Abo', freigabe: 'Freigabe' };
   const TIER = { free: 'Kostenlos', basis: 'Basis', pro: 'Fotobox' };
-  // Wie der Schalter VIP_STRIPE_GRATIS in license-shop (stripe-rabatt.md, Teil C): VIP stellt laufende Stripe-Abos auf 100 % Rabatt,
-  // der BoothDesigner bleibt kostenpflichtig. Wird der Schalter dort auf false gesetzt, hier auch – dann zahlt ein VIP-Kunde sein Abo weiter.
+  // Wie der Schalter VIP_STRIPE_GRATIS in license-shop (stripe-rabatt.md, Teil C): VIP stellt laufende Stripe-Abos auf 100 % Rabatt –
+  // seit 28.10.2026 auch den BoothDesigner. Wird der Schalter dort auf false gesetzt, hier auch – dann zahlt ein VIP-Kunde sein Abo weiter.
   const VIP_STRIPE_GRATIS = true;
   const VIP_STRIPE_TXT = VIP_STRIPE_GRATIS
-    ? 'Laufende Abos bei Stripe kosten mit VIP ab der nächsten Rechnung 0 € (der BoothDesigner bleibt kostenpflichtig). Beim Ausschalten gilt dort wieder der normale Preis bzw. sein Rabatt.'
+    ? 'Laufende Abos bei Stripe (auch der BoothDesigner) kosten mit VIP ab der nächsten Rechnung 0 €. Beim Ausschalten gilt dort wieder der normale Preis bzw. sein Rabatt.'
     : 'Laufende Abos bei Stripe ändert VIP nicht – sie werden weiter abgebucht. Soll der Kunde nichts mehr zahlen, das Abo bei Stripe kündigen.';
+  const STUDIO = { vip: 'VIP', abo: 'Abo', geschenk: 'Geschenk', freigabe: 'Freigabe', test: 'Test', frei: 'frei', abgelaufen: 'abgelaufen' };
   const esc0 = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let sb, esc = esc0, toast = () => {}, o = null, d = null, id = '', changed = false, busy = false, asking = false, done = null;
   const $ = (s, r = o) => r ? r.querySelector(s) : null;
@@ -54,6 +62,8 @@ window.AdminKunde = (() => {
   const shift = t => { const [y, mo, da, h, mi, s] = berlin(t); return Date.UTC(y, mo - 1, da, h, mi, s) - (t - t % 1000); }; // Berlin minus UTC in ms
   const fmtD = v => ts(v) ? new Date(ts(v)).toLocaleDateString('de-DE', { timeZone: TZ }) : '–';
   const future = v => (ts(v) || 0) > Date.now();
+  const forever = v => (ts(v) || 0) >= Date.UTC(2100, 0, 1); // BoothDesigner „dauerhaft“ steht als 31.12.2999 in der Datenbank
+  const dated = v => !!ts(v) && !forever(v);                 // hat ein echtes Ende (sonst: dauerhaft)
   const left = v => Math.max(0, Math.ceil((ts(v) - Date.now()) / 864e5));
   const toInput = v => { if (!ts(v)) return ''; const [y, mo, da] = berlin(ts(v)); return `${y}-${pad(mo)}-${pad(da)}`; };
   // Datum aus dem Feld (JJJJ-MM-TT) = bis Ende dieses Tages in deutscher Zeit (23:59:59 Berlin, auch an den Tagen der Zeitumstellung)
@@ -75,7 +85,8 @@ window.AdminKunde = (() => {
   const badge = (t, c = '') => `<span class="badge ${c}">${esc(t)}</span>`;
 
   // Welche SQL-Datei fehlt? Name der Funktion aus der Fehlermeldung, sonst die aufgerufene Funktion; alles andere steht in 0011.
-  const SQL = { set_max_devices: '202610250003_fotobox_anzahl.sql („Anzahl Fotoboxen“)', set_storage_gb: '202610240002_speicher_je_kunde.sql („Speicher je Kunde“)' };
+  const SQL = { set_max_devices: '202610250003_fotobox_anzahl.sql („Anzahl Fotoboxen“)', set_storage_gb: '202610240002_speicher_je_kunde.sql („Speicher je Kunde“)',
+    admin_customer_marks: '202610280010_kunden_boothdesigner.sql („BoothDesigner im Kunden-Management“)' };
   const sqlFile = e => { const f = /(?:public\.|function\s+)(\w+)\s*\(/i.exec(String(e?.message || ''))?.[1];
     return SQL[f] || SQL[e?.fn] || '202610250011_kunden_rabatte.sql („Kunden-Werkzeuge“)'; };
   // Fehler verständlich (der Betreiber ist kein Programmierer). Klartext vom Server (raise exception auf Deutsch) wird durchgereicht.
@@ -101,8 +112,11 @@ window.AdminKunde = (() => {
   const prof = () => d?.profile || d?.profil || {};
   const deal = () => d?.deal || d?.deals || {};
   const lics = () => [].concat(d?.licenses || d?.lizenzen || []).filter(x => x && typeof x === 'object');
+  // Zeilen plan 'vip' (BoothDesigner bei VIP, 202610280010) meldet admin_customer als Quelle 'abo' – hier richtig als VIP
   const extras = () => [].concat(d?.extras || d?.addons || []).filter(x => x && typeof x === 'object')
-    .map(e => ({ extra: String(e.extra || e.key || ''), src: String(e.source || e.quelle || e.plan || ''), until: e.until !== undefined ? e.until : e.valid_until ?? null }));
+    .map(e => ({ extra: String(e.extra || e.key || ''), src: e.plan === 'vip' ? 'vip' : String(e.source || e.quelle || e.plan || ''), until: e.until !== undefined ? e.until : e.valid_until ?? null,
+      stripe: e.stripe === true }));
+  const marks = () => (d?.marks && typeof d.marks === 'object' ? d.marks : {}); // admin_customer_marks (Konto von boothdesigner.de, Stand BoothDesigner)
   const freeUntil = () => d?.free_until ?? d?.trial_until ?? null;
   const stripeOn = () => d?.stripe_active != null ? !!d.stripe_active : lics().some(l => l.stripe === true || l.stripe_active === true);
   // Hat der Kunde Abos bei Stripe (auch mit offener Zahlung: past_due/unpaid haben valid_until in der Vergangenheit, stripe_active
@@ -131,8 +145,11 @@ window.AdminKunde = (() => {
     const p = prof();
     if (p.is_admin) return `<div class="msg">Das ist ein Betreiber-Konto. Betreiber-Konten kann man hier nicht bearbeiten.</div>`;
     const dl = deal(), vip = !!dl.vip, pct = N(dl.discount_pct), dOn = pct > 0 && (!dl.discount_until || future(dl.discount_until));
-    const fu = freeUntil(), fOn = future(fu), st = store(), str = stripeOn(), hs = hasStripe(), ex = extras(), ls = lics();
-    const tags = [vip && badge('VIP – alles kostenlos', 'ok'), fOn && badge(`Gratis bis ${fmtD(fu)} (noch ${days(left(fu))})`, 'ok'),
+    const fu = freeUntil(), fOn = future(fu), st = store(), str = stripeOn(), hs = hasStripe(), ex = extras(), ls = lics(), mk = marks();
+    // „BoothDesigner · Abo · bis 28.11.2026“ – Teile mit „ · “ übersetzt i18n.js einzeln
+    const bdTag = mk.studio && STUDIO[mk.studio] ? badge(['BoothDesigner', STUDIO[mk.studio], mk.studio !== 'abgelaufen' && dated(mk.until) && `bis ${fmtD(mk.until)}`].filter(Boolean).join(' · '),
+      mk.studio === 'abgelaufen' ? '' : 'ok') : '';
+    const tags = [mk.bd && badge('Konto von boothdesigner.de'), bdTag, vip && badge('VIP – alles kostenlos', 'ok'), fOn && badge(`Gratis bis ${fmtD(fu)} (noch ${days(left(fu))})`, 'ok'),
       dOn && badge(`Rabatt ${pct} %${dl.discount_until ? ' bis ' + fmtD(dl.discount_until) : ''}`, 'warn'), str && badge('Stripe-Abo läuft'),
       d?.tier && badge('Stufe jetzt: ' + (TIER[d.tier] || d.tier))].filter(Boolean).join(' ');
 
@@ -151,7 +168,7 @@ window.AdminKunde = (() => {
          <p class="small muted" style="margin:0">Beim Ausschalten bekommt der Kunde genau seinen Stand von vorher zurück – auch die Zahl der Fotoboxen (eine während VIP geänderte Zahl gilt nur für die VIP-Zeit).</p>
          ${stripeHint}
          <div class="row"><button type="button" class="btn danger" data-k="vip-off">VIP ausschalten</button></div>`
-      : `<p class="small" style="margin:0">Alles kostenlos und ohne Ablauf: Fotobox mit allen Funktionen, alle Zusatzfunktionen und die Offline-Warteschlange.</p>
+      : `<p class="small" style="margin:0">Alles kostenlos und ohne Ablauf: Fotobox mit allen Funktionen, alle Zusatzfunktionen, die Offline-Warteschlange und der BoothDesigner.</p>
          ${stripeHint}
          <div class="row"><button type="button" class="btn primary" data-k="vip-on">VIP einschalten</button></div>`);
 
@@ -165,7 +182,8 @@ window.AdminKunde = (() => {
       <div class="row" style="gap:6px"><input type="date" data-k="freedate" data-go="free-set" min="${today()}" value="${esc(fOn ? toInput(fu) : '')}" style="width:170px">
         <button type="button" class="btn small" data-k="free-set">Bis zu diesem Tag gratis</button>
         ${fOn ? '<button type="button" class="btn small danger" data-k="free-end">Jetzt beenden</button>' : ''}</div>
-      <p class="small muted" style="margin:0">Gratis heißt: alles wie im Test – Fotobox ohne Wasserzeichen und alle drei Zusatzfunktionen. Danach fällt das Konto von selbst auf seinen normalen Stand zurück (kostenlos oder sein Abo).</p>`);
+      <p class="small muted" style="margin:0">Gratis heißt: alles wie im Test – Fotobox ohne Wasserzeichen und alle drei Zusatzfunktionen. Danach fällt das Konto von selbst auf seinen normalen Stand zurück (kostenlos oder sein Abo).</p>
+      <p class="small muted" style="margin:0">Den BoothDesigner gratis stellen: unten bei „Zusatzfunktionen schenken“ – dauerhaft oder bis zu einem Datum.</p>`);
 
     const discSec = sec('disc', 'Rabatt', `<p class="small" style="margin:0">${pct > 0
         ? dOn ? `Aktuell: <b>${pct} %</b>${dl.discount_until ? ` bis ${esc(fmtD(dl.discount_until))}` : ' ohne Ende'}.` : `${pct} % – abgelaufen am ${esc(fmtD(dl.discount_until))}.`
@@ -176,21 +194,25 @@ window.AdminKunde = (() => {
         <div><label>Notiz (Grund)</label><input type="text" maxlength="200" data-k="note" data-go="disc-save" value="${esc(dl.note || '')}" placeholder="z. B. Messe-Angebot"></div></div>
       <div class="row"><button type="button" class="btn primary" data-k="disc-save">Rabatt speichern</button>${pct > 0 ? '<button type="button" class="btn danger" data-k="disc-off">Rabatt entfernen</button>' : ''}
         ${hs ? '<button type="button" class="btn" data-k="stripe-sync" title="Rabatt bzw. VIP noch einmal auf die laufenden Abos bei Stripe übertragen">Bei Stripe übernehmen</button>' : ''}</div>
-      <p class="small muted" style="margin:0">Gilt für alle Käufe des Kunden (Fotobox und Zusatzfunktionen) über Stripe. 0 % = kein Rabatt. Soll er gar nichts zahlen, ist VIP einfacher.${vip ? ' Solange VIP an ist, zählt der Rabatt nur für den BoothDesigner.' : ''}${hs ? ' Laufende Abos bei Stripe werden beim Speichern von Rabatt und VIP automatisch angepasst (ab der nächsten Rechnung). „Bei Stripe übernehmen“ wiederholt das, falls es nicht geklappt hat.' : ''}</p>`);
+      <p class="small muted" style="margin:0">Gilt für alle Käufe des Kunden (Fotobox, Zusatzfunktionen und BoothDesigner) über Stripe. 0 % = kein Rabatt. Soll er gar nichts zahlen, ist VIP einfacher.${vip ? ' Solange VIP an ist, zahlt der Kunde ohnehin nichts – der Rabatt zählt erst nach „VIP aus“.' : ''}${hs ? ' Laufende Abos bei Stripe werden beim Speichern von Rabatt und VIP automatisch angepasst (ab der nächsten Rechnung). „Bei Stripe übernehmen“ wiederholt das, falls es nicht geklappt hat.' : ''}</p>
+      <p class="small muted" style="margin:0">Hat der Kunde am BoothDesigner-Glücksrad Prozente gewonnen, gilt beim ersten BoothDesigner-Abo der größere Vorteil (beides zusammen geht bei Stripe nicht). Gewonnene Gratis-Monate kommen zuerst, danach gilt der Rabatt.</p>`);
 
     const giftRows = EXTRAS.map(([k, name]) => {
       const srcs = ex.filter(e => e.extra === k), gift = srcs.find(e => e.src === 'geschenk');
       const tg = srcs.map(e => { const on = !ts(e.until) || future(e.until);
-        return badge(`${SRC[e.src] || e.src || 'frei'}${ts(e.until) ? (on ? ' bis ' : ' – abgelaufen am ') + fmtD(e.until) : ' · dauerhaft'}`, on ? 'ok' : ''); }).join(' ');
+        return badge(`${SRC[e.src] || e.src || 'frei'}${dated(e.until) ? (on ? ' bis ' : ' – abgelaufen am ') + fmtD(e.until) : ' · dauerhaft'}`, on ? 'ok' : ''); }).join(' ');
+      // BoothDesigner geschenkt, sein Stripe-Abo läuft aber weiter: Hinweis (das Geschenk ändert nichts bei Stripe; VIP stellt es auf 0 €)
+      const paid = k === 'studio' && !vip && srcs.some(e => e.src === 'abo' && e.stripe && future(e.until));
       return `<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:10px">
         <div style="min-width:170px;flex:1"><b>${name}</b><div class="row" style="gap:4px;margin-top:2px">${tg || '<span class="small muted">nicht frei</span>'}</div></div>
-        <div class="row" style="gap:6px"><input type="date" data-k="giftdate" data-x="${k}" data-go="gift" min="${today()}" value="${esc(gift && future(gift.until) ? toInput(gift.until) : '')}" title="leer = dauerhaft" style="width:170px">
+        <div class="row" style="gap:6px"><input type="date" data-k="giftdate" data-x="${k}" data-go="gift" min="${today()}" value="${esc(gift && future(gift.until) && dated(gift.until) ? toInput(gift.until) : '')}" title="leer = dauerhaft" style="width:170px">
           <button type="button" class="btn small primary" data-k="gift" data-x="${k}">Dauerhaft schenken</button>
-          ${gift ? `<button type="button" class="btn small danger" data-k="gift-del" data-x="${k}">Geschenk entfernen</button>` : ''}</div></div>`;
+          ${gift ? `<button type="button" class="btn small danger" data-k="gift-del" data-x="${k}">Geschenk entfernen</button>` : ''}</div>
+        ${paid ? '<p class="small" style="margin:0;flex-basis:100%;color:var(--warn)">ⓘ Sein BoothDesigner-Abo bei Stripe läuft weiter und wird weiter abgebucht. Soll er nichts zahlen: VIP einschalten oder das Abo bei Stripe kündigen.</p>' : ''}</div>`;
     }).join('');
     const other = ex.filter(e => !EXTRAS.some(([k]) => k === e.extra) && e.extra && (!ts(e.until) || future(e.until)));
     const giftSec = sec('gift', 'Zusatzfunktionen schenken', `${giftRows}
-      ${other.length ? `<div class="small muted">Außerdem frei: ${other.map(e => esc(`${NAME[e.extra] || e.extra} (${SRC[e.src] || e.src || 'frei'}${ts(e.until) ? ' bis ' + fmtD(e.until) : ''})`)).join(', ')}</div>` : ''}
+      ${other.length ? `<div class="small muted">Außerdem frei: ${other.map(e => esc(`${NAME[e.extra] || e.extra} (${SRC[e.src] || e.src || 'frei'}${dated(e.until) ? ' bis ' + fmtD(e.until) : ''})`)).join(', ')}</div>` : ''}
       <p class="small muted" style="margin:0">Datum leer lassen = dauerhaft geschenkt. Ein Geschenk gilt zusätzlich zu Test, Abo oder Freigabe.</p>`);
 
     const boxSec = sec('box', 'Fotoboxen und Speicher', `<div class="grid2" style="gap:12px">
@@ -235,9 +257,12 @@ window.AdminKunde = (() => {
 
   // Daten eines Kunden holen – gibt sie zurück; übernommen werden sie nur, wenn derselbe Dialog noch offen ist (siehe load/run)
   async function fetchData(owner) {
-    let data = await rpc('admin_customer', { p_owner: owner });
+    // Kennzeichen (Konto von boothdesigner.de, Stand BoothDesigner) nebenbei – fehlt die Funktion noch (SQL 202610280010), ohne sie
+    const [main, mk] = await Promise.all([rpc('admin_customer', { p_owner: owner }), sb.rpc('admin_customer_marks', { p_owner: owner }).then(r => r.data, () => null)]);
+    let data = main;
     if (typeof data === 'string') try { data = JSON.parse(data); } catch {}
     if (!data || typeof data !== 'object') throw new Error('Dieser Kunde wurde nicht gefunden.');
+    data.marks = [].concat(mk || []).find(x => x && x.id === owner) || null;
     return data;
   }
   async function load() {
@@ -288,8 +313,10 @@ window.AdminKunde = (() => {
     if (r && typeof r === 'object' && (r.ok === true || N(r.failed) > 0)) {
       const subs = Array.isArray(r.subs) ? r.subs.filter(x => x && typeof x === 'object') : [], bad = subs.filter(x => x.result === 'fehler');
       const changedN = r.changed != null ? N(r.changed) : subs.filter(x => x.result === 'gesetzt' || x.result === 'entfernt').length;
-      if (r.ok === true) return { ok: true, n: Array.isArray(r.subs) ? subs.length : N(r.changed) + N(r.unchanged), changed: changedN };
-      return { ok: false, kind: 'part', failed: N(r.failed), total: subs.length || N(r.failed), m: String(bad[0]?.error || '') };
+      // Hinweis je Abo (z. B. „keine Zahlungsart hinterlegt“) – immer mit anzeigen, auch wenn alles übernommen wurde
+      const tips = [...new Set(subs.map(x => String(x.hinweis || '')).filter(Boolean))].join(' ');
+      if (r.ok === true) return { ok: true, n: Array.isArray(r.subs) ? subs.length : N(r.changed) + N(r.unchanged), changed: changedN, tips };
+      return { ok: false, kind: 'part', failed: N(r.failed), total: subs.length || N(r.failed), m: String(bad[0]?.error || ''), tips };
     }
     const status = N(err?.context?.status), m = String(r?.error || r?.message || err?.message || '');
     if (/Unbekannte Aktion|noch nicht freigeschaltet|Requested function was not found/i.test(m)) return { ok: false, kind: 'missing' };
@@ -304,14 +331,14 @@ window.AdminKunde = (() => {
   // Ohne Änderung schickt der Server nichts an Stripe; ohne Abo kommt subs: []. what: 'disc' | 'vip-on' | 'vip-off' | 'sync'.
   async function afterStripe(what, verb, owner, hs, pct = 0) {
     const r = await stripeDiscount(owner);
-    const out = (t, cls) => { t = (verb + t).trim() || 'Erledigt.'; return cls ? { t, cls } : t; };
+    const out = (t, cls) => { t = (verb + t).trim() || 'Erledigt.'; if (r.tips) { t += ' Achtung: ' + r.tips; cls = cls || 'warn'; } return cls ? { t, cls } : t; };
     const again = m => /noch einmal|Bei Stripe übernehmen/.test(m || '') ? '' : ' Bitte gleich „Bei Stripe übernehmen“ drücken.';
     if (r.ok) {
       if (!r.n) return out(what === 'sync' ? 'Bei Stripe läuft kein Abo dieses Kunden – es gibt nichts anzupassen.'
         : what === 'disc' && pct ? ' Er gilt beim nächsten Kauf (zurzeit läuft kein Abo bei Stripe).' : '');
       if (!r.changed) return out(what === 'sync' ? 'Bei Stripe war schon alles richtig.' : ' Die laufenden Abos bei Stripe stimmen schon.');
       return out(what === 'sync' ? 'Bei Stripe übernommen – gilt ab der nächsten Rechnung des Kunden.'
-        : what === 'vip-on' && VIP_STRIPE_GRATIS ? ' Die laufenden Abos bei Stripe kosten ab der nächsten Rechnung 0 € (der BoothDesigner bleibt kostenpflichtig).'
+        : what === 'vip-on' && VIP_STRIPE_GRATIS ? ' Die laufenden Abos bei Stripe (auch der BoothDesigner) kosten ab der nächsten Rechnung 0 €.'
         : what === 'vip-off' && VIP_STRIPE_GRATIS ? ' Die laufenden Abos bei Stripe kosten ab der nächsten Rechnung wieder den normalen Preis (bzw. mit seinem Rabatt).'
         : ' Die laufenden Abos bei Stripe sind auch angepasst (ab der nächsten Rechnung).');
     }
@@ -347,8 +374,8 @@ window.AdminKunde = (() => {
 
     if (k === 'vip-on' || k === 'vip-off') {
       const on = k === 'vip-on', hs = hasStripe();
-      if (!await ask(on ? `${who} auf VIP stellen? Dann ist alles kostenlos und ohne Ablauf: Fotobox mit allen Funktionen, alle Zusatzfunktionen und die Offline-Warteschlange.${hs ? (VIP_STRIPE_GRATIS
-          ? ' Laufende Abos bei Stripe kosten ab der nächsten Rechnung 0 € (der BoothDesigner bleibt kostenpflichtig).'
+      if (!await ask(on ? `${who} auf VIP stellen? Dann ist alles kostenlos und ohne Ablauf: Fotobox mit allen Funktionen, alle Zusatzfunktionen, die Offline-Warteschlange und der BoothDesigner.${hs ? (VIP_STRIPE_GRATIS
+          ? ' Laufende Abos bei Stripe (auch der BoothDesigner) kosten ab der nächsten Rechnung 0 €.'
           : ' Achtung: Laufende Abos bei Stripe werden weiter abgebucht – bei Bedarf bei Stripe kündigen.') : ''}`
         : `VIP bei ${who} ausschalten? Der Kunde bekommt genau seinen Stand von vorher zurück, auch die Zahl der Fotoboxen.${d?.free_mode === false ? ' Wurde das Preismodell seit dem Einschalten umgestellt, gilt dabei die neue Preisliste.' : ''}${hs && VIP_STRIPE_GRATIS
           ? ' Laufende Abos bei Stripe kosten ab der nächsten Rechnung wieder den normalen Preis (bzw. mit seinem Rabatt).' : ''}`, on ? 'VIP einschalten' : 'VIP ausschalten')) return;
@@ -390,8 +417,8 @@ window.AdminKunde = (() => {
           until = t.toISOString();
         }
       } else if (!await ask(`Rabatt von ${who} entfernen?`, 'Entfernen')) return;
-      // Bei VIP kostet ohnehin alles 0 € (Stripe: 100 %) – der Rabatt zählt dann nur für den BoothDesigner (nicht Teil von VIP)
-      const hs = hasStripe(), vipNote = pct && deal().vip ? ' Solange VIP an ist, zählt er nur für den BoothDesigner; nach „VIP aus“ für alles.' : '';
+      // Bei VIP kostet ohnehin alles 0 € (Stripe: 100 %, seit 28.10.2026 auch der BoothDesigner) – der Rabatt zählt erst nach „VIP aus“
+      const hs = hasStripe(), vipNote = pct && deal().vip ? ' Solange VIP an ist, zahlt der Kunde ohnehin nichts – der Rabatt zählt erst nach „VIP aus“.' : '';
       return run(keep, async () => {
         await rpc('admin_set_discount', { p_owner: owner, p_pct: pct, p_until: until, p_note: note || null });
         return afterStripe('disc', (pct ? `Rabatt ${pct} % gespeichert.` : 'Rabatt entfernt.') + vipNote, owner, hs, pct);
@@ -406,7 +433,14 @@ window.AdminKunde = (() => {
       const s = String($(`input[data-k="giftdate"][data-x="${x}"]`, keep)?.value || '').trim(), t = s ? dayEnd(s) : null;
       if (s && !t) return say('Bitte ein gültiges Datum wählen.', 'err');
       if (t && t <= Date.now()) return say('Das Datum liegt in der Vergangenheit. Für „dauerhaft“ das Datum leer lassen.', 'err');
-      return run(keep, async () => { await rpc('admin_gift_extra', { p_owner: owner, p_extra: x, p_until: t ? t.toISOString() : null }); return `„${NAME[x]}“ geschenkt – ${t ? 'bis ' + fmtD(t) : 'dauerhaft'}.`; });
+      return run(keep, async () => {
+        try { await rpc('admin_gift_extra', { p_owner: owner, p_extra: x, p_until: t ? t.toISOString() : null }); }
+        catch (e) { // Server noch ohne 202610280010: kennt nur die drei Fotobox-Zusatzfunktionen
+          if (x === 'studio' && /nur Fotomosaik, Live-Karikatur, Videonachricht\)/.test(e.message)) throw new Error('Den BoothDesigner kann der Server noch nicht verschenken. Bitte in Supabase im „SQL Editor“ die Datei 202610280010_kunden_boothdesigner.sql ausführen.');
+          throw e;
+        }
+        return `„${NAME[x]}“ geschenkt – ${t ? 'bis ' + fmtD(t) : 'dauerhaft'}.`;
+      });
     }
     if (k === 'dev-save') {
       const n = Number(val('maxdev'));
