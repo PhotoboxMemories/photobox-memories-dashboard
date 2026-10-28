@@ -598,6 +598,8 @@ I18N.add('tr', {
 "Boomerang aktivieren": "Boomerang'ı etkinleştir",
 "BoothDesigner ansehen": "BoothDesigner’ı görüntüle",
 "BoothDesigner freigeschaltet – viel Spaß beim Testen!": "BoothDesigner etkinleştirildi – iyi denemeler!",
+"BoothDesigner läuft mit deinem Fotobox-Abo bis {x} und verlängert sich mit ihm": "BoothDesigner fotoğraf kabini aboneliğinle {x} tarihine kadar çalışır ve onunla birlikte yenilenir",
+"BoothDesigner läuft mit deinem Fotobox-Abo und verlängert sich mit ihm": "BoothDesigner fotoğraf kabini aboneliğinle çalışır ve onunla birlikte yenilenir",
 "BoothDesigner läuft mit deinem Fotobox-Abo{x} und verlängert sich mit ihm": "BoothDesigner fotoğraf kabini aboneliğinle çalışır{x} ve onunla birlikte yenilenir",
 "BoothDesigner-Abo aktiv": "BoothDesigner aboneliği etkin",
 "BoothDesigner-Abo ist aktiv – danke!": "BoothDesigner aboneliğin etkin – teşekkürler!",
