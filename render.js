@@ -321,7 +321,7 @@
   // layout = { id, name, format, w, h, bg, twoPerPage, secondary, elements: [ … ] }
   // Element-Typen: photo (n = Fotonummer), image (src), text, shape (rect/ellipse), deco (Vorlagen-Deko)
   // =====================================================================
-  // Papierformate wie bei LumaBooth (Zoll, kurze Seite zuerst), sortiert von klein nach groß. Je Format gibt es Hoch- und
+  // Papierformate (Zoll, kurze Seite zuerst), sortiert von klein nach groß. Je Format gibt es Hoch- und
   // Querformat (quadratische nur einmal). Schlüssel: Größe + p/l; ältere Schlüssel (2x6, 4x6p, 5x7l, sq …) bleiben gültig.
   // pair = „2 pro Seite“ möglich; Panoramen (sehr lange Streifen) werden in einem Stück gedruckt.
   const SIZES = [['2x6', 2, 6, '2×6 Streifen'], ['3x4', 3, 4], ['3.5x5', 3.5, 5], ['4x4', 4, 4], ['4x4.5', 4, 4.5], ['4x6', 4, 6], ['4x8', 4, 8],
@@ -596,7 +596,7 @@
     x.fillStyle = 'rgba(0,0,0,.85)'; x.font = `700 ${Math.min(w, h) * .38}px system-ui,sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
     x.fillText(String(e.n || 1), w * .28, h * .12);
   }
-  // Schlagschatten wie bei LumaBooth: Farbe, Deckkraft, Winkel, Abstand, Weichheit (in Layout-Pixeln).
+  // Schlagschatten: Farbe, Deckkraft, Winkel, Abstand, Weichheit (in Layout-Pixeln).
   // Ältere Layouts haben nur shadow = true – dann der bisherige weiche Schatten nach unten.
   function setShadow(x, e, w, h) {
     if (!e.shadow) return false;
@@ -835,7 +835,7 @@
     }
     return c;
   }
-  // Druckbogen „2 pro Seite“ (wie LumaBooth): zwei Ausdrucke auf einem Blatt, entlang der kurzen Seite nebeneinander –
+  // Druckbogen „2 pro Seite“: zwei Ausdrucke auf einem Blatt, entlang der kurzen Seite nebeneinander –
   // z. B. 2×6-Streifen auf 4×6, 4×6 auf 6×8, 5×7 auf 8×10. Der Drucker schneidet sie auseinander.
   const sheetOf = L => !L.twoPerPage ? { w: L.w, h: L.h } : L.w <= L.h ? { w: L.w * 2, h: L.h, dx: L.w, dy: 0 } : { w: L.w, h: L.h * 2, dx: 0, dy: L.h };
   function renderSheet(L, o = {}) {
