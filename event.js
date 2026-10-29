@@ -520,6 +520,22 @@
       if (!data || data.updated_at === baseAt) return;
       baseAt = data.updated_at; if (adoptRemote(data.settings).length) refreshAfterRemote();
     }, 15000);
+    // Fotoboxen des Ereignisses (Upload-Stand, online) auf der Übersicht alle 15 Sekunden neu holen – sonst blieb der Stand vom Öffnen
+    // stehen, z. B. „2 Foto(s) warten auf den Upload“, obwohl die Fotos längst in der Galerie waren (Betreiber 29.10.2026)
+    const devSig = l => JSON.stringify(l.map(d => [d.id, d.name, +d.status?.uploads || 0, +d.status?.prints || 0, !!(d.last_seen && Date.now() - new Date(d.last_seen) < 18e4), devOrientWarn(d)]));
+    let devShown = null; // erst im Takt berechnen (devOrientWarn steht weiter unten)
+    const devT = setInterval(async () => {
+      if (!document.body.contains(root)) return clearInterval(devT);
+      if (ctx.demo || document.visibilityState !== 'visible' || page !== 'dash') return;
+      const { data } = await ctx.sb.from('devices').select('id,name,event_id,status,last_seen').eq('event_id', ev.id);
+      if (!data) return;
+      const all = ctx.devices || [], fresh = data.map(d => ({ ...(all.find(o => o.id === d.id) || {}), ...d }));
+      devShown ??= devSig(all.filter(d => d.event_id === ev.id));
+      ctx.devices = [...all.filter(d => d.event_id !== ev.id && !data.some(n => n.id === d.id)), ...fresh];
+      const sig = devSig(fresh); if (sig === devShown || page !== 'dash') return;
+      const a = document.activeElement; if (a && root.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return; // nicht mitten ins Tippen
+      devShown = sig; render();
+    }, 15000);
     let E = { name: ev.name, event_date: ev.event_date, logo_url: ev.logo_url, share_token: ev.share_token }; // share_token = Kennung im Freigabe-Link der Galerie
     // Fotomosaik und Live-Karikatur nur mit Freigabe des Betreibers (Verwaltung → Lizenzen → „Freigaben“); ohne Freigabe
     // zeigt der Menüpunkt ein Schloss und die Seite nur einen Hinweis statt der Einstellungen
