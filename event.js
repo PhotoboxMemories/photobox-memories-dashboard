@@ -1905,20 +1905,18 @@
     }
     // Fotomosaik: Vorschau mit Beispielfotos, Tafel und Maße (ändert sich sofort beim Schieben der Regler)
     const mzv = { url: '', img: null, ph: {}, smp: null, smpKind: '' };
-    // Beispiel für die Kachel-Vorschau: das neueste Foto dieses Ereignisses, sonst ein Platzhalter
+    // Beispiel für die Kachel-Vorschau: immer unser Testpaar (Betreiber 29.10.2026, wie in der Fotobox – nicht das neueste Gästefoto)
     function mzSample() {
       if (mzv.smp) return;
-      if (!gal.list) { if (!gal.loading) loadGallery().then(() => { if (gal.list) drawMosaic(); }).catch(() => {}); return; }
       mzv.smp = FBR.placeholder(1, 900, 900); mzv.smpKind = 'demo';
-      const it = gal.list.find(x => /_original\d*\.(jpe?g|png)$/i.test(x.name || x.path || '')) || gal.list.find(x => /\.(jpe?g|png)$/i.test(x.name || x.path || '') && !/\.gif$/i.test(x.path || ''));
-      if (it) { const im = new Image(); im.onload = () => { mzv.smp = im; mzv.smpKind = 'event'; drawMosaic(); }; im.src = galUrl(it.thumb || it.path); }
+      const im = new Image(); im.onload = () => { mzv.smp = im; drawMosaic(); }; im.src = 'testfoto.jpg';
     }
     function drawMosaicTile(c, p) {
       const cv = $(root, '#wsMzTile'), note = $(root, '#wsMzTileNote'); if (!cv) return;
       mzSample(); const photo = mzv.smp || FBR.placeholder(1, 900, 900);
       const i = Math.floor(c.rows / 2) * c.cols + Math.floor(c.cols / 2);
       try { Mosaic.drawTilePreview(cv, photo, p, i, c, 260); } catch { return; }
-      if (note) note.textContent = (mzv.smpKind === 'event' ? 'Mit dem neuesten Foto dieses Ereignisses' : 'Mit einem Beispielfoto') + (p ? '' : ' · ohne Hauptbild');
+      if (note) note.textContent = 'Mit einem Beispielfoto' + (p ? '' : ' · ohne Hauptbild');
     }
     function drawMosaic() {
       const cv = $(root, '#wsMz'), box = $(root, '#wsMzBoard'), infoEl = $(root, '#wsMzInfo'); if (!cv) return;
