@@ -833,7 +833,7 @@
       if (a === 'cari-copy') { const i = $(main, '[data-cari-link]'); try { await navigator.clipboard.writeText(i.value); ctx.toast('Link kopiert'); } catch { i.select(); } return; }
       if (a === 'cari-qr') { // QR-Code für Tischkarten (Bibliothek erst bei Bedarf laden)
         const box = $(main, '[data-cari-qr]'), url = $(main, '[data-cari-link]').value;
-        if (!window.qrcode) await new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }).catch(() => {});
+        if (!window.qrcode) await new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'vendor/qrcode.min.js'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }).catch(() => {});
         if (!window.qrcode) return ctx.toast('QR-Code konnte nicht geladen werden.');
         const q = qrcode(0, 'M'); q.addData(url); q.make();
         box.innerHTML = `<div style="display:inline-block;background:#fff;padding:10px;border-radius:12px;border:1px solid #eee">${q.createSvgTag({ cellSize: 6, margin: 2 })}</div><p style="margin:6px 0 0;color:#6b6b78;font-size:13px">Rechtsklick → „Bild speichern“ oder Bildschirmfoto für Tischkarten. Mit Code-Pflicht brauchen Gäste zusätzlich den Code vom Bildschirm.</p>`;
@@ -1251,7 +1251,7 @@
       if (!L.length) return;
       if (L.length > 400 && !await (G.pmConfirm || (async t => confirm(t)))(`${L.length} Dateien in eine ZIP-Datei packen? Das kann einige Minuten dauern und braucht viel Arbeitsspeicher.`, 'Herunterladen')) return;
       try {
-        if (!G.JSZip) await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; sc.onload = ok; sc.onerror = () => no(new Error('ZIP-Baustein nicht ladbar')); document.head.appendChild(sc); });
+        if (!G.JSZip) await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'vendor/jszip.min.js'; sc.onload = ok; sc.onerror = () => no(new Error('ZIP-Baustein nicht ladbar')); document.head.appendChild(sc); });
         const zip = new G.JSZip(); let done = 0;
         for (const x of L) { status(`Lade ${++done} von ${L.length} …`); try { zip.file(String(done).padStart(4, '0') + '_' + galName(x), await fetchBlob(x.path)); } catch {} }
         status('Packe ZIP-Datei …');
