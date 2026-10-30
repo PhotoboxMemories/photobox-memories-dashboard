@@ -1554,7 +1554,11 @@
       ai() {
         const central = S.ai.connection === 'central';
         if (ai.lib === null) aiLibLoad();
-        if (central) Promise.resolve(ctx.sb.from('ai_wallets').select('balance').eq('owner_id', ctx.me.id).maybeSingle()).then(({ data, error }) => {
+        // Betreiber: kein Guthaben, kein Limit – stattdessen zählt der Verbrauch nach oben (alle Bilder, Betreiber 30.10.2026)
+        if (central && ctx.admin) Promise.resolve(ctx.sb.from('ai_jobs').select('cost').eq('owner_id', ctx.me.id).eq('status', 'succeeded').limit(100000)).then(({ data, error }) => {
+          const el = main.querySelector('[data-ai-bal]'); if (el) el.textContent = error ? 'Verbrauch nicht abrufbar' : `${(data || []).length} Bilder · ${(data || []).reduce((a, j) => a + (j.cost || 0), 0)} Credits-Wert`;
+        });
+        else if (central) Promise.resolve(ctx.sb.from('ai_wallets').select('balance').eq('owner_id', ctx.me.id).maybeSingle()).then(({ data, error }) => {
           const el = main.querySelector('[data-ai-bal]'); if (el) el.textContent = error ? 'Guthaben nicht abrufbar' : (data?.balance || 0) + ' Credits';
         });
         if (central) Promise.resolve(ctx.sb.from('ai_jobs').select('cost').eq('event_id', ev.id).eq('status', 'succeeded').limit(10000)).then(({ data, error }) => { // Verbrauch in diesem Ereignis
@@ -1583,7 +1587,7 @@
           ${ai.result && !ai.busy && !libEditing ? '<button class="ghost" style="width:100%;margin-top:8px" data-a="ai-lib-result">☆ In „Meine KI-Stile“ speichern</button>' : ''}
           ${ai.recent.length ? `<small style="display:block;margin-top:10px">Letzte Generierungen</small><div class="airecent">${ai.recent.map((r, n) => `<img src="${r.image}" title="${esc(r.name)}" data-a="ai-recent" data-i="${n}">`).join('')}</div>` : ''}</div>
           <div class="card"><div class="aibar">${central
-            ? `<span>KI-Guthaben:</span><span class="bal" data-ai-bal>…</span><small>${S.ai.resolution === '1k' ? '1 Credit pro Bild' : '2 Credits pro Bild (2K)'}</small><small><span>In diesem Ereignis verbraucht:</span> <b data-ai-used>…</b></small><span class="sp" style="flex:1"></span><button class="btn pri" data-a="ai-buy">Credits kaufen</button><button class="ghost" data-a="ai-status">Verbindung prüfen</button>`
+            ? `<span>${ctx.admin ? 'Bisher verbraucht (ohne Limit):' : 'KI-Guthaben:'}</span><span class="bal" data-ai-bal>…</span><small>${ctx.admin ? 'Betreiber: keine Credits nötig' : S.ai.resolution === '1k' ? '1 Credit pro Bild' : '2 Credits pro Bild (2K)'}</small><small><span>In diesem Ereignis verbraucht:</span> <b data-ai-used>…</b></small><span class="sp" style="flex:1"></span><button class="btn pri" data-a="ai-buy">Credits kaufen</button><button class="ghost" data-a="ai-status">Verbindung prüfen</button>`
             : `<span>Eigener API-Schlüssel auf der Fotobox · ${({ grok: 'Grok (xAI)', openai: 'OpenAI', gemini: 'Google Gemini' })[S.ai.provider]}</span>`}</div></div>`;
         const lib = ai.lib;
         // Stile nach Inhalt gruppiert (Spalte category, SQL 202610300001): Berufe zu Berufe, Urlaub zu Urlaub … – data-i bleibt der Platz in der Liste
