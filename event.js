@@ -581,7 +581,9 @@
     const aiLibLoad = async () => {
       ai.lib = 'loading';
       try {
-        const { data, error } = await ctx.sb.from('ai_styles').select('id,name,prompt,thumb,shared,owner,category').order('created_at', { ascending: false }).limit(300);
+        let { data, error } = await ctx.sb.from('ai_styles').select('id,name,prompt,thumb,shared,owner,category').order('created_at', { ascending: false }).limit(300);
+        // Spalte category fehlt noch (SQL 202610300001 nicht ausgeführt): Liste ohne Kategorien laden – die Stile dürfen nie „verschwinden“
+        if (error && /category/i.test(error.message)) ({ data, error } = await ctx.sb.from('ai_styles').select('id,name,prompt,thumb,shared,owner').order('created_at', { ascending: false }).limit(300));
         if (error) ai.lib = { error: /relation|does not exist|schema cache|column/i.test(error.message) ? 'setup' : error.message };
         else { ai.lib = (data || []).filter(x => x.owner === ctx.me.id); ai.common = (data || []).filter(x => x.owner !== ctx.me.id && x.shared); }
       } catch (error) { ai.lib = { error: error.message }; }
