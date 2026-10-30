@@ -662,7 +662,7 @@
       return ctx.uploadFile(await aiThumbFile(result.image));
     }
     // Testbild mit eigenem Foto: für „Meine KI-Stile“ stattdessen ein Bild mit dem Testpaar erzeugen (nach Rückfrage)
-    const aiPairAsk = () => (G.pmConfirm || (async x => confirm(x)))('Für „Meine KI-Stile“ nehmen wir als Bild immer unser Testpaar – nicht dein eigenes Testfoto. Jetzt ein Bild mit dem Testpaar erzeugen? (1 Credit)');
+    const aiPairAsk = () => (G.pmConfirm || (async x => confirm(x)))('Für „Meine KI-Stile“ nehmen wir als Bild immer unser Testpaar – nicht dein eigenes Testfoto. Jetzt ein Bild mit dem Testpaar erzeugen? (1 Credit)', 'Erzeugen');
     if (!ai.own) aiDefaultPhoto().then(u => { if (u && !ai.own && !ai.photo) { ai.photo = u; if (page === 'ai' || page === 'fx' || page === 'cari') render(); } });
     const status = t => { $(root, '.st').textContent = t; };
     function save() {
@@ -958,7 +958,7 @@
       }
       if (a === 'ai-lib-pair' || a === 'ai-lib-pair-missing') { // Bilder in „Meine KI-Stile“ mit unserem Testpaar erzeugen (1 Credit je Stil) – alle oder nur die fehlenden
         const L = Array.isArray(ai.lib) ? ai.lib.filter(x => a === 'ai-lib-pair' || !x.thumb) : []; if (!L.length || ai.busy) return;
-        if (!await (G.pmConfirm || (async x => confirm(x)))(`${a === 'ai-lib-pair' ? `Alle ${L.length} Bilder` : `${L.length} fehlende Bilder`} in „Meine KI-Stile“ mit unserem Testpaar erzeugen? Das kostet ${L.length} Credits (1 je Stil) und dauert etwa ${Math.max(1, Math.ceil(L.length / 3))} Minuten. Die Texte bleiben, wie sie sind.`)) return;
+        if (!await (G.pmConfirm || (async x => confirm(x)))(`${a === 'ai-lib-pair' ? `Alle ${L.length} Bilder` : `${L.length} fehlende Bilder`} in „Meine KI-Stile“ mit unserem Testpaar erzeugen? ${ctx.admin ? 'Als Betreiber ohne Credits.' : `Das kostet ${L.length} Credits (1 je Stil).`} Dauert etwa ${Math.max(1, Math.ceil(L.length / 3))} Minuten. Die Texte bleiben, wie sie sind.`, 'Erzeugen')) return;
         ai.busy = true; render(); let ok = 0, fail = 0, last = '';
         for (const [i, x] of L.entries()) {
           status(`Testpaar-Bild ${i + 1} von ${L.length}: ${x.name} …`);
