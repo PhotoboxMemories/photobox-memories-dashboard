@@ -447,7 +447,7 @@
     bg: { smooth: 11 },
     survey: { questions: [], prev: 'Vorherige', next: 'Weiter', done: 'Fertig' },
     disc: { title: 'Sind Sie mit den Bedingungen einverstanden?', warn: 'Ihre Sitzung wird abgebrochen', agree: 'Ich stimme zu', cancel: 'Session abbrechen' },
-    share: { email: { on: false, from: '', subject: 'Hier ist Ihr Foto', body: '<h2>Hier ist Ihr Foto</h2>{image}<br>', inputText: 'E-Mail eingeben', sendText: 'E-Mail senden' },
+    share: { pos: '', photoSize: 0, email: { on: false, from: '', subject: 'Hier ist Ihr Foto', body: '<h2>Hier ist Ihr Foto</h2>{image}<br>', inputText: 'E-Mail eingeben', sendText: 'E-Mail senden' },
       sms: { on: false, message: 'Hier ist Ihr Foto', cc: '49', inputText: 'Telefonnummer eingeben', sendText: 'SMS senden' },
       wa: { on: false, message: 'Hier ist Ihr Foto', cc: '49', inputText: 'Telefonnummer eingeben', scanText: 'Mit dem Handy scannen' },
       originals: true, deleteBtn: true, deleteText: 'Wiederholen', cloud: true, uploadOriginals: true, origUp: false },
@@ -1645,7 +1645,10 @@
               <label class="l">Nachricht (max. 128 Zeichen)</label><textarea rows="2" maxlength="128" data-s="x.share.wa.message">${esc(X.wa.message)}</textarea>
               <div class="grid3x">${text('x.share.wa.cc', 'Ländercode (+)')}${text('x.share.wa.inputText', 'Text für die Eingabe der Telefonnummer')}${text('x.share.wa.scanText', 'Text für „Mit dem Handy scannen“')}</div></div>`
           : sub.sh === 'screen' ? `<h2>Bildschirm zum Teilen</h2>${sharePreview()}<div class="card">${slider('autoReturn', 'Anzeigedauer des Bildschirms zum Teilen', 0, 120, 5)}
-              ${sw('x.share.deleteBtn', 'Schaltfläche „Löschen“ anzeigen', 'Gäste können die Aufnahme verwerfen und wiederholen')}${text('x.share.deleteText', 'Text für die Schaltfläche „Löschen“')}</div>`
+              ${sw('x.share.deleteBtn', 'Schaltfläche „Löschen“ anzeigen', 'Gäste können die Aufnahme verwerfen und wiederholen')}${text('x.share.deleteText', 'Text für die Schaltfläche „Löschen“')}</div>
+              <h2>Automatische Anordnung</h2><div class="card"><p style="margin:0 0 10px;color:#6b6b78;font-size:13px">Gilt, solange der Bildschirm oben nicht frei gestaltet ist. „Wie an der Fotobox“ lässt die Einstellung der jeweiligen Fotobox gelten.</p>
+              ${sel('x.share.pos', 'Anordnung der Schaltflächen', [['', 'Wie an der Fotobox eingestellt'], ['right', 'Rechts – Löschen oben links, Fertig oben rechts'], ['top', 'Oben über dem Foto'], ['left', 'Links'], ['bottom', 'Unten']])}
+              ${slider('x.share.photoSize', 'Größe des Fotos (0 = wie an der Fotobox)', 0, 90, 2, '%')}</div>`
           : `<h2>Weitere Optionen</h2><div class="card">${sw('x.share.cloud', 'Cloud-Freigabe', 'Fotos werden in die Online-Galerie hochgeladen und sind über einen Link abrufbar')}
               ${proOnly(sw('x.share.origUp', 'Originalfotos hochladen', 'Zusätzlich zum fertigen Ausdruck werden die einzelnen Aufnahmen in die Online-Galerie hochgeladen (braucht mehr Speicher)'))}
               ${sw('share', 'QR Code', 'Teilen Sie Fotos über einen QR-Code, den Gäste scannen können. Aktuell muss das Handy im selben WLAN wie die Fotobox sein.')}</div>`)}`;
