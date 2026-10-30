@@ -588,11 +588,13 @@
       if (page === 'ai') render();
     };
     const aiInLib = p => Array.isArray(ai.lib) && ai.lib.some(x => x.prompt === p.prompt);
+    // Kategorien der KI-Stile (Reihenfolge der Gruppen); neue Stile bekommen die im Formular gewählte, sonst „Sonstiges“
+    const AI_CATS = ['Berufe', 'Urlaub & Reise', 'Feier & Party', 'Hochzeit & Liebe', 'Weihnachten & Winter', 'Epochen & Geschichte', 'Film & Fantasy', 'Kunst & Malerei', 'Karikatur & Comic', 'Foto-Effekte', 'Sport & Action', 'Tiere & Natur', 'Sonstiges'];
     async function aiLibSave(item) {
       if (!Array.isArray(ai.lib)) return ctx.toast('„Meine KI-Stile“ ist noch nicht bereit.', 5000);
       if (aiInLib(item)) return ctx.toast('Dieser Stil ist schon in „Meine KI-Stile“.');
       // Stile des Betreibers sind sofort für alle Kunden freigegeben („Stile von Photobox Memories“, mit 👥 zurücknehmbar)
-      const { data, error } = await ctx.sb.from('ai_styles').insert({ name: String(item.name || 'Mein Stil').slice(0, 60), prompt: String(item.prompt).slice(0, 1200), thumb: item.thumb || null, ...(ctx.admin ? { shared: true } : {}) }).select('id,name,prompt,thumb,shared,owner').single();
+      const { data, error } = await ctx.sb.from('ai_styles').insert({ name: String(item.name || 'Mein Stil').slice(0, 60), prompt: String(item.prompt).slice(0, 1200), thumb: item.thumb || null, category: AI_CATS.includes(item.category) ? item.category : 'Sonstiges', ...(ctx.admin ? { shared: true } : {}) }).select('id,name,prompt,thumb,shared,owner,category').single();
       if (error) return ctx.toast('Speichern fehlgeschlagen: ' + error.message, 6000);
       ai.lib = [data, ...ai.lib]; render(); ctx.toast(ctx.admin ? 'In „Meine KI-Stile“ gespeichert und für alle Kunden freigegeben' : 'In „Meine KI-Stile“ gespeichert');
     }
@@ -624,7 +626,7 @@
     const aiDraft = () => {
       const before = ai.edit >= 0 ? S.ai.prompts[ai.edit] : null;
       return ai.custom
-        ? { id: before && !before.id.startsWith('lib-') ? before.id : (ai.draftId ||= crypto.randomUUID()), name: ($(main, '[data-ai-cname]').value.trim() || 'Eigener Stil').slice(0, 60), prompt: $(main, '[data-ai-ctext]').value.trim().slice(0, 1200) }
+        ? { id: before && !before.id.startsWith('lib-') ? before.id : (ai.draftId ||= crypto.randomUUID()), category: $(main, '[data-ai-ccat]')?.value || 'Sonstiges', name: ($(main, '[data-ai-cname]').value.trim() || 'Eigener Stil').slice(0, 60), prompt: $(main, '[data-ai-ctext]').value.trim().slice(0, 1200) }
         : aiCompose(aiFind(AI_MOTIFS, ai.p), aiFind(AI_ARTS, ai.a));
     };
     // Stil anlegen oder ersetzen; mit resultImage wird dieses Bild verkleinert als Vorschaubild hochgeladen.
@@ -854,7 +856,7 @@
       }
       if (a === 'ai-lib-edit' || a === 'ai-common-edit') { // Stil aus „Meine KI-Stile“ bearbeiten bzw. einen fertigen Stil als Vorlage für einen eigenen nehmen
         const x = (a === 'ai-common-edit' ? ai.common || [] : Array.isArray(ai.lib) ? ai.lib : [])[+t.dataset.i]; if (!x) return;
-        ai.libEdit = a === 'ai-lib-edit' ? x.id : ''; ai.edit = -1; ai.custom = true; ai.p = ai.a = ''; ai.seed = { name: x.name, prompt: x.prompt }; ai.draftId = ''; ai.cname = ai.ctext = undefined;
+        ai.libEdit = a === 'ai-lib-edit' ? x.id : ''; ai.edit = -1; ai.custom = true; ai.p = ai.a = ''; ai.seed = { name: x.name, prompt: x.prompt, category: x.category }; ai.draftId = ''; ai.cname = ai.ctext = undefined;
         render(); main.querySelector('[data-ai-builder]')?.scrollIntoView({ block: 'center' }); return;
       }
       if (a === 'cari-refresh') { await cariLoad(); return; }
@@ -920,7 +922,7 @@
         const x = Array.isArray(ai.lib) && ai.lib.find(y => y.id === ai.libEdit); if (!x) return;
         const item = aiDraft();
         if (aiEmptyText(item.prompt)) return ctx.toast('Bitte beschreibe zuerst, wie das Bild aussehen soll.');
-        const patch = { name: item.name, prompt: item.prompt };
+        const patch = { name: item.name, prompt: item.prompt, category: AI_CATS.includes(item.category) ? item.category : 'Sonstiges' };
         t.disabled = true;
         if (ai.result && ai.resultPrompt === item.prompt) {
           const pair = ai.resultOwn && await aiPairAsk(); // mit eigenem Foto getestet: Bild mit dem Testpaar oder altes Bild behalten
@@ -1583,7 +1585,7 @@
             : `<span>Eigener API-Schlüssel auf der Fotobox · ${({ grok: 'Grok (xAI)', openai: 'OpenAI', gemini: 'Google Gemini' })[S.ai.provider]}</span>`}</div></div>`;
         const lib = ai.lib;
         // Stile nach Inhalt gruppiert (Spalte category, SQL 202610300001): Berufe zu Berufe, Urlaub zu Urlaub … – data-i bleibt der Platz in der Liste
-        const CAT_ORDER = ['Berufe', 'Urlaub & Reise', 'Feier & Party', 'Epochen & Geschichte', 'Film & Fantasy', 'Kunst & Malerei', 'Karikatur & Comic', 'Foto-Effekte', 'Sonstiges'];
+        const CAT_ORDER = AI_CATS;
         const grouped = (list, tile) => {
           const groups = new Map();
           list.forEach((x, n) => { const k = x.category || 'Sonstiges'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(tile(x, n)); });
@@ -1602,6 +1604,7 @@
           <div class="card" data-ai-builder>${ai.custom ? '<p style="margin:0 0 6px"><a href="#" data-a="ai-new">← Zurück zu den Vorgaben</a></p>' : ''}<b>${editing ? 'Vorgabe bearbeiten: ' + esc(editing.name) : libEditing ? 'Meinen KI-Stil bearbeiten: ' + esc(libEditing.name) : ai.custom ? 'Benutzerdefinierter Prompt' : 'Vorgabe erstellen'}</b>
           ${editing || libEditing ? '<p class="small" style="margin:6px 0 0;color:#6b6b78">Text ändern, rechts neu generieren und speichern. Der Text bleibt danach offen – so kannst du ihn Schritt für Schritt verbessern.</p>' : ''}
           ${ai.custom ? `<label class="l">Name (sehen die Gäste)</label><input type="text" maxlength="60" data-ai-cname value="${esc(ai.cname ?? (ai.seed || editing)?.name ?? '')}" placeholder="z. B. Unser Firmenlook">
+            <label class="l">Kategorie (für „Meine KI-Stile“)</label><select data-ai-ccat>${AI_CATS.map(c => `<option value="${esc(c)}" ${(ai.ccat ?? (ai.seed || editing)?.category ?? 'Sonstiges') === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
             <label class="l">Beschreibung für die KI</label><textarea rows="5" maxlength="1200" data-ai-ctext placeholder="Motiv: was die Gäste werden · Szene: wo sie sind · Stil: wie das Bild aussieht">${esc(ai.ctext ?? ((ai.seed || editing)?.prompt || AI_KEEP))}</textarea>
             <small style="display:block;margin-top:10px"><b>Beispiel ausprobieren</b> · jedes lädt eine andere Kombination</small>
             <div class="aichips" style="margin-top:6px">${aiExamples().map((x, n) => `<button data-a="ai-example" data-i="${n}">${esc(x.name)}</button>`).join('')}</div>`
