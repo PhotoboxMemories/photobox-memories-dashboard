@@ -33,7 +33,7 @@
   #studioRoot .msg{background:#f6f4ee;border-radius:8px;padding:6px 9px;white-space:pre-wrap}
   @media (max-width:760px){#studioRoot .grid2{grid-template-columns:1fr}}`;
 
-  let ctx = null, site = null, subs = [], plans = [], shopReady = false, abo = null, filter = 'offen', fixes = [];
+  let ctx = null, site = null, subs = [], plans = [], shopReady = false, shopTax = false, abo = null, filter = 'offen', fixes = [];
   const $ = s => document.querySelector(s);
   const root = () => $('#studioRoot');
   const studioUrl = () => String(G.FOTOBOX_CONFIG?.studioUrl || '').replace(/\/+$/, '');
@@ -83,7 +83,7 @@
       ctx.sb.functions.invoke('license-shop', { body: { action: 'status' } }),
       ctx.sb.from('license_addons').select('valid_until,stripe_subscription').eq('owner_id', ctx.me.id).eq('extra', 'studio')
         .not('stripe_subscription', 'is', null).order('valid_until', { ascending: false }).limit(1)]);
-    plans = p.data || []; shopReady = !!st.data?.ready; abo = (a.data || [])[0] || null;
+    plans = p.data || []; shopReady = !!st.data?.ready; shopTax = !!st.data?.tax; abo = (a.data || [])[0] || null;
   }
   const aboLive = () => !!abo && new Date(abo.valid_until) > new Date();
   // Stripe meldet die Zahlung ein paar Sekunden nach der Rückkehr (stripe-webhook) – so lange warten
@@ -100,7 +100,7 @@
     location.href = data.url;
   }
   const buyButtons = primary => plans.map(p => `<button class="btn${primary ? ' primary' : ''}" data-a="buy" data-plan="${esc(p.id)}" ${shopReady ? '' : 'disabled title="Der Kauf ist noch nicht freigeschaltet"'}>${esc(p.name)} · ${(p.cents / 100).toLocaleString('de-DE')} € / ${p.billing === 'year' ? 'Jahr' : 'Monat'}</button>`).join('');
-  const agbNote = () => plans.length ? `<p class="small muted" style="margin-top:10px">Bezahlung über Stripe. Das Abo verlängert sich automatisch und ist jederzeit zum Ende der Laufzeit kündbar. Es gelten die <a href="${esc(studioUrl() || 'https://boothdesigner.de')}/agb.html" target="_blank" rel="noopener">AGB von BoothDesigner</a>.</p>` : '';
+  const agbNote = () => plans.length ? `<p class="small muted" style="margin-top:10px">Bezahlung über Stripe. Das Abo verlängert sich automatisch und ist jederzeit zum Ende der Laufzeit kündbar. Es gelten die <a href="${esc(studioUrl() || 'https://boothdesigner.de')}/agb.html" target="_blank" rel="noopener">AGB von BoothDesigner</a>.${shopTax ? ' Alle Preise zzgl. gesetzlicher Umsatzsteuer.' : ''}</p>` : '';
   async function onShop(b) {
     b.disabled = true;
     try { await shop(b.dataset.a === 'buy' ? { action: 'checkout', plan: b.dataset.plan, devices: 1 } : { action: 'portal' }); }
