@@ -591,7 +591,7 @@
     };
     const aiInLib = p => Array.isArray(ai.lib) && ai.lib.some(x => x.prompt === p.prompt);
     // Kategorien der KI-Stile (Reihenfolge der Gruppen); neue Stile bekommen die im Formular gewählte, sonst „Sonstiges“
-    const AI_CATS = ['Berufe', 'Urlaub & Reise', 'Feier & Party', 'Hochzeit & Liebe', 'Weihnachten & Winter', 'Epochen & Geschichte', 'Film & Fantasy', 'Kunst & Malerei', 'Karikatur & Comic', 'Foto-Effekte', 'Sport & Action', 'Tiere & Natur', 'Sonstiges'];
+    const AI_CATS = ['Berufe', 'Urlaub & Reise', 'Feier & Party', 'Gala & Glamour', 'Hochzeit & Liebe', 'Weihnachten & Winter', 'Epochen & Geschichte', 'Retro 80er & 90er', 'Western & Cowboys', 'Film & Fantasy', 'Verrückt & Lustig', 'Kunst & Malerei', 'Karikatur & Comic', 'Foto-Effekte', 'Sport & Action', 'Tiere & Natur', 'Sonstiges'];
     async function aiLibSave(item) {
       if (!Array.isArray(ai.lib)) return ctx.toast('„Meine KI-Stile“ ist noch nicht bereit.', 5000);
       if (aiInLib(item)) return ctx.toast('Dieser Stil ist schon in „Meine KI-Stile“.');
