@@ -536,6 +536,18 @@
       const a = document.activeElement; if (a && root.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return; // nicht mitten ins Tippen
       devShown = sig; render();
     }, 15000);
+    // Bilderliste alle 15 Sekunden nachladen, solange Übersicht, Analysen oder Shares offen sind – neue Fotos erschienen sonst erst nach
+    // erneutem Öffnen (Betreiber 30.10.2026: „Bilder kommen verzögert ins Dashboard“). Neu gezeichnet wird nur, wenn sich die Liste ändert.
+    const galT = setInterval(async () => {
+      if (!document.body.contains(root)) return clearInterval(galT);
+      if (ctx.demo || document.visibilityState !== 'visible' || !['dash', 'analytics', 'shares'].includes(page) || !gal.list || gal.loading) return;
+      const { data, error } = await ctx.sb.from('photos').select('id,path,thumb,kind,name,bytes,created_at').eq('event_id', ev.id).order('created_at', { ascending: false }).limit(2000);
+      if (error || !data || !gal.list) return;
+      const sig = l => l.map(x => x.id + ':' + (x.bytes || 0)).join(',');
+      if (sig(data) === sig(gal.list)) { gal.at = Date.now(); return; }
+      const a = document.activeElement; if (a && root.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return; // nicht mitten ins Tippen
+      gal.list = data; gal.at = Date.now(); render();
+    }, 15000);
     let E = { name: ev.name, event_date: ev.event_date, logo_url: ev.logo_url, share_token: ev.share_token }; // share_token = Kennung im Freigabe-Link der Galerie
     // Fotomosaik und Live-Karikatur nur mit Freigabe des Betreibers (Verwaltung → Lizenzen → „Freigaben“); ohne Freigabe
     // zeigt der Menüpunkt ein Schloss und die Seite nur einen Hinweis statt der Einstellungen
