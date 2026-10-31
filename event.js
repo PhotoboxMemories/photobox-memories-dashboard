@@ -655,7 +655,12 @@
     // zum Text mit dem Testpaar (zentrale KI, 1 Credit) und lädt es als Vorschaubild hoch.
     async function aiPairThumb(prompt) {
       const photo = await aiDefaultPhoto(); if (!photo) throw new Error('Das Testfoto konnte nicht geladen werden.');
-      const { data, error } = await ctx.sb.functions.invoke('ai-generate', { body: { image: photo, prompt: String(prompt).trim(), consent: true, eventId: ev.id, requestId: crypto.randomUUID(), test: true } });
+      // höchstens 3 Minuten warten – bleibt die Antwort aus (Verbindung weg, KI-Dienst hängt), zählt der Stil als Fehler und es geht weiter
+      // (Betreiber 31.10.2026: „bei Yoga am Strand blieb hängen“)
+      const { data, error } = await Promise.race([
+        ctx.sb.functions.invoke('ai-generate', { body: { image: photo, prompt: String(prompt).trim(), consent: true, eventId: ev.id, requestId: crypto.randomUUID(), test: true } }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('Keine Antwort vom KI-Dienst nach 3 Minuten – übersprungen.')), 180000))
+      ]);
       let result = data; if (error?.context?.json) { try { result = await error.context.json(); } catch {} }
       if (error || result?.error) throw new Error(result?.error || error.message);
       if (!result?.image) throw new Error('Der KI-Dienst hat kein Bild geliefert.');
