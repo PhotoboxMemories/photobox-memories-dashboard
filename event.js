@@ -442,6 +442,7 @@
     gif: { size: '720p-16:9', reverse: false, overlays: [], delay: 300 },
     slowmo: { enabled: false, countdown: 5, quality: 4, motion: false, flash: true, saveOriginal: true, preTextOn: false, preText: 'Bereit machen', length: 1, reverse: true, clipLen: 2, speed: '0.5x', soundtracks: [], overlays: [], size: '720p-16:9', intro: '', outro: '' },
     video: { countdown: 5, quality: 4, saveOriginal: true, preTextOn: false, preText: 'Bereit machen', overlays: [], size: '720p-16:9', intro: '', outro: '' },
+    robot: { enabled: false }, // Zeichenroboter: Aufnahme-Art „Zeichnung“ an der Fotobox (Einmessen dort unter Extras → Zeichenroboter)
     voice: { style: 'de-frau', randombefore: false, randomafter: false, files: { start: '', effect: '', countdown: '', before: [], after: [], signature: '', processing: '', done: '' } },
     fx: { mode: 'guest', lut: '', stickerStyle: 'standard', stickers: [] },
     bg: { smooth: 11 },
@@ -1447,9 +1448,9 @@
       },
       capture() {
         sub.mode ||= 'photo';
-        const M = [['photo', 'camera', 'Foto', 'single'], ['gif', 'film', 'GIF', 'gif'], ['boom', 'repeat', 'Boomerang', 'boomerang'], ['video', 'video', 'Video', 'video']];
+        const M = [['photo', 'camera', 'Foto', 'single'], ['gif', 'film', 'GIF', 'gif'], ['boom', 'repeat', 'Boomerang', 'boomerang'], ['video', 'video', 'Video', 'video'], ['robot', 'pen', 'Zeichenroboter', 'draw']];
         const photoOn = S.modes.single || S.modes.strip || S.modes.grid || S.layouts.length;
-        const isOn = (k, key) => k === 'photo' ? photoOn : k === 'slowmo' ? S.x.slowmo.enabled : S.modes[key];
+        const isOn = (k, key) => k === 'photo' ? photoOn : k === 'slowmo' ? S.x.slowmo.enabled : k === 'robot' ? !!S.x.robot?.enabled : S.modes[key];
         const sizes = [['720p-16:9', 'Rechteck 720p 16:9'], ['1080p-16:9', 'Rechteck 1080p 16:9'], ['720p-9:16', 'Hochformat 720p 9:16'], ['1080p-9:16', 'Hochformat 1080p 9:16'], ['square-720', 'Quadrat 720 1:1'], ['square-1080', 'Quadrat 1080 1:1']];
         const body = sub.mode === 'photo' ? `<div class="card">${sw('modes.single', 'Fotomodus aktivieren', 'Nehmen Sie Fotos für den Druck oder die digitale Weitergabe auf')}
               <p style="color:#777;font-size:13px">Das Aussehen der Ausdrucke legst du unter „Fotolayout & Countdown“ fest.</p>
@@ -1468,6 +1469,9 @@
             <h2>Soundtracks</h2><div class="card">${upList('x.slowmo.soundtracks', 'audio/mpeg', 'Soundtrack hinzufügen (MP3, max. 3 MB)')}</div>
             <h2>Overlays</h2><div class="card">${sel('x.slowmo.size', 'Ausgabegröße', sizes)}${upList('x.slowmo.overlays', 'image/png', 'Overlay hinzufügen (PNG)')}</div>
             <h2>Intro/Outro</h2><div class="card">${up('x.slowmo.intro', 'Intro-Video', 'video/mp4', 'MP4, max. 15 MB, 1280×720')}${up('x.slowmo.outro', 'Outro-Video', 'video/mp4', 'MP4, max. 15 MB, 1280×720')}</div>`
+          : sub.mode === 'robot' ? `<div class="card">${sw('x.robot.enabled', 'Zeichenroboter aktivieren', 'Ein Roboterarm zeichnet das Gästefoto live als Strichzeichnung auf Papier')}
+              <p style="color:#777;font-size:13px">Gäste wählen an der Fotobox „Zeichnung“, machen ein Foto, die KI macht daraus eine Strichzeichnung und der Arm zeichnet sie live aufs Blatt. Im Zeichnungs-Modus wird nicht gedruckt und nichts geteilt – die Gäste nehmen das Blatt mit.</p>
+              <p style="color:#777;font-size:13px">Blatt, Stift, Versatz und Geschwindigkeit stellst du an der Fotobox ein: Einstellungen → Extras → Zeichenroboter (Arm per USB, Rotrics DexArm).</p></div>`
           : `<div class="card">${sw('modes.video', 'Videomodus aktivieren', 'Nehmen Sie ein Video mit Ton auf')}</div>
             <h2>Allgemein</h2><div class="card">${slider('x.video.countdown', 'Countdown', 0, 30)}${slider('x.video.quality', 'Ausgabequalität', 1, 8, 1, 'mbps')}${slider('videoSecs', 'Aufnahmedauer', 1, 60, 1)}
               ${sw('videoAudio', 'Ton aufnehmen')}${sw('x.video.saveOriginal', 'Originalvideo speichern')}${sw('x.video.preTextOn', 'Text vor der Aufnahme anzeigen')}${text('x.video.preText', 'Text', 'Bereit machen')}</div>`;
@@ -2158,6 +2162,8 @@
     ['FOTO', 'bgremoval', 'wand', 'BACKGROUND REMOVAL', 'Hintergrund per KI durch ein digitales Bild ersetzen', { bgMode: 'ai', bgGuestChoice: true }],
     ['FOTO', 'mirror', 'smartphone', 'MIRROR BOOTH', 'Interaktive Sprachansagen und Animationen während der Aufnahme', { voice: true }],
     ['VIDEO', 'slowmo', 'film', '360 / SLOW-MO', 'Zeitlupen-Videos mit Tempo-Rampen', null],
+    ['ZEICHNEN', 'robot', 'pen', 'ZEICHENROBOTER', 'Ein Roboterarm zeichnet die Gäste live als Strichzeichnung auf Papier – kein Druck, kein Teilen',
+      { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: false }, x: { robot: { enabled: true } } }],
     ['VIDEO', 'video', 'video', 'VIDEO BOOTH', 'Videos mit Ton aufnehmen – für ein Video-Gästebuch', { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: true }, videoSecs: 15, videoAudio: true }]
   ];
   function newEventDialog(events, onPick, opts = {}) {
