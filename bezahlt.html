@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zahlung</title>
+<meta name="robots" content="noindex">
+<style>
+:root{color-scheme:light dark}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#111110;color:#fff;font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:24px;box-sizing:border-box;text-align:center}
+.box{max-width:420px}
+.ic{font-size:64px;line-height:1;margin-bottom:12px}
+h1{font-size:24px;margin:0 0 8px}
+p{margin:0;color:#c9c9c0}
+</style>
+</head>
+<body>
+<div class="box" id="ok"><div class="ic">✅</div><h1>Danke, die Zahlung ist bestätigt.</h1><p>Schau jetzt auf den Bildschirm der Fotobox – dein KI-Porträt wird erstellt. Abgebucht wird erst, wenn das Bild fertig ist.</p></div>
+<div class="box" id="abbruch" hidden><div class="ic">↩️</div><h1>Zahlung abgebrochen.</h1><p>Es wurde nichts abgebucht. An der Fotobox kannst du ein normales Foto machen oder es noch einmal versuchen.</p></div>
+<script>
+// Rücksprung von der Stripe-Bezahlseite (guest-pay): ?ok=1 oder ?abbruch=1 – die Fotobox merkt den Stand selbst (status-Abfrage)
+if (new URLSearchParams(location.search).has('abbruch')) { document.getElementById('ok').hidden = true; document.getElementById('abbruch').hidden = false; }
+</script>
+</body>
+</html>
