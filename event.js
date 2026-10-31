@@ -664,7 +664,7 @@
     // Testbild mit eigenem Foto: für „Meine KI-Stile“ stattdessen ein Bild mit dem Testpaar erzeugen (nach Rückfrage)
     const aiPairAsk = () => (G.pmConfirm || (async x => confirm(x)))('Für „Meine KI-Stile“ nehmen wir als Bild immer unser Testpaar – nicht dein eigenes Testfoto. Jetzt ein Bild mit dem Testpaar erzeugen? (1 Credit)', 'Erzeugen');
     if (!ai.own) aiDefaultPhoto().then(u => { if (u && !ai.own && !ai.photo) { ai.photo = u; if (page === 'ai' || page === 'fx' || page === 'cari') render(); } });
-    const status = t => { $(root, '.st').textContent = t; };
+    const status = t => { const el = $(root, '.st'); if (el) el.textContent = t; }; // nach render() kann das Feld kurz fehlen – nie abbrechen
     function save() {
       status('Speichert …'); clearTimeout(saveT);
       saveT = setTimeout(async () => {
@@ -959,16 +959,19 @@
       if (a === 'ai-lib-pair' || a === 'ai-lib-pair-missing') { // Bilder in „Meine KI-Stile“ mit unserem Testpaar erzeugen (1 Credit je Stil) – alle oder nur die fehlenden
         const L = Array.isArray(ai.lib) ? ai.lib.filter(x => a === 'ai-lib-pair' || !x.thumb) : []; if (!L.length || ai.busy) return;
         if (!await (G.pmConfirm || (async x => confirm(x)))(`${a === 'ai-lib-pair' ? `Alle ${L.length} Bilder` : `${L.length} fehlende Bilder`} in „Meine KI-Stile“ mit unserem Testpaar erzeugen? ${ctx.admin ? 'Als Betreiber ohne Credits.' : `Das kostet ${L.length} Credits (1 je Stil).`} Dauert etwa ${Math.max(1, Math.ceil(L.length / 3))} Minuten. Die Texte bleiben, wie sie sind.`, 'Erzeugen')) return;
-        ai.busy = true; render(); let ok = 0, fail = 0, last = '';
-        for (const [i, x] of L.entries()) {
-          status(`Testpaar-Bild ${i + 1} von ${L.length}: ${x.name} …`);
-          try {
-            const url = await aiPairThumb(x.prompt), { error } = await ctx.sb.from('ai_styles').update({ thumb: url }).eq('id', x.id);
-            if (error) throw error; x.thumb = url; ok++; if (page === 'ai') render();
-          } catch (e) { fail++; last = e.message; if (/Guthaben|anmelden|freigegeben|nicht erreichbar/i.test(e.message)) break; }
-        }
-        ai.busy = false; status(''); render();
-        ctx.toast(`${ok} von ${L.length} Bildern mit dem Testpaar erneuert${fail ? ` – Fehler: ${last}` : ''}`, 9000); return;
+        ai.busy = true; render(); let ok = 0, fail = 0, last = '', stop = '';
+        // Ein Klick erledigt alle (Betreiber 31.10.2026: „muss jedes Mal drücken“): jeder Stil in eigenem try, Fehler werden gezählt und
+        // nur bei Guthaben/Anmeldung abgebrochen; Fortschritt steht oben und im Fenstertitel, falls der Hinweis beim Neuzeichnen fehlt
+        try {
+          for (const [i, x] of L.entries()) {
+            try {
+              status(`Testpaar-Bild ${i + 1} von ${L.length}: ${x.name} …`); document.title = `KI-Bilder ${i + 1}/${L.length} …`;
+              const url = await aiPairThumb(x.prompt), { error } = await ctx.sb.from('ai_styles').update({ thumb: url }).eq('id', x.id);
+              if (error) throw error; x.thumb = url; ok++; if (page === 'ai' && (i % 3 === 2 || i === L.length - 1)) render();
+            } catch (e) { fail++; last = e?.message || String(e); console.warn('Testpaar-Bild', x.name, last); if (/Guthaben|anmelden|freigegeben|nicht erreichbar/i.test(last)) { stop = last; break; } }
+          }
+        } finally { ai.busy = false; status(''); document.title = 'Photobox Memories – Dashboard'; render(); }
+        ctx.toast(`${ok} von ${L.length} Bildern erzeugt${fail ? ` – ${fail} Fehler: ${last}` : ''}${stop ? ' (abgebrochen)' : ''}`, 12000); return;
       }
       if (a === 'ai-lib-add') { const p = S.ai.prompts[+t.dataset.i]; if (p) await aiLibSave(p); return; }
       if (a === 'ai-lib-share') { // nur Betreiber: Stil für alle Kunden freigeben oder zurücknehmen
