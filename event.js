@@ -442,7 +442,7 @@
     gif: { size: '720p-16:9', reverse: false, overlays: [], delay: 300 },
     slowmo: { enabled: false, countdown: 5, quality: 4, motion: false, flash: true, saveOriginal: true, preTextOn: false, preText: 'Bereit machen', length: 1, reverse: true, clipLen: 2, speed: '0.5x', soundtracks: [], overlays: [], size: '720p-16:9', intro: '', outro: '' },
     video: { countdown: 5, quality: 4, saveOriginal: true, preTextOn: false, preText: 'Bereit machen', overlays: [], size: '720p-16:9', intro: '', outro: '' },
-    robot: { enabled: false }, // Zeichenroboter: Aufnahme-Art „Zeichnung“ an der Fotobox (Einmessen dort unter Extras → Zeichenroboter)
+    robot: { enabled: false, themes: ['classic', 'caricature', 'superhero', 'football', 'astronaut', 'rockstar'], custom: [], guestPick: true, random: false, header: 'Wähle ein Thema' }, // Zeichenroboter: Aufnahme-Art „Zeichnung“ (Einmessen an der Fotobox unter Extras → Zeichenroboter); themes = Kennungen aus DRAW_THEMES, custom = eigene {id, name, prompt}
     voice: { style: 'de-frau', randombefore: false, randomafter: false, files: { start: '', effect: '', countdown: '', before: [], after: [], signature: '', processing: '', done: '' } },
     fx: { mode: 'guest', lut: '', stickerStyle: 'standard', stickers: [] },
     bg: { smooth: 11 },
@@ -833,6 +833,9 @@
         catch { ctx.toast('Guthaben nicht erreichbar. Zentrale KI muss zuerst freigeschaltet werden.', 5000); }
         return;
       }
+      if (a === 'rb-theme') { const l = S.x.robot.themes || []; S.x.robot.themes = l.includes(t.dataset.id) ? l.filter(x => x !== t.dataset.id) : [...l, t.dataset.id]; save(); render(); return; }
+      if (a === 'rb-cadd') { S.x.robot.custom = [...(S.x.robot.custom || []), { id: 'c' + Date.now().toString(36), name: '', prompt: '' }]; save(); render(); return; }
+      if (a === 'rb-cdel') { S.x.robot.custom = (S.x.robot.custom || []).filter((_, i) => i !== +t.dataset.i); save(); render(); return; }
       if (a === 'ai-clear') { ai[t.dataset.k] = ''; render(); return; }
       if (a === 'ai-pick') { ai.pick = t.dataset.k; ai.cat = ''; render(); return; }
       if (a === 'ai-close') { ai.pick = ''; render(); return; }
@@ -1471,7 +1474,15 @@
             <h2>Intro/Outro</h2><div class="card">${up('x.slowmo.intro', 'Intro-Video', 'video/mp4', 'MP4, max. 15 MB, 1280×720')}${up('x.slowmo.outro', 'Outro-Video', 'video/mp4', 'MP4, max. 15 MB, 1280×720')}</div>`
           : sub.mode === 'robot' ? `<div class="card">${sw('x.robot.enabled', 'Zeichenroboter aktivieren', 'Ein Roboterarm zeichnet das Gästefoto live als Strichzeichnung auf Papier')}
               <p style="color:#777;font-size:13px">Gäste wählen an der Fotobox „Zeichnung“, machen ein Foto, die KI macht daraus eine Strichzeichnung und der Arm zeichnet sie live aufs Blatt. Im Zeichnungs-Modus wird nicht gedruckt und nichts geteilt – die Gäste nehmen das Blatt mit.</p>
-              <p style="color:#777;font-size:13px">Blatt, Stift, Versatz und Geschwindigkeit stellst du an der Fotobox ein: Einstellungen → Extras → Zeichenroboter (Arm per USB, Rotrics DexArm).</p></div>`
+              <p style="color:#777;font-size:13px">Blatt, Stift, Versatz und Geschwindigkeit stellst du an der Fotobox ein: Einstellungen → Extras → Zeichenroboter (Arm per USB, Rotrics DexArm).</p></div>
+            <h2>Themen für Gäste</h2><div class="card">${sw('x.robot.guestPick', 'Gäste wählen das Thema', 'Vor dem Foto erscheint die Themen-Auswahl. Aus: das erste gewählte Thema gilt')}${sw('x.robot.random', 'Zufälliges Thema', 'Ohne Gästewahl bekommt jeder Gast ein zufälliges Thema aus der Auswahl')}${text('x.robot.header', 'Überschrift der Auswahl', 'Wähle ein Thema')}
+              <label class="l">Bibliothek – antippen zum Aus- oder Abwählen (${(S.x.robot.themes || []).length} gewählt)</label>
+              <div class="row" style="flex-wrap:wrap;gap:8px">${DRAW_THEMES.map(t => { const on = (S.x.robot.themes || []).includes(t.id); return `<button class="ghost" data-a="rb-theme" data-id="${t.id}" style="padding:6px 10px;${on ? 'background:#FFF4C2;border-color:#F7C838;font-weight:600' : 'opacity:.75'}" title="${esc(t.prompt || 'Nur die Konturen, ohne Verkleidung')}">${t.icon} ${esc(t.name)}${on ? ' ✓' : ''}</button>`; }).join('')}</div></div>
+            <h2>Eigene Themen</h2><div class="card">${(S.x.robot.custom || []).map((c, i) => `<div style="border:1px solid #eee;border-radius:8px;padding:10px;margin-bottom:8px">${text(`x.robot.custom.${i}.name`, 'Name des Themas', 'z. B. Firmenjubiläum')}
+                <label class="l">Beschreibung für die KI – was die Personen tragen oder tun</label><textarea data-s="x.robot.custom.${i}.prompt" rows="2" placeholder="z. B. Zeige die Personen im Firmen-Shirt mit Konfetti und einer Torte." style="width:100%">${esc(c.prompt || '')}</textarea>
+                <div class="row" style="justify-content:flex-end;margin-top:6px"><button class="ghost" data-a="rb-cdel" data-i="${i}">${ICON('trash', 14)} Entfernen</button></div></div>`).join('')}
+              <button class="ghost" data-a="rb-cadd">${ICON('plus', 15)} Eigenes Thema hinzufügen</button>
+              <p style="color:#777;font-size:13px;margin:8px 0 0">Jedes Thema wird an den Grund-Prompt „saubere schwarze Strichzeichnung, Gesichter erkennbar“ angehängt. Eigene Themen erscheinen bei den Gästen mit einem ✨.</p></div>`
           : `<div class="card">${sw('modes.video', 'Videomodus aktivieren', 'Nehmen Sie ein Video mit Ton auf')}</div>
             <h2>Allgemein</h2><div class="card">${slider('x.video.countdown', 'Countdown', 0, 30)}${slider('x.video.quality', 'Ausgabequalität', 1, 8, 1, 'mbps')}${slider('videoSecs', 'Aufnahmedauer', 1, 60, 1)}
               ${sw('videoAudio', 'Ton aufnehmen')}${sw('x.video.saveOriginal', 'Originalvideo speichern')}${sw('x.video.preTextOn', 'Text vor der Aufnahme anzeigen')}${text('x.video.preText', 'Text', 'Bereit machen')}</div>`;
@@ -2191,5 +2202,45 @@
     });
     document.body.appendChild(m);
   }
-  G.EventWS = { open, newEventDialog, pickTemplate, thumbOf, modal };
+  // Themen für den Zeichenroboter (Aufnahme-Art „Zeichnung“): Gäste wählen vor dem Foto, die KI zeichnet sie passend als Strichzeichnung.
+  // prompt = Zusatz zum Grund-Prompt der Strichzeichnung; icon/bg wie bei den KI-Stilen (Kachel ohne Beispielbild)
+  const DRAW_THEMES = [
+    ['classic', 'Klassisch', '✏️', '#3a3a3a,#777', ''],
+    ['caricature', 'Karikatur', '😄', '#f7c838,#ff9f43', 'Zeichne die Personen als freundliche Karikatur: Kopf deutlich größer als der Körper, markante Gesichtszüge liebevoll übertrieben, Körper klein und verspielt.'],
+    ['superhero', 'Superheld', '🦸', '#1e3c72,#e52d27', 'Zeige die Personen als Superhelden in engem Anzug mit Umhang und Emblem auf der Brust, heroische Pose, Fäuste in die Hüften gestemmt.'],
+    ['football', 'Fußball', '⚽', '#0b6623,#2ecc71', 'Zeige die Personen als Fußballspieler im Trikot mit Ball am Fuß, im Hintergrund angedeutet ein Tor.'],
+    ['astronaut', 'Astronaut', '🚀', '#0f0c29,#302b63', 'Zeige die Personen als Astronauten im Raumanzug mit offenem Helm, angedeutete Sterne und ein Planet im Hintergrund.'],
+    ['pirate', 'Pirat', '🏴‍☠️', '#2c3e50,#7f8c8d', 'Zeige die Personen als Piraten mit Dreispitz, Augenklappe oder Säbel, angedeutetes Schiffsdeck.'],
+    ['chef', 'Koch', '👨‍🍳', '#8e44ad,#e056a0', 'Zeige die Personen als Köche mit Kochmütze und Schürze, Kochlöffel oder Topf in der Hand.'],
+    ['doctor', 'Arzt', '🩺', '#16a085,#1abc9c', 'Zeige die Personen als Ärzte im Kittel mit Stethoskop.'],
+    ['firefighter', 'Feuerwehr', '🚒', '#c0392b,#e74c3c', 'Zeige die Personen als Feuerwehrleute in Einsatzjacke und Helm, Schlauch in der Hand.'],
+    ['police', 'Polizei', '👮', '#1f4e79,#2e86de', 'Zeige die Personen als Polizisten in Uniform mit Mütze.'],
+    ['soldier', 'Soldat', '🪖', '#4b5320,#8a9a5b', 'Zeige die Personen als Soldaten in Tarnuniform mit Helm, aufrechte Haltung.'],
+    ['rockstar', 'Rockstar', '🎸', '#1a1a1a,#ff0066', 'Zeige die Personen als Rockstars mit E-Gitarre auf der Bühne, wilde Frisur, Lederjacke.'],
+    ['dj', 'DJ', '🎧', '#12c2e9,#c471ed', 'Zeige die Personen als DJs mit Kopfhörern hinter dem Mischpult, eine Hand in der Luft.'],
+    ['wedding', 'Hochzeit', '💍', '#f5e6cc,#d4af37', 'Zeige die Personen festlich als Brautpaar oder Hochzeitsgäste in Kleid und Anzug, kleine Blumen.'],
+    ['christmas', 'Weihnachten', '🎄', '#0b3d2e,#c41e3a', 'Zeige die Personen mit Weihnachtsmütze und Pullover, Geschenke und Tannenzweige angedeutet.'],
+    ['halloween', 'Halloween', '🎃', '#1b1b2f,#ff7b00', 'Zeige die Personen in Halloween-Kostümen (Vampir, Hexe, Kürbis), Fledermäuse angedeutet.'],
+    ['cowboy', 'Cowboy', '🤠', '#8b5a2b,#deb887', 'Zeige die Personen als Cowboys mit Hut, Weste und Lasso, Kaktus angedeutet.'],
+    ['knight', 'Ritter', '🛡️', '#3b3b3b,#9e9e9e', 'Zeige die Personen als Ritter in Rüstung mit Schwert und Schild, Burgzinnen angedeutet.'],
+    ['royal', 'König & Königin', '👑', '#4a148c,#ffd700', 'Zeige die Personen als König und Königin mit Krone, Umhang und Zepter.'],
+    ['robot', 'Roboter', '🤖', '#1f2833,#66fcf1', 'Zeige die Personen als freundliche Roboter mit Metallkörper, Antennen und Display, Gesicht erkennbar.'],
+    ['manga', 'Manga', '🌸', '#ff9a9e,#fad0c4', 'Zeichne die Personen im Manga-Stil mit großen Augen und dynamischen Haaren.'],
+    ['comic', 'Comic', '💥', '#ffde59,#ff5757', 'Zeichne die Personen im Comic-Stil mit kräftigen Konturen und einer Sprechblase ohne Text.'],
+    ['surfer', 'Surfer', '🏄', '#00b4db,#0083b0', 'Zeige die Personen als Surfer mit Surfbrett am Strand, Welle angedeutet.'],
+    ['skier', 'Skifahrer', '⛷️', '#e0eafc,#cfdef3', 'Zeige die Personen als Skifahrer mit Skibrille, Stöcken und Skiern, Berge angedeutet.'],
+    ['pilot', 'Pilot', '✈️', '#141e30,#243b55', 'Zeige die Personen als Piloten in Uniform mit Mütze und Fliegerbrille, Flugzeug angedeutet.'],
+    ['racer', 'Rennfahrer', '🏎️', '#232526,#e10600', 'Zeige die Personen als Rennfahrer im Rennanzug mit Helm unter dem Arm, Rennwagen angedeutet.'],
+    ['boxer', 'Boxer', '🥊', '#8e0e00,#1f1c18', 'Zeige die Personen als Boxer mit Boxhandschuhen im Ring, Kampfpose.'],
+    ['dancer', 'Tänzer', '💃', '#ee0979,#ff6a00', 'Zeige die Personen als Tänzer in Bewegung, elegante Pose, Kleidung schwingt.'],
+    ['gardener', 'Gärtner', '🌻', '#56ab2f,#a8e063', 'Zeige die Personen als Gärtner mit Strohhut, Gießkanne und Sonnenblumen.'],
+    ['craftsman', 'Handwerker', '🔧', '#ff8008,#ffc837', 'Zeige die Personen als Handwerker mit Werkzeuggürtel, Helm und Schraubenschlüssel.'],
+    ['scientist', 'Wissenschaftler', '🔬', '#2193b0,#6dd5ed', 'Zeige die Personen als Wissenschaftler im Laborkittel mit Reagenzglas und Brille.'],
+    ['teacher', 'Lehrer', '📚', '#5f2c82,#49a09d', 'Zeige die Personen als Lehrer vor einer Tafel mit Zeigestab und Büchern.'],
+    ['farmer', 'Bauer', '🚜', '#a8702a,#f1c27d', 'Zeige die Personen als Bauern mit Latzhose und Hut, Traktor oder Heuballen angedeutet.'],
+    ['captain', 'Kapitän', '⚓', '#0b2545,#13315c', 'Zeige die Personen als Kapitäne mit Mütze und Steuerrad, Wellen angedeutet.'],
+    ['detective', 'Detektiv', '🕵️', '#2b1055,#7597de', 'Zeige die Personen als Detektive mit Hut, Mantel und Lupe.'],
+    ['angel', 'Engel', '😇', '#fdfbfb,#ebedee', 'Zeige die Personen als Engel mit Flügeln und Heiligenschein, kleine Wolken.'],
+  ].map(([id, name, icon, bg, prompt]) => ({ id, name, icon, bg, prompt }));
+  G.EventWS = { open, newEventDialog, pickTemplate, thumbOf, modal, DRAW_THEMES };
 })(window);
