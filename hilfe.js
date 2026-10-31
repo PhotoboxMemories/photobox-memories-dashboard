@@ -192,6 +192,9 @@
     { t: 'Hochladen hängt (Upload-Status)', k: 'status_warteschlange_upload_haengt_nicht_hochgeladen_offline_wartet',
       x: 'Zeigt, wie viele Fotos noch auf den Upload warten, und nennt den Grund (z. B. Anmeldung abgelaufen, Online-Galerie aus, kein Internet). „Jetzt hochladen“ versucht es sofort und zeigt das Ergebnis.',
       a: 'status', d: '' },
+    { t: 'Zeichenroboter (Roboterarm zeichnet das Foto)', k: 'zeichenroboter_roboter_arm_dexarm_stift_zeichnen_skizze_portrait_kalibrieren_einmessen_blatt_com_usb',
+      x: 'Ein Roboterarm (Rotrics DexArm, per USB) zeichnet das Gästefoto als Strichzeichnung auf Papier. Einrichten an der Fotobox: Einstellungen → Extras → Zeichenroboter: Anschluss wählen, „Verbinden“, Blatt (4 × 6, A6, A5, A4) unterlegen, mit den Pfeiltasten verschieben, Stifthöhe mit ▼/▲ so einstellen, dass die Spitze gerade aufsetzt, dann „Test Rahmen“ oder „Test Dreieck“. Stift anheben Niedrig/Mittel/Hoch, Geschwindigkeit Langsam bis Ultra.',
+      a: 'robot', d: '' },
     { t: 'Statistik', k: 'statistik_analysen_auswertung_anzahl_fotos_zahlen',
       x: 'Wie viele Fotos, GIFs und Videos an welchem Tag entstanden sind.',
       a: '', d: 'analytics' },
@@ -199,7 +202,7 @@
   const APP_PAGES = { design: 'Bildschirm-Editor', templates: 'Fotolayout', general: 'Allgemein', modes: 'Aufnahme-Arten', camera: 'Kamera',
     voice: 'Virtueller Berater', effects: 'Filter & Effekte', ai: 'KI-Porträts', bg: 'Hintergrund entfernen', guests: 'Umfrage', disc: 'Haftungsausschluss',
     share: 'Teilen', print: 'Drucken', mosaic: 'Fotomosaik', cari: 'Live-Karikatur', videomsg: 'Videonachricht',
-    status: 'Upload-Status', remote: 'Fernsteuerung', lang: 'Sprache', windows: 'Windows einrichten' };
+    status: 'Upload-Status', remote: 'Fernsteuerung', lang: 'Sprache', windows: 'Windows einrichten', robot: 'Zeichenroboter' };
   const APP_SUBS = { start: 'Startbildschirm', cap: 'Aufnahmebildschirm', share: 'Bildschirm zum Teilen' }, APP_PANELS = { design: 'Design', set: 'Einstellungen' };
   const APP_ACTS = { switch: 'Ereignis wechseln', update: 'Updates', slideshow: 'Slideshow', export: 'Exportieren' };
   const DASH_PAGES = { dash: 'Übersicht', analytics: 'Analysen', layout: 'Fotolayout & Countdown', capture: 'Aufnahme-Arten', voice: 'Virtueller Berater', lang: 'Sprache',
