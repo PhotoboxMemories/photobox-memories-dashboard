@@ -403,6 +403,19 @@
     #ws.navopen .navshade{display:block}
     #ws main.wm{padding:14px 12px 90px}
     #ws h1{font-size:20px;flex-wrap:wrap}
+    /* Handy (1.11.2026): Reiter-Leiste seitlich wischbar statt über den Rand, Knopfzeilen umbrechen, Credits-Leiste untereinander, Bilder nie breiter als der Bildschirm */
+    #ws .tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    #ws .tabs::-webkit-scrollbar{display:none}
+    #ws .tabs button{white-space:nowrap;flex:none;padding:10px 11px}
+    #ws .between{flex-wrap:wrap;gap:8px}
+    #ws .between>.row{display:flex;flex-wrap:wrap;width:100%;min-width:0}
+    #ws .between>.row>button{white-space:normal;text-align:left}
+    #ws .card .row{flex-wrap:wrap}
+    #ws .aibar{flex-direction:column;align-items:stretch;gap:8px}
+    #ws .aibar .sp{display:none}
+    #ws .aibar button{width:100%}
+    #ws main.wm img,#ws main.wm canvas,#ws main.wm video,#ws main.wm iframe{max-width:100%}
+    #ws main.wm input[type=text],#ws main.wm input[type=url],#ws main.wm input[type=email],#ws main.wm select,#ws main.wm textarea{max-width:100%}
     #ws .cols{flex-direction:column;gap:14px}
     #ws .cols>.left{min-width:0;max-width:none;width:100%}
     #ws .pv{width:100%;position:static}
