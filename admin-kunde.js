@@ -497,3 +497,22 @@ window.AdminKunde = (() => {
   }
   return { open };
 })();
+
+// Übersicht → Knopf „KI-Credits“: Der Betreiber hat kein Guthaben (seine Bilder zählen nur nach oben) – er sieht dort den
+// Gesamt-Verbrauch; Kunden sehen weiter ihr Guthaben (Betreiber 1.11.2026). Hängt sich an loadMyCredits aus index.html.
+window.addEventListener('DOMContentLoaded', () => {
+  if (typeof loadMyCredits !== 'function') return;
+  const orig = loadMyCredits;
+  loadMyCredits = async function () {
+    await orig.apply(this, arguments);
+    let pr = null, meId = null; try { pr = profile; meId = me?.id; } catch { return; }
+    if (!pr?.is_admin || !meId) return;
+    const { data, error } = await sb.from('ai_jobs').select('cost').eq('owner_id', meId).eq('status', 'succeeded').limit(100000);
+    if (error) return;
+    const sum = (data || []).reduce((a, j) => a + (j.cost || 0), 0);
+    const chip = document.getElementById('creditChip');
+    if (chip) { chip.innerHTML = `✨ <b id="creditChipN">${sum}</b> Credits verbraucht`; chip.title = 'Dein Gesamt-Verbrauch an KI-Credits – als Betreiber ohne Limit'; }
+    const first = document.querySelector('#creditStats .card');
+    if (first) first.innerHTML = `<b>${sum}</b><span>Verbraucht gesamt</span><span class="small muted">Credits · Betreiber: kein Guthaben nötig</span>`;
+  };
+});
