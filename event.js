@@ -1347,12 +1347,13 @@
     async function uploadToGallery() {
       const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*,video/mp4,video/webm'; inp.multiple = true;
       inp.onchange = async () => {
-        const files = [...inp.files].slice(0, 100); if (!files.length) return;
+        // alle gewählten Dateien (vorher nur die ersten 100 – Betreiber 1.11.2026: „lädt nur 100 Bilder“); ein Fehler bricht nicht mehr ab
+        const files = [...inp.files]; if (!files.length) return;
         const uid = ctx.me?.id; if (!uid) return ctx.toast('Bitte neu anmelden.', 4000);
-        let ok = 0, n = 0;
+        let ok = 0, n = 0, fail = 0, big = 0; const errs = [];
         for (const f of files) {
-          status(`Lädt ${++n} von ${files.length} hoch …`);
-          if (f.size > 25 * 1024 * 1024) continue;
+          status(`Lädt ${++n} von ${files.length} hoch … (${ok} fertig${fail ? `, ${fail} Fehler` : ''})`);
+          if (f.size > 25 * 1024 * 1024) { big++; continue; }
           try {
             const ext = (f.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, ''), id = crypto.randomUUID(), base = `${uid}/${ev.id}/${id}`;
             const video = f.type.startsWith('video'); let thumb = null;
@@ -1367,9 +1368,11 @@
             }
             const r2 = await ctx.sb.from('photos').insert({ event_id: ev.id, path: `${pre}${base}.${ext}`, thumb: thumb ? `${pre}${base}_t.jpg` : null, kind: ext === 'gif' ? 'gif' : video ? 'video' : 'photo', bytes: f.size, name: f.name.slice(0, 120) });
             if (r2.error) throw r2.error; ok++;
-          } catch (e) { ctx.toast('Hochladen fehlgeschlagen: ' + (e.message || e), 5000); break; }
+          } catch (e) { fail++; if (errs.length < 3) errs.push(e.message || String(e)); if (/neu anmelden|JWT|401/i.test(e.message || '')) break; }
         }
-        status(''); if (ok) ctx.toast(`${ok} Datei(en) hochgeladen`); gal.list = null; render(); loadGallery(true);
+        status('');
+        ctx.toast(`${ok} von ${files.length} Datei(en) hochgeladen${fail ? ` – ${fail} fehlgeschlagen (${errs.join('; ')})` : ''}${big ? ` – ${big} übersprungen (größer als 25 MB)` : ''}`, fail || big ? 10000 : 4000);
+        gal.list = null; render(); loadGallery(true);
       };
       inp.click();
     }
