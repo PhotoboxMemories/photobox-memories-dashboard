@@ -205,6 +205,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
     <div class="muted small" id="authHint">Melde dich an, um deine Events und Fotoboxen zu verwalten.</div>
     <div><label>E-Mail</label><input type="email" id="aEmail" autocomplete="email"></div>
     <div id="aPwWrap"><label>Passwort</label><input type="password" id="aPw" autocomplete="current-password"></div>
+    <div id="aCaptcha"></div>
     <button class="btn primary" id="aGo">Anmelden</button>
     <div class="row small" style="justify-content:space-between">
       <a href="#" id="aSwitch">Neues Konto erstellen</a>
@@ -642,13 +643,38 @@ $('#aSwitch').onclick = e => {
   $('#aSwitch').textContent = signup ? 'Ich habe schon ein Konto' : 'Neues Konto erstellen';
   $('#authHint').textContent = signup ? 'Erstelle dein kostenloses Konto – mit derselben E-Mail und demselben Passwort meldest du dich auch in der Fotobox an.' : 'Melde dich an, um deine Events und Fotoboxen zu verwalten.';
 };
+// Schutz gegen Bots (Betreiber 01.11.2026, statt Zwei-Faktor): Cloudflare Turnstile. Wird nur auf der Anmeldeseite geladen und
+// prüft meist unsichtbar; Supabase verlangt das Token für Anmelden, Registrieren, Passwort vergessen und Mail erneut senden.
+const TS_KEY = '0x4AAAAAAFvZRBRU8_Vr1VLM';
+let tsId = null, tsToken = '', tsWait = null;
+const tsLoad = () => window.turnstile ? Promise.resolve() : (tsWait ||= new Promise((res, rej) => {
+  const s = document.createElement('script'); s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; s.async = true;
+  s.onload = res; s.onerror = () => { tsWait = null; rej(new Error('Turnstile')); }; document.head.appendChild(s);
+}));
+async function tsRender() {
+  if (DEMO || tsId !== null) return;
+  try { await tsLoad(); } catch { return; }
+  if (tsId !== null || !window.turnstile) return;
+  tsId = turnstile.render('#aCaptcha', { sitekey: TS_KEY, appearance: 'interaction-only', callback: t => { tsToken = t; },
+    'expired-callback': () => { tsToken = ''; }, 'error-callback': () => { tsToken = ''; } });
+}
+async function captcha() { // frisches Token für genau eine Anfrage (jedes Token gilt nur einmal)
+  if (DEMO) return undefined;
+  await tsRender();
+  for (let i = 0; i < 60 && !tsToken && tsId !== null; i++) await new Promise(r => setTimeout(r, 200));
+  const t = tsToken; tsToken = ''; if (tsId !== null) try { turnstile.reset(tsId); } catch {}
+  return t || undefined;
+}
+$('#aEmail').addEventListener('focus', () => { tsRender(); });
+setTimeout(() => { if ($('#aEmail')?.offsetParent) tsRender(); }, 500);
 $('#aGo').onclick = async () => {
   const email = $('#aEmail').value.trim(), password = $('#aPw').value;
   if (!email || password.length < 6) return authMsg('Bitte E-Mail und ein Passwort mit mindestens 6 Zeichen eingeben.');
   $('#aGo').disabled = true;
+  const captchaToken = await captcha();
   const { data, error } = signup
-    ? await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.href.split('#')[0] } })
-    : await sb.auth.signInWithPassword({ email, password });
+    ? await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.href.split('#')[0], captchaToken } })
+    : await sb.auth.signInWithPassword({ email, password, options: { captchaToken } });
   $('#aGo').disabled = false;
   if (error) {
     if (/not confirmed/i.test(error.message)) return authUnconfirmed(email);
@@ -657,7 +683,8 @@ $('#aGo').onclick = async () => {
   if (signup && !data.session) authMsg('Fast geschafft! Bitte bestätige deine E-Mail über den Link, den wir dir geschickt haben. Keine Mail da? Bitte auch im Spam-Ordner nachsehen.', true);
 };
 // Anmelde-Fehler von Supabase (englisch) verständlich auf Deutsch
-const AUTH_ERR = m => /Invalid login credentials/i.test(m) ? 'E-Mail oder Passwort falsch.'
+const AUTH_ERR = m => /captcha/i.test(m) ? (window.turnstile ? 'Das hat nicht geklappt. Bitte noch einmal versuchen.' : 'Bitte die Internetverbindung prüfen und die Seite neu laden.')
+  : /Invalid login credentials/i.test(m) ? 'E-Mail oder Passwort falsch.'
   : /already registered|already been registered/i.test(m) ? 'Für diese E-Mail-Adresse gibt es schon ein Konto – bitte anmelden.'
   : /rate limit|too many/i.test(m) ? 'Gerade wurden zu viele Mails verschickt. Bitte in ein paar Minuten noch einmal versuchen.'
   : /expired|invalid.*link/i.test(m) ? 'Der Link ist abgelaufen. Bitte noch einmal anfordern.'
@@ -669,7 +696,7 @@ function authUnconfirmed(email) {
   m.innerHTML = 'Ihre E-Mail-Adresse ist noch nicht bestätigt. Bitte klicken Sie auf den Link in unserer Mail – auch im Spam-Ordner nachsehen. Der Link gilt nur eine begrenzte Zeit.<br><button type="button" class="btn" id="aResend" style="margin-top:10px">✉ Bestätigungs-Mail erneut senden</button>';
   $('#aResend').onclick = async () => {
     $('#aResend').disabled = true;
-    const { error } = await sb.auth.resend({ type: 'signup', email, options: { emailRedirectTo: location.href.split('#')[0] } });
+    const { error } = await sb.auth.resend({ type: 'signup', email, options: { emailRedirectTo: location.href.split('#')[0], captchaToken: await captcha() } });
     error ? authMsg(AUTH_ERR(error.message)) : authMsg('Neue Bestätigungs-Mail an ' + email + ' gesendet. Bitte den Link darin anklicken (auch im Spam-Ordner nachsehen).', true);
   };
 }
@@ -677,7 +704,7 @@ $('#aForgot').onclick = async e => {
   e.preventDefault();
   const email = $('#aEmail').value.trim();
   if (!email) return authMsg('Bitte zuerst die E-Mail-Adresse eingeben.');
-  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0] });
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0], captchaToken: await captcha() });
   error ? authMsg(AUTH_ERR(error.message)) : authMsg('Wir haben dir einen Link zum Zurücksetzen geschickt.', true);
 };
 $('#rGo').onclick = async () => {
