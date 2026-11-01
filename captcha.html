@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Photobox Memories</title>
+<!-- Sicherheitsprüfung für die Anmeldung der Fotobox (01.11.2026): Die Fotobox-App läuft ohne Internet-Adresse, Cloudflare Turnstile
+     braucht aber eine. Die App öffnet diese Seite kurz in einem eigenen Fenster; ist die Prüfung bestanden, steht das Token im
+     Adress-Anker (#token=…) – die App liest es dort und schickt es mit der Anmeldung an Supabase. Die Seite selbst sendet nichts. -->
+<style>
+  :root { color-scheme: light; }
+  html, body { margin: 0; height: 100%; background: #fff; font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: #222; }
+  main { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 16px; box-sizing: border-box; text-align: center; }
+  #ts { min-height: 65px; }
+  .small { color: #666; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <div id="msg">Sicherheitsprüfung …</div>
+  <div id="ts"></div>
+  <div class="small" id="hint"></div>
+</main>
+<script>
+(function () {
+  const L = (new URLSearchParams(location.search).get('l') || 'de').slice(0, 2);
+  const TX = {
+    de: ['Sicherheitsprüfung …', 'Einen Moment – gleich geht es weiter.', 'Fertig.', 'Die Prüfung ist gerade nicht erreichbar. Bitte die Internetverbindung prüfen.'],
+    en: ['Security check …', 'One moment – continuing shortly.', 'Done.', 'The check is not available right now. Please check the internet connection.'],
+    tr: ['Güvenlik kontrolü …', 'Bir saniye – birazdan devam ediliyor.', 'Tamam.', 'Kontrol şu anda kullanılamıyor. Lütfen internet bağlantısını kontrol edin.'],
+    fr: ['Vérification de sécurité …', 'Un instant – cela continue tout de suite.', 'Terminé.', 'La vérification est indisponible. Veuillez vérifier la connexion internet.'],
+    es: ['Comprobación de seguridad …', 'Un momento – enseguida continúa.', 'Listo.', 'La comprobación no está disponible. Comprueba la conexión a internet.'],
+    it: ['Controllo di sicurezza …', 'Un attimo – si continua subito.', 'Fatto.', 'Il controllo non è disponibile. Controlla la connessione internet.']
+  }[L] || null;
+  const T = TX || ['Sicherheitsprüfung …', 'Einen Moment – gleich geht es weiter.', 'Fertig.', 'Die Prüfung ist gerade nicht erreichbar. Bitte die Internetverbindung prüfen.'];
+  document.documentElement.lang = TX ? L : 'de';
+  document.getElementById('msg').textContent = T[0];
+  document.getElementById('hint').textContent = T[1];
+  const s = document.createElement('script');
+  s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+  s.async = true;
+  s.onerror = () => { document.getElementById('hint').textContent = T[3]; location.hash = 'fehler=laden'; };
+  s.onload = () => {
+    turnstile.render('#ts', {
+      sitekey: '0x4AAAAAAFvZRBRU8_Vr1VLM',
+      language: TX ? L : 'de',
+      callback: (t) => { document.getElementById('msg').textContent = T[2]; document.getElementById('hint').textContent = ''; location.hash = 'token=' + encodeURIComponent(t); },
+      'error-callback': () => { document.getElementById('hint').textContent = T[3]; }
+    });
+  };
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>
