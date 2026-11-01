@@ -239,13 +239,15 @@ window.AdminSchutz = (() => {
       lv = data?.currentLevel;
       if (!lv) return out(); // keine gültige Sitzung mehr – die Anmeldeseite kommt von selbst
     } catch (e) { if (noSession(e)) return out(); }
-    if (lv === 'aal2') { startIdle(); addPage(); return true; }
-    try { const f = await factors(); f.verified.length ? verifyOverlay(f.verified) : enrollOverlay(false); }
-    catch (e) {
-      if (noSession(e)) return out();
-      overlay(`<h2 style="margin:0">Admin-Anmeldung</h2><div class="msg err">${esc(errText(e))}</div><div class="row"><button type="button" class="btn" data-mfa="out">Neu anmelden</button></div>`);
-    }
-    return false;
+    // Zwei-Faktor abgeschaltet (Betreiber 01.11.2026): Jede Bestätigung des Codes beendete bei Supabase alle anderen Anmeldungen des
+    // Kontos – die Fotoboxen flogen raus. Kein Code mehr; die Abmelde-Uhr (30 Min.) und die Seite „Sicherheit“ bleiben.
+    // Ersatz-Wache: Hinweis-Mail bei jeder neuen Betreiber-Anmeldung (einmal je Sitzung) – fremde Anmeldungen fallen so sofort auf
+    try {
+      const { data: ss } = await sb.auth.getSession(), p = (ss?.session?.access_token || '').split('.')[1] || '';
+      const sid = p ? JSON.parse(atob(p.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat(-p.length & 3))).session_id : '';
+      if (sid && localStorage.getItem('pm.adminLoginMail') !== sid) { localStorage.setItem('pm.adminLoginMail', sid); notifyLogin(); }
+    } catch {}
+    startIdle(); addPage(); return true;
   }
   return { ensure };
 })();
