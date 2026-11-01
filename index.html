@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Photobox Memories – Dashboard</title>
 <link rel="stylesheet" href="fonts-fredoka/fredoka.css">
-<script>window.I18N_V = '20261028-2';</script>
+<script>window.I18N_V = '20261101-1';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -998,7 +998,7 @@ function deviceDetails(d, online, mine) {
   return `<div class="stats" style="margin:6px 0 14px${ori ? ';grid-template-columns:repeat(auto-fit,minmax(170px,1fr))' : ''}">
       <div class="card"><b>${N(st.prints)}${N(st.printLimit) ? ` <span style="font-size:16px">/ ${N(st.printLimit)}</span>` : ''}</b><span>Ausdrucke bei diesem Ereignis</span><span class="small muted">${N(st.printLimit) ? 'noch ' + Math.max(0, N(st.printLimit) - N(st.prints)) + ' übrig' : 'kein Limit eingestellt'}</span></div>
       <div class="card"><b style="font-size:17px">${esc(st.camera?.name || '–')}</b><span>Kamera</span><span class="small">${ok(st.camera?.ready)}</span></div>
-      <div class="card"><b style="font-size:17px">${esc(st.printer?.name || '–')}</b><span>Drucker</span><span class="small">${ok(st.printer?.ok)}${N(st.printer?.code) ? ' · Windows-Statuscode ' + N(st.printer.code) : ''}</span></div>
+      <div class="card"><b style="font-size:17px">${esc(st.printer?.name || '–')}</b><span>Drucker</span><span class="small">${ok(st.printer?.ok)}${N(st.printer?.code) ? ' · Windows-Statuscode ' + N(st.printer.code) : ''}</span>${[].concat(st.media || []).filter(m => m && N(m.size)).map(m => `<span class="small" style="display:block;margin-top:4px${N(m.left) <= 30 ? ';color:#d33;font-weight:600' : ''}">${(st.media || []).length > 1 ? `<span translate="no">${esc(m.printer)}</span>: ` : ''}<span>Druckerrolle</span> · <span>Noch ${N(m.left)} von ${N(m.size)} Drucken</span>${N(m.left) <= 30 ? ' · <span>Rolle fast leer</span>' : ''}</span>`).join('')}</div>
       <div class="card"><b style="font-size:17px">${esc(scr)}</b><span>Bildschirm</span><span class="small muted">${esc(st.event || 'kein Ereignis')} · gemeldet vor ${age < 120 ? age + ' s' : Math.round(age / 60) + ' min'}</span></div>
       ${ori}
     </div>
@@ -1032,7 +1032,7 @@ function renderDevices() {
       <td><input value="${esc(d.name || 'FotoBox')}" data-dev="${d.id}" data-act="name" style="max-width:200px"></td>
       <td><span class="dot ${online ? 'on' : ''}"></span>${online ? 'Online' : d.last_seen ? 'zuletzt ' + new Date(d.last_seen).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : 'nie'}${N(st.uploads) > 0 ? `<div class="small" style="color:#c98a00;margin-top:2px" title="Liegen sicher auf der Fotobox und werden automatisch hochgeladen, sobald der Foto-Speicher erreichbar ist">⏳ ${N(st.uploads)} ${N(st.uploads) === 1 ? 'Foto wartet' : 'Fotos warten'} auf den Upload</div>` : ''}</td>
       <td>${opts}</td>
-      <td>${st.prints != null ? `<b>${N(st.prints)}</b>${N(st.printLimit) ? ' / ' + N(st.printLimit) : ''}` : '–'}</td>
+      <td>${st.prints != null ? `<b>${N(st.prints)}</b>${N(st.printLimit) ? ' / ' + N(st.printLimit) : ''}` : '–'}${[].concat(st.media || []).filter(m => m && N(m.size)).map(m => `<div class="small" title="Druckerrolle" style="margin-top:2px;${N(m.left) <= 30 ? 'color:#d33;font-weight:600' : 'color:#888'}">🧻 ${N(m.left)} / ${N(m.size)}</div>`).join('')}</td>
       <td>${d.photos_total}</td>
       <td class="small">${esc(d.app_version || '–')}</td>
       <td class="adminCol small ${profile.is_admin ? '' : 'hidden'}">${esc(d.licenses?.customer_name || d.licenses?.customer_email || '')}</td>
