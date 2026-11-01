@@ -24,6 +24,7 @@
 <script src="start-anim.js?v=20261020-1"></script>
 <script src="admin-schutz.js?v=20261025-3"></script>
 <script src="admin-kunde.js?v=20261028-2"></script>
+<script src="admin-besucher.js?v=20261101-1"></script>
 <script src="event.js?v=20261101-1"></script>
 <script src="studio.js?v=20261030-1"></script>
 <script src="vendor/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
@@ -378,6 +379,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       </div>
       <div data-admp="overview">
         <div class="stats" id="ovStats"></div>
+        <div class="card" id="bdVisits" style="margin-bottom:20px"></div>
         <div class="card" style="margin-bottom:20px">
           <div class="pagehead" style="margin-bottom:10px"><h2 style="margin:0">Kunden</h2><div class="row" style="gap:8px"><button type="button" class="btn small" id="ovStoreScan" title="Belegten Speicher aller Kunden bei Hetzner neu zählen">Speicher neu berechnen</button><select id="ovFilter" style="width:auto;max-width:220px" title="Kunden filtern"><option value="">Alle Kunden</option><option value="bd">Nur BoothDesigner</option></select><input id="ovSearch" placeholder="Suchen…" style="max-width:260px"></div></div>
           <div class="tablewrap"><table>
@@ -1815,6 +1817,7 @@ $('#planAdd').onclick = async () => {
 let ov = null;
 async function loadOverview() {
   if (!profile?.is_admin || !$('#ovStats')) return;
+  window.AdminBesucher?.load(sb, $('#bdVisits'), esc); // Besucher von boothdesigner.de (admin-besucher.js, SQL 202611010001)
   const [p, w, l, j, st, mk] = await Promise.all([
     sb.from('profiles').select('id,email,name,is_admin,created_at').order('created_at', { ascending: false }),
     sb.from('ai_wallets').select('owner_id,balance'),
