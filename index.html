@@ -25,6 +25,7 @@
 <script src="admin-schutz.js?v=20261101-1"></script>
 <script src="admin-kunde.js?v=20261028-2"></script>
 <script src="admin-besucher.js?v=20261101-1"></script>
+<script src="admin-boothdesigner.js?v=20261101-1"></script>
 <script src="event.js?v=20261101-1"></script>
 <script src="studio.js?v=20261030-1"></script>
 <script src="vendor/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
@@ -373,6 +374,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       <!-- Unterseiten der Verwaltung (zuletzt gewählte bleibt gemerkt) -->
       <div class="admnav" id="admNav">
         <button type="button" data-adm="overview" data-ic="users" class="on">Übersicht</button>
+        <button type="button" data-adm="bd" data-ic="palette">BoothDesigner</button>
         <button type="button" data-adm="licenses" data-ic="key">Lizenzen</button>
         <button type="button" data-adm="credits" data-ic="sparkles">KI-Guthaben</button>
         <button type="button" data-adm="sales" data-ic="gift"><span data-admpaid>Tarife &amp; Foto-Shop</span><span data-admfree class="hidden">Foto-Shop</span></button>
@@ -380,15 +382,16 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       </div>
       <div data-admp="overview">
         <div class="stats" id="ovStats"></div>
-        <div class="card" id="bdVisits" style="margin-bottom:20px"></div>
         <div class="card" style="margin-bottom:20px">
-          <div class="pagehead" style="margin-bottom:10px"><h2 style="margin:0">Kunden</h2><div class="row" style="gap:8px"><button type="button" class="btn small" id="ovStoreScan" title="Belegten Speicher aller Kunden bei Hetzner neu zählen">Speicher neu berechnen</button><select id="ovFilter" style="width:auto;max-width:220px" title="Kunden filtern"><option value="">Alle Kunden</option><option value="bd">Nur BoothDesigner</option></select><input id="ovSearch" placeholder="Suchen…" style="max-width:260px"></div></div>
+          <div class="pagehead" style="margin-bottom:10px"><h2 style="margin:0">Kunden</h2><div class="row" style="gap:8px"><button type="button" class="btn small" id="ovStoreScan" title="Belegten Speicher aller Kunden bei Hetzner neu zählen">Speicher neu berechnen</button><input id="ovSearch" placeholder="Suchen…" style="max-width:260px"></div></div>
           <div class="tablewrap"><table>
             <thead><tr><th>Kunde</th><th>Registriert</th><th>Lizenz</th><th>Fotoboxen</th><th>Guthaben</th><th>Erhalten</th><th>KI-Bilder</th><th>Speicher</th><th>Aktionen</th></tr></thead>
             <tbody id="ovCustomers"><tr><td colspan="9" class="empty">Lädt …</td></tr></tbody>
           </table></div>
         </div>
       </div>
+      <!-- BoothDesigner: Konten, Testversionen, Abos, Besucher (admin-boothdesigner.js, Betreiber-Wunsch 01.11.2026) -->
+      <div data-admp="bd" class="hidden" id="bdPage"></div>
       <div data-admp="licenses" class="hidden">
         <div class="pagehead"><h2 style="margin:0">Alle Lizenzen</h2><div class="row" style="gap:10px;flex-wrap:wrap"><input id="lSearch" placeholder="Suchen…" style="flex:1 1 180px;width:auto;max-width:260px"><button class="btn primary" id="lNewBtn" type="button">+ Neue Lizenz</button></div></div>
         <div class="card hidden" style="margin-bottom:20px" id="lNewCard">
@@ -799,7 +802,7 @@ $('#nav').onclick = e => {
   if (t === 'studio') openStudio();
 };
 
-/* ---------- Verwaltung: Unterseiten (Übersicht, Lizenzen, KI-Guthaben, Tarife & Foto-Shop, Software & Speicher) ---------- */
+/* ---------- Verwaltung: Unterseiten (Übersicht, BoothDesigner, Lizenzen, KI-Guthaben, Tarife & Foto-Shop, Software & Speicher) ---------- */
 const admShow = k => {
   if (!$(`#admNav [data-adm="${k}"]`)) k = 'overview';
   $$('#admNav button').forEach(b => b.classList.toggle('on', b.dataset.adm === k));
@@ -1845,7 +1848,7 @@ $('#planAdd').onclick = async () => {
 let ov = null;
 async function loadOverview() {
   if (!profile?.is_admin || !$('#ovStats')) return;
-  window.AdminBesucher?.load(sb, $('#bdVisits'), esc); // Besucher von boothdesigner.de (admin-besucher.js, SQL 202611010001)
+  window.AdminBD?.load(sb, $('#bdPage'), esc, fmtDate); // Verwaltung → BoothDesigner: Konten, Tests, Abos, Besucher (admin-boothdesigner.js)
   const [p, w, l, j, st, mk] = await Promise.all([
     sb.from('profiles').select('id,email,name,is_admin,created_at').order('created_at', { ascending: false }),
     sb.from('ai_wallets').select('owner_id,balance'),
