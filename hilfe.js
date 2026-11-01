@@ -190,7 +190,7 @@
       x: 'An der Fotobox: Ereignis auf einen USB-Stick oder in einen Ordner exportieren. Im Dashboard: „Alle herunterladen“ in der Galerie.',
       a: '@export', d: 'dash' },
     { t: 'Hochladen hängt (Upload-Status)', k: 'status_warteschlange_upload_haengt_nicht_hochgeladen_offline_wartet',
-      x: 'Zeigt, wie viele Fotos noch auf den Upload warten, und nennt den Grund (z. B. Anmeldung abgelaufen, Online-Galerie aus, kein Internet). „Jetzt hochladen“ versucht es sofort und zeigt das Ergebnis.',
+      x: 'Zeigt, wie viele Fotos noch auf den Upload warten, und nennt den Grund (z. B. Online-Galerie aus, kein Internet). Ist die Konto-Anmeldung abgelaufen, lädt die Fotobox trotzdem hoch – über den Lizenzschlüssel; nur KI-Porträts und Löschen brauchen die Anmeldung. „Jetzt hochladen“ versucht es sofort und zeigt das Ergebnis.',
       a: 'status', d: '' },
     { t: 'Zeichenroboter (Roboterarm zeichnet das Foto)', k: 'zeichenroboter_roboter_arm_dexarm_stift_zeichnen_skizze_portrait_kalibrieren_einmessen_blatt_com_usb',
       x: 'Ein Roboterarm (Rotrics DexArm, per USB) zeichnet das Gästefoto als Strichzeichnung auf Papier. Einrichten an der Fotobox: Einstellungen → Extras → Zeichenroboter: Anschluss wählen, „Verbinden“, Blatt (4 × 6, A6, A5, A4) unterlegen, mit den Pfeiltasten verschieben, Stifthöhe mit ▼/▲ so einstellen, dass die Spitze gerade aufsetzt, dann „Test Rahmen“ oder „Test Dreieck“. Stift anheben Niedrig/Mittel/Hoch, Geschwindigkeit Langsam bis Ultra.',
