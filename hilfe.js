@@ -123,7 +123,7 @@
     { t: 'Hintergrund entfernen (Greenscreen)', k: 'hintergrund_entfernen_greenscreen_green_screen_gruen_austauschen_hintergruende_freistellen',
       x: 'Neuer Hintergrund per KI ohne grüne Wand oder klassisch mit Greenscreen. Eigene Hintergründe hochladen – die Gäste suchen sich einen aus.',
       a: 'bg', d: 'bg' },
-    { t: 'KI-Porträts', k: 'ki_kuenstliche_intelligenz_portraet_portraets_stil_stile_superheld_grok_ai',
+    { t: 'KI-Fotos', k: 'ki_kuenstliche_intelligenz_portraet_portraets_stil_stile_superheld_grok_ai',
       x: 'Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen.',
       a: 'ai', d: 'ai' },
     { t: 'Kosten und Lizenz', k: 'tarif_tarife_preis_preise_kosten_kostenlos_gratis_basis_pro_abo_lizenz_kaufen_buchen_upgrade_werbung_schloss_gesperrt_test_testen_probe',
@@ -190,7 +190,7 @@
       x: 'An der Fotobox: Ereignis auf einen USB-Stick oder in einen Ordner exportieren. Im Dashboard: „Alle herunterladen“ in der Galerie.',
       a: '@export', d: 'dash' },
     { t: 'Hochladen hängt (Upload-Status)', k: 'status_warteschlange_upload_haengt_nicht_hochgeladen_offline_wartet',
-      x: 'Zeigt, wie viele Fotos noch auf den Upload warten, und nennt den Grund (z. B. Online-Galerie aus, kein Internet). Ist die Konto-Anmeldung abgelaufen, lädt die Fotobox trotzdem hoch – über den Lizenzschlüssel; nur KI-Porträts und Löschen brauchen die Anmeldung. „Jetzt hochladen“ versucht es sofort und zeigt das Ergebnis.',
+      x: 'Zeigt, wie viele Fotos noch auf den Upload warten, und nennt den Grund (z. B. Online-Galerie aus, kein Internet). Ist die Konto-Anmeldung abgelaufen, lädt die Fotobox trotzdem hoch – über den Lizenzschlüssel; nur KI-Fotos und Löschen brauchen die Anmeldung. „Jetzt hochladen“ versucht es sofort und zeigt das Ergebnis.',
       a: 'status', d: '' },
     { t: 'Zeichenroboter (Roboterarm zeichnet das Foto)', k: 'zeichenroboter_roboter_arm_dexarm_stift_zeichnen_skizze_portrait_kalibrieren_einmessen_blatt_com_usb',
       x: 'Ein Roboterarm (Rotrics DexArm, per USB) zeichnet das Gästefoto als Strichzeichnung auf Papier. Einrichten an der Fotobox: Einstellungen → Extras → Zeichenroboter: Anschluss wählen, „Verbinden“, Blatt (4 × 6, A6, A5, A4) unterlegen, mit den Pfeiltasten verschieben, Stifthöhe mit ▼/▲ so einstellen, dass die Spitze gerade aufsetzt, dann „Test Rahmen“ oder „Test Dreieck“. Stift anheben Niedrig/Mittel/Hoch, Geschwindigkeit Langsam bis Ultra.',
@@ -200,13 +200,13 @@
       a: '', d: 'analytics' },
   ];
   const APP_PAGES = { design: 'Bildschirm-Editor', templates: 'Fotolayout', general: 'Allgemein', modes: 'Aufnahme-Arten', camera: 'Kamera',
-    voice: 'Virtueller Berater', effects: 'Filter & Effekte', ai: 'KI-Porträts', bg: 'Hintergrund entfernen', guests: 'Umfrage', disc: 'Haftungsausschluss',
+    voice: 'Virtueller Berater', effects: 'Filter & Effekte', ai: 'KI-Fotos', bg: 'Hintergrund entfernen', guests: 'Umfrage', disc: 'Haftungsausschluss',
     share: 'Teilen', print: 'Drucken', mosaic: 'Fotomosaik', cari: 'Live-Karikatur', videomsg: 'Videonachricht',
     status: 'Upload-Status', remote: 'Fernsteuerung', lang: 'Sprache', windows: 'Windows einrichten', robot: 'Zeichenroboter' };
   const APP_SUBS = { start: 'Startbildschirm', cap: 'Aufnahmebildschirm', share: 'Bildschirm zum Teilen' }, APP_PANELS = { design: 'Design', set: 'Einstellungen' };
   const APP_ACTS = { switch: 'Ereignis wechseln', update: 'Updates', slideshow: 'Slideshow', export: 'Exportieren' };
   const DASH_PAGES = { dash: 'Übersicht', analytics: 'Analysen', layout: 'Fotolayout & Countdown', capture: 'Aufnahme-Arten', voice: 'Virtueller Berater', lang: 'Sprache',
-    start: 'Startbildschirm', fx: 'Filter & Effekte', bg: 'Hintergrund entfernen', ai: 'KI-Porträts', survey: 'Umfrage & Haftungsausschluss',
+    start: 'Startbildschirm', fx: 'Filter & Effekte', bg: 'Hintergrund entfernen', ai: 'KI-Fotos', survey: 'Umfrage & Haftungsausschluss',
     share: 'Teilen', print: 'Drucken', mosaic: 'Fotomosaik', cari: 'Live-Karikatur', videomsg: 'Videonachricht' };
   const DASH_TABS = { events: 'Ereignisse', devices: 'Geräte', leads: 'Gäste-Daten', licenses: 'Meine Lizenzen' };
 
