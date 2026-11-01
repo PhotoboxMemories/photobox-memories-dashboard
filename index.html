@@ -661,7 +661,8 @@ async function tsRender() {
 async function captcha() { // frisches Token für genau eine Anfrage (jedes Token gilt nur einmal)
   if (DEMO) return undefined;
   await tsRender();
-  for (let i = 0; i < 60 && !tsToken && tsId !== null; i++) await new Promise(r => setTimeout(r, 200));
+  // bis 12 s warten; zeigt Cloudflare das Kästchen „Ich bin ein Mensch“, bis 90 s (der Gast muss es erst anklicken)
+  for (let i = 0; i < 450 && !tsToken && tsId !== null && (i < 60 || $('#aCaptcha iframe')?.offsetHeight > 0); i++) await new Promise(r => setTimeout(r, 200));
   const t = tsToken; tsToken = ''; if (tsId !== null) try { turnstile.reset(tsId); } catch {}
   return t || undefined;
 }
