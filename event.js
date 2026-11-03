@@ -471,7 +471,7 @@
     startLogo: { src: 'own', url: '', size: 72, fit: 'contain' }, // Logo in der weißen Scheibe der Standard-Startanimation
     videomsg: { on: false, title: 'Videonachricht hinterlassen', sub: 'Scanne den Code mit deinem Handy', pos: 'tl', size: 'm', welcome: '', welcomeText: '' }, // Zusatzfunktion: Videonachricht per QR-Code (welcome = Begrüßungsvideo)
     mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false, preview: true, source: 'original' },
-    ai: { guestPay: false, guestPrice: 100, skip: false, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Foto erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
+    ai: { guestPay: false, guestPrice: 100, skip: false, only: false, layouts: [], texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Foto erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
   };
   const deepMerge = (def, val) => { const out = structuredClone(def); if (val && typeof val === 'object' && !Array.isArray(val)) for (const [k, v] of Object.entries(val)) out[k] = out[k] && typeof out[k] === 'object' && !Array.isArray(out[k]) ? deepMerge(out[k], v) : v; return out; };
   const NEEDSRV_S = '<span class="soon" title="Braucht zusätzlich einen Online-Dienst, der noch nicht eingerichtet ist.">Dienst folgt</span>';
@@ -775,6 +775,7 @@
         if (g && !list.includes(g)) list.unshift(g);
         S.x.lang.list = list.length === I18N.CODES.length ? [] : list; save(); return;
       }
+      if (t.dataset.ailay) { S.x.ai.layouts = $$(main, '[data-ailay]').filter(x => x.checked).map(x => x.dataset.ailay); save(); render(); return; } // KI nur bei diesen Layouts
       if (t.dataset.varnd) { S.x.voice = S.x.voice || {}; S.x.voice.rnd = { ...(S.x.voice.rnd || {}), [t.dataset.varnd]: t.checked }; save(); return; }
       if (t.dataset.livetpl !== undefined) { S.liveView = t.checked ? 'template' : 'plain'; const l = t.closest('.row')?.querySelector('.swl'); if (l) l.textContent = t.checked ? 'Ein' : 'Aus'; save(); return; }
       if (t.dataset.aiConsent !== undefined) { ai.consentOk = t.checked; return; }
@@ -796,7 +797,7 @@
       const swBtn = { printButton: 'bPrint', share: 'bQR', stickers: 'bDeco', 'x.share.deleteBtn': 'bRetake' }[p];
       if (swBtn && v) for (const L of [S.shareScreen, S.shareScreen2]) L?.elements?.forEach(e => { if (e.type === 'sbtn' && e.key === swBtn) e.hidden = false; });
       save(); drawPreview();
-      if (t.type === 'radio' || p === 'startDisplay' || p === 'askCopies' || p === 'x.caricature.on' || t.dataset.rerender || (p.startsWith('x.videomsg.') && t.tagName === 'SELECT')) render();
+      if (t.type === 'radio' || p === 'startDisplay' || p === 'askCopies' || p === 'x.caricature.on' || p === 'x.ai.only' || t.dataset.rerender || (p.startsWith('x.videomsg.') && t.tagName === 'SELECT')) render();
     });
     main.addEventListener('change', e => {
       const t = e.target;
@@ -1181,6 +1182,16 @@
       if (!S.layouts.length || (o !== 'portrait' && o !== 'landscape') || hasOrient(o)) return '';
       return o === 'portrait' ? `Fotobox ${d.name || 'FotoBox'} steht hochkant – dieses Ereignis hat kein Hochformat-Layout`
         : `Fotobox ${d.name || 'FotoBox'} steht quer – dieses Ereignis hat kein Querformat-Layout`; };
+    // KI nur bei bestimmten Layouts (Betreiber 03.11.2026): ein Häkchen je Layout – eigene Layouts, sonst die eingebauten Foto-Aufnahme-Arten.
+    // Gespeichert als Schlüssel wie an der Fotobox: 'L_<id>' für eigene Layouts, 'single'/'strip'/'grid' für die eingebauten.
+    function aiLayoutList() {
+      const list = Array.isArray(S.x.ai.layouts) ? S.x.ai.layouts : [];
+      const items = S.layouts.length
+        ? S.layouts.map(L => ['L_' + L.id, `<span translate="no">${esc(L.name)}</span> · ${FBR.photoCount(L)} Foto(s)`, `<img src="${layoutThumb(L)}" alt="" style="height:44px;border-radius:6px;background:#eee">`])
+        : [['single', 'Einzelfoto'], ['strip', 'Fotostreifen'], ['grid', 'Collage']].filter(([k]) => S.modes[k]).map(([k, n]) => [k, n, '']);
+      return `<p style="margin:8px 0 6px;color:#6b6b78;font-size:13px">KI-Fotos gibt es bei diesen Layouts:</p><div style="display:flex;flex-wrap:wrap;gap:10px 22px">${items.map(([k, n, pic]) => `<label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" data-ailay="${esc(k)}" ${list.includes(k) ? 'checked' : ''}>${pic}${n}</label>`).join('')}</div>
+        ${items.length && !items.some(([k]) => list.includes(k)) ? '<p style="margin:8px 0 0;color:#c98a00;font-size:13px">Noch kein Layout angehakt – so gibt es in diesem Ereignis keine KI-Fotos.</p>' : ''}`;
+    }
     function layoutCards() {
       return `<div class="dd"><button class="btn" data-a="newlay">${ICON('plus', 16)} Neues Layout ${ICON('chevronDown', 16)}</button><div class="menu" style="display:none">
           <button data-a="fromtpl">${ICON('gallery', 16)} Vorlage wählen</button><button data-a="fromplain">${ICON('image', 16)} Ohne Vorlage (nur Foto)</button><button data-a="fromimg">${ICON('upload', 16)} Bild hochladen</button></div></div>
@@ -1673,6 +1684,8 @@
           <label class="l">Bildqualität (Grok)</label><select data-s="ai.resolution" data-rerender="1"><option value="1k" ${S.ai.resolution === '1k' ? 'selected' : ''}>1K · schneller${central ? ' · 1 Credit' : ''}</option><option value="2k" ${S.ai.resolution === '2k' ? 'selected' : ''}>2K · hohe Auflösung${central ? ' · 2 Credits' : ''}</option></select>
           ${ctx.admin ? `<div class="card"><b>Bezahlung durch Gäste</b><p style="margin:4px 0 10px;color:#6b6b78;font-size:13px">Gäste zahlen ihr KI-Foto selbst per QR-Code am Handy (Apple Pay, Google Pay, Karte). Abgebucht wird erst, wenn das Bild fertig ist – bei Fehlern nie. Das bezahlte Bild bekommt nur der Gast, es landet nicht in der Galerie. Zurzeit nur für Fotoboxen von Photobox Memories (Geld auf unser Stripe-Konto).</p>
           ${sw('x.ai.guestPay', 'Gäste zahlen selbst', 'Statt Credits aus dem Paket')}${slider('x.ai.guestPrice', 'Preis je Bild', 50, 500, 10, 'Cent')}</div>` : ''}
+          <div class="card">${sw('x.ai.only', 'KI nur bei bestimmten Layouts', 'Aus = KI-Fotos bei allen Foto-Layouts. Ein = Gäste wählen zuerst das Layout; nur bei den angehakten Layouts kommt danach die Stilauswahl, alle anderen bleiben normale Fotos.')}
+          ${S.x.ai.only ? aiLayoutList() : ''}</div>
           <div class="card">${sw('x.ai.skip', 'Option zum Überspringen der KI-Fotos hinzufügen', 'Gäste können ihr Foto auch ohne KI-Stil behalten')}
           ${sw('x.ai.consent', 'Gäste vor dem KI-Foto um Zustimmung bitten', 'Aus = keine Abfrage an der Fotobox. Das Foto wird trotzdem an den KI-Dienst (xAI, USA) übertragen – die Einwilligung regelst du dann selbst, zum Beispiel im Vertrag mit deinem Kunden oder per Aushang an der Fotobox.')}</div>
           <div class="card"><details class="adv"><summary>Texte für die Gäste anpassen</summary><p style="color:#6b6b78;font-size:13px;margin:8px 0">Diese Texte sehen deine Gäste an der Fotobox, wenn sie ein KI-Foto erstellen. Du kannst jede Formulierung ändern, zum Beispiel in eine andere Sprache oder in euren Ton.</p><div class="grid3x">
