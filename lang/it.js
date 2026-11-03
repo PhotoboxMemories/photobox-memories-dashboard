@@ -4044,5 +4044,12 @@ I18N.add('it', {
 "übertragen und dort zu KI-Porträts verarbeitet werden.": "trasferite e lì trasformate in ritratti IA.",
 "übertragen werden.": "vengano trasferite.",
 "übrig": "rimasto",
-"„Groß“ nutzt die volle Auflösung der Kamera und ergibt die beste Qualität. „Mittel“ und „Klein“ sind etwas schneller.": "«Grande» usa la piena risoluzione della fotocamera e offre la qualità migliore. «Media» e «Piccola» sono un po’ più veloci."
+"„Groß“ nutzt die volle Auflösung der Kamera und ergibt die beste Qualität. „Mittel“ und „Klein“ sind etwas schneller.": "«Grande» usa la piena risoluzione della fotocamera e offre la qualità migliore. «Media» e «Piccola» sono un po’ più veloci.",
+"KI nur bei bestimmten Layouts": "IA solo per determinati layout",
+"Aus = KI-Fotos bei allen Foto-Layouts. Ein = Gäste wählen zuerst das Layout; nur bei den angehakten Layouts kommt danach die Stilauswahl, alle anderen bleiben normale Fotos.": "Spento = foto IA per tutti i layout foto. Acceso = gli ospiti scelgono prima il layout; la scelta dello stile segue solo per i layout spuntati, tutti gli altri restano foto normali.",
+"KI-Fotos gibt es bei diesen Layouts": "Le foto IA sono disponibili per questi layout",
+"Noch kein Layout angehakt – so gibt es in diesem Ereignis keine KI-Fotos.": "Nessun layout ancora spuntato: così in questo evento non ci saranno foto IA.",
+"mit KI-Foto": "con foto IA",
+"{x} Foto(s)": "{x} foto",
+"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Gli ospiti diventano star del cinema, supereroi o opere d’arte. Scegli gli stili, imposta consenso e testi. Sotto «Alla cabina foto» puoi limitare le foto IA a determinati layout: gli ospiti scelgono prima il layout e solo quelli spuntati offrono gli stili IA."
 });
