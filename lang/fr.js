@@ -93,6 +93,7 @@ I18N.add('fr', {
 "Ab Basis": "Dès Basique",
 "Kein Ereignis gefunden.": "Aucun événement trouvé.",
 "Name oder Datum": "Nom ou date",
+"Steht eine Vorlage auf „Auf dem Zweitdrucker drucken“, wird nur diese Vorlage geschnitten. Auf dem Hauptdrucker wird dann nichts geschnitten, auch keine Fotostreifen.": "Si un modèle est réglé sur « Imprimer sur la deuxième imprimante », seul ce modèle est coupé. Sur l’imprimante principale, rien n’est alors coupé, pas même les bandelettes photo.",
 "ab nächster Fotobox-Version": "à partir de la prochaine version",
 "Ab Pro": "Dès Pro",
 "Abbrechen": "Annuler",
