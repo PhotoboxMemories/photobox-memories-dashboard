@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Photobox Memories – Dashboard</title>
 <link rel="stylesheet" href="fonts-fredoka/fredoka.css">
-<script>window.I18N_V = '20261103-5';</script>
+<script>window.I18N_V = '20261103-6';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -26,7 +26,7 @@
 <script src="admin-kunde.js?v=20261028-2"></script>
 <script src="admin-besucher.js?v=20261101-1"></script>
 <script src="admin-boothdesigner.js?v=20261101-1"></script>
-<script src="event.js?v=20261103-5"></script>
+<script src="event.js?v=20261103-6"></script>
 <script src="studio.js?v=20261103-1"></script>
 <script src="vendor/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <style>
@@ -991,7 +991,7 @@ async function createEvent(settings, logo_url, name, typeName, page) {
 $('#reloadDevices').onclick = loadDevices;
 async function loadDevices() {
   // nur Fotoboxen der eigenen Lizenzen – auch der Admin sieht hier keine Geräte seiner Kunden
-  const { data, error } = await sb.from('devices').select('*, licenses!inner(customer_name, customer_email, owner_id)').eq('licenses.owner_id', me.id).order('last_seen', { ascending: false, nullsFirst: false });
+  const { data, error } = await sb.from('devices').select('*, events(updated_at), licenses!inner(customer_name, customer_email, owner_id)').eq('licenses.owner_id', me.id).order('last_seen', { ascending: false, nullsFirst: false });
   if (error) return toast('Fehler: ' + error.message);
   devices = data; renderDevices(); renderEvents(); startCard();
 }
@@ -1010,7 +1010,7 @@ const camDraft = {};
 function deviceDetails(d, online, mine) {
   const st = d.status, N = v => Math.max(0, Math.round(+v) || 0); // Status meldet die Fotobox selbst: Zahlen nur als Zahl
   if (!st) return `<div class="empty">Diese Fotobox meldet noch keinen Status. Dafür braucht sie die Fotobox-Version 1.15 oder neuer.</div>`;
-  const age = Math.round((Date.now() - new Date(st.at || d.last_seen)) / 1000), fresh = online && age < 90;
+  const age = Math.round((Date.now() - new Date(d.last_seen || st.at)) / 1000), fresh = online && age < 90; // Server-Zeit: Die Uhr der Fotobox kann falsch gehen
   const ok = v => v === true ? '<span class="dot on"></span>bereit' : v === false ? '<span class="dot" style="background:#d23b3b"></span>nicht bereit' : '<span class="dot"></span>unbekannt';
   const scr = { home: 'Betreiber-Startseite', attract: 'Startbildschirm (wartet auf Gäste)', capture: 'Aufnahme läuft', review: 'Bildschirm zum Teilen', share: 'QR-Code', modes: 'Auswahl', login: 'Anmeldung', evpick: 'Ereignis-Auswahl' }[st.screen] || st.screen || '–';
   const cmd = d.command ? `<span class="badge">Befehl wartet auf die Fotobox …</span>` : '';
@@ -1024,7 +1024,12 @@ function deviceDetails(d, online, mine) {
   const dr = camDraft[d.id] || { props: {}, live: {} };
   const props = [].concat(st.camera?.props || []).filter(p => p && Array.isArray(p.list)).map(p => { const cur = dr.props[p.id] ?? p.cur, lv = dr.live[p.id] ?? p.live; return `<div><label>${esc(p.label)}</label><select data-prop="${esc(p.id)}">${p.list.map(v => `<option ${v === cur ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>`
     + (p.canLive ? `<label class="small muted" style="margin-top:6px">Live-Ansicht</label><select data-live="${esc(p.id)}"><option value="">wie Foto</option>${p.list.map(v => `<option ${v === lv ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>` : '') + '</div>'; }).join('');
-  const waiting = d.command ? `<p class="small" style="margin-top:10px;color:#b26a00">${!fresh ? 'Die Fotobox ist gerade nicht verbunden. Befehle werden ausgeführt, sobald sie sich wieder meldet (höchstens 10 Minuten lang).' : !st.busy && ['home', 'attract', 'lock'].includes(st.screen) ? 'Befehl unterwegs – die Fotobox übernimmt ihn in bis zu 30 Sekunden.' : 'Befehl wartet: Die Fotobox ist gerade nicht auf der Startseite. Er wird ausgeführt, sobald sie dorthin zurückkehrt, höchstens 10 Minuten lang.'}</p>` : '';
+  const waiting = d.command ? `<p class="small" style="margin-top:10px;color:#b26a00">${!fresh ? 'Die Fotobox ist gerade nicht verbunden. Der Befehl wird ausgeführt, sobald sie sich wieder meldet.' : !st.busy && ['home', 'attract', 'lock', 'evpick'].includes(st.screen) ? 'Befehl unterwegs – die Fotobox übernimmt ihn in bis zu 15 Sekunden.' : 'Befehl wartet: Die Fotobox ist gerade nicht auf der Startseite. Er wird ausgeführt, sobald sie dorthin zurückkehrt.'}</p>` : '';
+  const newCmds = !!st.sync && 'applied' in st.sync, syncSt = devSyncState(d); // ältere Fotoboxen kennen die neuen Befehle nicht
+  const cmdLine = st.cmd?.id ? `<p class="small" style="margin-top:10px">Letzter Befehl: <b>${esc(CMD_NAMES[st.cmd.type] || st.cmd.type || '')}</b> · ${new Date(st.cmd.at).toLocaleTimeString('de-DE', { timeStyle: 'short' })} · <span style="color:${st.cmd.ok ? '#1a7f37' : '#d23b3b'}">${st.cmd.ok ? '✓' : '✗'} ${esc(st.cmd.text)}</span></p>` : st.last ? `<p class="small" style="margin-top:10px">Letzte Rückmeldung der Fotobox: <b>${esc(st.last)}</b></p>` : '';
+  const updT = st.upd?.state === 'ready' ? `Update ${st.upd.version || ''} liegt bereit und wird beim nächsten Start installiert` : st.upd?.state === 'downloading' ? `Update ${st.upd.version || ''} wird geladen` : st.upd?.state === 'error' ? `Update-Fehler: ${st.upd.message || ''}` : '';
+  const notes = [st.camera?.err ? 'Kamera: ' + st.camera.err : '', st.printer?.state ? 'Drucker: ' + st.printer.state : '', [].concat(st.printer?.missing || []).length ? 'Druckertreiber fehlt: ' + [].concat(st.printer.missing).join(', ') : '', updT,
+    st.robot ? (st.robot.connected ? (st.robot.homed ? 'Zeichenroboter bereit' : 'Zeichenroboter verbunden, Grundstellung fehlt') : 'Zeichenroboter nicht verbunden') : ''].filter(Boolean);
   return `<div class="stats" style="margin:6px 0 14px${ori ? ';grid-template-columns:repeat(auto-fit,minmax(170px,1fr))' : ''}">
       <div class="card"><b>${N(st.prints)}${N(st.printLimit) ? ` <span style="font-size:16px">/ ${N(st.printLimit)}</span>` : ''}</b><span>Ausdrucke bei diesem Ereignis</span><span class="small muted">${N(st.printLimit) ? 'noch ' + Math.max(0, N(st.printLimit) - N(st.prints)) + ' übrig' : 'kein Limit eingestellt'}</span></div>
       <div class="card"><b style="font-size:17px">${esc(st.camera?.name || '–')}</b><span>Kamera</span><span class="small">${ok(st.camera?.ready)}</span></div>
@@ -1035,19 +1040,45 @@ function deviceDetails(d, online, mine) {
     ${dp?.forced ? `<p class="small" style="margin:-6px 0 12px;color:#b8860b">⚠️ ${dp.orient === 'portrait'
       ? 'Die Ausrichtung ist an dieser Fotobox fest auf Hochformat eingestellt – sie folgt nicht dem Bildschirm. Ändern an der Fotobox unter Einstellungen → Allgemein.'
       : 'Die Ausrichtung ist an dieser Fotobox fest auf Querformat eingestellt – sie folgt nicht dem Bildschirm. Ändern an der Fotobox unter Einstellungen → Allgemein.'}</p>` : ''}
-    ${st.sync && !(st.sync.account && st.sync.event) ? `<p class="small" style="margin:-6px 0 12px;color:#b8860b">⚠️ ${!st.sync.account ? 'Diese Fotobox ist nur mit dem Lizenzschlüssel angemeldet – Änderungen an der Fotobox kommen nicht ins Dashboard. An der Fotobox unter Einstellungen → Allgemein mit E-Mail und Passwort anmelden.' : 'An dieser Fotobox ist kein Ereignis gewählt – Änderungen kommen nicht ins Dashboard.'}</p>`
+    ${syncSt ? `<p class="small" style="margin:-6px 0 12px;color:${syncSt === 'ok' ? '#1a7f37' : '#b26a00'}">${syncSt === 'ok' ? '✓ Diese Fotobox hat den aktuellen Stand des Ereignisses übernommen.' : syncSt === 'wait' ? '⏳ Neuer Stand wartet: An der Fotobox ist das Menü offen oder eine Aufnahme läuft.' : '↻ Der neue Stand kommt in wenigen Sekunden an.'}</p>` : ''}
+    ${notes.length ? `<div class="small" style="margin:-6px 0 12px">${notes.map(n => `<div>• ${esc(n)}</div>`).join('')}</div>` : ''}
+    ${st.sync && !(st.sync.account && st.sync.event) && !(st.sync.event && st.sync.viaKey) ? `<p class="small" style="margin:-6px 0 12px;color:#b8860b">⚠️ ${!st.sync.account ? 'Diese Fotobox ist nur mit dem Lizenzschlüssel angemeldet – Änderungen an der Fotobox kommen nicht ins Dashboard. An der Fotobox unter Einstellungen → Allgemein mit E-Mail und Passwort anmelden.' : 'An dieser Fotobox ist kein Ereignis gewählt – Änderungen kommen nicht ins Dashboard.'}</p>`
       : N(st.sync?.pending) ? `<p class="small muted" style="margin:-6px 0 12px">${N(st.sync.pending)} Änderung(en) der Fotobox warten noch auf die Übertragung ins Dashboard.</p>` : ''}
     ${mine ? `<div class="card" style="margin-bottom:10px"><h2>Fernsteuerung</h2>
       ${fresh ? '' : '<p class="small muted" style="margin-bottom:8px">Die Fotobox ist gerade nicht verbunden. Befehle werden ausgeführt, sobald sie sich wieder meldet (höchstens 10 Minuten lang).</p>'}
       <div class="row" style="margin-bottom:12px"><button class="btn primary" data-dev="${d.id}" data-act="testprint">🖨 Testdruck auslösen</button><button class="btn" data-dev="${d.id}" data-act="pinreset" title="Entfernt den Sicherheitspin an der Fotobox, falls er vergessen wurde">🔓 Sicherheitspin zurücksetzen${st.locked ? ' (gesperrt)' : ''}</button>${cmd}</div>
+      ${newCmds ? `<div class="row" style="margin-bottom:12px">${st.screen === 'attract' ? `<button class="btn" data-dev="${d.id}" data-act="stop">⏹ Ereignis beenden</button>` : `<button class="btn" data-dev="${d.id}" data-act="start">▶ Ereignis starten</button>`}${st.pin ? (st.locked ? `<button class="btn" data-dev="${d.id}" data-act="unlock">🔓 Entsperren</button>` : `<button class="btn" data-dev="${d.id}" data-act="lock">🔒 Sperren</button>`) : ''}<button class="btn" data-dev="${d.id}" data-act="reload" title="Holt alle Einstellungen neu aus dem Dashboard">↻ Einstellungen neu laden</button><button class="btn" data-dev="${d.id}" data-act="update">⬇ Update installieren</button><button class="btn" data-dev="${d.id}" data-act="restart">⟳ Neu starten</button></div>` : ''}
       ${props ? `<div class="grid3">${props}</div><div class="row" style="margin-top:12px"><button class="btn" data-dev="${d.id}" data-act="camera">Kamerawerte an die Fotobox senden</button><span class="small muted">Wird übernommen, wenn gerade keine Aufnahme läuft.</span></div>`
         : `<p class="small muted">Kamerawerte (ISO, Blende, Verschlusszeit) lassen sich einstellen, wenn eine Kamera direkt per USB angeschlossen und bereit ist.</p>`}
-      ${waiting}${st.last ? `<p class="small" style="margin-top:10px">Letzte Rückmeldung der Fotobox: <b>${esc(st.last)}</b></p>` : ''}</div>` : ''}`;
+      ${waiting}${cmdLine}</div>` : ''}`;
+}
+const CMD_NAMES = { testprint: 'Testdruck', camera: 'Kamerawerte', sync: 'Abgleich', reload: 'Einstellungen neu laden', pinreset: 'Sicherheitspin', start: 'Ereignis starten', stop: 'Ereignis beenden', lock: 'Sperren', unlock: 'Entsperren', update: 'Update', restart: 'Neu starten' };
+// Hat die Fotobox den aktuellen Stand übernommen? (meldet sie selbst, ab Fotobox 1.18.67)
+function devSyncState(d) {
+  const y = d.status?.sync; if (!y || !d.events || !('applied' in y)) return '';
+  if (d.last_seen && Date.now() - new Date(d.last_seen) > 18e4) return '';
+  return y.waiting ? 'wait' : y.applied && d.events?.updated_at && Date.parse(y.applied) === Date.parse(d.events.updated_at) ? 'ok' : 'coming';
+}
+// Nur ein Befehlsplatz je Gerät: Ein wartender Befehl wird nicht still überschrieben. Ist er über 10 Minuten alt, darf der neue ihn ersetzen.
+const cmdFree = () => `command.is.null,command->>at.lt."${new Date(Date.now() - 6e5).toISOString()}"`;
+const cmdNew = command => ({ id: crypto.randomUUID(), at: new Date().toISOString(), ttl: { testprint: 6e5, start: 6e5, stop: 6e5, restart: 6e5, camera: 36e5 }[command.type] ?? 864e5, ...command });
+const cmdWatch = {}; let cmdWatchT = 0;
+async function cmdWatchTick() { // Rückmeldung der Fotobox als Hinweis zeigen, auch wenn die Details zu sind
+  const ids = Object.keys(cmdWatch); if (!ids.length) { clearInterval(cmdWatchT); cmdWatchT = 0; return; }
+  const { data } = await sb.from('devices').select('id,status,command').in('id', ids.map(c => cmdWatch[c].dev));
+  for (const c of ids) {
+    const w = cmdWatch[c], d = data?.find(x => x.id === w.dev), r = d?.status?.cmd;
+    if (r?.id === c) { toast(`${CMD_NAMES[r.type] || ''}: ${r.ok ? '✓' : '✗'} ${r.text}`, 7000); delete cmdWatch[c]; loadDevices(); }
+    else if (Date.now() - w.at > 12e4 || (d && d.command?.id !== c && Date.now() - w.at > 3e4)) { delete cmdWatch[c]; loadDevices(); } // Fotobox aus oder ältere Version
+  }
 }
 async function sendDeviceCommand(id, command) {
-  const { error } = await sb.from('devices').update({ command: { id: crypto.randomUUID(), at: new Date().toISOString(), ...command } }).eq('id', id);
+  const c = cmdNew(command);
+  const { data, error } = await sb.from('devices').update({ command: c }).eq('id', id).or(cmdFree()).select('id');
   if (error) return toast(/command|column/i.test(error.message) ? 'Die Fernsteuerung ist auf dem Server noch nicht eingerichtet (Migration fehlt).' : 'Fehler: ' + error.message, 6000);
+  if (!data?.length) { loadDevices(); return toast('Es wartet noch ein Befehl an diese Fotobox. Bitte kurz warten und noch einmal versuchen.', 6000); }
   toast('Befehl gesendet – die Fotobox führt ihn in wenigen Sekunden aus', 4000); loadDevices();
+  cmdWatch[c.id] = { dev: id, at: Date.now() }; cmdWatchT ||= setInterval(cmdWatchTick, 5000);
 }
 function renderDevices() {
   const el = $('#deviceList');
@@ -1076,7 +1107,7 @@ $('#deviceList').addEventListener('change', async e => {
   const { error } = await sb.from('devices').update(patch).eq('id', id);
   if (error) return toast('Fehler: ' + error.message);
   // Fotobox gleich abgleichen lassen (Fernbefehl, etwa alle 15 s abgefragt) statt bis zum nächsten Abgleich zu warten
-  if (act === 'event') await sb.from('devices').update({ command: { id: crypto.randomUUID(), at: new Date().toISOString(), type: 'sync' } }).eq('id', id).then(() => {}, () => {});
+  if (act === 'event') await sb.from('devices').update({ command: cmdNew({ type: 'sync' }) }).eq('id', id).or(cmdFree()).then(() => {}, () => {});
   toast(act === 'event' ? 'Event zugewiesen – die Fotobox übernimmt es in etwa 15 Sekunden, sobald keine Aufnahme läuft und ihr Menü geschlossen ist' : 'Name gespeichert', act === 'event' ? 6000 : 2200);
   loadDevices();
 });
@@ -1094,6 +1125,11 @@ $('#deviceList').addEventListener('click', async e => {
   }
   if (act === 'pinreset') { if (await pmConfirm('Den Sicherheitspin an dieser Fotobox entfernen? Die Fotobox ist danach entsperrt, bis du dort einen neuen PIN einträgst.', 'PIN entfernen')) sendDeviceCommand(dev, { type: 'pinreset' }); return; }
   if (act === 'testprint') { if (await pmConfirm('Jetzt einen Testdruck an dieser Fotobox auslösen? Das verbraucht ein Blatt.', 'Drucken')) sendDeviceCommand(dev, { type: 'testprint' }); return; }
+  const CONFIRM = { start: ['Das Ereignis an dieser Fotobox jetzt starten? Gäste können sie danach benutzen.', 'Starten'], stop: ['Das Ereignis an dieser Fotobox beenden? Gäste können sie dann nicht mehr benutzen.', 'Beenden'],
+    lock: ['Diese Fotobox sperren? Entsperren geht danach mit dem Sicherheitspin oder von hier aus.', 'Sperren'], unlock: ['Diese Fotobox entsperren? Dann kommt jeder ohne Sicherheitspin in die Einstellungen.', 'Entsperren'],
+    reload: ['Alle Einstellungen neu aus dem Dashboard holen? Änderungen an der Fotobox, die noch nicht übertragen sind, gehen dabei verloren.', 'Neu laden'],
+    update: ['Das neueste Update an dieser Fotobox installieren? Sie startet danach neu. Das geht nur, wenn gerade kein Ereignis läuft.', 'Installieren'], restart: ['Das Programm an dieser Fotobox neu starten? Es ist dann etwa eine Minute nicht bedienbar.', 'Neu starten'] };
+  if (CONFIRM[act]) { if (await pmConfirm(...CONFIRM[act])) sendDeviceCommand(dev, { type: act }); return; }
   if (act === 'camera') { // nur geänderte Werte senden: unveränderte können nichts schiefgehen lassen
     const td = e.target.closest('td'), known = [].concat(devices.find(x => x.id === dev)?.status?.camera?.props || []), was = (id, k) => known.find(p => p.id === id)?.[k] ?? '', changed = (attr, k) => Object.fromEntries([...td.querySelectorAll(`[data-${attr}]`)].map(x => [x.dataset[attr], x.value]).filter(([id, v]) => v !== was(id, k)));
     const props = changed('prop', 'cur'), live = changed('live', 'live');
