@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Photobox Memories – Dashboard</title>
 <link rel="stylesheet" href="fonts-fredoka/fredoka.css">
-<script>window.I18N_V = '20261101-1';</script>
+<script>window.I18N_V = '20261103-1';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -266,7 +266,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         </div>
         <p class="small hidden" id="startMail" style="margin-top:14px">📧 Den Download-Link haben wir dir auch per Mail geschickt.</p>
       </div>
-      <div class="pagehead"><h1>Laufende Ereignisse</h1><div class="row" style="gap:10px;flex-wrap:wrap"><button class="btn" id="creditChip" type="button" title="KI-Guthaben ansehen und kaufen">✨ <b id="creditChipN">–</b> KI-Credits</button><input id="evSearch" placeholder="🔍 Ereignisname" style="max-width:260px"></div></div>
+      <div class="pagehead"><h1>Laufende Ereignisse</h1><div class="row" style="gap:10px;flex-wrap:wrap"><button class="btn" id="creditChip" type="button" title="KI-Guthaben ansehen und kaufen">✨ <b id="creditChipN">–</b> KI-Credits</button><input id="evSearch" placeholder="🔍 Name oder Datum" style="max-width:260px"></div></div>
       <div class="evgrid" id="eventList"></div>
       <h1 style="margin:28px 0 16px">Abgeschlossene Ereignisse</h1>
       <div class="evgrid" id="eventDone"></div>
@@ -872,10 +872,26 @@ function eventCover(e) {
   if (L && !coverLoaded.has(key)) FBR.preloadLayout(L).then(() => { coverLoaded.add(key); delete coverCache[key]; const img = document.querySelector(`.evc[data-id="${e.id}"] img`); if (img) img.src = eventCover(e); });
   return coverCache[key] = c.toDataURL('image/jpeg', .8);
 }
+// Suche nach Name oder Datum: „3.11.2026“, „03.11.26“, „3.11.“, „11.2026“, „2026“, „2026-11-03“ – auch zusammen („hochzeit 3.11.“)
+function evDateMatch(iso, t) {
+  if (!iso) return false;
+  const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
+  let x;
+  if ((x = t.match(/^(\d{4})-(\d{1,2})(?:-(\d{1,2}))?$/))) return +x[1] === y && +x[2] === m && (!x[3] || +x[3] === d);
+  if ((x = t.match(/^(\d{1,2})[./-](\d{4})$/))) return +x[1] === m && +x[2] === y;
+  if ((x = t.match(/^(\d{1,2})[./-](\d{1,2})(?:[./-](\d{4}|\d{2})?)?$/))) return +x[1] === d && +x[2] === m && (!x[3] || (x[3].length === 2 ? 2000 + +x[3] : +x[3]) === y);
+  return /^\d{4}$/.test(t) && +t === y;
+}
+function evMatch(e, q) {
+  if (!q) return true;
+  const name = e.name.toLowerCase();
+  if (name.includes(q) || evDateMatch(e.event_date, q.replace(/([./-])\s+/g, '$1').replace(/\s+/g, '.'))) return true;
+  return q.replace(/(\d[./-])\s+(?=\d)/g, '$1').split(/\s+/).every(t => name.includes(t) || evDateMatch(e.event_date, t));
+}
 function renderEvents() {
-  const q = ($('#evSearch')?.value || '').toLowerCase();
+  const q = ($('#evSearch')?.value || '').toLowerCase().trim();
   const today = new Date().toISOString().slice(0, 10);
-  const list = events.filter(e => !q || e.name.toLowerCase().includes(q));
+  const list = events.filter(e => evMatch(e, q));
   const card = e => {
     const n = devices.filter(d => d.event_id === e.id).length;
     return `<div class="evc" data-id="${e.id}"><button class="evdel" data-del="${e.id}" title="Ereignis löschen" aria-label="Ereignis löschen">${ICON('trash', 16)}</button><div class="cv ${photoCovers[e.id] ? 'photo' : ''}"><img src="${photoCovers[e.id] || eventCover(e)}" alt=""></div>
@@ -883,7 +899,7 @@ function renderEvents() {
   };
   const running = list.filter(e => !e.event_date || e.event_date >= today), done = list.filter(e => e.event_date && e.event_date < today);
   $('#eventList').innerHTML = `<div class="evc evnew" id="newEventCard"><div class="cv"><span>+</span>Erstellen Sie ein neues Ereignis</div></div>` + running.map(card).join('');
-  $('#eventDone').innerHTML = done.map(card).join('') || '<div class="small muted">Noch keine abgeschlossenen Ereignisse.</div>';
+  $('#eventDone').innerHTML = done.map(card).join('') || `<div class="small muted">${q ? 'Kein Ereignis gefunden.' : 'Noch keine abgeschlossenen Ereignisse.'}</div>`;
   $$('.evc[data-id]').forEach(c => c.onclick = async ev => {
     const e = events.find(x => x.id === c.dataset.id);
     if (ev.target.closest('[data-del]')) { ev.stopPropagation(); if (await deleteEventFull(e)) loadEvents(); return; } // Mülleimer an der Kachel
