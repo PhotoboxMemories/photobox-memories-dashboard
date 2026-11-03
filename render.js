@@ -834,6 +834,7 @@
         if (o.placeholders) drawPhotoMock(x, w, h, typeof o.photoAr === 'function' ? o.photoAr(L) : o.photoAr); // Zahl oder je Layout (Hoch/Quer)
       } else if (e.type === 'sfil') {
         if (o.placeholders) drawChipsMock(x, w, h);
+      } else if (e.type === 'qr' && o.off && o.off.has('qr')) { // Teilen-Bildschirm: QR-Code ausgeschaltet
       } else if (e.type === 'qr') {
         drawQrEl(x, e, w, h, o);
       } else if (e.type === 'answer') { // Antwort des Gastes auf Umfrage-Frage Nr. e.q
