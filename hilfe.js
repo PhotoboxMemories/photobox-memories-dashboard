@@ -175,7 +175,7 @@
       x: 'Zeigt alle Fotos des Ereignisses nacheinander – neue kommen von selbst dazu.',
       a: '@slideshow', d: 'dash' },
     { t: 'Fernsteuerung und Geräte', k: 'fernsteuerung_geraete_status_fernbedienung_testdruck_ferne_online_offline',
-      x: 'Im Dashboard unter „Geräte“ siehst du jede Fotobox mit Kamera, Drucker und Ausdrucken – mit Testdruck aus der Ferne.',
+      x: 'Im Dashboard unter „Geräte“ siehst du jede Fotobox mit Kamera, Drucker und Ausdrucken und ob sie den aktuellen Stand des Ereignisses übernommen hat. Unter „Details“ kannst du aus der Ferne einen Testdruck auslösen, das Ereignis starten oder beenden, sperren und entsperren, Einstellungen neu laden, ein Update installieren und neu starten.',
       a: 'remote', d: 'tab:devices' },
     { t: 'Windows für die Fotobox einrichten', k: 'windows_einrichten_optimieren_energiesparen_standby_usb_wlan_wifi_adapter_internet_weg_trennt_benachrichtigungen_update_neustart_wischgesten_sperrbildschirm_bildschirmschoner_hoechstleistung_energieplan_festplatte_toene_sounds_uhrzeit_automatisch_anmelden_autologin_kennwort',
       x: 'An der Fotobox unter Menü → System → „Windows einrichten“: Höchstleistung, Standby, Festplatte, USB-Energiesparen, Uhrzeit, Meldungen, Windows-Töne, Wischgesten und Update-Neustarts mit einem Klick – jede Einstellung einzeln und wieder rücknehmbar. Dort auch „Automatisch anmelden“: Windows startet dann ohne Anmelde-Bildschirm.',
