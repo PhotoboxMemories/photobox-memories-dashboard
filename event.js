@@ -792,6 +792,9 @@
       }
       if (t.type === 'checkbox') { const l = t.closest('.row,h1')?.querySelector('.swl'); if (l) l.textContent = v ? 'Ein' : 'Aus'; }
       if (t.dataset.num) $$(main, `[data-s="${p}"]`).forEach(x => { if (x !== t) x.value = v; });
+      // Schalter eingeschaltet: Schaltfläche auch dann zeigen, wenn sie in der eigenen Gestaltung ausgeblendet war
+      const swBtn = { printButton: 'bPrint', share: 'bQR', stickers: 'bDeco', 'x.share.deleteBtn': 'bRetake' }[p];
+      if (swBtn && v) for (const L of [S.shareScreen, S.shareScreen2]) L?.elements?.forEach(e => { if (e.type === 'sbtn' && e.key === swBtn) e.hidden = false; });
       save(); drawPreview();
       if (t.type === 'radio' || p === 'startDisplay' || p === 'askCopies' || p === 'x.caricature.on' || t.dataset.rerender || (p.startsWith('x.videomsg.') && t.tagName === 'SELECT')) render();
     });
@@ -1922,7 +1925,7 @@
     const shareOf = o => [S.shareScreen, S.shareScreen2].find(L => L && L.screen && L.orient === o) || null;
     const shareFor = o => shareOf(o) || (S.shareScreen ? FBR.adaptScreen(S.shareScreen, o) : FBR.createShare(o));
     const shareSysOpts = () => ({ note: 'Mit eigener Gestaltung gelten „Speicherort der Teilen-Symbole“ und „Textetiketten“ nicht mehr – alles steht dort, wo du es hinschiebst.',
-      off: [S.x.share.deleteBtn === false && 'bRetake', S.printButton === false && 'bPrint', S.share === false && 'bQR', S.stickers === false && 'bDeco', !(S.x.mosaic?.on && S.x.mosaic.who === 'guest') && 'bMosaic'].filter(Boolean) });
+      off: [S.x.share.deleteBtn === false && 'bRetake', S.printButton === false && 'bPrint', S.share === false && 'bQR', S.stickers === false && 'bDeco', S.share === false && 'qr', !(S.x.mosaic?.on && S.x.mosaic.who === 'guest') && 'bMosaic'].filter(Boolean) });
     function sharePreview() {
       const cv = (o, flex) => `<div style="flex:${flex};min-width:0"><small style="color:#555">${FBR.SCREEN_SIZES[o].label}</small><canvas id="wsShare${o === 'landscape' ? 'L' : 'P'}" data-a="editshare" data-o="${o}" title="Anklicken zum Gestalten" style="width:100%;border-radius:8px;display:block;cursor:pointer;margin-top:4px;background:#222225"></canvas><small id="wsShareNote${o === 'landscape' ? 'L' : 'P'}" style="color:#888"></small></div>`;
       return `<div class="card"><b>Gestaltung</b><p style="margin:4px 0 12px;color:#6b6b78;font-size:13px">Schaltflächen, Foto, Filter-Leiste, Texte, Bilder und einen QR-Code frei anordnen – wie beim Startbildschirm. Gilt an allen Fotoboxen dieses Ereignisses.</p>
