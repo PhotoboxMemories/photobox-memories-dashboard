@@ -60,7 +60,31 @@
   // o.scale: dasselbe Layout in höherer Auflösung zeichnen (fertiges Foto der Fotobox). Koordinaten bleiben die des Layouts;
   // nur Schatten (shadowBlur/-Offset rechnen in echten Pixeln) werden mit SHS vergrößert.
   let SHS = 1;
-  function drawCover(x, img, dx, dy, dw, dh) {
+  // Nachschärfen fürs fertige Foto (Betreiber 03.11.2026: „beste Auflösung und scharfe Bilder“): Das Foto wird erst auf die Pixel seines Felds
+  // verkleinert und dann geschärft – Verkleinern und Sublimationsdruck machen jedes Foto etwas weich. Geschärft wird nur die Helligkeit (keine
+  // Farbsäume), feines Rauschen bleibt unberührt (Schwelle), starke Kanten sind begrenzt (keine hellen Ränder). Bilder, die vergrößert würden
+  // (Webcam, KI-Fotos), bleiben, wie sie sind. Das Ergebnis wird je Foto gemerkt: Ein anderer Filter braucht es nicht noch einmal.
+  const SHARP = { radius: 1.2, amount: .7, thresh: 3, limit: 40 }, sharpCache = new WeakMap();
+  function unsharp(c) {
+    const w = c.width, h = c.height, x = c.getContext('2d'), b = document.createElement('canvas'); b.width = w; b.height = h;
+    const bx = b.getContext('2d', { willReadFrequently: true }); bx.drawImage(c, 0, 0); bx.filter = `blur(${SHARP.radius}px)`; bx.drawImage(c, 0, 0);
+    const im = x.getImageData(0, 0, w, h), d = im.data, e = bx.getImageData(0, 0, w, h).data, { amount, thresh, limit } = SHARP;
+    for (let i = 0; i < d.length; i += 4) {
+      let t = ((d[i] - e[i]) * 54 + (d[i + 1] - e[i + 1]) * 183 + (d[i + 2] - e[i + 2]) * 19) / 256;
+      if (t > thresh) t = Math.min(limit, t - thresh); else if (t < -thresh) t = Math.max(-limit, t + thresh); else continue;
+      t *= amount; d[i] += t; d[i + 1] += t; d[i + 2] += t;
+    }
+    x.putImageData(im, 0, 0);
+  }
+  function sharpSlot(img, sx, sy, sw, sh, tw, th) {
+    const key = [sx, sy, sw, sh, tw, th].join(), had = sharpCache.get(img);
+    if (had?.key === key) return had.c;
+    const c = document.createElement('canvas'); c.width = tw; c.height = th;
+    hq(c.getContext('2d', { willReadFrequently: true })).drawImage(img, sx, sy, sw, sh, 0, 0, tw, th);
+    unsharp(c); sharpCache.set(img, { key, c });
+    return c;
+  }
+  function drawCover(x, img, dx, dy, dw, dh, sharpen) {
     const iw = img.naturalWidth || img.videoWidth || img.width, ih = img.naturalHeight || img.videoHeight || img.height;
     const s = Math.max(dw / iw, dh / ih), sw = dw / s, sh = dh / s, f = img.pmFocus;
     let sx = (iw - sw) / 2, sy = (ih - sh) / 2;
@@ -71,6 +95,10 @@
       sx = Math.min(iw - sw, Math.max(0, fx + fw / 2 - sw / 2));
       sy = Math.min(ih - sh, Math.max(0, fh < sh ? fy - (sh - fh) * .35 : fy));
     } else if (f) sy = (ih - sh) * .3;
+    if (sharpen) {
+      const m = x.getTransform(), tw = Math.round(dw * Math.hypot(m.a, m.b)), th = Math.round(dh * Math.hypot(m.c, m.d));
+      if (tw > 1 && th > 1 && sw >= tw * .9) return void hq(x).drawImage(sharpSlot(img, sx, sy, sw, sh, tw, th), dx, dy, dw, dh);
+    }
     hq(x).drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
   }
   function confetti(x, R, n, colors, seed, sizeF = 1) {
@@ -281,7 +309,7 @@
         x.save();
         if (rad) { rr(x, X, Y, W, H, rad); x.clip(); }
         if (o.filter && o.filter !== 'none') x.filter = o.filter;
-        if (img) drawCover(x, img, X, Y, W, H);
+        if (img) drawCover(x, img, X, Y, W, H, o.sharpen);
         x.restore();
         if (t.slotBorder) {
           x.save(); x.strokeStyle = t.slotBorder.c; x.lineWidth = t.slotBorder.w * s * 2;
@@ -781,7 +809,7 @@
         if (e.shadow) { x.save(); setShadow(x, e, w, h); x.fillStyle = '#fff'; rr(x, -w / 2, -h / 2, w, h, rad); x.fill(); x.restore(); }
         x.save(); rr(x, -w / 2, -h / 2, w, h, rad); x.clip();
         const img = photos.length ? photos[((e.n || 1) - 1) % photos.length] : null;
-        if (img) { if (o.filter && o.filter !== 'none') x.filter = o.filter; drawCover(x, img, -w / 2, -h / 2, w, h); }
+        if (img) { if (o.filter && o.filter !== 'none') x.filter = o.filter; drawCover(x, img, -w / 2, -h / 2, w, h, o.sharpen); }
         else placeholderPhoto(x, e, w, h);
         x.restore();
         if (e.stroke && e.strokeW) { x.strokeStyle = e.stroke; x.lineWidth = e.strokeW; rr(x, -w / 2, -h / 2, w, h, rad); x.stroke(); }
