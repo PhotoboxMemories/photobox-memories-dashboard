@@ -91,6 +91,8 @@ I18N.add('en', {
 "A5 (148 × 210 mm)": "A5 (148 × 210 mm)",
 "A6 (105 × 148 mm)": "A6 (105 × 148 mm)",
 "Ab Basis": "From Basic",
+"Kein Ereignis gefunden.": "No event found.",
+"Name oder Datum": "Name or date",
 "ab nächster Fotobox-Version": "from next photo booth version",
 "Ab Pro": "From Pro",
 "Abbrechen": "Cancel",
