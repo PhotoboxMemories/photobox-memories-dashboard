@@ -4044,5 +4044,12 @@ I18N.add('fr', {
 "übertragen und dort zu KI-Porträts verarbeitet werden.": "transférées et transformées là-bas en portraits IA.",
 "übertragen werden.": "soient transférées.",
 "übrig": "restant",
-"„Groß“ nutzt die volle Auflösung der Kamera und ergibt die beste Qualität. „Mittel“ und „Klein“ sind etwas schneller.": "« Grande » utilise la pleine résolution de l’appareil et donne la meilleure qualité. « Moyenne » et « Petite » sont un peu plus rapides."
+"„Groß“ nutzt die volle Auflösung der Kamera und ergibt die beste Qualität. „Mittel“ und „Klein“ sind etwas schneller.": "« Grande » utilise la pleine résolution de l’appareil et donne la meilleure qualité. « Moyenne » et « Petite » sont un peu plus rapides.",
+"KI nur bei bestimmten Layouts": "IA seulement pour certaines mises en page",
+"Aus = KI-Fotos bei allen Foto-Layouts. Ein = Gäste wählen zuerst das Layout; nur bei den angehakten Layouts kommt danach die Stilauswahl, alle anderen bleiben normale Fotos.": "Désactivé = photos IA pour toutes les mises en page photo. Activé = les invités choisissent d’abord la mise en page ; le choix du style ne suit que pour les mises en page cochées, les autres restent des photos normales.",
+"KI-Fotos gibt es bei diesen Layouts": "Les photos IA sont disponibles pour ces mises en page",
+"Noch kein Layout angehakt – so gibt es in diesem Ereignis keine KI-Fotos.": "Aucune mise en page cochée pour l’instant – il n’y aura donc pas de photos IA dans cet événement.",
+"mit KI-Foto": "avec photo IA",
+"{x} Foto(s)": "{x} photo(s)",
+"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Les invités deviennent stars de cinéma, super-héros ou œuvres d’art. Choisir les styles, régler le consentement et les textes. Sous « Au photobooth », tu peux limiter les photos IA à certaines mises en page – les invités choisissent alors d’abord la mise en page et seules les mises en page cochées proposent les styles IA."
 });
