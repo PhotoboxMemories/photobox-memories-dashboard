@@ -91,6 +91,7 @@ I18N.add('en', {
 "A5 (148 × 210 mm)": "A5 (148 × 210 mm)",
 "A6 (105 × 148 mm)": "A6 (105 × 148 mm)",
 "Ab Basis": "From Basic",
+"Bluetooth-Verbindung zur GoPro ging nicht ({x}). Quik-App am Handy schließen, die GoPro aus- und einschalten, „Gerät verbinden → GoPro Quik“ öffnen und noch einmal versuchen.": "Bluetooth connection to the GoPro failed ({x}). Close the Quik app on your phone, switch the GoPro off and on, open “Connect Device → GoPro Quik” and try again.",
 "ab nächster Fotobox-Version": "from next photo booth version",
 "Ab Pro": "From Pro",
 "Abbrechen": "Cancel",
