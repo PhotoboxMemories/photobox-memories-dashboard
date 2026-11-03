@@ -4044,5 +4044,12 @@ I18N.add('es', {
 "übertragen und dort zu KI-Porträts verarbeitet werden.": "se envíen y allí se conviertan en retratos IA.",
 "übertragen werden.": "se transfieran.",
 "übrig": "restante",
-"„Groß“ nutzt die volle Auflösung der Kamera und ergibt die beste Qualität. „Mittel“ und „Klein“ sind etwas schneller.": "«Grande» usa la resolución completa de la cámara y ofrece la mejor calidad. «Mediana» y «Pequeña» son algo más rápidas."
+"„Groß“ nutzt die volle Auflösung der Kamera und ergibt die beste Qualität. „Mittel“ und „Klein“ sind etwas schneller.": "«Grande» usa la resolución completa de la cámara y ofrece la mejor calidad. «Mediana» y «Pequeña» son algo más rápidas.",
+"KI nur bei bestimmten Layouts": "IA solo para ciertos diseños",
+"Aus = KI-Fotos bei allen Foto-Layouts. Ein = Gäste wählen zuerst das Layout; nur bei den angehakten Layouts kommt danach die Stilauswahl, alle anderen bleiben normale Fotos.": "Desactivado = fotos con IA en todos los diseños de foto. Activado = los invitados eligen primero el diseño; la elección de estilo solo aparece en los diseños marcados, los demás quedan como fotos normales.",
+"KI-Fotos gibt es bei diesen Layouts": "Las fotos con IA están disponibles en estos diseños",
+"Noch kein Layout angehakt – so gibt es in diesem Ereignis keine KI-Fotos.": "Todavía no hay ningún diseño marcado; así no habrá fotos con IA en este evento.",
+"mit KI-Foto": "con foto IA",
+"{x} Foto(s)": "{x} foto(s)",
+"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Los invitados se convierten en estrellas de cine, superhéroes u obras de arte. Elegir estilos, ajustar consentimiento y textos. En «En el fotomatón» puedes limitar las fotos con IA a ciertos diseños: los invitados eligen primero el diseño y solo los marcados ofrecen los estilos de IA."
 });
