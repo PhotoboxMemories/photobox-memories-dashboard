@@ -453,7 +453,7 @@
   // Erweiterte Einstellungen im vollen Umfang. Liegen unter settings.x, damit ältere Fotobox-Versionen sie einfach ignorieren.
   const X_DEF = {
     gif: { size: '720p-16:9', reverse: false, overlays: [], delay: 300 },
-    slowmo: { enabled: false, countdown: 5, quality: 4, motion: false, flash: true, saveOriginal: true, preTextOn: false, preText: 'Bereit machen', length: 1, reverse: true, clipLen: 2, speed: '0.5x', soundtracks: [], overlays: [], size: '720p-16:9', intro: '', outro: '' },
+    slowmo: { enabled: false, countdown: 5, quality: 4, motion: false, flash: true, saveOriginal: true, preTextOn: false, preText: 'Bereit machen', length: 6, reverse: true, clipLen: 2, speed: '0.5x', soundtracks: [], overlays: [], size: '720p-16:9', intro: '', outro: '' },
     video: { countdown: 5, quality: 4, saveOriginal: true, preTextOn: false, preText: 'Bereit machen', overlays: [], size: '720p-16:9', intro: '', outro: '' },
     robot: { enabled: false, themes: ['classic', 'caricature', 'superhero', 'football', 'astronaut', 'rockstar'], custom: [], guestPick: true, random: false, header: 'Wähle ein Thema' }, // Zeichenroboter: Aufnahme-Art „Zeichnung“ (Einmessen an der Fotobox unter Extras → Zeichenroboter); themes = Kennungen aus DRAW_THEMES, custom = eigene {id, name, prompt}
     voice: { style: 'de-frau', randombefore: false, randomafter: false, files: { start: '', effect: '', countdown: '', before: [], after: [], signature: '', processing: '', done: '' } },
@@ -1482,7 +1482,7 @@
       },
       capture() {
         sub.mode ||= 'photo';
-        const M = [['photo', 'camera', 'Foto', 'single'], ['gif', 'film', 'GIF', 'gif'], ['boom', 'repeat', 'Boomerang', 'boomerang'], ['video', 'video', 'Video', 'video'], ['robot', 'pen', 'Zeichenroboter', 'draw']];
+        const M = [['photo', 'camera', 'Foto', 'single'], ['gif', 'film', 'GIF', 'gif'], ['boom', 'repeat', 'Boomerang', 'boomerang'], ['video', 'video', 'Video', 'video'], ['slowmo', 'rotate', '360 / Slow-Mo', null], ['robot', 'pen', 'Zeichenroboter', 'draw']];
         const photoOn = S.modes.single || S.modes.strip || S.modes.grid || S.layouts.length;
         const isOn = (k, key) => k === 'photo' ? photoOn : k === 'slowmo' ? S.x.slowmo.enabled : k === 'robot' ? !!S.x.robot?.enabled : S.modes[key];
         const sizes = [['720p-16:9', 'Rechteck 720p 16:9'], ['1080p-16:9', 'Rechteck 1080p 16:9'], ['720p-9:16', 'Hochformat 720p 9:16'], ['1080p-9:16', 'Hochformat 1080p 9:16'], ['square-720', 'Quadrat 720 1:1'], ['square-1080', 'Quadrat 1080 1:1']];
@@ -1496,9 +1496,9 @@
           : sub.mode === 'boom' ? `<div class="card">${sw('modes.boomerang', 'Boomerang aktivieren', 'Kurzer Clip, der vor und zurück läuft')}<label class="l">Länge</label><select data-s="boomerangLen">${['kurz', 'mittel', 'lang'].map(n => `<option ${S.boomerangLen === n ? 'selected' : ''}>${n}</option>`).join('')}</select></div>`
           : sub.mode === 'slowmo' ? `<div class="card">${sw('x.slowmo.enabled', '360/Slow-mo-Modus aktivieren', 'Nehmen Sie 360-Grad- oder Zeitlupenaufnahmen auf')}</div>
             <h2>Allgemein</h2><div class="card">${slider('x.slowmo.countdown', 'Countdown', 0, 30)}${slider('x.slowmo.quality', 'Ausgabequalität', 1, 8, 1, 'mbps')}
-              ${sw('x.slowmo.motion', 'Bei Bewegungserkennung aufnehmen', 'Aufnahme starten, wenn sich das Gerät bewegt')}${sw('x.slowmo.flash', 'Blitz während der Aufnahme blinken lassen')}${sw('x.slowmo.saveOriginal', 'Originalvideo speichern')}
+              ${sw('x.slowmo.motion', 'Bei Bewegungserkennung aufnehmen', 'Die Aufnahme startet, sobald sich im Livebild der Fotobox-Kamera etwas bewegt')}${sw('x.slowmo.flash', 'Blitz während der Aufnahme blinken lassen')}${sw('x.slowmo.saveOriginal', 'Originalvideo speichern')}
               ${sw('x.slowmo.preTextOn', 'Text vor der Aufnahme anzeigen')}${text('x.slowmo.preText', 'Text', 'Bereit machen')}</div>
-            <h2>Video-Timeline</h2><div class="card">${slider('x.slowmo.length', 'Aufnahmelänge', 1, 15)}${sw('x.slowmo.reverse', 'Video umkehren', 'Erst vorwärts, dann rückwärts abspielen')}
+            <h2>Video-Timeline</h2><div class="card">${slider('x.slowmo.length', 'Aufnahmelänge', 3, 15)}${sw('x.slowmo.reverse', 'Video umkehren', 'Erst vorwärts, dann rückwärts abspielen')}
               ${slider('x.slowmo.clipLen', 'Länge der Clip-Aufnahme', .5, 2, .5, 's')}${sel('x.slowmo.speed', 'Clip-Geschwindigkeit', [['0.25x', '0,25x'], ['0.5x', '0,5x'], ['1x', '1x'], ['2x', '2x']])}</div>
             <h2>Soundtracks</h2><div class="card">${upList('x.slowmo.soundtracks', 'audio/mpeg', 'Soundtrack hinzufügen (MP3, max. 3 MB)')}</div>
             <h2>Overlays</h2><div class="card">${sel('x.slowmo.size', 'Ausgabegröße', sizes)}${upList('x.slowmo.overlays', 'image/png', 'Overlay hinzufügen (PNG)')}</div>
@@ -1510,7 +1510,7 @@
               <label class="l">Bibliothek – antippen zum Aus- oder Abwählen (${(S.x.robot.themes || []).length} gewählt)</label>
               <div class="row" style="flex-wrap:wrap;gap:8px">${DRAW_THEMES.map(t => { const on = (S.x.robot.themes || []).includes(t.id); return `<button class="ghost" data-a="rb-theme" data-id="${t.id}" style="padding:6px 10px;${on ? 'background:#FFF4C2;border-color:#F7C838;font-weight:600' : 'opacity:.75'}" title="${esc(t.prompt || 'Nur die Konturen, ohne Verkleidung')}">${t.icon} ${esc(t.name)}${on ? ' ✓' : ''}</button>`; }).join('')}</div></div>
             <h2>Eigene Themen</h2><div class="card">${(S.x.robot.custom || []).map((c, i) => `<div style="border:1px solid #eee;border-radius:8px;padding:10px;margin-bottom:8px">${text(`x.robot.custom.${i}.name`, 'Name des Themas', 'z. B. Firmenjubiläum')}
-                <label class="l">Beschreibung für die KI – was die Personen tragen oder tun</label><textarea data-s="x.robot.custom.${i}.prompt" rows="2" placeholder="z. B. Zeige die Personen im Firmen-Shirt mit Konfetti und einer Torte." style="width:100%">${esc(c.prompt || '')}</textarea>
+                <label class="l">Beschreibung für die KI – was die Personen tragen oder tun</label><textarea data-s="x.robot.custom.${i}.prompt" rows="2" maxlength="700" placeholder="z. B. Zeige die Personen im Firmen-Shirt mit Konfetti und einer Torte." style="width:100%">${esc(c.prompt || '')}</textarea>
                 <div class="row" style="justify-content:flex-end;margin-top:6px"><button class="ghost" data-a="rb-cdel" data-i="${i}">${ICON('trash', 14)} Entfernen</button></div></div>`).join('')}
               <button class="ghost" data-a="rb-cadd">${ICON('plus', 15)} Eigenes Thema hinzufügen</button>
               <p style="color:#777;font-size:13px;margin:8px 0 0">Jedes Thema wird an den Grund-Prompt „saubere schwarze Strichzeichnung, Gesichter erkennbar“ angehängt. Eigene Themen erscheinen bei den Gästen mit einem ✨.</p></div>`
@@ -1519,7 +1519,7 @@
               ${sw('videoAudio', 'Ton aufnehmen')}${sw('x.video.saveOriginal', 'Originalvideo speichern')}${sw('x.video.preTextOn', 'Text vor der Aufnahme anzeigen')}${text('x.video.preText', 'Text', 'Bereit machen')}</div>`;
         return `<h1>Aufnahme-Arten</h1><div class="cols"><div class="left">
           <div class="modes">${M.map(([k, ic, n, key]) => `<div class="mode ${sub.mode === k ? 'on' : ''}" data-mode="${k}"><span class="ic">${ICON(ic, 22)}</span>${n}${k !== 'photo' && !pro() ? ' 🔒' : ''}<span class="dot ${isOn(k, key) ? 'a' : ''}"></span></div>`).join('')}</div>
-          ${sub.mode !== 'photo' && !pro() ? '<div class="card" style="background:#FFFAEA"><b>GIF, Boomerang und Video gibt es ab dem Tarif Pro.</b><p style="margin:8px 0 0"><button class="btn pri" data-a="tarife">Tarife ansehen</button></p></div>' : body}
+          ${sub.mode !== 'photo' && !pro() ? '<div class="card" style="background:#FFFAEA"><b>GIF, Boomerang, Video und 360° gibt es ab dem Tarif Pro.</b><p style="margin:8px 0 0"><button class="btn pri" data-a="tarife">Tarife ansehen</button></p></div>' : body}
           <h2>Live-Ansicht</h2><div class="card"><div class="between"><div><b>Live-Ansicht in der Vorlage</b><br><small style="color:#6b6b78">Gäste sehen sich beim Countdown im Fotolayout – so wie das fertige Foto. Aus: nur das Kamerabild.</small></div>
             <div class="row"><label class="sw"><input type="checkbox" data-livetpl ${S.liveView !== 'plain' ? 'checked' : ''}><i></i></label><span class="swl">${S.liveView !== 'plain' ? 'Ein' : 'Aus'}</span></div></div></div>
           <h2>Spiegeln</h2><div class="card">${sw('mirror', 'Gespiegelte Live-Ansicht')}${sw('mirrorPhoto', 'Aufgenommene Fotos und Videos spiegeln', 'Spiegelt das gespeicherte und gedruckte Ergebnis')}${sw('cropLive', 'Live-Ansicht auf das Fotofeld zuschneiden')}</div>
