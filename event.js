@@ -443,8 +443,8 @@
     ai: { enabled: false, prompt: '' },
     title: '', subtitle: '', startText: 'Tippen zum Starten', startScreen: null, startScreen2: null, shareScreen: null, shareScreen2: null, attractP: null, attractL: null, accent: '#F7C838', attractUrl: '', attractType: '', attractFit: 'cover', startDisplay: 'media', font: 'modern', frame: '#ffffff', textColor: '#222222', template: 'classic',
     layouts: [], guestLayouts: false, gifFromPhotos: false,
-    countdown: 3, countdownNext: 3, between: 2, autoReturn: 30, sound: true, mirror: true, mirrorPhoto: false, cropLive: true,
-    modes: { single: true, strip: true, grid: true, gif: true, boomerang: true, video: true }, gifFrames: 4, boomerangLen: 'mittel', videoSecs: 10, videoAudio: true,
+    countdown: 3, countdownNext: 3, between: 2, autoReturn: 30, sound: true, mirror: true, mirrorPhoto: false, cropLive: true, liveView: 'template',
+    modes: { single: true, strip: true, grid: true, gif: true, boomerang: true, video: true }, gifFrames: 4, gifDelay: 600, gifReverse: false, boomerangLen: 'mittel', videoSecs: 10, videoAudio: true,
     voice: false, beauty: false, beautyStrength: 40, filtersOn: true, filters: FILTERS.map(f => f[0]), stickers: true,
     bgMode: 'off', keyStrength: 50, bgUrls: [], bgGuestChoice: true,
     form: { enabled: false, name: true, email: true, phone: false, newsletter: false, text: 'Ich bin einverstanden, dass meine Fotos gespeichert und für dieses Event verwendet werden.' },
@@ -491,7 +491,8 @@
     if (!document.getElementById('ws-css')) { const s = document.createElement('style'); s.id = 'ws-css'; s.textContent = CSS; document.head.appendChild(s); }
     const norm = st => { const o = { ...structuredClone(DEF), ...(st || {}) };
       o.modes = { ...DEF.modes, ...(st?.modes || {}) }; o.form = { ...DEF.form, ...(st?.form || {}) };
-      o.ai = AIEvent.normalize(st?.ai); o.x = deepMerge(X_DEF, st?.x); o.layouts = o.layouts || []; return o; };
+      o.ai = AIEvent.normalize(st?.ai); o.x = deepMerge(X_DEF, st?.x); o.layouts = o.layouts || [];
+      o.form.consent = o.form.consent ?? !!o.form.enabled; o.form.title = o.form.title ?? o.x.disc?.title ?? ''; return o; }; // wie die Fotobox: ohne eigenen Schalter gilt der Umfrage-Schalter
     const S = norm(ev.settings);
     // Abgleich mit den Fotoboxen: An der Fotobox gespeicherte Einstellungen landen ebenfalls im Ereignis. Darum schickt das
     // Dashboard nur, was hier geändert wurde (gegenüber „base“ = zuletzt bekannter Stand), und übernimmt Änderungen von der
@@ -529,14 +530,17 @@
     }
     const pollT = setInterval(async () => {
       if (!document.body.contains(root)) return clearInterval(pollT);
-      if (ctx.demo || document.visibilityState !== 'visible' || persisting || dirtyKeys().length) return;
+      if (ctx.demo || document.visibilityState !== 'visible' || persisting) return; // auch bei offenen Änderungen: adoptRemote lässt sie in Ruhe
       const { data } = await ctx.sb.from('events').select('settings,updated_at').eq('id', ev.id).maybeSingle();
       if (!data || data.updated_at === baseAt) return;
       baseAt = data.updated_at; if (adoptRemote(data.settings).length) refreshAfterRemote();
     }, 15000);
     // Fotoboxen des Ereignisses (Upload-Stand, online) auf der Übersicht alle 15 Sekunden neu holen – sonst blieb der Stand vom Öffnen
     // stehen, z. B. „2 Foto(s) warten auf den Upload“, obwohl die Fotos längst in der Galerie waren (Betreiber 29.10.2026)
-    const devSig = l => JSON.stringify(l.map(d => [d.id, d.name, +d.status?.uploads || 0, +d.status?.prints || 0, !!(d.last_seen && Date.now() - new Date(d.last_seen) < 18e4), devOrientWarn(d)]));
+    // Hat die Fotobox den aktuellen Stand übernommen? (meldet sie selbst, ab Fotobox 1.18.67)
+    const devSyncNote = d => { const y = d.status?.sync; if (!y || !('applied' in y)) return '';
+      return y.waiting ? 'Änderung wartet: Menü an der Fotobox offen oder Aufnahme läuft' : y.applied && baseAt && Date.parse(y.applied) === Date.parse(baseAt) ? '✓ Stand übernommen' : 'Änderung kommt gleich an'; };
+    const devSig = l => JSON.stringify(l.map(d => [d.id, d.name, +d.status?.uploads || 0, +d.status?.prints || 0, !!(d.last_seen && Date.now() - new Date(d.last_seen) < 18e4), devOrientWarn(d), devSyncNote(d)]));
     let devShown = null; // erst im Takt berechnen (devOrientWarn steht weiter unten)
     const devT = setInterval(async () => {
       if (!document.body.contains(root)) return clearInterval(devT);
@@ -684,13 +688,22 @@
     const aiPairAsk = () => (G.pmConfirm || (async x => confirm(x)))('Für „Meine KI-Stile“ nehmen wir als Bild immer unser Testpaar – nicht dein eigenes Testfoto. Jetzt ein Bild mit dem Testpaar erzeugen? (1 Credit)', 'Erzeugen');
     if (!ai.own) aiDefaultPhoto().then(u => { if (u && !ai.own && !ai.photo) { ai.photo = u; if (page === 'ai' || page === 'fx' || page === 'cari') render(); } });
     const status = t => { const el = $(root, '.st'); if (el) el.textContent = t; }; // nach render() kann das Feld kurz fehlen – nie abbrechen
+    let saveTry = 0;
     function save() {
       status('Speichert …'); clearTimeout(saveT);
       saveT = setTimeout(async () => {
-        const { error } = await persistNow();
-        status(error ? '⚠️ ' + error.message : '✓ Alle Änderungen gespeichert');
+        const { error } = await persistNow().catch(e => ({ error: e }));
+        if (!error) { saveTry = 0; return status('✓ Alle Änderungen gespeichert'); }
+        if (/JWT|expired|401|session/i.test(error.message || '')) { // neuer Versuch hilft hier nicht
+          status('⚠️ Nicht gespeichert: Anmeldung abgelaufen'); return ctx.toast?.('Deine Anmeldung ist abgelaufen. Bitte melde dich in einem neuen Tab an und ändere danach hier etwas, damit gespeichert wird.', 8000);
+        }
+        status('⚠️ Speichern hat nicht geklappt – neuer Versuch gleich');
+        saveT = setTimeout(save, saveTry++ < 2 ? 5000 : 15000);
       }, 600);
     }
+    const saveOnline = () => { if (saveTry) save(); };
+    const saveLeave = e => { if (document.body.contains(root) && dirtyKeys().length) { e.preventDefault(); e.returnValue = ''; } };
+    addEventListener('online', saveOnline); addEventListener('beforeunload', saveLeave);
     function renderNav() {
       const lock = k => (LOCKS[k] && !allowed(LOCKS[k])) || (PRO_PAGES[k] && !pro());
       let c = '#F7C838'; // Farbe der Gruppe (wie in der Fotobox), gilt für die Einträge darunter
@@ -1443,7 +1456,7 @@
               <div class="foot"><span></span><button class="more" data-a="go" data-pg="analytics">Analysen →</button></div></div>
             <div class="dcard"><div class="nums"><span>Uploads<b>${n(P.length)}</b></span><span>Ausdrucke<b>${prints}</b></span><span>Gäste-Daten<b>${ctx.leadsCount?.(ev.id) ?? '–'}</b></span><span>Fotoboxen<b>${devs.length}</b></span></div>
               <div class="foot"><span>${n(P.length)} Shares insgesamt</span><button class="more" data-a="go" data-pg="shares">Shares →</button></div></div>
-            <div class="dcard boxes"><b class="dt">Zugewiesene Fotoboxen</b>${devs.length ? devs.map(d => `<div class="between"><span>📸 ${esc(d.name || 'FotoBox')}${+d.status?.uploads > 0 ? ` <small style="display:inline">· ${+d.status.uploads} Foto(s) warten auf den Upload</small>` : ''}${devOrientWarn(d) ? `<small style="color:#b26a00">⚠️ ${esc(devOrientWarn(d))}</small>` : ''}</span><small>${d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? '🟢 online' : 'offline'}</small></div>`).join('')
+            <div class="dcard boxes"><b class="dt">Zugewiesene Fotoboxen</b>${devs.length ? devs.map(d => `<div class="between"><span>📸 ${esc(d.name || 'FotoBox')}${+d.status?.uploads > 0 ? ` <small style="display:inline">· ${+d.status.uploads} Foto(s) warten auf den Upload</small>` : ''}${devOrientWarn(d) ? `<small style="color:#b26a00">⚠️ ${esc(devOrientWarn(d))}</small>` : ''}${devSyncNote(d) && d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? `<small>${esc(devSyncNote(d))}</small>` : ''}</span><small>${d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? '🟢 online' : 'offline'}</small></div>`).join('')
             : '<p style="color:#777">Noch keine. In der FotoBox anmelden und dieses Event auswählen – oder oben unter „Geräte“ zuweisen.</p>'}</div>
             <div class="dcard share"><b class="dt">Online-Galerie</b>
               ${sw('x.gallery.link', 'Freigabe von Links', 'Jeder mit dem Link zum Ereignis darf dieses Ereignis sehen')}
@@ -1491,7 +1504,7 @@
               ${!S.layouts.length ? `${sw('modes.strip', 'Standard-Fotostreifen anbieten')}${sw('modes.grid', 'Standard-Collage anbieten')}` : ''}</div>
             <h2>Countdown</h2><div class="card">${slider('countdown', 'Countdown vor Foto 1', 0, 30)}${slider('countdownNext', 'Countdown vor weiteren Fotos', 0, 30)}${slider('between', 'Anzeigedauer des Fotos', 0, 30)}</div>`
           : sub.mode === 'gif' ? `<div class="card">${sw('modes.gif', 'GIF-Modus aktivieren', 'Nehmen Sie Fotos auf, um ein GIF zu erstellen')}</div>
-            <h2>Anzahl der Fotos</h2><div class="card">${slider('gifFrames', 'Anzahl der aufzunehmenden Fotos', 2, 20, 1, 'Fotos')}${slider('x.gif.delay', 'Abstand zwischen den Aufnahmen', 50, 500, 10, 'ms')}
+            <h2>Anzahl der Fotos</h2><div class="card">${slider('gifFrames', 'Anzahl der aufzunehmenden Fotos', 2, 20, 1, 'Fotos')}${slider('gifDelay', 'Abstand zwischen den Aufnahmen', 100, 2000, 50, 'ms')}${sw('gifReverse', 'Umgekehrtes GIF', 'Erst vorwärts, dann rückwärts abspielen')}
               <p style="color:#777;font-size:13px">Startet ein Gast eine Fotosession, entspricht die Anzahl der Fotos stattdessen dem Drucklayout.</p></div>`
           : sub.mode === 'boom' ? `<div class="card">${sw('modes.boomerang', 'Boomerang aktivieren', 'Kurzer Clip, der vor und zurück läuft')}<label class="l">Länge</label><select data-s="boomerangLen">${['kurz', 'mittel', 'lang'].map(n => `<option ${S.boomerangLen === n ? 'selected' : ''}>${n}</option>`).join('')}</select></div>`
           : sub.mode === 'slowmo' ? `<div class="card">${sw('x.slowmo.enabled', '360/Slow-mo-Modus aktivieren', 'Nehmen Sie 360-Grad- oder Zeitlupenaufnahmen auf')}</div>
@@ -1540,7 +1553,7 @@
           <div class="card"><label class="l">Stil der Animationen</label><select data-s="x.voice.anim" data-rerender="1">${AdvisorAnim.STYLES.map(st => `<option value="${st.id}" ${st.id === style ? 'selected' : ''}>${esc(st.name)}</option>`).join('')}</select>
             <div class="row" style="margin-top:10px"><button class="ghost" data-a="valib">${ICON('sparkles', 15)} Animationen ansehen</button></div>
             ${sel('x.voice.bg', 'Hintergrund der Animationen', [['solid', 'Deckend – nur die Animation'], ['see', 'Durchsichtig – Video bzw. Livebild bleibt sichtbar']])}
-            ${sel('x.voice.style', 'Stimme für Sprachansagen', [['de-frau', 'Deutsche Stimme (Frau)'], ['de-mann', 'Deutsche Stimme (Mann)'], ['en-frau', 'Englische Stimme (Frau)']])}
+            
             <small style="color:#6b6b78">Ob die Fotobox die Texte zusätzlich vorliest, stellen Sie an der Fotobox unter „Virtueller Berater“ → „Sprachansagen“ ein.</small></div>
           <div class="vagrid">${cards}</div>`;
       },
@@ -1591,7 +1604,7 @@
         return `<h1>Filter & Effekte</h1>${tabs('fx', [['beauty', 'Schönheitsfilter'], ['color', 'Farbfilter'], ['sticker', 'Aufkleber']])}
           ${allTabs('fx', () => sub.fx === 'beauty' ? `${titleSw('Schönheitsfilter', 'beauty')}<div class="card">Tragen Sie einen Schönheitsfilter auf, um die Haut zu glätten und Schönheitsfehler zu entfernen.${slider('beautyStrength', 'Stärke', 0, 100, 5, '%')}</div>`
           : sub.fx === 'color' ? `${titleSw('Farbfilter', 'filtersOn')}<div class="card">Wenden Sie einen Farbfilter an, um Töne zu verändern und Farben anzupassen.
-              <label class="l">Filter</label><div class="row">${[['auto', 'Automatisch durchwechseln'], ['guest', 'Gäste wählen den Filter']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="fxm" data-s="x.fx.mode" value="${k}" ${S.x.fx.mode === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
+              
               <div class="filters" style="margin-top:12px">${FILTERS.map(([id, n, css]) => `<div class="flt ${S.filters.includes(id) ? 'on' : ''}" data-flt="${id}"><img src="${filterThumb(css)}"><span>${n}</span></div>`).join('')}</div>
               <div class="between" style="margin-top:8px"><small style="color:#6b6b78">${ai.own ? 'Vorschau mit deinem eigenen Testfoto' : 'Vorschau mit dem Standard-Testfoto'}</small><span>${ai.own ? '<a href="#" data-a="ai-photo-reset">Standardbild</a> · ' : ''}<a href="#" data-a="ai-photo">Bild ändern</a></span></div></div>`
           : `${titleSw('Aufkleber', 'stickers')}<div class="card">Lassen Sie Ihre Gäste ihre Fotos mit lustigen Aufklebern verzieren.
@@ -1689,8 +1702,8 @@
           <div class="card">${sw('x.ai.skip', 'Option zum Überspringen der KI-Fotos hinzufügen', 'Gäste können ihr Foto auch ohne KI-Stil behalten')}
           ${sw('x.ai.consent', 'Gäste vor dem KI-Foto um Zustimmung bitten', 'Aus = keine Abfrage an der Fotobox. Das Foto wird trotzdem an den KI-Dienst (xAI, USA) übertragen – die Einwilligung regelst du dann selbst, zum Beispiel im Vertrag mit deinem Kunden oder per Aushang an der Fotobox.')}</div>
           <div class="card"><details class="adv"><summary>Texte für die Gäste anpassen</summary><p style="color:#6b6b78;font-size:13px;margin:8px 0">Diese Texte sehen deine Gäste an der Fotobox, wenn sie ein KI-Foto erstellen. Du kannst jede Formulierung ändern, zum Beispiel in eine andere Sprache oder in euren Ton.</p><div class="grid3x">
-            ${text('x.ai.texts.choose', 'Überschrift der Stilauswahl')}${text('x.ai.texts.chooseBtn', 'Knopf: Stil auswählen')}${text('x.ai.texts.createBtn', 'Knopf: KI-Foto erstellen')}${text('x.ai.texts.creating', 'Hinweis während der Erstellung')}
-            ${text('x.ai.texts.retrying', 'Hinweis beim zweiten Versuch')}${text('x.ai.texts.retryBtn', 'Knopf: erneut versuchen')}${text('x.ai.texts.skipBtn', 'Knopf: ohne KI weiter')}${text('x.ai.texts.failed', 'Meldung, wenn es nicht geklappt hat')}</div></details></div>
+            ${text('x.ai.texts.choose', 'Überschrift der Stilauswahl')}${text('x.ai.texts.creating', 'Hinweis während der Erstellung')}
+            ${text('x.ai.texts.skipBtn', 'Knopf: ohne KI weiter')}</div></details></div>
           <div class="card"><details class="adv"><summary>Mehr zu den KI-Bildern</summary>
           <p>Die KI-Bilder entstehen über Photobox Memories (Grok) und nutzen das Guthaben des angemeldeten Kontos – auf der Fotobox ist kein eigener Schlüssel nötig.</p>
           <p><small>Pro Foto eine KI-Anfrage, Internet erforderlich. Schlägt die KI fehl, erhalten die Gäste einen Hinweis und ihre Originalfotos. Videos, GIFs und Boomerangs bleiben unverändert. Testfotos werden nicht gespeichert.</small></p></details></div></div><div class="right">${right}</div></div>${modal}`;
@@ -1712,8 +1725,8 @@
               <p style="margin-top:12px"><button class="ghost" data-a="q-add">+ Frage hinzufügen</button></p></div>
             <h2>Schaltflächenbeschriftungen</h2><div class="card">Passen Sie den Text der Navigationsschaltflächen in Ihrer Umfrage an
               <div class="grid3x">${text('x.survey.done', 'Fertig')}</div></div>`
-          : `${titleSw('Haftungsausschluss', 'form.enabled')}<div class="card">Bitten Sie Ihre Gäste, einen Haftungsausschluss zu akzeptieren
-              ${text('x.disc.title', 'Titel für Haftungsausschluss')}
+          : `${titleSw('Haftungsausschluss', 'form.consent')}<div class="card">Bitten Sie Ihre Gäste, einen Haftungsausschluss zu akzeptieren
+              ${text('form.title', 'Titel für Haftungsausschluss')}
               <label class="l">Text des Haftungsausschlusses</label><textarea rows="5" data-s="form.text">${esc(S.form.text)}</textarea>
               <p style="color:#777;font-size:13px">Wenn der Gast den Haftungsausschluss nicht akzeptiert, wird seine Sitzung abgebrochen und seine Fotos werden gelöscht.</p>
               <div class="grid3x">${text('x.disc.agree', 'Vereinbarung')}${text('x.disc.cancel', 'Abbrechen')}</div></div>`)}`;
@@ -1747,9 +1760,9 @@
               ${sw('askCopies', '„Wie viele Kopien?“ fragen', 'Der Gast wählt selbst – die Auswahl startet bei 1 und geht bis „Kopien pro Gast“ (Reiter Drucklimits).')}
               ${S.askCopies ? '' : `<label class="l">Kopien pro Ausdruck</label><input type="number" min="1" max="10" data-s="copies" data-num="1" value="${S.copies}">
               <p style="color:#6b6b78;font-size:13px;margin:6px 0 0">So oft wird jedes Foto gedruckt – auch beim automatischen Drucken. Höchstens so viele wie „Kopien pro Gast“ (Reiter Drucklimits)${(+S.copies || 1) > (+S.maxCopies || 3) ? ` – <b style="color:#b26b00">zurzeit ${+S.maxCopies || 3}</b>` : ''}.</p>`}
-              <p style="font-weight:600;margin-top:14px">Texte</p><div class="grid3x">${text('x.print.btnText', 'Drucken')}${text('x.print.printingText', 'Drucken...')}${text('x.print.copiesText', 'Wie viele Kopien?')}</div></div>`
+              <p style="font-weight:600;margin-top:14px">Texte</p><div class="grid3x">${text('x.print.btnText', 'Drucken')}${text('x.print.copiesText', 'Wie viele Kopien?')}</div></div>`
           : `${titleSw('Drucklimits', '')}<div class="card">Ein Limit für die erlaubten Ausdrucke festlegen.
-              <div class="row"><div style="flex:1"><label class="l">Maximale Anzahl an Ausdrucken pro Ereignis (0 = kein Limit)</label><input type="number" min="0" data-s="printLimit" data-num="1" value="${S.printLimit}"></div>
+              <div class="row"><div style="flex:1"><label class="l">Maximale Anzahl an Ausdrucken je Fotobox (0 = kein Limit)</label><input type="number" min="0" data-s="printLimit" data-num="1" value="${S.printLimit}"></div>
               <div style="flex:1"><label class="l">Maximale Anzahl an Kopien pro Gast</label><input type="number" min="1" max="20" data-s="maxCopies" data-num="1" value="${S.maxCopies}"></div></div>
               ${ctx.admin ? sw('x.print.buyMore', 'Weitere Drucke verkaufen', 'Ist das Limit voll, nimmt die Fotobox Drucke aus dem Druck-Guthaben oder der Kunde kauft ein Paket per QR-Code (1 Druck = 50 Cent).') : ''}
               ${sw('showPrintsLeft', 'Restlimit an der Fotobox anzeigen', 'Unter dem Drucken-Symbol steht, wie viele Ausdrucke noch übrig sind, zum Beispiel „Noch 37 Drucke“. Nur wenn oben ein Limit eingetragen ist.')}</div>`)}`;
@@ -2131,8 +2144,10 @@
       if (!img) $(m, '.bigpv').innerHTML = '<p style="padding:30px">Noch kein Layout angelegt.</p>';
     }
     async function close() {
-      clearTimeout(saveT); clearInterval(pollT);
-      try { await persistNow(); } catch (e) { console.warn('Speichern beim Schließen:', e); }
+      clearTimeout(saveT);
+      const { error } = await persistNow().catch(e => ({ error: e }));
+      if (error && !await (G.pmConfirm || (async x => confirm(x)))('Speichern hat nicht geklappt. Trotzdem schließen? Die letzten Änderungen gehen dann verloren.', 'Trotzdem schließen')) return save();
+      clearInterval(pollT); removeEventListener('online', saveOnline); removeEventListener('beforeunload', saveLeave);
       root.remove(); ctx.onClose?.();
     }
 
