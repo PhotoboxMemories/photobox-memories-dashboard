@@ -4,6 +4,9 @@
 // Daten: public.studio_sites / public.studio_submissions; Löschen über die Serverfunktion „studio“ (Dateien bei Hetzner).
 // StudioPage.open(ctx) – ctx = { sb, me, toast, uploadFile, extra(k), tier(), reloadTier(), events(), reloadEvents(), admin, demo }
 // standalone: true im eigenen Bereich auf boothdesigner.de/konto (ohne Fotobox-Software: kein „In Ereignis übernehmen“)
+// Seit 03.11.2026 als Reiter (Wunsch des Betreibers „übersichtlicher, nicht durcheinander“): Übersicht (Status, Kundenlink, neue
+// Einsendungen), Einsendungen, Einstellungen, Abo & Rechnungen (nur wenn es etwas zu buchen/verwalten gibt), Betreiber-Werkzeuge
+// (nur Admin: Designs korrigieren, Glücksrad-Zähler). #win und #radStats aus konto/index.html wandern in den passenden Reiter.
 (function (G) {
   'use strict';
   // wie CATEGORIES im Template-Studio (template-studio/editor/template-studio.src.html)
@@ -31,9 +34,24 @@
   #studioRoot .badge{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700;background:#FFF3C4;color:#8a6400}
   #studioRoot .badge.erledigt{background:#e3f4e6;color:#1f7a35} #studioRoot .badge.in_arbeit{background:#e5eefc;color:#2456a6}
   #studioRoot .msg{background:#f6f4ee;border-radius:8px;padding:6px 9px;white-space:pre-wrap}
-  @media (max-width:760px){#studioRoot .grid2{grid-template-columns:1fr}}`;
+  #studioRoot .tabs{display:flex;flex-wrap:wrap;gap:4px;margin:14px 0 18px;padding:5px;background:var(--card,#fff);border:1px solid var(--line,#e7e7ee);border-radius:12px;width:fit-content;max-width:100%}
+  #studioRoot .tabs button{background:none;border:0;padding:9px 14px;border-radius:8px;color:var(--muted,#6b6b78);font:inherit;font-weight:600;display:inline-flex;gap:7px;align-items:center;cursor:pointer}
+  #studioRoot .tabs button:hover{color:var(--fg,var(--ink,#17171c))}
+  #studioRoot .tabs button.on{background:var(--gold,var(--accent,#F7C838));color:var(--accent-fg,#fff)}
+  #studioRoot .tabs .cnt{background:#d23b3b;color:#fff;border-radius:999px;padding:0 7px;font-size:12px;line-height:18px;font-weight:700}
+  #studioRoot .tabs button.on .cnt{background:rgba(0,0,0,.28)}
+  #studioRoot .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px}
+  #studioRoot .tiles .card{display:flex;flex-direction:column;gap:2px;align-items:flex-start}
+  #studioRoot .tiles .card b{font-size:24px;line-height:1.25}
+  #studioRoot details summary{cursor:pointer;font-weight:600;list-style:none;display:flex;gap:8px;align-items:center}
+  #studioRoot details summary::-webkit-details-marker{display:none}
+  #studioRoot details summary::before{content:'▸';font-size:13px;transition:transform .15s}
+  #studioRoot details[open] summary::before{transform:rotate(90deg)}
+  #studioRoot .win{margin:0 0 14px;max-width:none;justify-content:flex-start;text-align:left}
+  #studioRoot .rad-stats{margin:14px 0 0}
+  @media (max-width:760px){#studioRoot .grid2,#studioRoot .tiles{grid-template-columns:1fr}}`;
 
-  let ctx = null, site = null, subs = [], plans = [], shopReady = false, shopTax = false, abo = null, filter = 'offen', fixes = [];
+  let ctx = null, site = null, subs = [], plans = [], shopReady = false, shopTax = false, abo = null, filter = 'offen', fixes = [], tab = 'start';
   const $ = s => document.querySelector(s);
   const root = () => $('#studioRoot');
   const studioUrl = () => String(G.FOTOBOX_CONFIG?.studioUrl || '').replace(/\/+$/, '');
@@ -43,7 +61,7 @@
   async function open(c) {
     ctx = c;
     if (!$('#studioCss')) { const st = document.createElement('style'); st.id = 'studioCss'; st.textContent = CSS; document.head.appendChild(st); }
-    root().innerHTML = '<p class="muted">Lädt …</p>';
+    park(); root().innerHTML = '<p class="muted">Lädt …</p>';
     // Rückkehr von der Stripe-Bezahlseite (nur boothdesigner.de/konto, im Dashboard kehrt Stripe ins Dashboard zurück)
     const paid = ctx.standalone && new URLSearchParams(location.search).get('lizenz');
     if (paid) {
@@ -111,15 +129,15 @@
     const t = ctx.tier() || {}, until = t.studio_until ? new Date(t.studio_until) : null;
     if (ctx.admin || ctx.demo || !until || until.getFullYear() >= 2100) return '';
     // Neues Abo-Modell: BoothDesigner ist im bezahlten Fotobox-Abo enthalten (my_tier.studio_in_abo) – dann kein eigenes Abo anbieten
-    if (t.studio_in_abo) return `<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between;align-items:center;gap:12px">
+    if (t.studio_in_abo) return `<div class="card"><div class="row" style="justify-content:space-between;align-items:center;gap:12px">
         <span><b>Im Fotobox-Abo enthalten</b> <span class="small muted">${t.studio_until ? `· BoothDesigner läuft mit deinem Fotobox-Abo bis ${fmtDate(t.studio_until)} und verlängert sich mit ihm` : '· BoothDesigner läuft mit deinem Fotobox-Abo und verlängert sich mit ihm'}</span></span>
         ${aboLive() ? '<button class="btn small" data-a="portal">Abo &amp; Rechnungen verwalten</button>' : ''}</div>
         ${aboLive() ? '<p class="small" style="margin:8px 0 0">Du hast zusätzlich noch ein eigenes BoothDesigner-Abo. Das brauchst du nicht mehr – du kannst es unter „Abo &amp; Rechnungen verwalten“ kündigen.</p>' : ''}</div>`;
-    if (aboLive()) return `<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between;align-items:center;gap:12px">
+    if (aboLive()) return `<div class="card"><div class="row" style="justify-content:space-between;align-items:center;gap:12px">
         <span><b>BoothDesigner-Abo aktiv</b> <span class="small muted">· verlängert sich am ${fmtDate(abo.valid_until)} automatisch, solange du nicht kündigst</span></span>
         <button class="btn small" data-a="portal">Abo &amp; Rechnungen verwalten</button></div></div>`;
     if (!plans.length) return '';
-    return `<div class="card" style="margin-top:14px"><b>Jetzt das BoothDesigner-Abo buchen</b> <span class="small muted">· freigeschaltet bis ${fmtDate(t.studio_until)}</span>
+    return `<div class="card"><b>Jetzt das BoothDesigner-Abo buchen</b> <span class="small muted">· freigeschaltet bis ${fmtDate(t.studio_until)}</span>
         <p class="small" style="margin:6px 0 10px">Damit deine Kunden das Studio danach weiter nutzen können, buche jetzt das Abo – deine Einstellungen und Einsendungen bleiben.</p>
         <div class="row">${buyButtons(true)}</div>${agbNote()}</div>`;
   }
@@ -128,7 +146,7 @@
   async function locked() {
     const t = ctx.tier() || {};
     const ended = t.studio_until && new Date(t.studio_until) < new Date();
-    root().innerHTML = `<div class="pagehead"><h1>BoothDesigner</h1></div>
+    park(); show(); root().innerHTML = `<div class="pagehead"><h1>BoothDesigner</h1></div>
       <div class="card" style="max-width:820px">
         <h2 style="margin-top:0">Deine Kunden gestalten ihr Fotolayout selbst</h2>
         <p>Über 100 Designs für Hochzeit, Geburtstag, Taufe, Firmenfeier und mehr – auf deiner eigenen Webseite, mit deinem Logo und deinen Farben.
@@ -157,35 +175,68 @@
     };
   }
 
-  // ---------- Seite ----------
+  // ---------- Seite: Reiter ----------
+  // Bausteine aus konto/index.html (Glücksrad-Gewinn #win, Glücksrad-Zähler #radStats): vor jedem Neuaufbau aus dem Seiteninhalt
+  // herausnehmen (sonst gingen sie mit innerHTML verloren) und danach in den Platzhalter des passenden Reiters setzen
+  const MOVABLE = ['win', 'radStats'];
+  function park() { MOVABLE.forEach(id => { const el = document.getElementById(id); if (el && root().contains(el)) root().before(el); }); }
+  // Ohne Platzhalter (anderer Reiter) bleibt der Baustein unsichtbar; show() zeigt alle wieder (Seite „noch nicht freigeschaltet“)
+  function place() { MOVABLE.forEach(id => { const el = document.getElementById(id), slot = root().querySelector(`[data-slot="${id}"]`); if (!el) return; if (slot) slot.appendChild(el); el.style.display = slot ? '' : 'none'; }); }
+  const show = () => MOVABLE.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ''; });
+  const TABS = [['start', 'Übersicht'], ['subs', 'Einsendungen'], ['settings', 'Einstellungen'], ['abo', 'Abo & Rechnungen'], ['admin', 'Betreiber-Werkzeuge']];
   function render() {
     const t = ctx.tier() || {}, until = t.studio_until ? new Date(t.studio_until) : null;
-    const shown = subs.filter(s => filter === 'alle' || (filter === 'offen' ? s.status !== 'erledigt' : s.status === 'erledigt'));
-    const n = subs.filter(s => s.status === 'neu').length;
+    const n = subs.filter(s => s.status === 'neu').length, aboHtml = aboCard(), isAdmin = ctx.admin && !ctx.demo;
+    const tabs = TABS.filter(([k]) => k === 'abo' ? !!aboHtml : k === 'admin' ? isAdmin : true);
+    if (!tabs.some(([k]) => k === tab)) tab = 'start';
+    park();
     root().innerHTML = `<div class="pagehead"><h1>BoothDesigner</h1>
         <span class="small muted">${ctx.admin ? 'Betreiber-Konto' : until && until.getFullYear() < 2100 ? `Freigeschaltet bis ${until.toLocaleDateString('de-DE')}` : ''}</span></div>
-      ${aboCard()}
-      ${site ? linkCard() : ''}
-      ${ctx.admin && !ctx.demo ? fixCard() : ''}
-      <h2 style="margin:26px 0 12px">Einsendungen ${n ? `<span class="badge">${n} neu</span>` : ''}</h2>
-      ${site ? `<div class="row" style="margin-bottom:12px">${[['offen', 'Offen'], ['erledigt', 'Erledigt'], ['alle', 'Alle']].map(([k, l]) =>
-        `<button class="btn small${filter === k ? ' primary' : ''}" data-a="filter" data-f="${k}">${l}</button>`).join('')}</div>
-        <div class="subs">${shown.length ? shown.map(subCard).join('') : '<p class="muted">Noch keine Einsendungen. Schick deinen Kunden den Link oder baue das Studio auf deiner Webseite ein.</p>'}</div>`
-        : '<p class="muted">Richte zuerst unten dein Studio ein – danach erscheinen hier die Designs deiner Kunden.</p>'}
-      <h2 style="margin:30px 0 12px">Einstellungen</h2>
-      ${settingsCard()}`;
+      <div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" aria-selected="${tab === k}" class="${tab === k ? 'on' : ''}" data-a="tab" data-t="${k}">${l}${k === 'subs' && n ? `<span class="cnt">${n}</span>` : ''}</button>`).join('')}</div>
+      ${tab === 'subs' ? subsTab() : tab === 'settings' ? settingsCard() : tab === 'abo' ? aboHtml : tab === 'admin' ? adminTab() : startTab(n)}`;
+    place();
     root().onclick = onClick; root().onchange = onChange;
   }
+
+  // Übersicht: Glücksrad-Gewinn, Status (Abo/Test), neue Einsendungen, Studio an/aus, Link für die Kunden
+  function startTab(n) {
+    const t = ctx.tier() || {}, until = t.studio_until ? new Date(t.studio_until) : null, forever = !until || until.getFullYear() >= 2100;
+    const status = ctx.admin ? 'Betreiber-Konto' : t.studio_in_abo ? 'Im Fotobox-Abo enthalten' : aboLive() ? 'Abo aktiv' : forever ? 'Dauerhaft freigeschaltet' : 'Testzeitraum';
+    const sub = ctx.admin ? 'Alle Funktionen frei' : aboLive() ? `verlängert sich am ${fmtDate(abo.valid_until)}` : !forever ? `bis ${fmtDate(t.studio_until)}` : '';
+    const tabBtn = (k, l, primary) => `<button class="btn small${primary ? ' primary' : ''}" data-a="tab" data-t="${k}">${l}</button>`;
+    return `<div data-slot="win"></div>
+      ${site ? '' : `<div class="card" style="margin-bottom:14px"><b>Willkommen bei BoothDesigner!</b>
+        <p class="small" style="margin:6px 0 10px">Richte zuerst dein Studio ein: Name deiner Firma, Adresse und der Link zu deiner Datenschutzerklärung. Danach bekommst du hier deinen Link für die Kunden.</p>
+        ${tabBtn('settings', 'Studio einrichten', true)}</div>`}
+      <div class="tiles">
+        <div class="card"><span class="small muted">Status</span><b>${esc(status)}</b>${sub ? `<span class="small muted">${esc(sub)}</span>` : ''}
+          ${aboCard() ? `<div style="margin-top:8px">${tabBtn('abo', 'Abo &amp; Rechnungen')}</div>` : ''}</div>
+        <div class="card"><span class="small muted">Neue Einsendungen</span><b>${n}</b><div style="margin-top:8px">${tabBtn('subs', 'Einsendungen ansehen')}</div></div>
+        <div class="card"><span class="small muted">Dein Studio</span><b>${!site ? 'Noch nicht eingerichtet' : site.active ? 'Online' : 'Ausgeschaltet'}</b><div style="margin-top:8px">${tabBtn('settings', 'Einstellungen öffnen')}</div></div>
+      </div>
+      ${site ? linkCard() : ''}`;
+  }
+
+  function subsTab() {
+    if (!site) return `<p class="muted">Richte zuerst dein Studio ein – danach erscheinen hier die Designs deiner Kunden.</p>
+      <p><button class="btn primary" data-a="tab" data-t="settings">Studio einrichten</button></p>`;
+    const shown = subs.filter(s => filter === 'alle' || (filter === 'offen' ? s.status !== 'erledigt' : s.status === 'erledigt'));
+    return `<div class="row" style="margin-bottom:12px">${[['offen', 'Offen'], ['erledigt', 'Erledigt'], ['alle', 'Alle']].map(([k, l]) =>
+        `<button class="btn small${filter === k ? ' primary' : ''}" data-a="filter" data-f="${k}">${l}</button>`).join('')}</div>
+      <div class="subs">${shown.length ? shown.map(subCard).join('') : '<p class="muted">Noch keine Einsendungen. Schick deinen Kunden den Link oder baue das Studio auf deiner Webseite ein.</p>'}</div>`;
+  }
+
+  function adminTab() { return `${fixCard()}<div data-slot="radStats"></div>`; }
 
   // ---------- Nur Betreiber: Designs für alle Kunden korrigieren ----------
   // Öffnet das Studio mit einem Admin-Zugang (2 Stunden, Serverfunktion „studio“ → admin-ticket); dort unten „Für dieses Format speichern“.
   function fixCard() {
-    return `<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px">
+    return `<div class="card"><div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px">
       <div><b>Designs korrigieren</b> <span class="badge">nur Admin</span><p class="small muted" style="margin:4px 0 0">Öffnet das Studio im Admin-Modus: Design und Format wählen, im erweiterten Modus Texte, Deko und Fotofelder anpassen, unten „Für dieses Format speichern“. Alle Kunden sehen danach die korrigierte Fassung; eingetippte Texte bleiben.</p></div>
       <button class="btn primary" data-a="fixopen">Studio als Admin öffnen</button></div>
-      ${fixes.length ? `<div style="margin-top:12px;display:grid;gap:6px">${fixes.map(f => `<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:6px">
+      ${fixes.length ? `<details style="margin-top:12px"><summary class="small">${fixes.length === 1 ? '1 Korrektur anzeigen' : fixes.length + ' Korrekturen anzeigen'}</summary><div style="margin-top:8px;display:grid;gap:6px">${fixes.map(f => `<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:6px">
         <span class="small"><b>${esc(f.design)}</b> · ${f.layout === '*' ? 'Schrift &amp; Farben für alle Formate' : f.layout.startsWith('size-') ? esc(fixSize(f.layout)) : esc(f.layout)} <span class="muted">· ${fmtDate(f.updated_at)}</span></span>
-        <button class="btn small danger" data-a="fixdel" data-d="${esc(f.design)}" data-l="${esc(f.layout)}">Entfernen</button></div>`).join('')}</div>` : '<p class="small muted" style="margin:10px 0 0">Noch keine Korrekturen.</p>'}
+        <button class="btn small danger" data-a="fixdel" data-d="${esc(f.design)}" data-l="${esc(f.layout)}">Entfernen</button></div>`).join('')}</div></details>` : '<p class="small muted" style="margin:10px 0 0">Noch keine Korrekturen.</p>'}
     </div>`;
   }
   // „size-1200x1800“ → „alle 4×6-Formate (hoch)“ (Pixelmaße des Studios bei 300 dpi)
@@ -197,15 +248,15 @@
     const url = link();
     if (!url) return `<div class="card"><b>Link zu deinem Studio</b><p class="small muted" style="margin:6px 0 0">Die Adresse von BoothDesigner ist noch nicht eingetragen (config.js → studioUrl). Sobald die Domain eingerichtet ist, erscheinen hier Link und Einbettungscode.</p></div>`;
     const code = `<iframe src="${url}" style="width:100%;height:90vh;min-height:640px;border:0" title="Fotobox-Design gestalten" loading="lazy"></iframe>`;
-    return `<div class="card"><div class="grid2">
-      <div><b>Link für deine Kunden</b><p class="small muted" style="margin:4px 0 8px">Z. B. in die Buchungsbestätigung oder per WhatsApp.</p>
-        <div class="code">${esc(url)}</div>
-        <div class="row" style="margin-top:8px"><button class="btn small" data-a="copy" data-v="${esc(url)}">Link kopieren</button><a class="btn small" href="${esc(url)}" target="_blank" rel="noopener">${ctx.standalone ? 'Selbst gestalten' : 'Studio öffnen'}</a></div>
-        ${ctx.standalone ? '<p class="small muted" style="margin:8px 0 0">„Selbst gestalten“: Angemeldet kannst du im Studio auch eigene Vorlagen erstellen und als PNG herunterladen – ohne Einsendung.</p>' : ''}</div>
-      <div><b>Einbettungscode für deine Webseite</b><p class="small muted" style="margin:4px 0 8px">In WordPress, Wix, Jimdo, Shopware … als „HTML“-Block einfügen.</p>
+    return `<div class="card"><b>Link für deine Kunden</b><p class="small muted" style="margin:4px 0 8px">Z. B. in die Buchungsbestätigung oder per WhatsApp.</p>
+      <div class="code">${esc(url)}</div>
+      <div class="row" style="margin-top:8px"><button class="btn small primary" data-a="copy" data-v="${esc(url)}">Link kopieren</button><a class="btn small" href="${esc(url)}" target="_blank" rel="noopener">${ctx.standalone ? 'Selbst gestalten' : 'Studio öffnen'}</a></div>
+      ${ctx.standalone ? '<p class="small muted" style="margin:8px 0 0">„Selbst gestalten“: Angemeldet kannst du im Studio auch eigene Vorlagen erstellen und als PNG herunterladen – ohne Einsendung.</p>' : ''}
+      <details style="margin-top:14px"><summary>Einbettungscode für deine Webseite</summary>
+        <p class="small muted" style="margin:6px 0 8px">In WordPress, Wix, Jimdo, Shopware … als „HTML“-Block einfügen.</p>
         <div class="code">${esc(code)}</div>
-        <div class="row" style="margin-top:8px"><button class="btn small" data-a="copy" data-v="${esc(code)}">Code kopieren</button></div></div>
-    </div></div>`;
+        <div class="row" style="margin-top:8px"><button class="btn small" data-a="copy" data-v="${esc(code)}">Code kopieren</button></div></details>
+    </div>`;
   }
 
   function subCard(s) {
@@ -267,6 +318,7 @@
   async function onClick(e) {
     const b = e.target.closest('[data-a]'); if (!b || b.tagName === 'SELECT') return;
     const card = b.closest('.sub'), s = card && subs.find(x => x.id === card.dataset.id);
+    if (b.dataset.a === 'tab') { tab = b.dataset.t; render(); if (root().getBoundingClientRect().top < 0) root().scrollIntoView(); return; }
     if (b.dataset.a === 'filter') { filter = b.dataset.f; return render(); }
     if (b.dataset.a === 'buy' || b.dataset.a === 'portal') return onShop(b);
     if (b.dataset.a === 'fixopen') {
