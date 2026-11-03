@@ -93,6 +93,7 @@ I18N.add('en', {
 "Ab Basis": "From Basic",
 "Kein Ereignis gefunden.": "No event found.",
 "Name oder Datum": "Name or date",
+"Steht eine Vorlage auf „Auf dem Zweitdrucker drucken“, wird nur diese Vorlage geschnitten. Auf dem Hauptdrucker wird dann nichts geschnitten, auch keine Fotostreifen.": "If a template is set to “Print on the second printer”, only that template is cut. Nothing is cut on the main printer then, not even photo strips.",
 "ab nächster Fotobox-Version": "from next photo booth version",
 "Ab Pro": "From Pro",
 "Abbrechen": "Cancel",
