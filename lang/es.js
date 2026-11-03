@@ -93,6 +93,7 @@ I18N.add('es', {
 "Ab Basis": "Desde Básico",
 "Kein Ereignis gefunden.": "No se encontró ningún evento.",
 "Name oder Datum": "Nombre o fecha",
+"Steht eine Vorlage auf „Auf dem Zweitdrucker drucken“, wird nur diese Vorlage geschnitten. Auf dem Hauptdrucker wird dann nichts geschnitten, auch keine Fotostreifen.": "Si una plantilla está configurada como «Imprimir en la segunda impresora», solo se corta esa plantilla. En la impresora principal no se corta nada, ni siquiera las tiras de fotos.",
 "ab nächster Fotobox-Version": "a partir de la próxima versión",
 "Ab Pro": "Desde Pro",
 "Abbrechen": "Cancelar",
