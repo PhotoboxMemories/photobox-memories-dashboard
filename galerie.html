@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Fotogalerie</title>
-<script>window.I18N_V = '20261023-2';</script>
+<script>window.I18N_V = '20261103-2';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache: vom QR-Code der Fotobox (?l=…), sonst die des Handys
 (function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
@@ -50,8 +50,13 @@
   .one{text-align:center}.one img,.one video{max-width:100%;max-height:70vh;border-radius:10px;background:#000}
   .one p{color:var(--muted);font-size:14px}
   /* Slideshow (z. B. für einen zweiten Bildschirm oder Fernseher) */
-  body.show header,body.show footer{display:none}
-  #ss{position:fixed;inset:0;background:#000;cursor:pointer}
+  body.show header,body.show footer,body.show #pmad{display:none}
+  #ss{position:fixed;inset:0;z-index:50;background:#000;cursor:pointer}
+  #ss.idle{cursor:none}
+  #ss .ctl{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:6px;padding:6px;border-radius:999px;background:rgba(20,20,20,.72);transition:opacity .3s}
+  #ss.idle .ctl{opacity:0;pointer-events:none}
+  #ss .ctl button{width:46px;height:46px;border:0;border-radius:50%;background:none;color:#fff;font-size:20px;line-height:1;cursor:pointer;padding:0}
+  #ss .ctl button:hover,#ss .ctl button:focus-visible{background:rgba(255,255,255,.18)}
   #ss img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1.2s}
   #ss img.on{opacity:1}
   #ss .hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;color:#777;font-size:13px}
@@ -264,7 +269,7 @@
     $('#sub').setAttribute('translate', 'no');
     $('#sub').textContent = [r.subtitle, r.date ? new Date(r.date).toLocaleDateString(LOC) : ''].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(' · ');
     if (!photos.length) return box('<h2>Noch keine Fotos</h2><p>Sobald Fotos gemacht wurden, erscheinen sie hier. Einfach später noch einmal öffnen.</p>');
-    $('#main').innerHTML = `<div class="bar"><span>${photos.length} ${photos.length === 1 ? 'Aufnahme' : 'Aufnahmen'}</span>${r.download_all ? '<button class="btn" id="zip">Alle herunterladen</button>' : ''}</div>
+    $('#main').innerHTML = `<div class="bar"><span>${photos.length} ${photos.length === 1 ? 'Aufnahme' : 'Aufnahmen'}</span><span style="display:flex;gap:10px;flex-wrap:wrap">${photos.some(p => p.kind !== 'video') ? '<button class="btn" id="ssGo">▶ Slideshow starten</button>' : ''}${r.download_all ? '<button class="btn" id="zip">Alle herunterladen</button>' : ''}</span></div>
       <p class="keep" style="margin:-4px 0 12px"><span>Die Fotos bleiben 1 Jahr online und werden danach automatisch gelöscht.</span> <span>Speichere dir deine Lieblingsfotos rechtzeitig.</span></p>
       ${msgs.length ? `<h2 class="ghd">🎥 <span>Videonachrichten</span> <small>(${msgs.length})</small></h2>` : ''}
       <div class="grid">${photos.map((p, i) => (msgs.length && i === msgs.length ? `</div><h2 class="ghd">📸 <span>Fotos</span> <small>(${photos.length - msgs.length})</small></h2><div class="grid">` : '')
@@ -272,6 +277,7 @@
           ? `<span class="tag msg">▶</span>${msgName(p) ? `<figcaption translate="no">${esc(msgName(p))}</figcaption>` : ''}` : p.kind !== 'photo' ? `<span class="tag">${p.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}</figure>`).join('')}</div>`;
     document.querySelectorAll('.grid').forEach(g => { g.onclick = e => { const f = e.target.closest('figure'); if (f) open(+f.dataset.i); }; });
     if ($('#zip')) $('#zip').onclick = zipAll;
+    if ($('#ssGo')) $('#ssGo').onclick = () => { document.documentElement.requestFullscreen?.().catch(() => {}); slideshow(password); };
   }
 
   const isMsg = p => p.kind === 'video' && /^Videonachricht/.test(p.name || ''), msgName = p => String(p.name || '').replace(/^Videonachricht( von )?/, '').trim();
@@ -719,22 +725,36 @@
     };
     wait(0);
   }
-  // Slideshow: zeigt die Fotos des Ereignisses nacheinander im Vollbild, neue Fotos kommen von selbst dazu
+  // Slideshow: zeigt die Fotos des Ereignisses nacheinander im Vollbild, neue Fotos kommen von selbst dazu.
+  // Start über den Knopf in der Galerie oder direkt über den Link mit &show=1. Die Bedienung blendet sich aus, Tippen zeigt sie wieder.
   function slideshow(password) {
     document.body.classList.add('show');
-    $('#main').innerHTML = '<div id="ss"><img id="ssA" alt=""><img id="ssB" alt=""><div class="hint" id="ssHint"></div></div>';
-    let i = 0, flip = false;
+    const bt = (id, label, sign) => `<button type="button" id="${id}" aria-label="${label}" title="${label}">${sign}</button>`;
+    $('#main').innerHTML = `<div id="ss"><img id="ssA" alt=""><img id="ssB" alt=""><div class="hint" id="ssHint"></div>
+      <div class="ctl">${bt('ssPrev', 'Vorheriges', '‹')}${bt('ssPlay', 'Pause', '❚❚')}${bt('ssNext', 'Nächstes', '›')}${document.documentElement.requestFullscreen ? bt('ssFull', 'Vollbild', '⛶') : ''}${bt('ssClose', 'Schließen', '✕')}</div></div>`;
+    let i = 0, flip = false, paused = false, timer = 0, idleT = 0;
     const pics = () => photos.filter(p => p.kind !== 'video');
     const next = () => {
       const list = pics(); $('#ssHint').textContent = list.length ? '' : 'Noch keine Fotos – sobald Fotos gemacht wurden, erscheinen sie hier.';
       if (!list.length) return;
-      const p = list[i % list.length], el = $(flip ? '#ssA' : '#ssB'), other = $(flip ? '#ssB' : '#ssA'), im = new Image(); i++;
+      const p = list[((i % list.length) + list.length) % list.length], el = $(flip ? '#ssA' : '#ssB'), other = $(flip ? '#ssB' : '#ssA'), im = new Image(); i++;
       im.onload = () => { el.src = im.src; el.classList.add('on'); other.classList.remove('on'); flip = !flip; };
       im.src = url(p.path);
     };
-    next(); setInterval(next, 6000);
+    const plan = () => { clearTimeout(timer); if (!paused) timer = setTimeout(() => { next(); plan(); }, 6000); };
+    const step = back => { if (back) i -= 2; next(); plan(); };
+    const pause = () => { paused = !paused; const b = $('#ssPlay'), l = paused ? 'Abspielen' : 'Pause'; b.textContent = paused ? '▶' : '❚❚'; b.title = l; b.setAttribute('aria-label', l); plan(); };
+    const full = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.().catch(() => {}); };
+    const wake = () => { $('#ss').classList.remove('idle'); clearTimeout(idleT); idleT = setTimeout(() => $('#ss').classList.add('idle'), 4000); };
+    const stayOn = () => navigator.wakeLock?.request('screen').catch(() => {}); // Bildschirm bleibt an, solange die Slideshow läuft
+    $('#ssPrev').onclick = () => step(true); $('#ssNext').onclick = () => step(false); $('#ssPlay').onclick = pause;
+    if ($('#ssFull')) $('#ssFull').onclick = full;
+    $('#ssClose').onclick = () => { const u = new URL(location.href); u.searchParams.delete('show'); location.replace(u.href); }; // zurück zur Galerie
+    $('#ss').onclick = wake; $('#ss').onmousemove = wake;
+    document.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') step(true); else if (e.key === 'ArrowRight') step(false); else if (e.key === ' ') { e.preventDefault(); pause(); } else if (e.key === 'f') full(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) stayOn(); });
+    next(); plan(); wake(); stayOn();
     setInterval(async () => { try { const r = await fetchGallery(password); if (r.ok) { const had = photos.length; photos = r.photos || []; if (photos.length > had) i = 0; } } catch {} }, 30000); // neue Fotos zuerst
-    $('#ss').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.().catch(() => {}); };
   }
 
   let saved = ''; try { saved = sessionStorage.getItem('pm-gal-' + token) || ''; } catch {}
