@@ -4044,5 +4044,12 @@ I18N.add('tr', {
 "übertragen und dort zu KI-Porträts verarbeitet werden.": "aktarılmasını ve orada yapay zekâ portrelerine dönüştürülmesini kabul ediyorum.",
 "übertragen werden.": "aktarılmasını kabul ediyorum.",
 "übrig": "kaldı",
-"„Groß“ nutzt die volle Auflösung der Kamera und ergibt die beste Qualität. „Mittel“ und „Klein“ sind etwas schneller.": "„Büyük“ kameranın tam çözünürlüğünü kullanır ve en iyi kaliteyi verir. „Orta“ ve „Küçük“ biraz daha hızlıdır."
+"„Groß“ nutzt die volle Auflösung der Kamera und ergibt die beste Qualität. „Mittel“ und „Klein“ sind etwas schneller.": "„Büyük“ kameranın tam çözünürlüğünü kullanır ve en iyi kaliteyi verir. „Orta“ ve „Küçük“ biraz daha hızlıdır.",
+"KI nur bei bestimmten Layouts": "Yapay zekâ yalnızca belirli düzenlerde",
+"Aus = KI-Fotos bei allen Foto-Layouts. Ein = Gäste wählen zuerst das Layout; nur bei den angehakten Layouts kommt danach die Stilauswahl, alle anderen bleiben normale Fotos.": "Kapalı = tüm fotoğraf düzenlerinde yapay zekâ fotoğrafları. Açık = konuklar önce düzeni seçer; stil seçimi yalnızca işaretli düzenlerde gelir, diğerleri normal fotoğraf kalır.",
+"KI-Fotos gibt es bei diesen Layouts": "Yapay zekâ fotoğrafları şu düzenlerde var",
+"Noch kein Layout angehakt – so gibt es in diesem Ereignis keine KI-Fotos.": "Henüz hiçbir düzen işaretlenmedi – bu etkinlikte yapay zekâ fotoğrafı olmaz.",
+"mit KI-Foto": "yapay zekâ fotoğrafıyla",
+"{x} Foto(s)": "{x} fotoğraf",
+"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Konuklar film yıldızı, süper kahraman veya sanat eseri olur. Stilleri seçin, onay ve metinleri ayarlayın. „Fotoğraf kabininde“ altında yapay zekâ fotoğraflarını belirli düzenlerle sınırlayabilirsiniz – konuklar önce düzeni seçer ve yapay zekâ stilleri yalnızca işaretli düzenlerde sunulur."
 });
