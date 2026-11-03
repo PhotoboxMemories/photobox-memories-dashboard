@@ -93,6 +93,7 @@ I18N.add('tr', {
 "Ab Basis": "Basic’ten itibaren",
 "Kein Ereignis gefunden.": "Etkinlik bulunamadı.",
 "Name oder Datum": "Ad veya tarih",
+"Steht eine Vorlage auf „Auf dem Zweitdrucker drucken“, wird nur diese Vorlage geschnitten. Auf dem Hauptdrucker wird dann nichts geschnitten, auch keine Fotostreifen.": "Bir şablon „İkinci yazıcıda yazdır“ olarak ayarlanmışsa yalnızca bu şablon kesilir. Bu durumda ana yazıcıda fotoğraf şeritleri dahil hiçbir şey kesilmez.",
 "ab nächster Fotobox-Version": "sonraki kabin sürümünden itibaren",
 "Ab Pro": "Pro’dan itibaren",
 "Abbrechen": "İptal",
