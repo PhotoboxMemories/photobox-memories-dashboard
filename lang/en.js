@@ -4044,5 +4044,12 @@ I18N.add('en', {
 "übertragen und dort zu KI-Porträts verarbeitet werden.": "transferred and turned into AI portraits there.",
 "übertragen werden.": "be transferred.",
 "übrig": "left",
-"„Groß“ nutzt die volle Auflösung der Kamera und ergibt die beste Qualität. „Mittel“ und „Klein“ sind etwas schneller.": "“Large” uses the camera’s full resolution and gives the best quality. “Medium” and “Small” are slightly faster."
+"„Groß“ nutzt die volle Auflösung der Kamera und ergibt die beste Qualität. „Mittel“ und „Klein“ sind etwas schneller.": "“Large” uses the camera’s full resolution and gives the best quality. “Medium” and “Small” are slightly faster.",
+"KI nur bei bestimmten Layouts": "AI only for certain layouts",
+"Aus = KI-Fotos bei allen Foto-Layouts. Ein = Gäste wählen zuerst das Layout; nur bei den angehakten Layouts kommt danach die Stilauswahl, alle anderen bleiben normale Fotos.": "Off = AI photos for all photo layouts. On = guests pick the layout first; only for the ticked layouts does the style choice follow, all others stay normal photos.",
+"KI-Fotos gibt es bei diesen Layouts": "AI photos are available for these layouts",
+"Noch kein Layout angehakt – so gibt es in diesem Ereignis keine KI-Fotos.": "No layout ticked yet – so there are no AI photos in this event.",
+"mit KI-Foto": "with AI photo",
+"{x} Foto(s)": "{x} photo(s)",
+"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Guests become film stars, superheroes or works of art. Choose styles, set consent and texts. Under “At the photo booth” you can limit AI photos to certain layouts – guests then pick the layout first and only the ticked ones offer the AI styles."
 });
