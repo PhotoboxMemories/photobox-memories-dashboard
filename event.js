@@ -2192,10 +2192,10 @@
     ['FOTO', 'glam', 'sparkles', 'GLAM BOOTH', 'Fotos mit Hautglättung und Farbfiltern', { beauty: false, beautyStrength: 55, filtersOn: true, filters: ['normal', 'bw', 'glam', 'warm'], template: 'elegant', frame: '#111111', textColor: '#f3efe6', font: 'elegant' }],
     ['FOTO', 'bgremoval', 'wand', 'BACKGROUND REMOVAL', 'Hintergrund per KI durch ein digitales Bild ersetzen', { bgMode: 'ai', bgGuestChoice: true }],
     ['FOTO', 'mirror', 'smartphone', 'MIRROR BOOTH', 'Interaktive Sprachansagen und Animationen während der Aufnahme', { voice: true }],
-    ['VIDEO', 'slowmo', 'film', '360 / SLOW-MO', 'Zeitlupen-Videos mit Tempo-Rampen', null],
+    ['VIDEO', 'slowmo', 'film', '360 / SLOW-MO', 'Zeitlupen-Videos mit Tempo-Rampen', { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: false }, x: { slowmo: { enabled: true } } }],
+    ['VIDEO', 'video', 'video', 'VIDEO BOOTH', 'Videos mit Ton aufnehmen – für ein Video-Gästebuch', { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: true }, videoSecs: 15, videoAudio: true }],
     ['ZEICHNEN', 'robot', 'pen', 'ZEICHENROBOTER', 'Ein Roboterarm zeichnet die Gäste live als Strichzeichnung auf Papier – kein Druck, kein Teilen',
-      { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: false }, x: { robot: { enabled: true } } }],
-    ['VIDEO', 'video', 'video', 'VIDEO BOOTH', 'Videos mit Ton aufnehmen – für ein Video-Gästebuch', { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: true }, videoSecs: 15, videoAudio: true }]
+      { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: false }, x: { robot: { enabled: true } } }]
   ];
   function newEventDialog(events, onPick, opts = {}) {
     const cariOk = !opts.extra || opts.extra('caricature');
