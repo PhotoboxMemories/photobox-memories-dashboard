@@ -93,6 +93,7 @@ I18N.add('it', {
 "Ab Basis": "Da Base",
 "Kein Ereignis gefunden.": "Nessun evento trovato.",
 "Name oder Datum": "Nome o data",
+"Steht eine Vorlage auf „Auf dem Zweitdrucker drucken“, wird nur diese Vorlage geschnitten. Auf dem Hauptdrucker wird dann nichts geschnitten, auch keine Fotostreifen.": "Se un modello è impostato su «Stampa sulla seconda stampante», viene tagliato solo quel modello. Sulla stampante principale non viene tagliato nulla, nemmeno le strisce di foto.",
 "ab nächster Fotobox-Version": "dalla prossima versione",
 "Ab Pro": "Da Pro",
 "Abbrechen": "Annulla",
