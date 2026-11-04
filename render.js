@@ -524,10 +524,10 @@
     const ph = F.h * (land ? .56 : .5), pw = Math.min(F.w * .9, land ? ph * 1.6 : F.w * .9);
     els.push({ id: uid(), type: 'spic', x: R((F.w - pw) / 2), y: R(F.h * (land ? .28 : .3)), w: R(pw), h: R(ph), rot: 0 });
     els.push({ id: uid(), type: 'sfil', x: R(F.w * .05), y: R(F.h * (land ? .165 : .19) - 3 * u), w: R(F.w * .9), h: R(6 * u), rot: 0 });
-    const d = 9 * u, rh = o.labels ? d * 1.32 : d, cy = F.h * (land ? .085 : .07), row = ['bRetake', 'bDeco', 'bPrint', 'bQR', 'bDone'];
+    const d = 9 * u, rh = d * 1.32, cy = F.h * (land ? .085 : .07), row = ['bRetake', 'bDeco', 'bPrint', 'bQR', 'bDone'];
     const wOf = k => k === 'bRetake' ? 36 * u : k === 'bDone' ? 16 * u : d, gap = 2.4 * u;
     let x0 = (F.w - (row.reduce((a, k) => a + wOf(k), 0) + gap * (row.length - 1))) / 2;
-    const btn = (key, x, y, w, h) => { const b = SHARE_DEF[key]; els.push({ id: uid(), type: 'sbtn', key, shape: b.shape, text: b.shape === 'pill' || o.labels ? b.text : '', fill: b.fill, color: b.color, font: 'modern', x: R(x), y: R(y), w: R(w), h: R(h), rot: 0 }); };
+    const btn = (key, x, y, w, h) => { const b = SHARE_DEF[key]; els.push({ id: uid(), type: 'sbtn', key, shape: b.shape, text: b.text, fill: b.fill, color: b.color, font: 'modern', x: R(x), y: R(y), w: R(w), h: R(h), rot: 0 }); };
     for (const k of row) { const w = wOf(k), pill = SHARE_DEF[k].shape === 'pill', h = pill ? 6 * u : rh; btn(k, x0, cy - (pill ? h : d) / 2, w, h); x0 += w + gap; }
     btn('bMosaic', F.w - 3 * u - d, F.h * .5 - d / 2, d, rh); // erscheint nur, wenn Gäste selbst entscheiden, was ins Mosaik kommt
     return { id: uid(), screen: true, kind: 'share', orient: SCREEN_SIZES[orient] ? orient : 'portrait', w: F.w, h: F.h, theme: '', bg: '#222225', bgGrad: null, bgImage: '', bgFit: 'cover', live: false, elements: els };
@@ -535,9 +535,19 @@
   // Ältere Gestaltung ohne eine der Schaltflächen (z. B. neue Funktion): fehlende an der Standardstelle ergänzen
   function shareSys(L) {
     if (!L || L.kind !== 'share') return L;
-    const have = new Set(L.elements.map(e => e.type === 'sbtn' ? e.key : e.type)), def = createShare(L.orient);
+    // Schaltflächen mit den früheren Standardfarben bzw. ohne Beschriftung bekommen die farbige Fassung mit Text darunter (Betreiber 04.11.2026).
+    // Selbst gewählte Farben bleiben; wer die Beschriftung im Editor bewusst geleert hat (noText), behält das auch.
+    const OLD = { bRetake: ['', '#ffffff'], bDeco: ['#3a3a40', '#ffffff'], bDone: ['#ffffff', '#1D1D1B'] };
+    const look = e => {
+      if (e.type !== 'sbtn' || !SHARE_DEF[e.key]) return e;
+      const b = SHARE_DEF[e.key], old = OLD[e.key], c = { ...e };
+      if (old && (e.fill || '') === old[0] && (e.color || '#ffffff') === old[1]) { c.fill = b.fill; c.color = b.color; }
+      if (e.shape !== 'pill' && !String(e.text || '').trim() && !e.noText) { c.text = b.text; c.h = Math.max(e.h, Math.round(e.w * 1.32)); }
+      return c;
+    };
+    const els = L.elements.map(look), have = new Set(els.map(e => e.type === 'sbtn' ? e.key : e.type)), def = createShare(L.orient);
     const miss = def.elements.filter(e => !have.has(e.type === 'sbtn' ? e.key : e.type));
-    return miss.length ? { ...L, elements: [...L.elements, ...miss.map(e => ({ ...e, x: Math.round(e.x * L.w / def.w), y: Math.round(e.y * L.h / def.h) }))] } : L;
+    return { ...L, elements: [...els, ...miss.map(e => ({ ...e, x: Math.round(e.x * L.w / def.w), y: Math.round(e.y * L.h / def.h) }))] };
   }
   // Zum Speichern: unveränderte Standard-Schaltflächen weglassen, veränderte als normale Ebene behalten
   function screenStrip(L) {
@@ -682,12 +692,12 @@
   // ---------- Bildschirm zum Teilen (frei gestaltbar wie der Startbildschirm) ----------
   // Schaltflächen der Fotobox: [Schlüssel (id in der Fotobox), Name, Symbol, Form, Füllung, Text-/Symbolfarbe]
   const SHARE_BTNS = [
-    ['bRetake', 'Löschen und wiederholen', 'refresh', 'pill', '', '#ffffff'],
-    ['bDeco', 'Verzieren', 'sparkles', 'round', '#3a3a40', '#ffffff'],
+    ['bRetake', 'Löschen und wiederholen', 'refresh', 'pill', '#f0862b', '#ffffff'],
+    ['bDeco', 'Verzieren', 'sparkles', 'round', '#2f80ed', '#ffffff'],
     ['bPrint', 'Drucken', 'printer', 'round', '#e5484d', '#ffffff'],
     ['bQR', 'QR-Code', 'qr', 'round', '#8e3bd6', '#ffffff'],
     ['bMosaic', 'Mosaik', 'mosaic', 'round', '#0f9d76', '#ffffff'],
-    ['bDone', 'Fertig', 'check', 'pill', '#ffffff', '#1D1D1B'],
+    ['bDone', 'Fertig', 'check', 'pill', '#1fa35c', '#ffffff'],
   ];
   const SHARE_DEF = Object.fromEntries(SHARE_BTNS.map(([key, text, icon, shape, fill, color]) => [key, { key, text, icon, shape, fill, color }]));
   const icoUrl = (name, color) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="${color || '#ffffff'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${(G.ICONS || {})[name] || ''}</svg>`);
