@@ -1948,10 +1948,10 @@
       const b = nl.elements.find(e => e.type === 'button'); S.startText = b && !b.hidden ? String(b.text || '') : ''; save();
     }
     // Bildschirm zum Teilen: frei gestaltbar wie der Startbildschirm (shareScreen bzw. shareScreen2 je Ausrichtung). Ohne Gestaltung ordnet
-    // die Fotobox die Schaltflächen selbst an (Einstellungen an der Fotobox: Speicherort der Teilen-Symbole, Textetiketten).
+    // die Fotobox die Schaltflächen selbst an (Einstellungen an der Fotobox: Speicherort der Teilen-Symbole).
     const shareOf = o => [S.shareScreen, S.shareScreen2].find(L => L && L.screen && L.orient === o) || null;
     const shareFor = o => shareOf(o) || (S.shareScreen ? FBR.adaptScreen(S.shareScreen, o) : FBR.createShare(o));
-    const shareSysOpts = () => ({ note: 'Mit eigener Gestaltung gelten „Speicherort der Teilen-Symbole“ und „Textetiketten“ nicht mehr – alles steht dort, wo du es hinschiebst.',
+    const shareSysOpts = () => ({ note: 'Mit eigener Gestaltung gilt „Speicherort der Teilen-Symbole“ nicht mehr – alles steht dort, wo du es hinschiebst.',
       off: [S.x.share.deleteBtn === false && 'bRetake', S.printButton === false && 'bPrint', S.share === false && 'bQR', S.stickers === false && 'bDeco', S.share === false && 'qr', !(S.x.mosaic?.on && S.x.mosaic.who === 'guest') && 'bMosaic'].filter(Boolean) });
     function sharePreview() {
       const cv = (o, flex) => `<div style="flex:${flex};min-width:0"><small style="color:#555">${FBR.SCREEN_SIZES[o].label}</small><canvas id="wsShare${o === 'landscape' ? 'L' : 'P'}" data-a="editshare" data-o="${o}" title="Anklicken zum Gestalten" style="width:100%;border-radius:8px;display:block;cursor:pointer;margin-top:4px;background:#222225"></canvas><small id="wsShareNote${o === 'landscape' ? 'L' : 'P'}" style="color:#888"></small></div>`;
