@@ -540,7 +540,7 @@
     // Hat die Fotobox den aktuellen Stand übernommen? (meldet sie selbst, ab Fotobox 1.18.67)
     const devSyncNote = d => { const y = d.status?.sync; if (!y || !('applied' in y)) return '';
       return y.waiting ? 'Änderung wartet: Menü an der Fotobox offen oder Aufnahme läuft' : y.applied && baseAt && Date.parse(y.applied) === Date.parse(baseAt) ? '✓ Stand übernommen' : 'Änderung kommt gleich an'; };
-    const devSig = l => JSON.stringify(l.map(d => [d.id, d.name, +d.status?.uploads || 0, +d.status?.prints || 0, !!(d.last_seen && Date.now() - new Date(d.last_seen) < 18e4), devOrientWarn(d), devSyncNote(d)]));
+    const devSig = l => JSON.stringify(l.map(d => [d.id, d.name, +d.status?.uploads || 0, d.status?.up?.err || d.status?.up?.skip || '', +d.status?.prints || 0, !!(d.last_seen && Date.now() - new Date(d.last_seen) < 18e4), devOrientWarn(d), devSyncNote(d)]));
     let devShown = null; // erst im Takt berechnen (devOrientWarn steht weiter unten)
     const devT = setInterval(async () => {
       if (!document.body.contains(root)) return clearInterval(devT);
@@ -1456,7 +1456,7 @@
               <div class="foot"><span></span><button class="more" data-a="go" data-pg="analytics">Analysen →</button></div></div>
             <div class="dcard"><div class="nums"><span>Uploads<b>${n(P.length)}</b></span><span>Ausdrucke<b>${prints}</b></span><span>Gäste-Daten<b>${ctx.leadsCount?.(ev.id) ?? '–'}</b></span><span>Fotoboxen<b>${devs.length}</b></span></div>
               <div class="foot"><span>${n(P.length)} Shares insgesamt</span><button class="more" data-a="go" data-pg="shares">Shares →</button></div></div>
-            <div class="dcard boxes"><b class="dt">Zugewiesene Fotoboxen</b>${devs.length ? devs.map(d => `<div class="between"><span>📸 ${esc(d.name || 'FotoBox')}${+d.status?.uploads > 0 ? ` <small style="display:inline">· ${+d.status.uploads} Foto(s) warten auf den Upload</small>` : ''}${devOrientWarn(d) ? `<small style="color:#b26a00">⚠️ ${esc(devOrientWarn(d))}</small>` : ''}${devSyncNote(d) && d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? `<small>${esc(devSyncNote(d))}</small>` : ''}</span><small>${d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? '🟢 online' : 'offline'}</small></div>`).join('')
+            <div class="dcard boxes"><b class="dt">Zugewiesene Fotoboxen</b>${devs.length ? devs.map(d => `<div class="between"><span>📸 ${esc(d.name || 'FotoBox')}${+d.status?.uploads > 0 ? ` <small style="display:inline">· ${+d.status.uploads} Foto(s) warten auf den Upload</small>` : ''}${d.status?.up?.err || d.status?.up?.skip ? `<small style="color:#b26a00">⚠️ ${esc(d.status.up.err || d.status.up.skip)}</small>` : ''}${devOrientWarn(d) ? `<small style="color:#b26a00">⚠️ ${esc(devOrientWarn(d))}</small>` : ''}${devSyncNote(d) && d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? `<small>${esc(devSyncNote(d))}</small>` : ''}</span><small>${d.last_seen && Date.now() - new Date(d.last_seen) < 18e4 ? '🟢 online' : 'offline'}</small></div>`).join('')
             : '<p style="color:#777">Noch keine. In der FotoBox anmelden und dieses Event auswählen – oder oben unter „Geräte“ zuweisen.</p>'}</div>
             <div class="dcard share"><b class="dt">Online-Galerie</b>
               ${sw('x.gallery.link', 'Freigabe von Links', 'Jeder mit dem Link zum Ereignis darf dieses Ereignis sehen')}
