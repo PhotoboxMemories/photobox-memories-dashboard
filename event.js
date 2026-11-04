@@ -1230,12 +1230,26 @@
       if (gal.loading || (!force && gal.list && Date.now() - gal.at < 30000)) return;
       gal.loading = true;
       try {
-        const { data, error } = await ctx.sb.from('photos').select('id,path,thumb,kind,name,bytes,created_at').eq('event_id', ev.id).order('created_at', { ascending: false }).limit(2000);
+        // seitenweise: Ein Ereignis über mehrere Tage kann weit über 1000 Aufnahmen haben (der Server liefert je Abfrage höchstens 1000)
+        let data = [], error = null;
+        for (let from = 0; from < 20000; from += 1000) {
+          const r = await ctx.sb.from('photos').select('id,path,thumb,kind,name,bytes,created_at').eq('event_id', ev.id).order('created_at', { ascending: false }).range(from, from + 999);
+          if (r.error) { error = r.error; break; }
+          data = data.concat(r.data || []); if ((r.data || []).length < 1000) break;
+        }
         gal.error = error ? (/relation|does not exist|schema cache/i.test(error.message) ? 'Die Online-Galerie ist auf dem Server noch nicht eingerichtet.' : error.message) : '';
-        gal.list = error ? [] : [].concat(data || []);
+        gal.list = error ? [] : data;
+        const pr = await ctx.sb.from('event_prints').select('device_id,n').eq('event_id', ev.id).then(r => r, () => null); // fehlt die Tabelle noch: nur die zugewiesenen Fotoboxen
+        gal.prints = pr && !pr.error ? pr.data || [] : [];
       } catch (e) { gal.error = e.message; gal.list = []; }
       gal.loading = false; gal.at = Date.now();
       if (['dash', 'analytics', 'shares'].includes(page)) render();
+    }
+    // Ausdrucke des Ereignisses über alle Tage und Fotoboxen, auch solche, die inzwischen ein anderes Ereignis haben
+    function evPrints(devs) {
+      const m = new Map((gal.prints || []).map(r => [r.device_id, +r.n || 0]));
+      for (const d of devs) if (d.status?.prints != null) m.set(d.id, +d.status.prints || 0);
+      return [...m.values()].reduce((a, b) => a + b, 0);
     }
     const fetchBlob = async path => { const r = await fetch(galUrl(path)); if (!r.ok) throw new Error('Datei nicht abrufbar'); return r.blob(); };
     const saveBlob = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 20000); };
@@ -1415,17 +1429,18 @@
       // Analysen: Auswertung der Aufnahmen dieses Ereignisses
       analytics() {
         loadGallery(); const P = gal.list || [], S0 = P.filter(x => !isExtra(x));
-        const days = [...Array(30)].map((_, i) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (29 - i)); return d; });
-        const perDay = days.map(d => S0.filter(x => { const t = new Date(x.created_at); return t >= d && t < new Date(+d + 864e5); }).length), maxD = Math.max(1, ...perDay);
+        // nur Tage mit Aufnahmen, über die ganze Dauer des Ereignisses
+        const dayMap = new Map(); for (const x of S0) { const t = new Date(x.created_at), k = new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime(); dayMap.set(k, (dayMap.get(k) || 0) + 1); }
+        const dayList = [...dayMap.keys()].sort((a, b) => a - b), perDay = dayList.map(k => dayMap.get(k)), maxD = Math.max(1, ...perDay), dayName = k => new Date(k).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric', year: dayList.length && new Date(dayList[0]).getFullYear() !== new Date(dayList.at(-1)).getFullYear() ? 'numeric' : undefined });
         const perHour = [...Array(24)].map((_, h) => S0.filter(x => new Date(x.created_at).getHours() === h).length), maxH = Math.max(1, ...perHour);
         const kinds = [['Fotos', P.filter(x => x.kind === 'photo' && !isExtra(x)).length], ['Originalfotos', P.filter(x => x.kind === 'photo' && isExtra(x)).length], ['GIFs', P.filter(x => x.kind === 'gif').length], ['Videos', P.filter(x => x.kind === 'video').length]], maxK = Math.max(1, ...kinds.map(k => k[1]));
-        const devs = (ctx.devices || []).filter(d => d.event_id === ev.id), prints = devs.reduce((n, d) => n + (+d.status?.prints || 0), 0), limit = +S.printLimit || 0;
+        const devs = (ctx.devices || []).filter(d => d.event_id === ev.id), prints = evPrints(devs), limit = +S.printLimit || 0;
         const hb = (n, v, max) => `<div class="hbar"><span>${n}</span><span><i style="width:${Math.round(v / max * 100)}%"></i></span><b>${v}</b></div>`;
         return `<button class="backl" data-a="go" data-pg="dash">${ICON('chevronLeft', 14)} Zurück zum Dashboard</button>
-          <h1>${esc(E.name)}</h1><p style="margin:-8px 0 14px;color:#555">${E.event_date ? new Date(E.event_date).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }) : ''} · Letzte 30 Tage</p>
+          <h1>${esc(E.name)}</h1><p style="margin:-8px 0 14px;color:#555">${E.event_date ? new Date(E.event_date).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' : ''}${dayList.length === 1 ? '1 Tag mit Aufnahmen' : `${dayList.length} Tage mit Aufnahmen`}</p>
           ${gal.error ? `<div class="dempty">${esc(gal.error)}</div>` : `<div class="charts">
-            <div class="chart"><h3>Sitzungen pro Tag</h3><div class="bars">${perDay.map((v, i) => `<i style="height:${Math.round(v / maxD * 100)}%" title="${days[i].toLocaleDateString('de-DE')}: ${v}"></i>`).join('')}</div>
-              <div class="axis"><span>${days[0].toLocaleDateString('de-DE')}</span><span>heute</span></div></div>
+            <div class="chart"><h3>Sitzungen pro Tag</h3>${!dayList.length ? '<p style="font-size:13px;color:#555;margin:8px 0 0">Noch keine Aufnahmen.</p>' : dayList.length <= 14 ? dayList.map((k, i) => hb(dayName(k), perDay[i], maxD)).join('')
+              : `<div class="bars">${perDay.map((v, i) => `<i style="height:${Math.round(v / maxD * 100)}%" title="${dayName(dayList[i])}: ${v}"></i>`).join('')}</div><div class="axis"><span>${dayName(dayList[0])}</span><span>${dayName(dayList.at(-1))}</span></div>`}</div>
             <div class="chart"><h3>Sitzungen nach Uhrzeit</h3><div class="bars">${perHour.map((v, h) => `<i style="height:${Math.round(v / maxH * 100)}%" title="${h} Uhr: ${v}"></i>`).join('')}</div>
               <div class="axis"><span>0 Uhr</span><span>12 Uhr</span><span>23 Uhr</span></div></div>
             <div class="chart"><h3>Art der Aufnahmen</h3>${kinds.map(([n, v]) => hb(n, v, maxK)).join('')}</div>
@@ -1445,7 +1460,7 @@
       },
       dash() {
         const devs = (ctx.devices || []).filter(d => d.event_id === ev.id);
-        const prints = devs.reduce((n, d) => n + (+d.status?.prints || 0), 0), P = gal.list || []; // Status meldet die Fotobox selbst: nur als Zahl
+        const prints = evPrints(devs), P = gal.list || []; // Status meldet die Fotobox selbst: nur als Zahl
         loadGallery();
         const link = shareLink(), n = v => gal.list ? v : '…', sessions = P.filter(x => !isExtra(x)).length;
         const act = (a, ic, label, extra = '') => `<button data-a="${a}" ${extra}>${ICON(ic, 26)}<span>${label}</span></button>`;
