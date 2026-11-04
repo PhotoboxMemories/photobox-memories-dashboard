@@ -794,6 +794,7 @@
       else if (['x', 'y', 'w', 'h'].includes(k)) e[k] = fromU(+t.value);
       else e[k] = num.includes(k) ? +t.value : t.value;
       if (k === 'text' && e.type === 'sbtn' && e.shape !== 'pill') { // runde Schaltfläche: Platz für die Beschriftung darunter
+        e.noText = !t.value.trim(); // bewusst ohne Beschriftung: shareSys ergänzt sie dann nicht wieder
         const want = Math.round(e.w * (t.value.trim() ? 1.32 : 1)); if (Math.abs(e.h - want) > 2) { e.h = want; drawSel(); syncPos(); }
       }
       if (k === 'w' || k === 'h') e[k] = Math.max(10, e[k]);
