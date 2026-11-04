@@ -183,7 +183,7 @@
         <div class="body">
           <div class="side"></div>
           <div class="stage"><div class="page"><canvas></canvas><div class="ov"></div></div>
-            <div class="hint">Ziehen = verschieben · Punkte = Größe · ⟳ = drehen · Entf = löschen · Pfeiltasten = fein verschieben</div></div>
+            <div class="hint">Ziehen = verschieben · Punkte = Größe · ⟳ = drehen · Entf = löschen · Pfeiltasten = fein verschieben · Elemente rasten magnetisch ein, Alt = frei</div></div>
           <div class="props"></div>
         </div>`;
       document.body.appendChild(root);
@@ -394,10 +394,11 @@
       ov.querySelectorAll('.guide').forEach(n => n.remove());
       if (drag.mode === 'move') {
         let nx = drag.o.x + px - drag.px, ny = drag.o.y + py - drag.py;
-        // an Seitenmitte und -rändern einrasten
-        const gx = [[0, 0], [L.w / 2, e.w / 2], [L.w, e.w]], gy = [[0, 0], [L.h / 2, e.h / 2], [L.h, e.h]];
-        for (const [g, off] of gx) for (const k of [0, e.w / 2, e.w]) if (Math.abs(nx + k - g) < snap && (k === off || g !== L.w / 2 || k === e.w / 2)) { nx = g - k; guide('v', g); }
-        for (const [g] of gy) for (const k of [0, e.h / 2, e.h]) if (Math.abs(ny + k - g) < snap) { ny = g - k; guide('h', g); }
+        // magnetisch ausrichten (FBR.snapMove); mit gedrückter Alt-Taste ganz frei
+        if (!ev.altKey) {
+          const r = FBR.snapMove(L.elements, e, nx, ny, L.w, L.h, (ev.pointerType === 'touch' ? 16 : 10) / scale);
+          nx = r.x; ny = r.y; r.gv.forEach(v => guide('v', v)); r.gh.forEach(v => guide('h', v));
+        }
         e.x = Math.round(nx); e.y = Math.round(ny);
       } else if (drag.mode === 'res') {
         const a = -(e.rot || 0) * Math.PI / 180, dx = px - drag.px, dy = py - drag.py;
