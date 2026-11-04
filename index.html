@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Photobox Memories – Dashboard</title>
 <link rel="stylesheet" href="fonts-fredoka/fredoka.css">
-<script>window.I18N_V = '20261103-6';</script>
+<script>window.I18N_V = '20261104-1';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -26,7 +26,7 @@
 <script src="admin-kunde.js?v=20261028-2"></script>
 <script src="admin-besucher.js?v=20261101-1"></script>
 <script src="admin-boothdesigner.js?v=20261101-1"></script>
-<script src="event.js?v=20261103-6"></script>
+<script src="event.js?v=20261104-1"></script>
 <script src="studio.js?v=20261103-1"></script>
 <script src="vendor/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <style>
@@ -1028,9 +1028,12 @@ function deviceDetails(d, online, mine) {
   const newCmds = !!st.sync && 'applied' in st.sync, syncSt = devSyncState(d); // ältere Fotoboxen kennen die neuen Befehle nicht
   const cmdLine = st.cmd?.id ? `<p class="small" style="margin-top:10px">Letzter Befehl: <b>${esc(CMD_NAMES[st.cmd.type] || st.cmd.type || '')}</b> · ${new Date(st.cmd.at).toLocaleTimeString('de-DE', { timeStyle: 'short' })} · <span style="color:${st.cmd.ok ? '#1a7f37' : '#d23b3b'}">${st.cmd.ok ? '✓' : '✗'} ${esc(st.cmd.text)}</span></p>` : st.last ? `<p class="small" style="margin-top:10px">Letzte Rückmeldung der Fotobox: <b>${esc(st.last)}</b></p>` : '';
   const updT = st.upd?.state === 'ready' ? `Update ${st.upd.version || ''} liegt bereit und wird beim nächsten Start installiert` : st.upd?.state === 'downloading' ? `Update ${st.upd.version || ''} wird geladen` : st.upd?.state === 'error' ? `Update-Fehler: ${st.upd.message || ''}` : '';
-  const notes = [st.camera?.err ? 'Kamera: ' + st.camera.err : '', st.printer?.state ? 'Drucker: ' + st.printer.state : '', [].concat(st.printer?.missing || []).length ? 'Druckertreiber fehlt: ' + [].concat(st.printer.missing).join(', ') : '', updT,
+  const up = st.up || null, upMb = n => n >= 1048576 ? (n / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.round(n / 1024) + ' KB';
+  const notes = [st.gallery === false ? 'Online-Galerie ist bei diesem Ereignis ausgeschaltet – Fotos werden nicht hochgeladen.' : '', up?.err ? 'Hochladen: ' + up.err : '', up?.skip ? 'Foto nicht in der Warteschlange: ' + up.skip : '', N(up?.blocked) ? N(up.blocked) + ' Foto(s) lehnt der Server ab: Ereignis gelöscht oder anderes Konto' : '',
+    st.camera?.err ? 'Kamera: ' + st.camera.err : '', st.printer?.state ? 'Drucker: ' + st.printer.state : '', [].concat(st.printer?.missing || []).length ? 'Druckertreiber fehlt: ' + [].concat(st.printer.missing).join(', ') : '', updT,
     st.robot ? (st.robot.connected ? (st.robot.homed ? 'Zeichenroboter bereit' : 'Zeichenroboter verbunden, Grundstellung fehlt') : 'Zeichenroboter nicht verbunden') : ''].filter(Boolean);
-  return `<div class="stats" style="margin:6px 0 14px${ori ? ';grid-template-columns:repeat(auto-fit,minmax(170px,1fr))' : ''}">
+  return `<div class="stats" style="margin:6px 0 14px${ori || up ? ';grid-template-columns:repeat(auto-fit,minmax(170px,1fr))' : ''}">
+      ${up ? `<div class="card"><b>${N(st.uploads)}</b><span>Warten auf den Upload</span><span class="small muted">${N(up.done)} hochgeladen bei diesem Ereignis${N(up.bytes) ? ' · noch ' + upMb(N(up.bytes)) : ''}${N(up.orig) ? ' · ' + N(up.orig) + ' Originale' : ''}</span>${up.now ? `<span class="small muted" translate="no">⬆️ ${esc(up.now)}</span>` : ''}</div>` : ''}
       <div class="card"><b>${N(st.prints)}${N(st.printLimit) ? ` <span style="font-size:16px">/ ${N(st.printLimit)}</span>` : ''}</b><span>Ausdrucke bei diesem Ereignis</span><span class="small muted">${N(st.printLimit) ? 'noch ' + Math.max(0, N(st.printLimit) - N(st.prints)) + ' übrig' : 'kein Limit eingestellt'}</span></div>
       <div class="card"><b style="font-size:17px">${esc(st.camera?.name || '–')}</b><span>Kamera</span><span class="small">${ok(st.camera?.ready)}</span></div>
       <div class="card"><b style="font-size:17px">${esc(st.printer?.name || '–')}</b><span>Drucker</span><span class="small">${ok(st.printer?.ok)}${N(st.printer?.code) ? ' · Windows-Statuscode ' + N(st.printer.code) : ''}</span>${[].concat(st.media || []).filter(m => m && N(m.size)).map(m => `<span class="small" style="display:block;margin-top:4px${N(m.left) <= 30 ? ';color:#d33;font-weight:600' : ''}">${(st.media || []).length > 1 ? `<span translate="no">${esc(m.printer)}</span>: ` : ''}<span>Druckerrolle</span> · <span>Noch ${N(m.left)} von ${N(m.size)} Drucken</span>${N(m.left) <= 30 ? ' · <span>Rolle fast leer</span>' : ''}</span>`).join('')}</div>
