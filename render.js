@@ -532,6 +532,36 @@
     btn('bMosaic', F.w - 3 * u - d, F.h * .5 - d / 2, d, rh); // erscheint nur, wenn Gäste selbst entscheiden, was ins Mosaik kommt
     return { id: uid(), screen: true, kind: 'share', orient: SCREEN_SIZES[orient] ? orient : 'portrait', w: F.w, h: F.h, theme: '', bg: '#222225', bgGrad: null, bgImage: '', bgFit: 'cover', live: false, elements: els };
   }
+  // Magnetisches Einrasten beim Verschieben im Editor (Betreiber 04.11.2026): an Seitenrändern und -mitte, an Kanten und Mitten der anderen
+  // Elemente und an gleichen Abständen in einer Reihe oder Spalte. Runde Schaltflächen mit Text darunter zählen zusätzlich mit der Mitte ihres Kreises,
+  // so stehen sie auf einer Höhe mit länglichen Schaltflächen. Liefert die neue Position und die Linien, die angezeigt werden sollen.
+  function snapMove(els, e, nx, ny, W, H, range) {
+    const circle = o => o.type === 'sbtn' && o.shape !== 'pill' && o.h > o.w ? [o.w / 2] : [];
+    const others = els.filter(o => o !== e && !o.hidden && !((o.rot || 0) % 90) && o.w > 0 && o.h > 0);
+    const near = (a, b) => a < b + 1 && b < a + 1;
+    function axis(pos, size, X, S, cross, crossSize, Y, H2, page, extra) {
+      const targets = [0, page / 2, page], cand = [];
+      for (const o of others) targets.push(o[X], o[X] + o[S] / 2, o[X] + o[S], ...(extra ? extra(o).map(v => o[X] + v) : []));
+      const mine = [0, size / 2, size, ...(extra ? extra(e) : [])];
+      for (const t of targets) for (const k of mine) cand.push({ t, k });
+      // gleiche Abstände: nur mit Elementen, die in derselben Reihe bzw. Spalte stehen
+      const row = others.filter(o => cross < o[Y] + o[H2] && o[Y] < cross + crossSize).sort((a, b) => a[X] - b[X]);
+      for (let i = 0; i + 1 < row.length; i++) {
+        const a = row[i], b = row[i + 1], gap = b[X] - (a[X] + a[S]);
+        if (gap > 0) for (const o of row) { cand.push({ t: o[X] + o[S] + gap, k: 0, gap: true }, { t: o[X] - gap - size, k: 0, gap: true }); }
+        if (gap > size) cand.push({ t: a[X] + a[S] + (gap - size) / 2, k: 0, gap: true });
+      }
+      let best = null;
+      for (const c of cand) { const d = Math.abs(pos + c.k - c.t); if (d < range && (!best || d < best.d - .01)) best = { d, v: c.t - c.k }; }
+      const out = best ? best.v : pos, lines = [];
+      if (best) for (const c of cand) if (!c.gap && Math.abs(out + c.k - c.t) < .75 && !lines.some(l => near(l, c.t))) lines.push(c.t);
+      if (best && !lines.length) lines.push(out, out + size); // nur gleicher Abstand: beide Kanten zeigen
+      return { out, lines };
+    }
+    const vx = axis(nx, e.w, 'x', 'w', ny, e.h, 'y', 'h', W);
+    const vy = axis(ny, e.h, 'y', 'h', vx.out, e.w, 'x', 'w', H, circle);
+    return { x: vx.out, y: vy.out, gv: vx.lines, gh: vy.lines };
+  }
   // Ältere Gestaltung ohne eine der Schaltflächen (z. B. neue Funktion): fehlende an der Standardstelle ergänzen
   function shareSys(L) {
     if (!L || L.kind !== 'share') return L;
@@ -887,5 +917,5 @@
 
   G.FBR = { FONTS, FONT_NAMES, LAYOUTS, TEMPLATES, templateById: byId, render, drawBand, drawCover, placeholder, setResolver,
     FORMATS, SIZE_LIST, formatKey, layoutOrient, pickForOrient, sheetOf, PRESETS, presetSlots, createLayout, photoCount, renderLayout, renderSheet, loadImg, preloadLayout, fillText, uid,
-    SCREEN_SIZES, SCREEN_THEMES, createScreen, adaptScreen, applyTheme, screenSys, screenStrip, createShare, shareSys, SHARE_BTNS };
+    SCREEN_SIZES, SCREEN_THEMES, createScreen, adaptScreen, applyTheme, screenSys, screenStrip, createShare, shareSys, snapMove, SHARE_BTNS };
 })(window);
