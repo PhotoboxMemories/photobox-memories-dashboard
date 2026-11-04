@@ -1102,6 +1102,8 @@
       if (a === 'fromtpl') pickTemplate(vals(), addLayout);
       if (a === 'fromplain') pickFormat(modal(''), 'plain', vals(), addLayout);
       if (a === 'fromimg') fromImage();
+      if (a === 'fromdesign') G.DesignKatalog.open({ upload: ctx.uploadFile, canUse: pro(), lockedText: 'Designs installieren gibt es ab dem Tarif Pro.',
+        onInstall: Ls => { S.layouts.push(...Ls); if (Ls.length > 1) S.guestLayouts = true; sub.laySel = Ls[0].id; save(); render(); ctx.toast(Ls.length === 1 ? 'Design installiert.' : `${Ls.length} Formate installiert. Die Gäste wählen an der Fotobox.`, 5000); } });
       if (a === 'editlay') editLayout(t.dataset.id);
       if (a === 'sellay') { sub.laySel = sub.laySel === t.dataset.id ? '' : t.dataset.id; render(); }
       if (a === 'sharelay') { // Vorschau als Bild speichern, zum Weitergeben an den Kunden
@@ -1207,7 +1209,7 @@
     }
     function layoutCards() {
       return `<div class="dd"><button class="btn" data-a="newlay">${ICON('plus', 16)} Neues Layout ${ICON('chevronDown', 16)}</button><div class="menu" style="display:none">
-          <button data-a="fromtpl">${ICON('gallery', 16)} Vorlage wählen</button><button data-a="fromplain">${ICON('image', 16)} Ohne Vorlage (nur Foto)</button><button data-a="fromimg">${ICON('upload', 16)} Bild hochladen</button></div></div>
+          <button data-a="fromdesign">${ICON('sparkles', 16)} Design installieren</button><button data-a="fromtpl">${ICON('gallery', 16)} Vorlage wählen</button><button data-a="fromplain">${ICON('image', 16)} Ohne Vorlage (nur Foto)</button><button data-a="fromimg">${ICON('upload', 16)} Bild hochladen</button></div></div>
         ${S.layouts.length ? '<p style="margin:12px 0 0;color:#6b6b78;font-size:13px">Die Fotobox nimmt automatisch das erste Layout, das zu ihrem Bildschirm passt (hochkant → Hochformat, quer → Querformat). Wählen die Gäste das Layout selbst, sehen sie alle Layouts.</p>' : ''}
         ${orientHint()}
         <div class="lays">${S.layouts.length ? S.layouts.map(L => `<div class="lay ${sub.laySel === L.id ? 'on' : ''}" data-a="sellay" data-id="${L.id}" draggable="true" title="Anklicken zum Auswählen · am Griff ziehen zum Umsortieren">
