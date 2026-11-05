@@ -145,6 +145,7 @@ I18N.add('tr', {
 "Deine Anmeldung ist abgelaufen. Bitte melde dich in einem neuen Tab an und ändere danach hier etwas, damit gespeichert wird.": "Oturumunuzun süresi doldu. Lütfen yeni bir sekmede oturum açın ve kaydedilmesi için burada bir şeyi değiştirin.",
 "Der Akku der GoPro ist fast leer.": "GoPro'nun pili neredeyse bitti.",
 "Der Arm ist gerade beschäftigt.": "Kol şu anda meşgul.",
+"Der Echtzeit-Export ist für diese Lizenz nicht freigeschaltet. Nach dem Ereignis kopierst du alle Fotos über Menü → Ereignis → Exportieren.": "Anlık dışa aktarma bu lisans için açık değil. Etkinlikten sonra tüm fotoğrafları Menü → Etkinlik → Dışa aktar ile kopyala.",
 "Der Gutschein konnte nicht eingelöst werden.": "Kupon kullanılamadı.",
 "Der Roboter macht sich bereit …": "Robot hazırlanıyor …",
 "Der WLAN-Name braucht 1 bis 32 Zeichen, ohne Umlaute.": "Wi-Fi adı 1 ila 32 karakter olmalı, özel harf içermemeli.",
