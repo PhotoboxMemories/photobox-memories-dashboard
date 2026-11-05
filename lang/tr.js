@@ -133,6 +133,7 @@ I18N.add('tr', {
 "Das eigene WLAN gibt es nur unter Windows.": "Kendi Wi-Fi yalnızca Windows'ta kullanılabilir.",
 "Das neueste Update an dieser Fotobox installieren? Sie startet danach neu. Das geht nur, wenn gerade kein Ereignis läuft.": "En son güncelleme bu fotoğraf kabinine yüklensin mi? Ardından yeniden başlar. Bu yalnızca çalışan bir etkinlik yoksa mümkündür.",
 "Dashboard ist nicht eingerichtet": "Dashboard ayarlanmamış",
+"Datum vorbei, Fotobox noch zugewiesen": "Tarihi geçti, fotoğraf kabini hâlâ atanmış",
 "Deine Anmeldung ist abgelaufen. Bitte melde dich in einem neuen Tab an und ändere danach hier etwas, damit gespeichert wird.": "Oturumunuzun süresi doldu. Lütfen yeni bir sekmede oturum açın ve kaydedilmesi için burada bir şeyi değiştirin.",
 "Der Akku der GoPro ist fast leer.": "GoPro'nun pili neredeyse bitti.",
 "Der Arm ist gerade beschäftigt.": "Kol şu anda meşgul.",
