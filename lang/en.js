@@ -145,6 +145,7 @@ I18N.add('en', {
 "Deine Anmeldung ist abgelaufen. Bitte melde dich in einem neuen Tab an und ändere danach hier etwas, damit gespeichert wird.": "Your login has expired. Please sign in in a new tab and then change something here so that it is saved.",
 "Der Akku der GoPro ist fast leer.": "The GoPro battery is almost empty.",
 "Der Arm ist gerade beschäftigt.": "The arm is busy right now.",
+"Der Echtzeit-Export ist für diese Lizenz nicht freigeschaltet. Nach dem Ereignis kopierst du alle Fotos über Menü → Ereignis → Exportieren.": "Real-time export is not enabled for this licence. After the event, copy all photos via Menu → Event → Export.",
 "Der Gutschein konnte nicht eingelöst werden.": "The voucher could not be redeemed.",
 "Der Roboter macht sich bereit …": "The robot is getting ready …",
 "Der WLAN-Name braucht 1 bis 32 Zeichen, ohne Umlaute.": "The Wi-Fi name needs 1 to 32 characters, no special letters.",
