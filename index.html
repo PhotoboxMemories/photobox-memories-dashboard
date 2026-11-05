@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Photobox Memories – Dashboard</title>
 <link rel="stylesheet" href="fonts-fredoka/fredoka.css">
-<script>window.I18N_V = '20261105-5';</script>
+<script>window.I18N_V = '20261105-6';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -320,7 +320,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <p id="shopTier" style="margin:0 0 6px"></p>
         <p class="small muted" id="shopHint" style="margin-bottom:14px" data-paid></p>
         <div class="plans" id="shopPlans" data-paid></div>
-        <div class="row hidden" id="trialRow" style="margin-top:16px"><button class="btn primary" id="trialGo"><span data-freemode class="hidden">1 Monat Zusatzfunktionen kostenlos testen</span><span data-paid>30 Tage alles kostenlos testen</span></button><span class="small muted hidden" data-freemode>Ohne Zahlungsdaten · Fotomosaik, Live-Karikatur, Videonachricht und 10 KI-Credits · endet von selbst, danach geht es kostenlos weiter</span><span class="small muted" data-paid>Fotobox-Abo und alle Zusatzfunktionen · ohne Zahlungsdaten · endet nach 30 Tagen von selbst, danach geht es kostenlos weiter</span></div>
+        <div class="row hidden" id="trialRow" style="margin-top:16px"><button class="btn primary" id="trialGo"><span data-freemode class="hidden">1 Monat Zusatzfunktionen kostenlos testen</span><span data-paid>1 Jahr alles kostenlos testen</span></button><span class="small muted hidden" data-freemode>Ohne Zahlungsdaten · Fotomosaik, Live-Karikatur, Videonachricht und 10 KI-Credits · endet von selbst, danach geht es kostenlos weiter</span><span class="small muted" data-paid>Fotobox-Abo und alle Zusatzfunktionen · ohne Zahlungsdaten · endet nach 1 Jahr von selbst</span></div>
         <h3 style="margin:22px 0 6px">Zusatzfunktionen</h3>
         <p class="small muted" style="margin:0 0 10px" data-paid>Einzeln dazubuchbar – monatlich oder jährlich.</p>
         <p class="small muted hidden" style="margin:0 0 10px" data-freemode>Fotomosaik, Live-Karikatur und Videonachricht schaltet Photobox Memories auf Anfrage frei – oder du testest sie 1 Monat kostenlos.</p>
@@ -1823,7 +1823,7 @@ async function pickTarif(q) {
     if (q !== 'kostenlos') toast('Alle Funktionen sind zurzeit kostenlos.', 6000);
     const b = $(freeMode() ? '#shopTier [data-free]' : '#shopPlans [data-free]'); return b ? b.click() : q === 'kostenlos' && toast('Du hast schon eine Lizenz – sie steht oben unter „Meine Lizenzen“.', 7000); }
   if (q === 'test' && !freeMode() && trialOn()) // nach dem Umschalten startet der Test schon beim ersten Anmelden
-    return toast(`Dein 30-Tage-Test läuft bis ${dayMonth(myTier.trial_until)} Melde dich in der Fotobox mit diesem Konto an.`, 8000);
+    return toast(`Dein Test läuft bis ${dayMonth(myTier.trial_until)} Melde dich in der Fotobox mit diesem Konto an.`, 8000);
   if (q === 'test') return $('#trialRow').classList.contains('hidden') ? toast('Für dieses Konto gibt es schon eine Lizenz oder einen Test.', 7000) : $('#trialGo').click();
   const c = $(`#shopCard [data-plan="${q}"]`), b = c?.querySelector('[data-buy]'), p = shop.plans.find(x => x.id === q);
   if (!c) return toast('Diesen Tarif gibt es nicht – hier sind alle Tarife.', 6000);
@@ -1862,7 +1862,7 @@ function renderShop() {
   $('#shopTier').innerHTML = FREE ? `<span>Alle Funktionen sind kostenlos – mit deinem eigenen Logo. Nur KI-Bilder brauchen Credits.</span>${ext.length ? ` <span class="small muted">+ ${esc(ext.join(', '))}</span>` : ''}${trial}${mine.length ? '' : ' <button class="btn primary" data-free style="margin-left:8px">Kostenlos starten</button>'}`
     : cur ? `<span>Dein Tarif:</span> <b>${shown === 'test' ? 'Test' : esc(TIER_NAME[shown])}</b>${shown === 'pro' && boxes > 1 ? ` <span class="small muted">· ${boxN(boxes)}</span>` : ''}${ext.length ? ` <span class="small muted">+ ${esc(ext.join(', '))}</span>` : ''}${paid ? '' : ' ' + trialBadge()}${shown === 'test'
       ? '<br><span class="small muted">Nach dem Test läuft deine Fotobox kostenlos weiter (1 Layout, mit Photobox-Memories-Logo).</span>' : ''}`
-    : '<span>Du hast noch keine Lizenz. Starte kostenlos – oder teste 30 Tage alles kostenlos.</span>';
+    : '<span>Du hast noch keine Lizenz. Teste die Software 1 Jahr kostenlos mit allen Funktionen.</span>';
   $('#shopHint').textContent = shop.ready ? 'Bezahlung sicher über Stripe. Der Tarif wird direkt nach der Zahlung freigeschaltet – deine Fotobox bleibt angemeldet.'
     : 'Der Kauf wird gerade eingerichtet und ist bald verfügbar.';
   // Rabatt beim Jahrespreis: aus den eingeschalteten Plänen, sonst aus den geplanten Preisen (nie gemischt)
@@ -1932,7 +1932,7 @@ $('#trialGo').onclick = async () => {
   $('#trialGo').disabled = false;
   if (error) return toast(error.message, 5000);
   toast(freeMode() ? 'Dein Test läuft 1 Monat: Fotomosaik, Live-Karikatur und Videonachricht sind freigeschaltet, dazu 20 KI-Credits. Melde dich in der Fotobox mit diesem Konto an.'
-    : 'Dein Test läuft 30 Tage: alle Fotobox-Funktionen und alle Zusatzfunktionen sind freigeschaltet. Melde dich in der Fotobox mit diesem Konto an.', 9000);
+    : 'Dein Test läuft 1 Jahr: alle Fotobox-Funktionen und alle Zusatzfunktionen sind freigeschaltet. Melde dich in der Fotobox mit diesem Konto an.', 9000);
   await loadMyTier(); loadLicenses(); loadMyCredits();
 };
 { // Rückkehr von der Bezahlseite (Lizenz)
