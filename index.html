@@ -1970,10 +1970,15 @@ async function loadPromos() {
   if (DEMO) { $('#promoList').innerHTML = '<p class="small muted">Im Demo-Modus gibt es keine Codes.</p>'; return; }
   const { data, error } = await sb.rpc('promo_overview');
   if (error) { $('#promoList').innerHTML = '<p class="small" style="color:var(--warn)">Gutscheine sind auf dem Server noch nicht eingerichtet (SQL 202611050004_gutscheine.sql).</p>'; return; }
-  $('#promoList').innerHTML = (data || []).map(c => `<div class="planrow"><div class="row" style="gap:10px;flex-wrap:wrap"><b translate="no">${esc(c.code)}</b>
-      <span class="small muted">+${c.days} Tage · ${c.uses.length}${c.max ? ' von ' + c.max : ''} eingelöst${c.active ? '' : ' · ausgeschaltet'}${c.note ? ' · ' + esc(c.note) : ''}</span><span style="flex:1"></span>
+  // Statistik (Betreiber 05.11.2026: „wie viele den Code benutzt haben“): gesamt, letzte 7 Tage, schon im Test angerechnet bzw. wartet auf den Teststart
+  const wk = Date.now() - 7 * 864e5, recent = u => new Date(u.at).getTime() > wk, all = (data || []).flatMap(c => c.uses || []), done = all.filter(u => u.applied).length;
+  const stat = all.length ? `<div class="row" style="gap:18px;flex-wrap:wrap;margin:0 0 12px"><span><b style="font-size:20px">${all.length}</b> <span class="small muted">mal eingelöst</span></span>
+      <span><b style="font-size:20px">${all.filter(recent).length}</b> <span class="small muted">in den letzten 7 Tagen</span></span>
+      <span><b style="font-size:20px">${done}</b> <span class="small muted">im Test angerechnet</span></span><span><b style="font-size:20px">${all.length - done}</b> <span class="small muted">warten auf den Teststart</span></span></div>` : '';
+  $('#promoList').innerHTML = stat + (data || []).map(c => `<div class="planrow"><div class="row" style="gap:10px;flex-wrap:wrap"><b translate="no">${esc(c.code)}</b>
+      <span class="small muted">+${c.days} Tage · ${c.uses.length}${c.max ? ' von ' + c.max : ''} eingelöst${c.uses.length ? ' · ' + c.uses.filter(recent).length + ' in 7 Tagen' : ''}${c.active ? '' : ' · ausgeschaltet'}${c.note ? ' · ' + esc(c.note) : ''}</span><span style="flex:1"></span>
       <button class="btn small" type="button" data-pc-toggle="${esc(c.code)}" data-days="${c.days}" data-max="${c.max ?? ''}" data-note="${esc(c.note || '')}" data-on="${c.active ? 1 : 0}">${c.active ? 'Ausschalten' : 'Einschalten'}</button></div>
-      ${c.uses.length ? `<div class="small muted" style="margin-top:6px">${c.uses.slice(0, 100).map(u => `${esc(u.email || '?')} (${new Date(u.at).toLocaleDateString('de-DE')})`).join(' · ')}</div>` : ''}</div>`).join('') || '<p class="small muted">Noch keine Codes.</p>';
+      ${c.uses.length ? `<div class="small muted" style="margin-top:6px">${c.uses.slice(0, 100).map(u => `${esc(u.email || '?')} (${new Date(u.at).toLocaleDateString('de-DE')}${u.applied ? '' : ', wartet'})`).join(' · ')}</div>` : ''}</div>`).join('') || '<p class="small muted">Noch keine Codes.</p>';
 }
 const promoSave = async (code, days, active, max, note) => {
   const { error } = await sb.rpc('promo_save', { p_code: code, p_days: days, p_active: active, p_max: max || null, p_note: note || null });
