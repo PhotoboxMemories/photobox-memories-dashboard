@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Photobox Memories – Dashboard</title>
 <link rel="stylesheet" href="fonts-fredoka/fredoka.css">
-<script>window.I18N_V = '20261105-2';</script>
+<script>window.I18N_V = '20261105-3';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -1064,8 +1064,11 @@ function deviceDetails(d, online, mine) {
       ${newCmds ? `<div class="row" style="margin-bottom:12px">${st.screen === 'attract' ? `<button class="btn" data-dev="${d.id}" data-act="stop">⏹ Ereignis beenden</button>` : `<button class="btn" data-dev="${d.id}" data-act="start">▶ Ereignis starten</button>`}${st.pin ? (st.locked ? `<button class="btn" data-dev="${d.id}" data-act="unlock">🔓 Entsperren</button>` : `<button class="btn" data-dev="${d.id}" data-act="lock">🔒 Sperren</button>`) : ''}<button class="btn" data-dev="${d.id}" data-act="reload" title="Holt alle Einstellungen neu aus dem Dashboard">↻ Einstellungen neu laden</button><button class="btn" data-dev="${d.id}" data-act="update">⬇ Update installieren</button><button class="btn" data-dev="${d.id}" data-act="restart">⟳ Neu starten</button></div>` : ''}
       ${props ? `<div class="grid3">${props}</div><div class="row" style="margin-top:12px"><button class="btn" data-dev="${d.id}" data-act="camera">Kamerawerte an die Fotobox senden</button><span class="small muted">Wird übernommen, wenn gerade keine Aufnahme läuft.</span></div>`
         : `<p class="small muted">Kamerawerte (ISO, Blende, Verschlusszeit) lassen sich einstellen, wenn eine Kamera direkt per USB angeschlossen und bereit ist.</p>`}
-      ${waiting}${cmdLine}</div>` : ''}`;
+      ${waiting}${cmdLine}${profile.is_admin ? `<div style="margin-top:12px"><button class="btn small" data-dev="${d.id}" data-act="errlog">Fehlerprotokoll</button>${errLogs[d.id] ? errLogHtml(errLogs[d.id]) : ''}</div>` : ''}</div>` : ''}`;
 }
+// Fehlerprotokoll der Fotobox (nur Betreiber): neueste zuerst, Warnungen nach den Fehlern
+const errLogs = {};
+const errLogHtml = l => !l.length ? '<p class="small muted" style="margin:8px 0 0">Keine Fehler gemeldet.</p>' : `<div class="small" style="margin-top:8px;display:grid;gap:6px">${l.map(e => `<div style="border-top:1px solid rgba(128,128,128,.25);padding-top:6px"><b style="color:${e.level === 'warn' ? '#b26a00' : '#d23b3b'}">${e.level === 'crash' ? 'Absturz' : e.level === 'warn' ? 'Warnung' : 'Fehler'}</b> · ${e.n}× · ${new Date(e.last_at).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' })} · ${esc(e.version || '')}${e.screen ? ' · ' + esc(e.screen) : ''}<div translate="no" style="word-break:break-word">${esc(e.message)}</div></div>`).join('')}</div>`;
 const CMD_NAMES = { testprint: 'Testdruck', camera: 'Kamerawerte', sync: 'Abgleich', reload: 'Einstellungen neu laden', pinreset: 'Sicherheitspin', start: 'Ereignis starten', stop: 'Ereignis beenden', lock: 'Sperren', unlock: 'Entsperren', update: 'Update', restart: 'Neu starten' };
 // Hat die Fotobox den aktuellen Stand übernommen? (meldet sie selbst, ab Fotobox 1.18.67)
 function devSyncState(d) {
@@ -1138,6 +1141,12 @@ $('#deviceList').addEventListener('click', async e => {
     return renderDevices();
   }
   if (act === 'pinreset') { if (await pmConfirm('Den Sicherheitspin an dieser Fotobox entfernen? Die Fotobox ist danach entsperrt, bis du dort einen neuen PIN einträgst.', 'PIN entfernen')) sendDeviceCommand(dev, { type: 'pinreset' }); return; }
+  if (act === 'errlog') { // zweiter Klick schließt
+    if (errLogs[dev]) { delete errLogs[dev]; return renderDevices(); }
+    const { data, error } = await sb.from('app_errors').select('level,area,message,version,screen,n,last_at').eq('device_id', dev).order('last_at', { ascending: false }).limit(100);
+    if (error) return toast(/app_errors|relation|schema/i.test(error.message) ? 'Das Fehlerprotokoll ist auf dem Server noch nicht eingerichtet.' : 'Fehler: ' + error.message, 6000);
+    errLogs[dev] = data || []; return renderDevices();
+  }
   if (act === 'testprint') { if (await pmConfirm('Jetzt einen Testdruck an dieser Fotobox auslösen? Das verbraucht ein Blatt.', 'Drucken')) sendDeviceCommand(dev, { type: 'testprint' }); return; }
   const CONFIRM = { start: ['Das Ereignis an dieser Fotobox jetzt starten? Gäste können sie danach benutzen.', 'Starten'], stop: ['Das Ereignis an dieser Fotobox beenden? Gäste können sie dann nicht mehr benutzen.', 'Beenden'],
     lock: ['Diese Fotobox sperren? Entsperren geht danach mit dem Sicherheitspin oder von hier aus.', 'Sperren'], unlock: ['Diese Fotobox entsperren? Dann kommt jeder ohne Sicherheitspin in die Einstellungen.', 'Entsperren'],
