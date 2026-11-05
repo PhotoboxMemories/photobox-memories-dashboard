@@ -4266,7 +4266,7 @@ I18N.add('tr', {
 "Noch kein Layout angehakt – so gibt es in diesem Ereignis keine KI-Fotos.": "Henüz hiçbir düzen işaretlenmedi – bu etkinlikte yapay zekâ fotoğrafı olmaz.",
 "mit KI-Foto": "yapay zekâ fotoğrafıyla",
 "{x} Foto(s)": "{x} fotoğraf",
-"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Konuklar film yıldızı, süper kahraman veya sanat eseri olur. Stilleri seçin, onay ve metinleri ayarlayın. „Fotoğraf kabininde“ altında yapay zekâ fotoğraflarını belirli düzenlerle sınırlayabilirsiniz – konuklar önce düzeni seçer ve yapay zekâ stilleri yalnızca işaretli düzenlerde sunulur."
+"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Konuklar film yıldızı, süper kahraman veya sanat eseri olur. Stilleri seçin, onay ve metinleri ayarlayın. „Fotoğraf kabininde“ altında yapay zekâ fotoğraflarını belirli düzenlerle sınırlayabilirsiniz – konuklar önce düzeni seçer ve yapay zekâ stilleri yalnızca işaretli düzenlerde sunulur.",
 "… und {x} weitere": "… ve {x} tane daha",
 "⚠️ Noch nicht in der Windows-Firewall freigegeben: Dann kommt das Handy nicht an die Fotos.": "⚠️ Henüz Windows Güvenlik Duvarı'nda izin verilmedi: Telefon fotoğraflara ulaşamaz.",
 "✓ In der Galerie": "✓ Galeride",
