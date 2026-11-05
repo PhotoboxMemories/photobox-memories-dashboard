@@ -4266,7 +4266,7 @@ I18N.add('en', {
 "Noch kein Layout angehakt – so gibt es in diesem Ereignis keine KI-Fotos.": "No layout ticked yet – so there are no AI photos in this event.",
 "mit KI-Foto": "with AI photo",
 "{x} Foto(s)": "{x} photo(s)",
-"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Guests become film stars, superheroes or works of art. Choose styles, set consent and texts. Under “At the photo booth” you can limit AI photos to certain layouts – guests then pick the layout first and only the ticked ones offer the AI styles."
+"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Guests become film stars, superheroes or works of art. Choose styles, set consent and texts. Under “At the photo booth” you can limit AI photos to certain layouts – guests then pick the layout first and only the ticked ones offer the AI styles.",
 "… und {x} weitere": "… and {x} more",
 "⚠️ Noch nicht in der Windows-Firewall freigegeben: Dann kommt das Handy nicht an die Fotos.": "⚠️ Not yet allowed in Windows Firewall: the phone cannot reach the photos until it is.",
 "✓ In der Galerie": "✓ In the gallery",
