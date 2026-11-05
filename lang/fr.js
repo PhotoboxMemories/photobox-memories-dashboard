@@ -4266,7 +4266,7 @@ I18N.add('fr', {
 "Noch kein Layout angehakt – so gibt es in diesem Ereignis keine KI-Fotos.": "Aucune mise en page cochée pour l’instant – il n’y aura donc pas de photos IA dans cet événement.",
 "mit KI-Foto": "avec photo IA",
 "{x} Foto(s)": "{x} photo(s)",
-"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Les invités deviennent stars de cinéma, super-héros ou œuvres d’art. Choisir les styles, régler le consentement et les textes. Sous « Au photobooth », tu peux limiter les photos IA à certaines mises en page – les invités choisissent alors d’abord la mise en page et seules les mises en page cochées proposent les styles IA."
+"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Les invités deviennent stars de cinéma, super-héros ou œuvres d’art. Choisir les styles, régler le consentement et les textes. Sous « Au photobooth », tu peux limiter les photos IA à certaines mises en page – les invités choisissent alors d’abord la mise en page et seules les mises en page cochées proposent les styles IA.",
 "… und {x} weitere": "… et {x} de plus",
 "⚠️ Noch nicht in der Windows-Firewall freigegeben: Dann kommt das Handy nicht an die Fotos.": "⚠️ Pas encore autorisé dans le pare-feu Windows : le téléphone n'accède pas aux photos.",
 "✓ In der Galerie": "✓ Dans la galerie",
