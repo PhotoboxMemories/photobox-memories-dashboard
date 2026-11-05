@@ -133,6 +133,7 @@ I18N.add('fr', {
 "Das eigene WLAN gibt es nur unter Windows.": "Le Wi-Fi intégré n'existe que sous Windows.",
 "Das neueste Update an dieser Fotobox installieren? Sie startet danach neu. Das geht nur, wenn gerade kein Ereignis läuft.": "Installer la dernière mise à jour sur cette photobox ? Elle redémarrera ensuite. Possible uniquement si aucun événement n'est en cours.",
 "Dashboard ist nicht eingerichtet": "Le tableau de bord n'est pas configuré",
+"Datum vorbei, Fotobox noch zugewiesen": "Date passée, photobox encore attribuée",
 "Deine Anmeldung ist abgelaufen. Bitte melde dich in einem neuen Tab an und ändere danach hier etwas, damit gespeichert wird.": "Votre session a expiré. Connectez-vous dans un nouvel onglet, puis modifiez quelque chose ici pour enregistrer.",
 "Der Akku der GoPro ist fast leer.": "La batterie de la GoPro est presque vide.",
 "Der Arm ist gerade beschäftigt.": "Le bras est occupé pour le moment.",
