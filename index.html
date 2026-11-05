@@ -455,21 +455,39 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         </div>
         <div class="card" style="margin-bottom:20px" id="photoShopCard">
           <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Foto-Shop für Gäste</h2><span class="badge" id="shState"></span></div>
-          <p class="small muted" style="margin:0 0 12px">Gäste bestellen auf ihrer Fotoseite (QR-Code an der Fotobox) ihr Foto als Tasse, Mauspad, Magnet und mehr. Bezahlt wird über Stripe, gedruckt und verschickt wird von Gelato oder Printful. Gilt für die Fotos aller Fotoboxen – auch die deiner Software-Kunden; Verkäufer bist immer du. Bei Printful-Produkten schiebt der Gast sein Foto selbst zurecht.</p>
+          <div style="background:#FFFAEA;border-radius:12px;padding:12px 14px;margin:0 0 14px;font-size:14px;line-height:1.55">
+            <b>So funktioniert der Foto-Shop</b>
+            <ol style="margin:6px 0 8px 20px;padding:0">
+              <li>Der Gast scannt an der Fotobox den QR-Code und sieht sein Foto auf dem Handy.</li>
+              <li>Darunter bestellt er das Foto zum Beispiel als Tasse oder Mauspad und bezahlt über Stripe den <b>Preis, den du unten einträgst</b>, plus Versand.</li>
+              <li>Gelato oder Printful drucken das Produkt und schicken es direkt zum Gast. Den Einkaufspreis rechnen sie mit dir ab.</li>
+              <li>Der Rest gehört dir, abzüglich der Gebühr von Stripe.</li>
+            </ol>
+            <b>Wenn du hier etwas änderst:</b> Nach „Speichern“ gilt es sofort auf allen Fotoseiten, auch für die Fotos deiner Software-Kunden. Verkäufer bist immer du. Schon bezahlte Bestellungen ändern sich nicht.
+          </div>
           <div class="small" id="shServer" style="margin-bottom:12px"></div>
+          <h3 style="margin:18px 0 8px">1. Shop ein- oder ausschalten</h3>
           <div class="grid3">
-            <div><label>Shop</label><select id="sh_mode"></select></div>
-            <div><label>Verkäufer (Name oder Firma)</label><input id="sh_seller" maxlength="80" placeholder="z. B. Photobox Memories"></div>
-            <div><label>Versand pro Bestellung (€, brutto)</label><input id="sh_ship" type="number" min="0" step="0.01"></div>
+            <div><label>Shop</label><select id="sh_mode"></select><small class="muted">Aus: niemand sieht den Shop. Test: nur du über „Fotoseite ansehen“. Live: alle Gäste.</small></div>
+            <div><label>Verkäufer (Name oder Firma)</label><input id="sh_seller" maxlength="80" placeholder="z. B. Photobox Memories"><small class="muted">Steht beim Bestellen als Verkäufer.</small></div>
+          </div>
+          <h3 style="margin:18px 0 8px">2. Versand und Steuer</h3>
+          <div class="grid3">
+            <div><label>Versand pro Bestellung (€, brutto)</label><input id="sh_ship" type="number" min="0" step="0.01"><small class="muted">Kommt einmal zu jeder Bestellung dazu.</small></div>
             <div><label>Umsatzsteuer</label><select id="sh_vat"></select></div>
-            <div><label>Lieferländer (Ländercodes)</label><input id="sh_countries" placeholder="DE, AT"></div>
+            <div><label>Lieferländer (Ländercodes)</label><input id="sh_countries" placeholder="DE, AT"><small class="muted">Nur in diese Länder wird geliefert.</small></div>
+          </div>
+          <h3 style="margin:18px 0 8px">3. Rechtstexte</h3>
+          <p class="small muted" style="margin:0 0 8px">AGB, Datenschutz und Impressum sind Pflicht, sonst bleibt der Shop aus.</p>
+          <div class="grid3">
             <div><label>AGB (Link)</label><input id="sh_agb" placeholder="https://…"></div>
             <div><label>Datenschutz (Link)</label><input id="sh_privacy" placeholder="https://…"></div>
             <div><label>Impressum (Link)</label><input id="sh_imprint" placeholder="https://…"></div>
             <div><label>Widerrufsbelehrung (Link, freiwillig)</label><input id="sh_withdrawal" placeholder="https://…"></div>
           </div>
-          <label style="margin-top:16px">Produkte</label>
-          <p class="small muted" style="margin:0 0 8px"><span>Gelato-Produktnummer: in Gelato unter „Produktkatalog“ Produkt und Größe wählen, dann unter der Beschreibung die „Product UID“ kopieren. Hoch- oder Querformat wählt der Shop selbst passend zum Foto.</span> <span>Printful: die Varianten-ID (eine Zahl) aus dem Printful-Katalog.</span> <span>Produkte ohne Nummer erscheinen nicht.</span></p>
+          <h3 style="margin:18px 0 8px">4. Produkte und Preise</h3>
+          <p class="small muted" style="margin:0 0 8px">Der Preis ist das, was der Gast bezahlt, inklusive Umsatzsteuer und ohne Versand. Ein Produkt erscheint erst, wenn Preis und Produktnummer eingetragen sind und „Im Shop zeigen“ angehakt ist.</p>
+          <details class="small muted" style="margin:0 0 10px"><summary style="cursor:pointer">Wo finde ich die Produktnummer?</summary><p style="margin:6px 0 0"><span>Gelato-Produktnummer: in Gelato unter „Produktkatalog“ Produkt und Größe wählen, dann unter der Beschreibung die „Product UID“ kopieren. Hoch- oder Querformat wählt der Shop selbst passend zum Foto.</span> <span>Printful: die Varianten-ID (eine Zahl) aus dem Printful-Katalog.</span> <span>Produkte ohne Nummer erscheinen nicht.</span></p></details>
           <div id="shProducts"></div>
           <div class="row" style="margin-top:12px"><button class="btn" id="shAdd" type="button">+ Produkt</button><span style="flex:1"></span><a class="btn hidden" id="shTest" target="_blank" rel="noopener">Fotoseite ansehen</a><button class="btn primary" id="shSave" type="button">Speichern</button></div>
           <h3 style="margin:22px 0 8px">Bestellungen</h3>
@@ -1342,7 +1360,7 @@ async function loadShopCfg() {
   $('#sh_vat').innerHTML = PM_SHOP.VATS.map(([k, n]) => `<option value="${k}">${n}</option>`).join(''); $('#sh_vat').value = String(shCfg.vat);
   $('#sh_countries').value = shCfg.countries.join(', ');
   for (const k of ['agb', 'privacy', 'imprint', 'withdrawal']) $('#sh_' + k).value = shCfg.legal[k];
-  shRender(); shServer(); shOrders(); shSampleLink();
+  shRender(); shSums(); shServer(); shOrders(); shSampleLink();
 }
 function shRender() {
   $('#shProducts').innerHTML = shCfg.products.map(p => `<div class="planrow" data-id="${esc(p.id)}">
@@ -1353,8 +1371,15 @@ function shRender() {
         ${p.type === 'mug' ? `<div><label>Tasse: Foto auf der Druckfläche</label><select data-f="side">${PM_SHOP.SIDES.map(([k, n]) => `<option value="${k}" ${p.side === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>` : ''}
         <div style="grid-column:1/-1"><label>Produktnummer (Gelato: Product UID · Printful: Varianten-ID)</label><input data-f="uid" value="${esc(p.uid)}" placeholder="${p.provider === 'printful' ? 'z. B. 13097' : 'z. B. mug_product_msz_11-oz_…'}" spellcheck="false"></div></div>
       <div class="row" style="margin-top:10px"><label class="row" style="margin:0;color:var(--fg);font-weight:400;font-size:14px"><input type="checkbox" data-f="on" ${p.on ? 'checked' : ''}> Im Shop zeigen</label>
-        <span style="flex:1"></span><span class="small muted">${p.on && p.uid && p.cents ? '' : 'erscheint noch nicht'}</span><button class="btn small danger" type="button" data-sh-del>Entfernen</button></div></div>`).join('')
+        <span style="flex:1"></span><span class="small muted">${p.on && p.uid && p.cents ? '' : 'erscheint noch nicht'}</span><button class="btn small danger" type="button" data-sh-del>Entfernen</button></div>
+      <div class="small" data-sh-sum style="margin-top:8px"></div></div>`).join('')
     || '<p class="small muted">Noch keine Produkte – mit „+ Produkt“ anlegen.</p>';
+}
+// Je Produkt: was der Gast insgesamt bezahlt (Preis + Versand), aktualisiert sich beim Tippen
+function shSums() {
+  const eur = c => (c / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }), ship = shCents($('#sh_ship').value || 0) || 0;
+  document.querySelectorAll('#shProducts .planrow').forEach(r => { const c = shCents(r.querySelector('[data-f="price"]').value) || 0, el = r.querySelector('[data-sh-sum]'); if (!el) return;
+    el.innerHTML = c ? `Der Gast zahlt <b>${eur(c)}</b> + ${eur(ship)} Versand = <b>${eur(c + ship)}</b> für ein Stück` : '<span class="muted">Noch kein Preis eingetragen.</span>'; });
 }
 // Felder ins Objekt übernehmen (vor Speichern, Hinzufügen und Entfernen)
 function shCollect() {
@@ -1365,12 +1390,13 @@ function shCollect() {
   return { mode: $('#sh_mode').value, seller: $('#sh_seller').value, ship: shCents($('#sh_ship').value || 0), vat: Number($('#sh_vat').value), countries: $('#sh_countries').value,
     legal: { agb: $('#sh_agb').value, privacy: $('#sh_privacy').value, imprint: $('#sh_imprint').value, withdrawal: $('#sh_withdrawal').value }, products };
 }
-$('#shAdd').onclick = () => { shCfg = PM_SHOP.normalize(shCollect()); shCfg.products.push({ id: 'p' + Date.now().toString(36), type: 'mug', provider: 'printful', name: 'Tasse', cents: 0, uid: '', on: true, side: 'left' }); shRender(); };
+$('#shAdd').onclick = () => { shCfg = PM_SHOP.normalize(shCollect()); shCfg.products.push({ id: 'p' + Date.now().toString(36), type: 'mug', provider: 'printful', name: 'Tasse', cents: 0, uid: '', on: true, side: 'left' }); shRender(); shSums(); };
 $('#shProducts').addEventListener('click', e => {
   const row = e.target.closest('[data-sh-del]')?.closest('.planrow'); if (!row) return;
-  shCfg = PM_SHOP.normalize(shCollect()); shCfg.products = shCfg.products.filter(p => p.id !== row.dataset.id); shRender();
+  shCfg = PM_SHOP.normalize(shCollect()); shCfg.products = shCfg.products.filter(p => p.id !== row.dataset.id); shRender(); shSums();
 });
 $('#sh_mode').addEventListener('change', shSampleLink);
+$('#sh_ship').addEventListener('input', shSums); $('#shProducts').addEventListener('input', e => { if (e.target.dataset.f === 'price') shSums(); });
 $('#shProducts').addEventListener('change', e => {
   if (e.target.dataset.f !== 'provider') return;
   e.target.closest('.planrow').querySelector('[data-f="uid"]').placeholder = e.target.value === 'printful' ? 'z. B. 13097' : 'z. B. mug_product_msz_11-oz_…';
