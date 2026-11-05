@@ -641,7 +641,8 @@
       } catch (error) { ctx.toast('Zeichnung konnte nicht abgespielt werden: ' + error.message); }
     }
     ai.own = !!ai.photo;
-    const aiThumbFile = dataUrl => new Promise((res, rej) => { const img = new Image(); img.onload = () => { const k = Math.min(1, 480 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); c.toBlob(b => b ? res(new File([b], 'ki-stil.jpg', { type: 'image/jpeg' })) : rej(new Error('Bild nicht lesbar')), 'image/jpeg', .85); }; img.onerror = () => rej(new Error('Bild nicht lesbar')); img.src = dataUrl; });
+    // Vorschaubilder der KI-Stile 1080 px hoch (vorher 480): die Webseite zeigt sie im Vorher/Nachher-Vergleich, dort waren sie unscharf (05.11.2026)
+    const aiThumbFile = dataUrl => new Promise((res, rej) => { const img = new Image(); img.onload = () => { const k = Math.min(1, 1080 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); c.toBlob(b => b ? res(new File([b], 'ki-stil.jpg', { type: 'image/jpeg' })) : rej(new Error('Bild nicht lesbar')), 'image/jpeg', .85); }; img.onerror = () => rej(new Error('Bild nicht lesbar')); img.src = dataUrl; });
     // Aktuellen Entwurf aus dem Baukasten lesen (Bibliothek oder eigener Text).
     const aiDraft = () => {
       const before = ai.edit >= 0 ? S.ai.prompts[ai.edit] : null;
