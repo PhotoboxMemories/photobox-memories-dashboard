@@ -1,6 +1,29 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.78": {
+   "date": "2026-11-05",
+   "notes": {
+    "de": [
+     "„Wie viele Kopien?“ ist bei neuen Ereignissen von Anfang an eingeschaltet: Deine Gäste wählen beim Drucken selbst, wie viele Ausdrucke sie möchten."
+    ],
+    "en": [
+     "“How many copies?” is now switched on from the start for new events: your guests choose how many prints they want when printing."
+    ],
+    "tr": [
+     "“Kaç kopya?” yeni etkinliklerde artık baştan açık: Misafirlerin yazdırırken kaç baskı istediklerini kendileri seçer."
+    ],
+    "fr": [
+     "« Combien de copies ? » est désormais activé dès le départ pour les nouveaux événements : vos invités choisissent eux-mêmes le nombre de tirages à l’impression."
+    ],
+    "es": [
+     "«¿Cuántas copias?» viene activado desde el principio en los eventos nuevos: tus invitados eligen al imprimir cuántas copias quieren."
+    ],
+    "it": [
+     "«Quante copie?» è ora attivo fin dall’inizio nei nuovi eventi: i tuoi ospiti scelgono quante stampe vogliono al momento della stampa."
+    ]
+   }
+  },
   "1.18.77": {
    "date": "2026-11-05",
    "notes": {
