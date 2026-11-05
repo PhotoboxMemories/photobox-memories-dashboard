@@ -4266,7 +4266,7 @@ I18N.add('it', {
 "Noch kein Layout angehakt – so gibt es in diesem Ereignis keine KI-Fotos.": "Nessun layout ancora spuntato: così in questo evento non ci saranno foto IA.",
 "mit KI-Foto": "con foto IA",
 "{x} Foto(s)": "{x} foto",
-"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Gli ospiti diventano star del cinema, supereroi o opere d’arte. Scegli gli stili, imposta consenso e testi. Sotto «Alla cabina foto» puoi limitare le foto IA a determinati layout: gli ospiti scelgono prima il layout e solo quelli spuntati offrono gli stili IA."
+"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Gli ospiti diventano star del cinema, supereroi o opere d’arte. Scegli gli stili, imposta consenso e testi. Sotto «Alla cabina foto» puoi limitare le foto IA a determinati layout: gli ospiti scelgono prima il layout e solo quelli spuntati offrono gli stili IA.",
 "… und {x} weitere": "… e altre {x}",
 "⚠️ Noch nicht in der Windows-Firewall freigegeben: Dann kommt das Handy nicht an die Fotos.": "⚠️ Non ancora consentito nel firewall di Windows: il telefono non raggiunge le foto.",
 "✓ In der Galerie": "✓ Nella galleria",
