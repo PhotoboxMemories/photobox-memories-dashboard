@@ -1,6 +1,35 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.79": {
+   "date": "2026-11-06",
+   "notes": {
+    "de": [
+     "Stürzt die Fotobox einmal ab oder hängt sie, startet sie sich von selbst neu und macht im letzten Ereignis weiter.",
+     "Während Gäste die Fotobox benutzen, gehen Bildschirm und PC nicht mehr in den Ruhezustand."
+    ],
+    "en": [
+     "If the photo booth ever crashes or freezes, it restarts by itself and continues in the last event.",
+     "While guests are using the photo booth, the screen and PC no longer go to sleep."
+    ],
+    "tr": [
+     "Fotoğraf kabini çökerse veya donarsa kendiliğinden yeniden başlar ve son etkinlikte devam eder.",
+     "Misafirler fotoğraf kabinini kullanırken ekran ve bilgisayar artık uyku moduna geçmez."
+    ],
+    "fr": [
+     "Si la borne plante ou se fige, elle redémarre toute seule et reprend le dernier événement.",
+     "Pendant que les invités utilisent la borne, l’écran et le PC ne se mettent plus en veille."
+    ],
+    "es": [
+     "Si el fotomatón se bloquea o se cuelga, se reinicia solo y continúa en el último evento.",
+     "Mientras los invitados usan el fotomatón, la pantalla y el PC ya no entran en reposo."
+    ],
+    "it": [
+     "Se la photo booth si blocca o si arresta, si riavvia da sola e riprende l’ultimo evento.",
+     "Mentre gli ospiti usano la photo booth, lo schermo e il PC non vanno più in sospensione."
+    ]
+   }
+  },
   "1.18.78": {
    "date": "2026-11-05",
    "notes": {
