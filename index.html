@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Photobox Memories – Dashboard</title>
 <link rel="stylesheet" href="fonts-fredoka/fredoka.css">
-<script>window.I18N_V = '20261105-6';</script>
+<script>window.I18N_V = '20261105-7';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -321,6 +321,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <p class="small muted" id="shopHint" style="margin-bottom:14px" data-paid></p>
         <div class="plans" id="shopPlans" data-paid></div>
         <div class="row hidden" id="trialRow" style="margin-top:16px"><button class="btn primary" id="trialGo"><span data-freemode class="hidden">1 Monat Zusatzfunktionen kostenlos testen</span><span data-paid>1 Jahr alles kostenlos testen</span></button><span class="small muted hidden" data-freemode>Ohne Zahlungsdaten · Fotomosaik, Live-Karikatur, Videonachricht und 10 KI-Credits · endet von selbst, danach geht es kostenlos weiter</span><span class="small muted" data-paid>Fotobox-Abo und alle Zusatzfunktionen · ohne Zahlungsdaten · endet nach 1 Jahr von selbst</span></div>
+        <div class="row" id="promoRow" style="margin-top:12px;gap:8px;flex-wrap:wrap"><input id="promoCode" maxlength="40" placeholder="Gutscheincode" autocomplete="off" spellcheck="false" style="max-width:200px;text-transform:uppercase"><button class="btn" id="promoGo" type="button">Einlösen</button><span class="small muted" id="promoMsg"></span></div>
         <h3 style="margin:22px 0 6px">Zusatzfunktionen</h3>
         <p class="small muted" style="margin:0 0 10px" data-paid>Einzeln dazubuchbar – monatlich oder jährlich.</p>
         <p class="small muted hidden" style="margin:0 0 10px" data-freemode>Fotomosaik, Live-Karikatur und Videonachricht schaltet Photobox Memories auf Anfrage frei – oder du testest sie 1 Monat kostenlos.</p>
@@ -452,6 +453,18 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <p class="small muted" style="margin:0 0 12px">Preise pro Fotobox, brutto. Kunden sehen nur eingeschaltete Tarife unter „Meine Lizenzen“ und kaufen über Stripe – die Lizenz entsteht nach der Zahlung von selbst. Abos verlängern sich automatisch; gekündigte laufen bis zum Ende der bezahlten Zeit.</p>
           <p class="small hidden" id="planFreeNote" style="background:#FFFAEA;border-radius:10px;padding:8px 12px;margin:0 0 12px">Kostenlos-Modus aktiv – Kunden sehen die Tarife erst nach dem Umschalten (SQL 202610250005). Hier kannst du sie schon vorbereiten.</p>
           <div id="planList"><p class="small muted">Lädt …</p></div>
+        </div>
+        <div class="card" style="margin-bottom:20px" id="promoCard">
+          <h2 style="margin:0 0 6px">Gutscheincodes</h2>
+          <p class="small muted" style="margin:0 0 12px">Ein Code verlängert den Test eines Kunden um die angegebenen Tage, einmal je Konto. Kunden geben ihn unter „Meine Lizenzen“ ein oder öffnen den Link <b translate="no">dashboard.photobox-memories.de/?code=CODE</b>. Ist der Test noch nicht gestartet, werden die Tage gemerkt und beim Start dazugerechnet.</p>
+          <div id="promoList"></div>
+          <div class="grid3" style="margin-top:12px">
+            <div><label>Code</label><input id="pcCode" maxlength="40" placeholder="z. B. MIRKO" style="text-transform:uppercase"></div>
+            <div><label>Tage zusätzlich</label><input id="pcDays" type="number" min="1" max="1830" value="365"></div>
+            <div><label>Höchstens so oft (leer = ohne Grenze)</label><input id="pcMax" type="number" min="1"></div>
+            <div style="grid-column:1/-1"><label>Notiz</label><input id="pcNote" maxlength="120" placeholder="z. B. Facebook-Gruppe"></div>
+          </div>
+          <div class="row" style="margin-top:10px"><button class="btn primary" id="pcSave" type="button">Code speichern</button></div>
         </div>
         <div class="card" style="margin-bottom:20px" id="photoShopCard">
           <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Foto-Shop für Gäste</h2><span class="badge" id="shState"></span></div>
@@ -1352,6 +1365,7 @@ document.addEventListener('click', e => {
 let shCfg = null, shSample = '';
 const shCents = v => Math.round(parseFloat(String(v).replace(',', '.')) * 100);
 async function loadShopCfg() {
+  loadPromos();
   if (!profile?.is_admin || !$('#photoShopCard')) return;
   const b = DEMO ? null : await fetch(`${CFG.supabaseUrl}/storage/v1/object/public/photos/${PM_SHOP.path(me.id)}?t=${Date.now()}`, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
   shCfg = PM_SHOP.normalize(b);
@@ -1771,7 +1785,13 @@ if (location.hash === '#tarife') addEventListener('pm-ready', showTarife, { once
 //   Registrierung und Bestätigungs-Mail hinweg. Alte Links (basis-, pro-, alles-…) führen zum Fotobox-Abo.
 let shopPick = null;
 {
-  const sp = new URLSearchParams(location.search), q = sp.get('tarif'), neu = sp.get('konto') === 'neu';
+  const sp = new URLSearchParams(location.search), q = sp.get('tarif'), neu = sp.get('konto') === 'neu', pc = sp.get('code');
+  if (pc && /^[A-Za-z0-9-]{3,40}$/.test(pc)) try { localStorage.setItem('pm.code', JSON.stringify({ c: pc.toUpperCase(), t: Date.now() })); } catch {}
+  if (pc) { sp.delete('code'); history.replaceState(null, '', location.pathname + (String(sp) ? '?' + sp : '') + location.hash); }
+  let pcw = null; try { pcw = JSON.parse(localStorage.getItem('pm.code') || 'null'); } catch {}
+  if (pcw && !(pcw.c && Date.now() - pcw.t < 7 * 864e5)) { pcw = null; try { localStorage.removeItem('pm.code'); } catch {} }
+  if (pcw) addEventListener('pm-ready', () => { try { localStorage.removeItem('pm.code'); } catch {} $('#promoCode').value = pcw.c; redeemPromo(pcw.c); }, { once: true });
+  if (pc && !q && !neu && !signup) $('#aSwitch').click();
   if (q || neu) {
     sp.delete('tarif'); sp.delete('konto'); // nur die eigenen Zusätze entfernen – ?download=1 bleibt bis nach der Anmeldung
     history.replaceState(null, '', location.pathname + (String(sp) ? '?' + sp : '') + location.hash);
@@ -1926,6 +1946,42 @@ $('#shopPortal').onclick = async () => {
   if (error || !/^https:\/\/billing\.stripe\.com\//.test(data?.url || '')) return toast(data?.error || 'Die Verwaltung bei Stripe konnte nicht geöffnet werden.', 5000);
   location.href = data.url;
 };
+// Gutscheincode (SQL 202611050004): verlängert den Test um die Tage des Codes, einmal je Konto
+async function redeemPromo(code) {
+  code = String(code || '').trim().toUpperCase(); const msg = t => { $('#promoMsg').textContent = t; };
+  if (!code) return msg('Bitte einen Gutscheincode eingeben.');
+  if (DEMO) return toast('Demo-Modus – es wird nichts gespeichert');
+  $('#promoGo').disabled = true;
+  try {
+    const { data, error } = await sb.rpc('redeem_promo', { p_code: code });
+    if (error) throw error;
+    if (!data?.ok) return msg(data?.error || 'Der Gutschein konnte nicht eingelöst werden.');
+    const t = data.days === 365 ? 'Gutschein eingelöst: Dein Test verlängert sich um 1 Jahr.' : `Gutschein eingelöst: Dein Test verlängert sich um ${data.days} Tage.`;
+    msg(t); toast(t, 8000); $('#promoCode').value = '';
+    try { await loadMyTier(); renderShop(); } catch {}
+  } catch (e) { msg(/redeem_promo|schema cache|does not exist/i.test(e.message || '') ? 'Gutscheine sind gerade nicht verfügbar.' : 'Der Gutschein konnte nicht eingelöst werden.'); }
+  finally { $('#promoGo').disabled = false; }
+}
+$('#promoGo').onclick = () => redeemPromo($('#promoCode').value);
+$('#promoCode').addEventListener('keydown', e => { if (e.key === 'Enter') redeemPromo($('#promoCode').value); });
+// Betreiber: Gutscheincodes anlegen, ein-/ausschalten, Einlösungen sehen
+async function loadPromos() {
+  if (!profile?.is_admin || !$('#promoCard')) return;
+  if (DEMO) { $('#promoList').innerHTML = '<p class="small muted">Im Demo-Modus gibt es keine Codes.</p>'; return; }
+  const { data, error } = await sb.rpc('promo_overview');
+  if (error) { $('#promoList').innerHTML = '<p class="small" style="color:var(--warn)">Gutscheine sind auf dem Server noch nicht eingerichtet (SQL 202611050004_gutscheine.sql).</p>'; return; }
+  $('#promoList').innerHTML = (data || []).map(c => `<div class="planrow"><div class="row" style="gap:10px;flex-wrap:wrap"><b translate="no">${esc(c.code)}</b>
+      <span class="small muted">+${c.days} Tage · ${c.uses.length}${c.max ? ' von ' + c.max : ''} eingelöst${c.active ? '' : ' · ausgeschaltet'}${c.note ? ' · ' + esc(c.note) : ''}</span><span style="flex:1"></span>
+      <button class="btn small" type="button" data-pc-toggle="${esc(c.code)}" data-days="${c.days}" data-max="${c.max ?? ''}" data-note="${esc(c.note || '')}" data-on="${c.active ? 1 : 0}">${c.active ? 'Ausschalten' : 'Einschalten'}</button></div>
+      ${c.uses.length ? `<div class="small muted" style="margin-top:6px">${c.uses.slice(0, 100).map(u => `${esc(u.email || '?')} (${new Date(u.at).toLocaleDateString('de-DE')})`).join(' · ')}</div>` : ''}</div>`).join('') || '<p class="small muted">Noch keine Codes.</p>';
+}
+const promoSave = async (code, days, active, max, note) => {
+  const { error } = await sb.rpc('promo_save', { p_code: code, p_days: days, p_active: active, p_max: max || null, p_note: note || null });
+  if (error) { toast('Fehler: ' + error.message, 6000); return false; } loadPromos(); return true;
+};
+$('#promoList').addEventListener('click', e => { const b = e.target.closest('[data-pc-toggle]'); if (!b) return;
+  promoSave(b.dataset.pcToggle, +b.dataset.days, b.dataset.on !== '1', +b.dataset.max || null, b.dataset.note); });
+$('#pcSave').onclick = async () => { if (await promoSave($('#pcCode').value, +$('#pcDays').value, true, +$('#pcMax').value || null, $('#pcNote').value)) { toast('Code gespeichert.'); $('#pcCode').value = ''; $('#pcNote').value = ''; } };
 $('#trialGo').onclick = async () => {
   $('#trialGo').disabled = true;
   const { error } = await sb.rpc('start_trial');
