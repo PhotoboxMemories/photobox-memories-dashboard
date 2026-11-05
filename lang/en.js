@@ -133,6 +133,7 @@ I18N.add('en', {
 "Das eigene WLAN gibt es nur unter Windows.": "The own Wi-Fi is only available on Windows.",
 "Das neueste Update an dieser Fotobox installieren? Sie startet danach neu. Das geht nur, wenn gerade kein Ereignis läuft.": "Install the latest update on this photo booth? It will restart afterwards. This only works when no event is running.",
 "Dashboard ist nicht eingerichtet": "Dashboard is not set up",
+"Datum vorbei, Fotobox noch zugewiesen": "Date passed, photo booth still assigned",
 "Deine Anmeldung ist abgelaufen. Bitte melde dich in einem neuen Tab an und ändere danach hier etwas, damit gespeichert wird.": "Your login has expired. Please sign in in a new tab and then change something here so that it is saved.",
 "Der Akku der GoPro ist fast leer.": "The GoPro battery is almost empty.",
 "Der Arm ist gerade beschäftigt.": "The arm is busy right now.",
