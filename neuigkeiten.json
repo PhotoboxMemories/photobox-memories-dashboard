@@ -1,6 +1,29 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.76": {
+   "date": "2026-11-05",
+   "notes": {
+    "de": [
+     "Die Fotobox meldet technische Fehler jetzt automatisch, damit wir sie schneller finden und beheben können. Fotos und Gäste-Daten werden dabei nicht übertragen."
+    ],
+    "en": [
+     "The photo booth now reports technical errors automatically so that we can find and fix them faster. Photos and guest data are not transferred."
+    ],
+    "tr": [
+     "Fotoğraf kabini artık teknik hataları otomatik olarak bildiriyor, böylece onları daha hızlı bulup giderebiliyoruz. Fotoğraflar ve misafir verileri aktarılmaz."
+    ],
+    "fr": [
+     "La photobox signale désormais automatiquement les erreurs techniques afin que nous puissions les trouver et les corriger plus vite. Les photos et les données des invités ne sont pas transmises."
+    ],
+    "es": [
+     "El fotomatón ahora notifica automáticamente los errores técnicos para que podamos encontrarlos y corregirlos más rápido. No se transmiten fotos ni datos de invitados."
+    ],
+    "it": [
+     "La photo booth ora segnala automaticamente gli errori tecnici, così possiamo trovarli e correggerli più in fretta. Foto e dati degli ospiti non vengono trasmessi."
+    ]
+   }
+  },
   "1.18.75": {
    "date": "2026-11-05",
    "notes": {
