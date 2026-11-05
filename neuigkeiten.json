@@ -5,22 +5,22 @@
    "date": "2026-11-05",
    "notes": {
     "de": [
-     "Neue Version."
+     "Ereignisse sind jetzt nach Termin sortiert: Als Nächstes, In Zukunft, Ohne Datum und vergangene Ereignisse. Das gilt im Dashboard, bei den BoothDesigner-Einsendungen und bei der Auswahl an der Fotobox."
     ],
     "en": [
-     "New version."
+     "Events are now sorted by date: Coming up next, Later, No date and past events. This applies in the dashboard, to BoothDesigner submissions and to the selection on the photo booth."
     ],
     "tr": [
-     "Yeni sürüm."
+     "Etkinlikler artık tarihe göre sıralanıyor: Sıradakiler, Daha sonra, Tarihsiz ve geçmiş etkinlikler. Bu, dashboard'da, BoothDesigner gönderimlerinde ve fotoğraf kabinindeki seçimde geçerlidir."
     ],
     "fr": [
-     "Nouvelle version."
+     "Les événements sont désormais triés par date : À venir bientôt, Plus tard, Sans date et événements passés. Cela vaut pour le tableau de bord, les envois BoothDesigner et le choix sur la photobox."
     ],
     "es": [
-     "Nueva versión."
+     "Los eventos ahora se ordenan por fecha: A continuación, Más adelante, Sin fecha y eventos pasados. Se aplica en el panel, en los envíos de BoothDesigner y en la selección del fotomatón."
     ],
     "it": [
-     "Nuova versione."
+     "Gli eventi ora sono ordinati per data: Prossimamente, Più avanti, Senza data ed eventi passati. Vale nella dashboard, per gli invii BoothDesigner e nella scelta sulla photo booth."
     ]
    }
   },
@@ -28,22 +28,22 @@
    "date": "2026-11-04",
    "notes": {
     "de": [
-     "Neue Version."
+     "Neu: Über 260 fertige Designs direkt installieren. Design in der Vorschau ansehen, Formate wählen, Name und Datum eintragen, fertig. Zu finden unter Fotolayout → Design installieren, im Dashboard und an der Fotobox."
     ],
     "en": [
-     "New version."
+     "New: install more than 260 ready-made designs directly. Preview a design, choose formats, enter name and date, done. Find it under Photo layout → Install design, in the dashboard and on the photo booth."
     ],
     "tr": [
-     "Yeni sürüm."
+     "Yeni: 260'tan fazla hazır tasarımı doğrudan yükleyin. Tasarımı önizleyin, formatları seçin, ad ve tarihi girin, bitti. Fotoğraf düzeni → Tasarım yükle altında, dashboard'da ve fotoğraf kabininde."
     ],
     "fr": [
-     "Nouvelle version."
+     "Nouveau : installez directement plus de 260 designs prêts à l'emploi. Prévisualisez un design, choisissez les formats, saisissez le nom et la date, c'est fait. Sous Mise en page photo → Installer un design, dans le tableau de bord et sur la photobox."
     ],
     "es": [
-     "Nueva versión."
+     "Novedad: instala directamente más de 260 diseños listos. Previsualiza un diseño, elige los formatos, introduce nombre y fecha, y listo. Está en Diseño de foto → Instalar diseño, en el panel y en el fotomatón."
     ],
     "it": [
-     "Nuova versione."
+     "Novità: installa direttamente oltre 260 design pronti. Guarda l'anteprima, scegli i formati, inserisci nome e data, ed è fatto. Si trova in Layout foto → Installa design, nella dashboard e sulla photo booth."
     ]
    }
   },
@@ -51,22 +51,22 @@
    "date": "2026-11-04",
    "notes": {
     "de": [
-     "Neue Version."
+     "Im Editor richten sich Elemente beim Verschieben jetzt magnetisch aus: an Rändern, an der Mitte, an anderen Elementen und an gleichen Abständen. Goldene Linien zeigen die Ausrichtung."
     ],
     "en": [
-     "New version."
+     "In the editor, elements now snap into place when you move them: to edges, the centre, other elements and equal spacing. Gold lines show the alignment."
     ],
     "tr": [
-     "Yeni sürüm."
+     "Düzenleyicide öğeler taşınırken artık mıknatıs gibi hizalanıyor: kenarlara, ortaya, diğer öğelere ve eşit aralıklara. Altın çizgiler hizalamayı gösterir."
     ],
     "fr": [
-     "Nouvelle version."
+     "Dans l'éditeur, les éléments s'alignent désormais par aimantation quand vous les déplacez : sur les bords, au centre, sur les autres éléments et à espacement égal. Des lignes dorées indiquent l'alignement."
     ],
     "es": [
-     "Nueva versión."
+     "En el editor, los elementos ahora se ajustan como un imán al moverlos: a los bordes, al centro, a otros elementos y a distancias iguales. Las líneas doradas muestran la alineación."
     ],
     "it": [
-     "Nuova versione."
+     "Nell'editor gli elementi ora si allineano come un magnete quando li sposti: ai bordi, al centro, ad altri elementi e a distanze uguali. Le linee dorate mostrano l'allineamento."
     ]
    }
   },
