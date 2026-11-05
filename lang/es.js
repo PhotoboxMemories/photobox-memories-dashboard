@@ -4266,7 +4266,7 @@ I18N.add('es', {
 "Noch kein Layout angehakt – so gibt es in diesem Ereignis keine KI-Fotos.": "Todavía no hay ningún diseño marcado; así no habrá fotos con IA en este evento.",
 "mit KI-Foto": "con foto IA",
 "{x} Foto(s)": "{x} foto(s)",
-"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Los invitados se convierten en estrellas de cine, superhéroes u obras de arte. Elegir estilos, ajustar consentimiento y textos. En «En el fotomatón» puedes limitar las fotos con IA a ciertos diseños: los invitados eligen primero el diseño y solo los marcados ofrecen los estilos de IA."
+"Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.": "Los invitados se convierten en estrellas de cine, superhéroes u obras de arte. Elegir estilos, ajustar consentimiento y textos. En «En el fotomatón» puedes limitar las fotos con IA a ciertos diseños: los invitados eligen primero el diseño y solo los marcados ofrecen los estilos de IA.",
 "… und {x} weitere": "… y {x} más",
 "⚠️ Noch nicht in der Windows-Firewall freigegeben: Dann kommt das Handy nicht an die Fotos.": "⚠️ Aún no permitido en el firewall de Windows: el móvil no puede acceder a las fotos.",
 "✓ In der Galerie": "✓ En la galería",
