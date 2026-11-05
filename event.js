@@ -1769,7 +1769,7 @@
               ${slider('x.share.photoSize', 'Größe des Fotos (0 = wie an der Fotobox)', 0, 90, 2, '%')}</div>`
           : `<h2>Weitere Optionen</h2><div class="card">${sw('x.share.cloud', 'Cloud-Freigabe', 'Fotos werden in die Online-Galerie hochgeladen und sind über einen Link abrufbar')}
               ${proOnly(sw('x.share.origUp', 'Originalfotos hochladen', 'Zusätzlich zum fertigen Ausdruck werden die einzelnen Aufnahmen in die Online-Galerie hochgeladen (braucht mehr Speicher)'))}
-              ${sw('share', 'QR Code', 'Teilen Sie Fotos über einen QR-Code, den Gäste scannen können. Aktuell muss das Handy im selben WLAN wie die Fotobox sein.')}</div>`)}`;
+              ${sw('share', 'QR Code', 'Gäste scannen den QR-Code und haben das Foto sofort auf dem Handy. Dafür muss das Hochladen in die Online-Galerie eingeschaltet sein.')}</div>`)}`;
       },
       print() {
         return `<h1>Drucken</h1>${tabs('pr', [['gen', 'Allgemein'], ['lim', 'Drucklimits']])}
