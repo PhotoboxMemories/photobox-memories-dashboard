@@ -18,6 +18,9 @@
   const SLUG = /^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/;
   const toSlug = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/ß/g, 'ss')
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+  // Abstand zum Termin in Tagen (0 = heute, negativ = vorbei), nach dem Kalendertag vor Ort
+  const dayOf = d => { const x = new Date(String(d).slice(0, 10) + 'T12:00:00'), n = new Date(); n.setHours(12, 0, 0, 0); return Math.round((x - n) / 864e5); };
+  const dayLabel = d => { const n = dayOf(d); return n === 0 ? 'heute' : n === 1 ? 'morgen' : n === -1 ? 'gestern' : n > 0 ? `in ${n} Tagen` : `vor ${-n} Tagen`; };
   const fmtDate = d => d ? new Date(d.length === 10 ? d + 'T12:00:00' : d).toLocaleDateString('de-DE') : '–';
   const CSS = `
   #studioRoot .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -223,7 +226,17 @@
     const shown = subs.filter(s => filter === 'alle' || (filter === 'offen' ? s.status !== 'erledigt' : s.status === 'erledigt'));
     return `<div class="row" style="margin-bottom:12px">${[['offen', 'Offen'], ['erledigt', 'Erledigt'], ['alle', 'Alle']].map(([k, l]) =>
         `<button class="btn small${filter === k ? ' primary' : ''}" data-a="filter" data-f="${k}">${l}</button>`).join('')}</div>
-      <div class="subs">${shown.length ? shown.map(subCard).join('') : '<p class="muted">Noch keine Einsendungen. Schick deinen Kunden den Link oder baue das Studio auf deiner Webseite ein.</p>'}</div>`;
+      ${shown.length ? subGroups(shown) : '<p class="muted">Noch keine Einsendungen. Schick deinen Kunden den Link oder baue das Studio auf deiner Webseite ein.</p>'}`;
+  }
+
+  // Nach Termin (Betreiber 05.11.2026): die nächsten 7 Tage zuerst, dann die späteren nach Datum, ohne Datum, zuletzt die abgelaufenen (die letzten zuerst)
+  function subGroups(list) {
+    const asc = (a, b) => dayOf(a.event_date) - dayOf(b.event_date), dated = list.filter(s => s.event_date);
+    const groups = [['Als Nächstes', dated.filter(s => dayOf(s.event_date) >= 0 && dayOf(s.event_date) <= 7).sort(asc)],
+      ['In Zukunft', dated.filter(s => dayOf(s.event_date) > 7).sort(asc)],
+      ['Ohne Datum', list.filter(s => !s.event_date)],
+      ['Abgelaufen', dated.filter(s => dayOf(s.event_date) < 0).sort((a, b) => asc(b, a))]];
+    return groups.filter(([, l]) => l.length).map(([t, l]) => `<h3 style="margin:18px 0 10px">${t} <span class="small muted">(${l.length})</span></h3><div class="subs">${l.map(subCard).join('')}</div>`).join('');
   }
 
   function adminTab() { return `${fixCard()}<div data-slot="radStats"></div>`; }
@@ -267,7 +280,7 @@
         <a href="mailto:${esc(s.customer_email)}">${esc(s.customer_email)}</a>
         <span class="muted">${esc(s.design_name || s.design)} · ${esc(s.layout_name || s.layout)}${variantsOf(s).length ? ` · plus ${variantsOf(s).length} ${variantsOf(s).length === 1 ? 'Variante' : 'Varianten'}` : ''}</span>
         ${variantsOf(s).length ? `<span class="muted">Druckvorlagen der Varianten: ${variantsOf(s).map(v => `<a href="${esc(fileUrl(s, v.file))}" download target="_blank" rel="noopener">${esc(v.layout_name || v.layout)}</a>`).join(' · ')}</span>` : ''}
-        <span class="muted">Veranstaltung: ${fmtDate(s.event_date)} · eingegangen ${fmtDate(s.created_at)}</span>
+        <span class="muted">Veranstaltung: ${fmtDate(s.event_date)}${s.event_date ? ` (${dayLabel(s.event_date)})` : ''} · eingegangen ${fmtDate(s.created_at)}</span>
         ${s.event_id ? `<span class="muted">Ereignis: ${esc((ctx.events() || []).find(e => e.id === s.event_id)?.name || (ctx.standalone ? 'im Dashboard von Photobox Memories' : 'gelöscht'))}${s.event_created ? ' · automatisch angelegt' : s.auto_layout ? ' · als Fotolayout übernommen' : ''}</span>` : ''}
         ${s.start_kind ? `<span class="muted">Startbildschirm als ${s.start_kind === 'image' ? 'Bild' : 'Animation'}: ${['p', 'l'].map(o => `<a href="${esc(fileUrl(s, `start-${o}.${({ image: 'jpg', video: 'mp4', webm: 'webm' })[s.start_kind]}`))}" target="_blank" rel="noopener">${o === 'p' ? 'hoch' : 'quer'}</a>`).join(' · ')}</span>` : ''}
         ${s.message ? `<div class="msg">${esc(s.message)}</div>` : ''}
