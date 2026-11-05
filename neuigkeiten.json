@@ -1,6 +1,29 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.77": {
+   "date": "2026-11-05",
+   "notes": {
+    "de": [
+     "Die einzelnen Aufnahmen (Originalfotos) lädt die Fotobox nur noch in die Online-Galerie, wenn du beim Ereignis „Originalfotos hochladen“ einschaltest. Ohne diese Einstellung kommen nur die fertigen Fotos online."
+    ],
+    "en": [
+     "The photo booth now uploads the single shots (original photos) to the online gallery only if you switch on “Upload original photos” for the event. Without this setting, only the finished photos go online."
+    ],
+    "tr": [
+     "Fotoğraf kabini tek tek çekimleri (orijinal fotoğraflar) artık yalnızca etkinlikte “Orijinal fotoğrafları yükle”yi açarsan çevrim içi galeriye yükler. Bu ayar olmadan yalnızca hazır fotoğraflar çevrim içi olur."
+    ],
+    "fr": [
+     "La borne n’envoie désormais les prises de vue individuelles (photos originales) dans la galerie en ligne que si vous activez « Envoyer les photos originales » pour l’événement. Sans ce réglage, seules les photos finies sont en ligne."
+    ],
+    "es": [
+     "El fotomatón solo sube las tomas individuales (fotos originales) a la galería en línea si activas «Subir fotos originales» en el evento. Sin este ajuste, solo se suben las fotos terminadas."
+    ],
+    "it": [
+     "La photo booth carica gli scatti singoli (foto originali) nella galleria online solo se attivi «Carica le foto originali» per l’evento. Senza questa impostazione vanno online solo le foto finite."
+    ]
+   }
+  },
   "1.18.76": {
    "date": "2026-11-05",
    "notes": {
@@ -2269,7 +2292,7 @@
      "«Subir fotos originales» ya funciona: las tomas individuales se suben a la galería en línea además de la foto terminada. Las fotos originales que se habían quedado atascadas se suben la próxima vez que se inicie el fotomatón."
     ],
     "it": [
-     "«Carica foto originali» ora funziona: i singoli scatti finiscono nella galleria online oltre alla foto finita. Le foto originali rimaste bloccate finora vengono caricate al prossimo avvio del photo booth."
+     "«Carica le foto originali» ora funziona: i singoli scatti finiscono nella galleria online oltre alla foto finita. Le foto originali rimaste bloccate finora vengono caricate al prossimo avvio del photo booth."
     ]
    }
   },
