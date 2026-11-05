@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Photobox Memories – Dashboard</title>
 <link rel="stylesheet" href="fonts-fredoka/fredoka.css">
-<script>window.I18N_V = '20261105-1';</script>
+<script>window.I18N_V = '20261105-2';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -897,7 +897,7 @@ function evMatch(e, q) {
 }
 function renderEvents() {
   const q = ($('#evSearch')?.value || '').toLowerCase().trim();
-  const today = new Date().toISOString().slice(0, 10);
+  const localDay = ms => new Date(ms - new Date(ms).getTimezoneOffset() * 6e4).toISOString().slice(0, 10), today = localDay(Date.now()); // Kalendertag vor Ort, nicht UTC
   const list = events.filter(e => evMatch(e, q));
   const card = e => {
     const n = devices.filter(d => d.event_id === e.id).length;
@@ -907,12 +907,15 @@ function renderEvents() {
   // Ein Ereignis, dem eine Fotobox zugewiesen ist, läuft noch – auch wenn sein Datum vorbei ist (mehrere Tage, Betreiber 04.11.2026)
   const live = e => !e.event_date || e.event_date >= today || devices.some(d => d.event_id === e.id);
   const running = list.filter(live), done = list.filter(e => !live(e)).sort((a, b) => b.event_date.localeCompare(a.event_date)); // zuletzt vergangene zuerst
-  // Termine (Betreiber 05.11.2026): die nächsten 7 Tage und Ereignisse mit Fotobox zuerst, dann die späteren nach Datum, zuletzt die ohne Datum
-  const in7 = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10), soon = e => e.event_date && (e.event_date <= in7 || e.event_date < today);
+  // Termine (Betreiber 05.11.2026): die nächsten 7 Tage zuerst, dann die späteren nach Datum, ohne Datum. Datum vorbei, aber noch eine Fotobox
+  // zugewiesen: eigene Gruppe – eine Fotobox bleibt oft einfach auf ihrem letzten Ereignis, das gehört nicht zu „Als Nächstes“.
+  const in7 = localDay(Date.now() + 7 * 864e5), soon = e => e.event_date && e.event_date >= today && e.event_date <= in7;
   const byDate = (a, b) => a.event_date.localeCompare(b.event_date), head = t => `<h2 style="grid-column:1/-1;margin:14px 0 0;font-size:18px">${t}</h2>`;
-  const next = running.filter(soon).sort(byDate), later = running.filter(e => e.event_date && !soon(e)).sort(byDate), none = running.filter(e => !e.event_date);
+  const next = running.filter(soon).sort(byDate), later = running.filter(e => e.event_date > in7).sort(byDate), none = running.filter(e => !e.event_date),
+    stale = running.filter(e => e.event_date && e.event_date < today).sort((a, b) => b.event_date.localeCompare(a.event_date));
   $('#eventList').innerHTML = `<div class="evc evnew" id="newEventCard"><div class="cv"><span>+</span>Erstellen Sie ein neues Ereignis</div></div>`
-    + (next.length ? head('Als Nächstes') + next.map(card).join('') : '') + (later.length ? head('In Zukunft') + later.map(card).join('') : '') + (none.length ? head('Ohne Datum') + none.map(card).join('') : '');
+    + (next.length ? head('Als Nächstes') + next.map(card).join('') : '') + (later.length ? head('In Zukunft') + later.map(card).join('') : '') + (none.length ? head('Ohne Datum') + none.map(card).join('') : '')
+    + (stale.length ? head('Datum vorbei, Fotobox noch zugewiesen') + stale.map(card).join('') : '');
   $('#eventDone').innerHTML = done.map(card).join('') || `<div class="small muted">${q ? 'Kein Ereignis gefunden.' : 'Noch keine abgeschlossenen Ereignisse.'}</div>`;
   $$('.evc[data-id]').forEach(c => c.onclick = async ev => {
     const e = events.find(x => x.id === c.dataset.id);
