@@ -448,7 +448,7 @@
     voice: false, beauty: false, beautyStrength: 40, filtersOn: true, filters: FILTERS.map(f => f[0]), stickers: true,
     bgMode: 'off', keyStrength: 50, bgUrls: [], bgGuestChoice: true,
     form: { enabled: false, name: true, email: true, phone: false, newsletter: false, text: 'Ich bin einverstanden, dass meine Fotos gespeichert und für dieses Event verwendet werden.' },
-    share: true, autoPrint: false, printButton: true, askCopies: false, maxCopies: 3, printLimit: 0, showPrintsLeft: false, copies: 1
+    share: true, autoPrint: false, printButton: true, askCopies: true, maxCopies: 3, printLimit: 0, showPrintsLeft: false, copies: 1
   };
   // Erweiterte Einstellungen im vollen Umfang. Liegen unter settings.x, damit ältere Fotobox-Versionen sie einfach ignorieren.
   const X_DEF = {
@@ -465,7 +465,7 @@
       sms: { on: false, message: 'Hier ist Ihr Foto', cc: '49', inputText: 'Telefonnummer eingeben', sendText: 'SMS senden' },
       wa: { on: false, message: 'Hier ist Ihr Foto', cc: '49', inputText: 'Telefonnummer eingeben', scanText: 'Mit dem Handy scannen' },
       originals: true, deleteBtn: true, deleteText: 'Wiederholen', cloud: true, uploadOriginals: true, origUp: false },
-    print: { btnText: 'Drucken', printingText: 'Drucken...', copiesText: 'Wie viele Kopien?', buyMore: true },
+    print: { btnText: 'Drucken', printingText: 'Drucken...', copiesText: 'Wie viele Kopien?', buyMore: false },
     gallery: { link: false, guests: false, downloadAll: false, password: '' },
     lang: { guest: '', pick: false, list: [] }, // Gästesprache: '' = wie das Menü der Fotobox
     startLogo: { src: 'own', url: '', size: 72, fit: 'contain' }, // Logo in der weißen Scheibe der Standard-Startanimation
@@ -1781,7 +1781,7 @@
           : `${titleSw('Drucklimits', '')}<div class="card">Ein Limit für die erlaubten Ausdrucke festlegen.
               <div class="row"><div style="flex:1"><label class="l">Maximale Anzahl an Ausdrucken je Fotobox (0 = kein Limit)</label><input type="number" min="0" data-s="printLimit" data-num="1" value="${S.printLimit}"></div>
               <div style="flex:1"><label class="l">Maximale Anzahl an Kopien pro Gast</label><input type="number" min="1" max="20" data-s="maxCopies" data-num="1" value="${S.maxCopies}"></div></div>
-              ${ctx.admin ? sw('x.print.buyMore', 'Weitere Drucke verkaufen', 'Ist das Limit voll, nimmt die Fotobox Drucke aus dem Druck-Guthaben oder der Kunde kauft ein Paket per QR-Code (1 Druck = 50 Cent).') : ''}
+              ${ctx.admin && G.PM_PRINT_SHOP ? sw('x.print.buyMore', 'Weitere Drucke verkaufen', 'Ist das Limit voll, nimmt die Fotobox Drucke aus dem Druck-Guthaben oder der Kunde kauft ein Paket per QR-Code (1 Druck = 50 Cent).') : ''}
               ${sw('showPrintsLeft', 'Restlimit an der Fotobox anzeigen', 'Unter dem Drucken-Symbol steht, wie viele Ausdrucke noch übrig sind, zum Beispiel „Noch 37 Drucke“. Nur wenn oben ein Limit eingetragen ist.')}</div>`)}`;
       },
       // Fotomosaik: viele Gästefotos ergeben ein großes Bild (Bildschirm und/oder Klebewand mit nummerierter Tafel)
