@@ -145,6 +145,7 @@ I18N.add('fr', {
 "Deine Anmeldung ist abgelaufen. Bitte melde dich in einem neuen Tab an und ändere danach hier etwas, damit gespeichert wird.": "Votre session a expiré. Connectez-vous dans un nouvel onglet, puis modifiez quelque chose ici pour enregistrer.",
 "Der Akku der GoPro ist fast leer.": "La batterie de la GoPro est presque vide.",
 "Der Arm ist gerade beschäftigt.": "Le bras est occupé pour le moment.",
+"Der Echtzeit-Export ist für diese Lizenz nicht freigeschaltet. Nach dem Ereignis kopierst du alle Fotos über Menü → Ereignis → Exportieren.": "L’export en temps réel n’est pas activé pour cette licence. Après l’événement, copie toutes les photos via Menu → Événement → Exporter.",
 "Der Gutschein konnte nicht eingelöst werden.": "Le code n’a pas pu être utilisé.",
 "Der Roboter macht sich bereit …": "Le robot se prépare …",
 "Der WLAN-Name braucht 1 bis 32 Zeichen, ohne Umlaute.": "Le nom du Wi-Fi doit compter 1 à 32 caractères, sans accents.",
