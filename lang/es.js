@@ -133,6 +133,7 @@ I18N.add('es', {
 "Das eigene WLAN gibt es nur unter Windows.": "El wifi propio solo está disponible en Windows.",
 "Das neueste Update an dieser Fotobox installieren? Sie startet danach neu. Das geht nur, wenn gerade kein Ereignis läuft.": "¿Instalar la última actualización en este fotomatón? Después se reiniciará. Solo funciona si no hay ningún evento en marcha.",
 "Dashboard ist nicht eingerichtet": "El panel no está configurado",
+"Datum vorbei, Fotobox noch zugewiesen": "Fecha pasada, fotomatón aún asignado",
 "Deine Anmeldung ist abgelaufen. Bitte melde dich in einem neuen Tab an und ändere danach hier etwas, damit gespeichert wird.": "Tu sesión ha caducado. Inicia sesión en una pestaña nueva y luego cambia algo aquí para que se guarde.",
 "Der Akku der GoPro ist fast leer.": "La batería de la GoPro está casi agotada.",
 "Der Arm ist gerade beschäftigt.": "El brazo está ocupado en este momento.",
