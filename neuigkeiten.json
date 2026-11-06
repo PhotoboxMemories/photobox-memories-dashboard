@@ -1,6 +1,29 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.81": {
+   "date": "2026-11-06",
+   "notes": {
+    "de": [
+     "Während eines Ereignisses legt die Fotobox die Fotos geschützt ab. Nach dem Ereignis findest du sie wie gewohnt im Fotoordner, oder du exportierst sie mit einem Klick auf einen USB-Stick (Menü → Ereignis → Exportieren)."
+    ],
+    "en": [
+     "During an event, the photo booth stores the photos in a protected place. After the event you find them in the photo folder as usual, or you export them to a USB stick with one click (Menu → Event → Export)."
+    ],
+    "tr": [
+     "Etkinlik sırasında fotoğraf kabini fotoğrafları korumalı bir yerde saklar. Etkinlikten sonra onları her zamanki gibi fotoğraf klasöründe bulursun ya da tek tıkla bir USB belleğe aktarırsın (Menü → Etkinlik → Dışa aktar)."
+    ],
+    "fr": [
+     "Pendant un événement, la borne range les photos dans un endroit protégé. Après l’événement, tu les retrouves comme d’habitude dans le dossier photos, ou tu les exportes en un clic sur une clé USB (Menu → Événement → Exporter)."
+    ],
+    "es": [
+     "Durante un evento, el fotomatón guarda las fotos en un lugar protegido. Después del evento las encuentras como siempre en la carpeta de fotos, o las exportas con un clic a un USB (Menú → Evento → Exportar)."
+    ],
+    "it": [
+     "Durante un evento la photo booth salva le foto in un posto protetto. Dopo l’evento le trovi come sempre nella cartella delle foto, oppure le esporti con un clic su una chiavetta USB (Menu → Evento → Esporta)."
+    ]
+   }
+  },
   "1.18.79": {
    "date": "2026-11-06",
    "notes": {
