@@ -12,7 +12,7 @@
     // Alle KI-Bilder laufen über die zentrale KI (Grok über Photobox Memories, Credits). Eigene API-Schlüssel (Gemini,
     // OpenAI, Grok auf der Fotobox) gibt es seit 19.10.2026 nicht mehr – auch alte Events mit „local“ nutzen Grok.
     const connection = 'central';
-    return { connection, resolution: value?.resolution === '1k' ? '1k' : '2k', provider: 'grok', enabled: value?.enabled === true, prompts, guestChoice: value?.guestChoice !== false,
+    return { connection, resolution: value?.resolution === '2k' ? '2k' : '1k', provider: 'grok', enabled: value?.enabled === true, prompts, guestChoice: value?.guestChoice !== false,
       selectedId: selected?.id || '', prompt: selected?.prompt || '' };
   }
   const forBooth = (settings, enabled = true) => ({ ...normalize(settings), enabled: enabled !== false && normalize(settings).enabled });
