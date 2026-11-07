@@ -94,7 +94,7 @@
       x: 'Hat die Fotobox kein Internet, das Handy aber schon, zeigt der QR-Code das Foto, sobald die Fotobox wieder online ist. Für Orte ganz ohne Empfang: an der Fotobox unter Teilen & Drucken „WLAN für Gäste“ einschalten. Das WLAN kommt vom PC (Mobiler Hotspot von Windows) oder von einem eigenen kleinen Router. Beim ersten Mal „In der Windows-Firewall freigeben“ und „WLAN jetzt testen“. Ohne Internet zeigt der QR-Bildschirm dann zwei Codes: erst ins WLAN, dann das Foto.',
       a: 'share', d: '' },
     { t: 'QR-Code zum Foto', k: 'qr_qrcode_handy_download_herunterladen_scannen_foto_aufs_handy_wlan_selbes_wlan_online_ereignis',
-      x: 'Gäste scannen den QR-Code und haben das Foto sofort auf dem Handy. Dafür muss die Fotobox angemeldet, ein Ereignis aus dem Dashboard gewählt und das Hochladen in die Online-Galerie eingeschaltet sein – sonst funktioniert der QR-Code nur im selben WLAN (gelber Hinweis auf dem Startbildschirm).',
+      x: 'Gäste scannen den QR-Code und haben das Foto sofort auf dem Handy – über das Internet, auch mit mobilen Daten. Dafür muss die Fotobox angemeldet und ein Ereignis aus dem Dashboard gewählt sein (sonst gelber Hinweis auf dem Startbildschirm). Ist beim Ereignis „Fotos hochladen“ aus, geht das Foto nur für den QR-Code online, nicht in die Galerie. Dauert das Hochladen länger, zeigt das Handy einen Ladebalken.',
       a: 'share', d: 'share' },
     { t: 'Fotos in die Online-Galerie hochladen', k: 'cloud_online_galerie_hochladen_upload_freigabe_erweiterte_internet',
       x: 'Die Fotobox lädt jedes fertige Foto in die Online-Galerie des Ereignisses. Braucht die Anmeldung mit deinem Konto.',
