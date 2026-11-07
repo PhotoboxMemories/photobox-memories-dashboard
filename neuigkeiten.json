@@ -1,6 +1,53 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.82": {
+   "date": "2026-11-06",
+   "notes": {
+    "de": [
+     "Der QR-Code funktioniert jetzt immer über das Internet, auch mit mobilen Daten. Gäste müssen nicht mehr im selben WLAN sein.",
+     "Ist bei einem Ereignis „Fotos hochladen“ aus, bekommen Gäste ihr Foto trotzdem per QR-Code. In die Galerie kommt es dann nicht.",
+     "Dauert das Hochladen länger, zeigt das Handy einen Ladebalken mit Prozentanzeige.",
+     "Ohne Internet kannst du an der Fotobox jetzt ein Ereignis anlegen oder auswählen und sofort loslegen. Sobald die Fotobox wieder online ist, erscheint das Ereignis im Dashboard und die Fotos werden hochgeladen.",
+     "Auch ohne Internet kannst du an der Fotobox ein Ereignis anlegen oder auswählen. Im Dashboard erscheint es, sobald die Fotobox wieder online ist, danach werden die Fotos hochgeladen."
+    ],
+    "en": [
+     "The QR code now always works over the internet, even with mobile data. Guests no longer need to be on the same Wi-Fi.",
+     "If “Upload photos” is off for an event, guests still get their photo via QR code. It just doesn’t go into the gallery.",
+     "If uploading takes longer, the phone shows a progress bar with a percentage.",
+     "Without internet you can now create or choose an event at the photo booth and start right away. As soon as the photo booth is online again, the event appears in the dashboard and the photos are uploaded.",
+     "You can now create or choose an event at the photo booth even without internet. It appears in the dashboard as soon as the booth is back online, and then the photos are uploaded."
+    ],
+    "tr": [
+     "QR kod artık her zaman internet üzerinden, mobil veriyle de çalışıyor. Misafirlerin aynı Wi-Fi’de olması gerekmiyor.",
+     "Bir etkinlikte „Fotoğraf yükle“ kapalıysa misafirler fotoğraflarını yine de QR kodla alır. Fotoğraf sadece galeriye girmez.",
+     "Yükleme uzun sürerse telefon yüzdeli bir ilerleme çubuğu gösterir.",
+     "İnternet olmadan da artık fotoğraf kabininde bir etkinlik oluşturabilir veya seçebilir ve hemen başlayabilirsin. Fotoğraf kabini tekrar çevrimiçi olduğunda etkinlik panelde görünür ve fotoğraflar yüklenir.",
+     "Artık internet olmadan da fotoğraf kabininde etkinlik oluşturabilir veya seçebilirsin. Kabin tekrar çevrimiçi olunca panelde görünür, ardından fotoğraflar yüklenir."
+    ],
+    "fr": [
+     "Le QR code fonctionne désormais toujours par Internet, même avec les données mobiles. Les invités n’ont plus besoin d’être sur le même Wi-Fi.",
+     "Si « Envoyer des photos » est désactivé pour un événement, les invités reçoivent quand même leur photo par QR code. Elle ne va simplement pas dans la galerie.",
+     "Si l’envoi prend plus de temps, le téléphone affiche une barre de progression avec pourcentage.",
+     "Sans Internet, tu peux maintenant créer ou choisir un événement sur la photobooth et commencer tout de suite. Dès que la photobooth est de nouveau en ligne, l’événement apparaît dans le tableau de bord et les photos sont envoyées.",
+     "Même sans Internet, tu peux créer ou choisir un événement sur la photobooth. Il apparaît dans le tableau de bord dès que la photobooth est de nouveau en ligne, puis les photos sont envoyées."
+    ],
+    "es": [
+     "El código QR ahora funciona siempre por internet, también con datos móviles. Los invitados ya no tienen que estar en la misma red wifi.",
+     "Si «Subir fotos» está desactivado en un evento, los invitados reciben igualmente su foto por código QR. Solo que no va a la galería.",
+     "Si la subida tarda más, el móvil muestra una barra de progreso con porcentaje.",
+     "Sin internet ahora puedes crear o elegir un evento en el fotomatón y empezar enseguida. En cuanto el fotomatón vuelve a estar en línea, el evento aparece en el panel y las fotos se suben.",
+     "Ahora también puedes crear o elegir un evento en el fotomatón sin internet. Aparece en el panel en cuanto vuelva a estar en línea y después se suben las fotos."
+    ],
+    "it": [
+     "Il codice QR ora funziona sempre via internet, anche con i dati mobili. Gli ospiti non devono più essere sulla stessa rete Wi-Fi.",
+     "Se per un evento „Carica foto“ è disattivato, gli ospiti ricevono comunque la foto tramite codice QR. Solo che non va nella galleria.",
+     "Se il caricamento dura di più, il telefono mostra una barra di avanzamento con percentuale.",
+     "Senza internet ora puoi creare o scegliere un evento sulla fotocabina e iniziare subito. Appena la fotocabina è di nuovo online, l’evento compare nella dashboard e le foto vengono caricate.",
+     "Ora puoi creare o scegliere un evento sulla fotocabina anche senza internet. Compare nella dashboard non appena la fotocabina è di nuovo online, poi le foto vengono caricate."
+    ]
+   }
+  },
   "1.18.81": {
    "date": "2026-11-06",
    "notes": {
