@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Fotogalerie</title>
-<script>window.I18N_V = '20261103-2';</script>
+<script>window.I18N_V = '20261106-1';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache: vom QR-Code der Fotobox (?l=…), sonst die des Handys
 (function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
@@ -84,7 +84,11 @@
   body.solo footer{padding:22px 16px 30px;display:flex;flex-direction:column;align-items:center;gap:8px;color:#8a8a92}
   .spin{width:40px;height:40px;border:4px solid rgba(0,0,0,.1);border-top-color:#F9CB38;border-radius:50%;animation:sp 1s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}} @keyframes shim{to{background-position:-300% 0}} @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}}
-  @media(prefers-reduced-motion:reduce){.polaroid,.ph,.spin{animation:none}}
+  .upbar{width:min(260px,100%);display:flex;flex-direction:column;gap:6px}
+  .upbar .tr{height:12px;border-radius:99px;background:rgba(0,0,0,.1);overflow:hidden}
+  .upbar .tr i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#F9CB38,#f5a623);transition:width .4s ease}
+  .upbar .pc{font:600 14px Fredoka,system-ui,sans-serif;color:#1D1D1B;font-variant-numeric:tabular-nums}
+  @media(prefers-reduced-motion:reduce){.polaroid,.ph,.spin{animation:none}.upbar .tr i{transition:none}}
   /* Foto-Shop unter dem Einzelfoto (Druck über Printful/Gelato, Bezahlung über Stripe) */
   .shop{margin:30px 0 6px;padding:20px 14px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:18px}
   .shop h2{margin:0;font:600 22px Fredoka,system-ui,sans-serif;text-align:center;outline:none}
@@ -693,34 +697,76 @@
       if (vid) { el.preload = 'metadata'; el.muted = true; el.onloadedmetadata = () => done(true); } else el.onload = () => done(true);
       el.onerror = () => done(false); setTimeout(() => done(false), 20000); el.src = t;
     });
-    let blob = null; const getBlob = async src => blob || (blob = await fetch(src).then(r => { if (!r.ok) throw 0; return r.blob(); }));
+    // Datei mit Fortschritt laden (Betreiber 06.11.2026: „wenn Hochladen länger dauert, soll so ein Balken kommen mit Download“)
+    // Zeitgrenze: 20 s bis zur Antwort, danach je 15 s ohne neue Daten (schlechter Empfang, Wechsel WLAN → mobile Daten) – dann neuer Versuch
+    const fetchPct = async (src, onPct) => {
+      const ac = new AbortController(); let stall = setTimeout(() => ac.abort(), 20000);
+      const alive = () => { clearTimeout(stall); stall = setTimeout(() => ac.abort(), 15000); };
+      try {
+        const r = await fetch(src, { signal: ac.signal }); if (!r.ok) throw 0;
+        const len = +r.headers.get('content-length') || 0;
+        if (!r.body?.getReader || !len) { alive(); const b = await r.blob(); onPct(100); return b; }
+        const rd = r.body.getReader(), parts = []; let got = 0;
+        for (;;) { alive(); const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; onPct(Math.min(99, got / len * 100)); }
+        onPct(100); return new Blob(parts, { type: r.headers.get('content-type') || type });
+      } finally { clearTimeout(stall); }
+    };
+    let blob = null; const getBlob = async (src, onPct = () => {}) => blob || (blob = await fetchPct(src, onPct));
     const fileName = () => [String(brand?.name || '').replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, ''), what].filter(Boolean).join('-') + '.' + ext;
     const canShare = f => { try { return !!(navigator.canShare && navigator.canShare({ files: [f] })); } catch { return false; } };
     const show = src => {
       const shareOk = canShare(new File([new Blob([''], { type })], fileName(), { type }));
       $('#title').textContent = vid ? 'Dein Video ist da!' : 'Dein Foto ist da!'; $('#sub').textContent = 'Speichern, teilen, Erinnerung behalten.';
-      $('#main').innerHTML = `${orderNote()}<div class="polaroid">${vid ? `<video src="${esc(src)}" controls autoplay loop playsinline muted></video>` : `<img src="${esc(src)}" alt="Dein Foto">`}
+      $('#main').innerHTML = `${orderNote()}<div class="polaroid">${vid ? `<video src="${esc(src)}" controls autoplay loop playsinline muted></video>` : `<img src="${esc(blob ? URL.createObjectURL(blob) : src)}" alt="Dein Foto">`}
           <div class="cap">${capHtml()}</div></div>
         <div class="acts"><button class="btn" id="oneDl">${I('download')} ${vid ? 'Video speichern' : 'Foto speichern'}</button>${shareOk ? `<button class="btn ghost" id="oneSh">${I('share')} Teilen</button>` : ''}</div>
         ${vid ? '' : `<button class="btn ghost sgo" id="oneShop" type="button" hidden>${I('gift')} <span></span></button>`}
         <p class="tip">${vid ? 'Tipp: Nach dem Speichern findest du das Video in deinen Downloads bzw. in der Fotos-App.' : 'Tipp: Auf dem iPhone das Foto gedrückt halten → „Zu Fotos hinzufügen“.'}</p>
         <p class="keep">${vid ? '<span>Dein Video bleibt 1 Jahr online und wird danach automatisch gelöscht.</span> <span>Speichere es dir am besten gleich.</span>'
           : '<span>Dein Foto bleibt 1 Jahr online und wird danach automatisch gelöscht.</span> <span>Speichere es dir am besten gleich.</span>'}</p>`;
-      $('#oneDl').onclick = async () => { const b = $('#oneDl'); b.disabled = true;
-        try { save(await getBlob(src), fileName()); } catch { window.open(src, '_blank'); }
-        b.disabled = false; };
+      $('#oneDl').onclick = async () => { const b = $('#oneDl'), html = b.innerHTML; b.disabled = true;
+        const pct = n => { if (!blob) b.innerHTML = `${I('download')} <span>Wird geladen …</span> <span translate="no">${Math.round(n)} %</span>`; };
+        try { save(await getBlob(src, pct), fileName()); } catch { window.open(src, '_blank'); }
+        b.innerHTML = html; b.disabled = false; };
       if (shareOk) $('#oneSh').onclick = async () => {
         try { const f = new File([await getBlob(src)], fileName(), { type }); await navigator.share({ files: [f], ...(brand?.name ? { title: brand.name } : {}) }); }
         catch (e) { if (e?.name !== 'AbortError') window.open(src, '_blank'); }
       };
       if (!vid) showShop(src);
     };
+    // Balken: Solange die Fotobox noch hochlädt, läuft er langsam bis höchstens 70 % (geschätzt, nie voll); sobald das Foto da ist,
+    // zeigt er das echte Herunterladen aufs Handy bis 100 %. Ein Video lädt erst beim Speichern (Prozent im Knopf).
+    const t0 = Date.now(); let barMax = 0, downing = false;
+    const bar = (pct, down) => {
+      const f = $('#upBar i'), p = $('#upPct'), l = $('#upLbl'); if (!f) return;
+      barMax = Math.max(barMax, pct); f.style.width = barMax.toFixed(1) + '%'; p.textContent = Math.round(barMax) + ' %';
+      const k = down ? (vid ? 'Dein Video wird geladen …' : 'Dein Foto wird geladen …') : 'Wird hochgeladen …';
+      if (l.dataset.k !== k) { l.dataset.k = k; l.textContent = k; }
+    };
+    const guess = () => { if (!downing) bar(70 * (1 - Math.exp(-(Date.now() - t0) / 25000)), false); };
+    const waitBox = n => {
+      if (!$('#upBar')) $('#main').innerHTML = `<div class="polaroid"><div class="ph"><b>${vid ? 'Dein Video ist gleich da …' : 'Dein Foto ist gleich da …'}</b>
+        <div class="upbar" id="upBar" role="progressbar" aria-label="Fortschritt"><span id="upLbl"></span><div class="tr"><i></i></div><span class="pc" id="upPct" translate="no">0 %</span></div>
+        <small id="upTxt"></small></div><div class="cap">${capHtml()}</div></div>`;
+      const k = n < 60 ? 'Es wird gerade von der Fotobox hochgeladen. Die Seite zeigt es von selbst an.'
+        : 'Das dauert gerade etwas länger. Die Seite schaut weiter nach – du kannst diesen Link auch später noch einmal öffnen.';
+      const tx = $('#upTxt'); if (tx.dataset.k !== k) { tx.dataset.k = k; tx.textContent = k; }
+    };
+    // Foto: gleich mit Fortschritt laden (zugleich die Prüfung, ob es schon oben ist); geht das nicht (z. B. Zugriffsregeln), wie bisher über ein Bild
+    const probe = async base => {
+      if (vid) return ready(base);
+      const t = base + '?t=' + Date.now();
+      const from = barMax;
+      try { blob = await fetchPct(t, x => { downing = true; bar(from + (100 - from) * x / 100, true); }); return t; }
+      catch (e) { blob = null; downing = false; return e === 0 ? null : ready(base); }
+    };
+    let tick = 0;
     const wait = async n => {
-      const src = await ready() || (alt ? await ready(alt) : null); if (src) return show(src); // sonst die Notfall-Kopie
-      $('#main').innerHTML = `<div class="polaroid"><div class="ph"><div class="spin"></div><b>${vid ? 'Dein Video ist gleich da …' : 'Dein Foto ist gleich da …'}</b><small>${n < 60
-        ? 'Es wird gerade von der Fotobox hochgeladen. Die Seite zeigt es von selbst an.'
-        : 'Das dauert gerade etwas länger. Die Seite schaut weiter nach – du kannst diesen Link auch später noch einmal öffnen.'}</small></div>
-        <div class="cap">${capHtml()}</div></div>`;
+      waitBox(n); clearInterval(tick); tick = setInterval(guess, 500); guess();
+      const src = await probe(u) || (alt ? await probe(alt) : null); // sonst die Notfall-Kopie
+      clearInterval(tick);
+      if (src) { bar(100, true); return setTimeout(() => show(src), 250); }
+      tick = setInterval(guess, 500);
       setTimeout(() => wait(n + 1), n < 60 ? 3000 : 15000);
     };
     wait(0);
