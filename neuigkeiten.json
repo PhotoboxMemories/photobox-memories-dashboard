@@ -1,6 +1,29 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.92": {
+   "date": "2026-11-08",
+   "notes": {
+    "de": [
+     "Hintergrund entfernen testen: jetzt auch mit einem eigenen Foto vom PC."
+    ],
+    "en": [
+     "Background removal test: now also with your own photo from the PC."
+    ],
+    "tr": [
+     "Arka plan kaldırma testi: artık bilgisayardaki kendi fotoğrafınla da."
+    ],
+    "fr": [
+     "Test de suppression de l’arrière-plan : désormais aussi avec votre propre photo du PC."
+    ],
+    "es": [
+     "Prueba de eliminar fondo: ahora también con una foto propia del PC."
+    ],
+    "it": [
+     "Prova di rimozione sfondo: ora anche con una tua foto dal PC."
+    ]
+   }
+  },
   "1.18.91": {
    "date": "2026-11-08",
    "notes": {
