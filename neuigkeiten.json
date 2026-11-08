@@ -1,6 +1,41 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.90": {
+   "date": "2026-11-08",
+   "notes": {
+    "de": [
+     "KI-Auswahl: Vorschaubilder wieder in voller Größe.",
+     "Ereignisse lassen sich an der Fotobox jetzt auch wechseln, wenn die Anmeldung abgelaufen ist.",
+     "Die Ereignis-Liste ist nach Datum sortiert: das neueste oben, Ereignisse ohne Datum unten."
+    ],
+    "en": [
+     "AI selection: preview images back to full size.",
+     "Events can now be switched at the photo booth even when the login has expired.",
+     "The event list is sorted by date: newest at the top, events without a date at the bottom."
+    ],
+    "tr": [
+     "AI seçimi: önizleme resimleri yeniden tam boyutta.",
+     "Etkinlikler artık oturum süresi dolmuş olsa bile fotoğraf kabininde değiştirilebilir.",
+     "Etkinlik listesi tarihe göre sıralı: en yeni üstte, tarihsiz etkinlikler altta."
+    ],
+    "fr": [
+     "Sélection IA : aperçus de nouveau en taille normale.",
+     "Les événements peuvent désormais être changés au photobooth même si la connexion a expiré.",
+     "La liste des événements est triée par date : le plus récent en haut, ceux sans date en bas."
+    ],
+    "es": [
+     "Selección de IA: vistas previas de nuevo a tamaño completo.",
+     "Ahora los eventos se pueden cambiar en el fotomatón aunque la sesión haya caducado.",
+     "La lista de eventos está ordenada por fecha: el más reciente arriba, los eventos sin fecha abajo."
+    ],
+    "it": [
+     "Scelta IA: anteprime di nuovo a grandezza piena.",
+     "Ora gli eventi si possono cambiare al photobooth anche se l’accesso è scaduto.",
+     "L’elenco degli eventi è ordinato per data: il più recente in alto, quelli senza data in fondo."
+    ]
+   }
+  },
   "1.18.88": {
    "date": "2026-11-08",
    "notes": {
