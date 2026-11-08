@@ -1,6 +1,41 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.86": {
+   "date": "2026-11-08",
+   "notes": {
+    "de": [
+     "QR-Code: Funktioniert jetzt auch, wenn das Foto schon fertig hochgeladen ist, bevor der Gast auf „QR-Code“ tippt.",
+     "Alle Auswahl-Bildschirme für Gäste schließen nach 30 Sekunden ohne Bedienung.",
+     "KI-Auswahl: etwas kleinere Vorschaubilder, die Themen stehen direkt im Bild."
+    ],
+    "en": [
+     "QR code: now also works when the photo has already finished uploading before the guest taps “QR code”.",
+     "All selection screens for guests close after 30 seconds without input.",
+     "AI selection: slightly smaller preview images, themes are shown directly in the picture."
+    ],
+    "tr": [
+     "QR kod: Misafir “QR kod”a dokunmadan önce fotoğraf yüklenmiş olsa bile artık çalışıyor.",
+     "Misafirler için tüm seçim ekranları 30 saniye işlem yapılmazsa kapanır.",
+     "AI seçimi: biraz daha küçük önizleme resimleri, temalar doğrudan resmin üzerinde."
+    ],
+    "fr": [
+     "QR code : fonctionne désormais aussi lorsque la photo est déjà entièrement envoyée avant que l’invité touche « QR code ».",
+     "Tous les écrans de sélection pour les invités se ferment après 30 secondes sans action.",
+     "Sélection IA : aperçus un peu plus petits, les thèmes figurent directement sur l’image."
+    ],
+    "es": [
+     "Código QR: ahora también funciona si la foto ya terminó de subirse antes de que el invitado toque «Código QR».",
+     "Todas las pantallas de selección para invitados se cierran tras 30 segundos sin uso.",
+     "Selección de IA: vistas previas algo más pequeñas, los temas aparecen directamente en la imagen."
+    ],
+    "it": [
+     "Codice QR: ora funziona anche se la foto è già stata caricata prima che l’ospite tocchi «Codice QR».",
+     "Tutte le schermate di scelta per gli ospiti si chiudono dopo 30 secondi senza uso.",
+     "Scelta IA: anteprime un po’ più piccole, i temi sono scritti direttamente nell’immagine."
+    ]
+   }
+  },
   "1.18.85": {
    "date": "2026-11-08",
    "notes": {
