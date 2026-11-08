@@ -1,6 +1,29 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.85": {
+   "date": "2026-11-08",
+   "notes": {
+    "de": [
+     "Foto-Aufgaben jetzt freiwillig: Auf dem Startbildschirm steht unter der Galerie der Knopf „Foto-Aufgabe“. Nur wer ihn antippt, bekommt eine Aufgabe – ein normaler Tipp macht ein Foto wie bisher."
+    ],
+    "en": [
+     "Photo challenges are now optional: the start screen shows a “Photo challenge” button below the gallery. Only guests who tap it get a challenge – a normal tap takes a photo as before."
+    ],
+    "tr": [
+     "Fotoğraf görevleri artık isteğe bağlı: Başlangıç ekranında galerinin altında “Fotoğraf görevi” düğmesi var. Yalnızca ona dokunan görev alır – normal dokunuş eskisi gibi fotoğraf çeker."
+    ],
+    "fr": [
+     "Les défis photo sont désormais facultatifs : sous la galerie, l’écran d’accueil affiche le bouton « Défi photo ». Seuls ceux qui le touchent reçoivent un défi – une touche normale prend une photo comme avant."
+    ],
+    "es": [
+     "Los retos fotográficos ahora son opcionales: en la pantalla de inicio, debajo de la galería, está el botón «Reto fotográfico». Solo quien lo toca recibe un reto; un toque normal hace una foto como siempre."
+    ],
+    "it": [
+     "Le sfide fotografiche ora sono facoltative: nella schermata iniziale, sotto la galleria, c’è il pulsante «Sfida fotografica». Solo chi lo tocca riceve una sfida – un tocco normale scatta una foto come prima."
+    ]
+   }
+  },
   "1.18.84": {
    "date": "2026-11-08",
    "notes": {
