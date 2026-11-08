@@ -1,6 +1,35 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.88": {
+   "date": "2026-11-08",
+   "notes": {
+    "de": [
+     "KI-Auswahl: Vorschaubilder wieder etwas größer.",
+     "„Ohne KI weiter“ steht in der KI-Auswahl jetzt an erster Stelle."
+    ],
+    "en": [
+     "AI selection: preview images slightly larger again.",
+     "“Continue without AI” is now the first tile in the AI selection."
+    ],
+    "tr": [
+     "AI seçimi: önizleme resimleri yeniden biraz daha büyük.",
+     "“AI olmadan devam” artık AI seçiminde ilk sırada."
+    ],
+    "fr": [
+     "Sélection IA : aperçus de nouveau un peu plus grands.",
+     "« Continuer sans IA » est désormais en première position dans la sélection IA."
+    ],
+    "es": [
+     "Selección de IA: vistas previas de nuevo algo más grandes.",
+     "«Continuar sin IA» aparece ahora en primer lugar en la selección de IA."
+    ],
+    "it": [
+     "Scelta IA: anteprime di nuovo un po’ più grandi.",
+     "«Continua senza IA» è ora al primo posto nella scelta IA."
+    ]
+   }
+  },
   "1.18.86": {
    "date": "2026-11-08",
    "notes": {
