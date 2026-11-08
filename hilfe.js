@@ -6,6 +6,12 @@
 //   d = Ziel im Dashboard: 'seite[#einstellung]' im Ereignis oder 'tab:reiter' (Hauptseite), '' = nur an der Fotobox
 (function (G) {
   const TOPICS = [
+    { t: 'Foto-Aufgaben für Gäste', k: 'foto_aufgaben_aufgabe_fotospiele_fotospiel_spiel_spiele_challenge_hochzeitsspiel_hochzeit_gaeste_aufgabenliste_posen',
+      x: 'Vor dem Foto zeigt die Fotobox eine zufällige Aufgabe, zum Beispiel „Mache ein Foto mit der Braut.“. Im Dashboard schaltest du sie unter Gäste → Foto-Aufgaben ein, wählst fertige Gruppen (Hochzeit, Geburtstag, Firmenfeier, Party) oder schreibst eigene Aufgaben.',
+      a: '', d: 'tasks#x.tasks.on' },
+    { t: 'Viele KI-Stile auf einmal', k: 'ki_stile_alle_uebernehmen_viele_thema_themen_sortiert_kategorie_kategorien_auswahl_ki_fotos',
+      x: 'Im Dashboard unter KI-Fotos übernimmst du mit „Alle übernehmen“ ein ganzes Thema oder alle Stile auf einmal in das Ereignis. Bei mehr als 12 Stilen wählen die Gäste an der Fotobox zuerst ein Thema und dann den Stil.',
+      a: '', d: 'ai' },
     { t: 'Logo in der Startanimation', k: 'logo_scheibe_mitte_standard_standardanimation_animation_startanimation_standardvideo_startvideo_firmenlogo_eigenes_kamerasymbol',
       x: 'Ohne eigenes Startvideo zeigt die Fotobox die Standard-Animation mit einer weißen Scheibe in der Mitte. Dort wählst du dein Firmenlogo, das Logo des Ereignisses, ein eigenes Bild oder nichts – dazu Größe und Darstellung.',
       a: 'design:start:set#slHead', d: 'start#x.startLogo.src' },

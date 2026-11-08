@@ -467,7 +467,8 @@
       originals: true, deleteBtn: true, deleteText: 'Wiederholen', cloud: true, uploadOriginals: true, origUp: false },
     print: { btnText: 'Drucken', printingText: 'Drucken...', copiesText: 'Wie viele Kopien?', buyMore: false },
     gallery: { link: false, guests: false, downloadAll: false, password: '' },
-    lang: { guest: '', pick: false, list: [] }, // Gästesprache: '' = wie das Menü der Fotobox
+    lang: { guest: '', pick: false, list: [] },
+    tasks: { on: false, cats: ['hochzeit'], off: [], own: '', every: 'shot', read: 4, reroll: true, title: 'Eure Aufgabe' }, // Foto-Aufgaben vor dem Foto (foto-aufgaben.js, Betreiber 08.11.2026) // Gästesprache: '' = wie das Menü der Fotobox
     startLogo: { src: 'own', url: '', size: 72, fit: 'contain' }, // Logo in der weißen Scheibe der Standard-Startanimation
     videomsg: { on: false, title: 'Videonachricht hinterlassen', sub: 'Scanne den Code mit deinem Handy', pos: 'tl', size: 'm', welcome: '', welcomeText: '' }, // Zusatzfunktion: Videonachricht per QR-Code (welcome = Begrüßungsvideo)
     mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false, preview: true, source: 'original' },
@@ -481,7 +482,7 @@
     ['dash', 'dashboard', 'Übersicht'],
     ['h', 'Aussehen'], ['start', 'monitor', 'Startbildschirm'], ['layout', 'aperture', 'Fotolayout & Countdown'], ['fx', 'sparkles', 'Filter & Effekte'], ['bg', 'wand', 'Hintergrund entfernen'],
     ['h', 'Aufnahme'], ['capture', 'sliders', 'Aufnahme-Arten'], ['voice', 'mic', 'Virtueller Berater'], ['ai', 'user', 'KI-Fotos'],
-    ['h', 'Gäste'], ['survey', 'clipboard', 'Umfrage & Haftungsausschluss'], ['lang', 'globe', 'Sprache'],
+    ['h', 'Gäste'], ['survey', 'clipboard', 'Umfrage & Haftungsausschluss'], ['tasks', 'star', 'Foto-Aufgaben'], ['lang', 'globe', 'Sprache'],
     ['h', 'Teilen & Drucken'], ['share', 'share', 'Teilen'], ['print', 'printer', 'Drucken'],
     ['h', 'Extras'], ['mosaic', 'mosaic', 'Fotomosaik', 1], ['cari', 'smile', 'Live-Karikatur', 1], ['videomsg', 'video', 'Videonachricht', 1]
   ];
@@ -651,17 +652,36 @@
         : aiCompose(aiFind(AI_MOTIFS, ai.p), aiFind(AI_ARTS, ai.a));
     };
     // Stil anlegen oder ersetzen; mit resultImage wird dieses Bild verkleinert als Vorschaubild hochgeladen.
+    const AI_MAX = 500; // Stile je Ereignis (ai-event.js schneidet bei 500 ab)
+    // Stile nach Themen sortiert halten (Reihenfolge wie AI_CATS, eigene Stile ohne Thema zuerst) – so sehen Gäste sie an der Fotobox
+    const aiCatRank = k => k ? (AI_CATS.indexOf(k) + 1 || AI_CATS.length) : 0;
+    const aiSortPrompts = () => { S.ai.prompts = S.ai.prompts.map((p, i) => [p, i]).sort((x, y) => aiCatRank(x[0].cat) - aiCatRank(y[0].cat) || x[1] - y[1]).map(x => x[0]); };
+    // Stile aus „Meine KI-Stile“ bzw. „Stile von Photobox Memories“ übernehmen – einzeln, ein ganzes Thema oder alle (ohne Credits)
+    function aiAddStyles(list) {
+      const have = new Set(S.ai.prompts.map(p => p.prompt)); let n = 0, full = false;
+      for (const x of list) {
+        if (!x?.prompt || have.has(x.prompt)) continue;
+        if (S.ai.prompts.length >= AI_MAX) { full = true; break; }
+        S.ai.prompts.push({ id: crypto.randomUUID(), name: x.name, prompt: x.prompt, ...(x.thumb ? { thumb: x.thumb } : {}), cat: x.category || 'Sonstiges' });
+        have.add(x.prompt); n++;
+      }
+      if (n) { const open = S.ai.prompts[ai.edit]?.id; aiSortPrompts(); if (open) ai.edit = S.ai.prompts.findIndex(p => p.id === open); S.ai = AIEvent.normalize(S.ai); save(); render(); }
+      ctx.toast(full ? `Höchstens ${AI_MAX} Stile pro Event – ${n} übernommen.` : !n ? (list.length === 1 ? 'Dieser Stil ist schon in diesem Event.' : 'Diese Stile sind schon alle in diesem Event.') : n === 1 ? 'Stil übernommen – ohne Credits' : `${n} Stile übernommen – ohne Credits`);
+      return n;
+    }
     // Gibt die Position des Stils zurück oder -1, wenn nicht gespeichert wurde.
     async function aiCommit(item, resultImage) {
       let at = ai.edit >= 0 ? ai.edit : S.ai.prompts.findIndex(x => x.id === item.id);
       const prev = at >= 0 ? S.ai.prompts[at] : null;
-      if (!prev && S.ai.prompts.length >= 15) { ctx.toast('Maximal 15 Stile pro Event.'); return -1; }
+      if (!prev && S.ai.prompts.length >= AI_MAX) { ctx.toast(`Höchstens ${AI_MAX} Stile pro Event.`); return -1; }
       if (resultImage) {
         status('Lädt Vorschaubild hoch …');
         try { item.thumb = await ctx.uploadFile(await aiThumbFile(resultImage)); }
         catch (error) { ctx.toast('Vorschaubild konnte nicht hochgeladen werden: ' + error.message, 5000); }
       }
+      if (prev) { at = S.ai.prompts.indexOf(prev); if (at < 0) { at = S.ai.prompts.length; S.ai.prompts.push(prev); } } // Liste kann sich beim Hochladen geändert haben (Sortieren)
       if (!item.thumb && prev?.thumb && prev.prompt === item.prompt) item.thumb = prev.thumb;
+      if (prev?.cat && !item.cat) item.cat = prev.cat; // Thema bleibt beim Bearbeiten
       if (prev) { if (S.ai.selectedId === prev.id) S.ai.selectedId = item.id; S.ai.prompts[at] = item; } else { S.ai.prompts.push(item); at = S.ai.prompts.length - 1; }
       S.ai = AIEvent.normalize(S.ai); save();
       return at;
@@ -718,7 +738,7 @@
     });
     $(root, '.navshade').addEventListener('click', () => root.classList.remove('navopen'));
     // Hilfe-Suche (hilfe.js, dieselbe wie in der Fotobox): Stichwort eintippen → wie man es einstellt, „Hingehen“ öffnet die Seite
-    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261025-2'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261108-1'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     const closeEditor = () => close(); // Editor schließen (für Themen auf den Hauptseiten, z. B. „Meine Lizenzen“)
     async function openHelp() {
       try { await helpLib(); } catch { return ctx.toast('Die Hilfe konnte nicht geladen werden.'); }
@@ -789,6 +809,12 @@
         if (g && !list.includes(g)) list.unshift(g);
         S.x.lang.list = list.length === I18N.CODES.length ? [] : list; save(); return;
       }
+      if (t.dataset.taskcat) { S.x.tasks.cats = $$(main, '[data-taskcat]').filter(x => x.checked).map(x => x.dataset.taskcat); save(); render(); return; } // Foto-Aufgaben: Gruppen
+      if (t.dataset.taskoff) { // einzelne fertige Aufgabe ab- oder wieder anwählen (gespeichert wird der deutsche Text der abgewählten)
+        const [cid, i] = t.dataset.taskoff.split(':'), txt = G.FOTO_AUFGABEN?.CATS.find(c => c.id === cid)?.list[+i]; if (!txt) return;
+        const off = new Set(S.x.tasks.off || []); if (t.checked) off.delete(txt); else off.add(txt);
+        S.x.tasks.off = [...off]; save(); taskInfo(); return;
+      }
       if (t.dataset.ailay) { S.x.ai.layouts = $$(main, '[data-ailay]').filter(x => x.checked).map(x => x.dataset.ailay); save(); render(); return; } // KI nur bei diesen Layouts
       if (t.dataset.varnd) { S.x.voice = S.x.voice || {}; S.x.voice.rnd = { ...(S.x.voice.rnd || {}), [t.dataset.varnd]: t.checked }; save(); return; }
       if (t.dataset.livetpl !== undefined) { S.liveView = t.checked ? 'template' : 'plain'; const l = t.closest('.row')?.querySelector('.swl'); if (l) l.textContent = t.checked ? 'Ein' : 'Aus'; save(); return; }
@@ -811,7 +837,8 @@
       const swBtn = { printButton: 'bPrint', share: 'bQR', stickers: 'bDeco', 'x.share.deleteBtn': 'bRetake' }[p];
       if (swBtn && v) for (const L of [S.shareScreen, S.shareScreen2]) L?.elements?.forEach(e => { if (e.type === 'sbtn' && e.key === swBtn) e.hidden = false; });
       save(); drawPreview();
-      if (t.type === 'radio' || p === 'startDisplay' || p === 'askCopies' || p === 'x.caricature.on' || p === 'x.ai.only' || t.dataset.rerender || (p.startsWith('x.videomsg.') && t.tagName === 'SELECT')) render();
+      if (p === 'x.tasks.own') taskInfo();
+      if (t.type === 'radio' || p === 'startDisplay' || p === 'askCopies' || p === 'x.caricature.on' || p === 'x.ai.only' || p === 'x.tasks.on' || t.dataset.rerender || (p.startsWith('x.videomsg.') && t.tagName === 'SELECT')) render();
     });
     main.addEventListener('change', e => {
       const t = e.target;
@@ -1022,10 +1049,18 @@
       }
       if (a === 'ai-lib-use') {
         const x = (t.dataset.common ? ai.common : Array.isArray(ai.lib) ? ai.lib : [])[+t.dataset.i]; if (!x) return;
-        if (S.ai.prompts.some(p => p.prompt === x.prompt)) return ctx.toast('Dieser Stil ist schon in diesem Event.');
-        if (S.ai.prompts.length >= 15) return ctx.toast('Maximal 15 Stile pro Event.');
-        S.ai.prompts.push({ id: crypto.randomUUID(), name: x.name, prompt: x.prompt, ...(x.thumb ? { thumb: x.thumb } : {}) });
-        S.ai = AIEvent.normalize(S.ai); save(); render(); ctx.toast('Stil übernommen – ohne Credits'); return;
+        aiAddStyles([x]); return;
+      }
+      if (a === 'ai-cat-all') { // ein ganzes Thema (data-cat) oder alle Stile (leer) übernehmen
+        const src = t.dataset.common ? ai.common || [] : Array.isArray(ai.lib) ? ai.lib : [], k = t.dataset.cat || '';
+        aiAddStyles(src.filter(x => !k || (x.category || 'Sonstiges') === k)); return;
+      }
+      if (a === 'ai-cat-del') { // Stile dieses Ereignisses entfernen: ein Thema (data-cat, '' = eigene Stile) oder alle ('*')
+        const k = t.dataset.cat ?? '*', drop = S.ai.prompts.filter(p => k === '*' || (p.cat || '') === k); if (!drop.length) return;
+        if (!await (G.pmConfirm || (async text => confirm(text)))(k === '*' ? `Alle ${drop.length} Stile aus diesem Event entfernen? „Meine KI-Stile“ und die Stile von Photobox Memories bleiben erhalten.` : `${drop.length} Stile aus dem Thema „${k || 'Eigene Stile'}“ aus diesem Event entfernen?`, 'Entfernen')) return;
+        const gone = new Set(drop.map(p => p.id)); S.ai.prompts = S.ai.prompts.filter(p => !gone.has(p.id));
+        if (gone.has(S.ai.selectedId)) S.ai.selectedId = '';
+        ai.edit = -1; S.ai = AIEvent.normalize(S.ai); save(); render(); ctx.toast(`${drop.length} Stile entfernt`); return;
       }
       if (a === 'ai-lib-del') {
         const x = Array.isArray(ai.lib) && ai.lib[+t.dataset.i]; if (!x) return;
@@ -1174,7 +1209,7 @@
     // ---------- Seiten ----------
     const addLayout = L => { S.layouts.push(L); sub.laySel = L.id; save(); render(); if (pro()) editLayout(L.id); }; // Vorlage wählen geht in jedem Tarif, Bearbeiten ab Pro
     const layoutThumb = (L, px = 300) => thumbOf(L, px, vals());
-    const vals = () => ({ titel: S.title || E.name, untertitel: S.subtitle || (E.event_date ? new Date(E.event_date).toLocaleDateString('de-DE') : ''), datum: new Date().toLocaleDateString('de-DE'), uhrzeit: '20:15', event: E.name, name: 'Lisa' });
+    const vals = () => ({ titel: S.title || E.name, untertitel: S.subtitle || (E.event_date ? new Date(E.event_date).toLocaleDateString('de-DE') : ''), datum: new Date().toLocaleDateString('de-DE'), uhrzeit: '20:15', event: E.name, name: 'Lisa', aufgabe: 'Zeigt euren besten Tanzschritt' });
     // Hoch- und Querformat: Die Fotobox erkennt ihren Bildschirm selbst und nimmt das erste passende Layout (quadratische passen immer).
     // Zugewiesene Fotoboxen melden ihre Ausrichtung im Gerätestatus (status.display.orient) – danach richten sich Vorschau und Warnungen.
     const ORI_NAME = { portrait: 'Hochformat', landscape: 'Querformat', '': 'Hoch + Quer' };
@@ -1428,6 +1463,9 @@
       const rows = (gal.list || []).map(x => [new Date(x.created_at).toLocaleString('de-DE'), kindName(x), x.name || '', Math.round((x.bytes || 0) / 1024) + ' KB', galUrl(x.path)].map(q).join(';'));
       saveBlob(new Blob(['\ufeff' + ['Datum;Art;Datei;Größe;Adresse', ...rows].join('\r\n')], { type: 'text/csv;charset=utf-8' }), (E.name || 'Ereignis').replace(/[^\w\-äöüÄÖÜß ]/g, '_') + '-Shares.csv');
     }
+    const taskTotal = () => G.FOTO_AUFGABEN ? G.FOTO_AUFGABEN.pool(S.x.tasks).length : 0;
+    const taskCountText = () => { const n = taskTotal(); return n === 1 ? 'Die Fotobox zieht aus 1 Aufgabe.' : `Die Fotobox zieht aus ${n} Aufgaben.`; };
+    const taskInfo = () => { const n = $(main, '#taskCount'), w = $(main, '#taskWarn'); if (n) n.textContent = taskCountText(); if (w) w.style.display = S.x.tasks.on && !taskTotal() ? '' : 'none'; };
     const PAGES = {
       // Analysen: Auswertung der Aufnahmen dieses Ereignisses
       analytics() {
@@ -1677,20 +1715,24 @@
         const lib = ai.lib;
         // Stile nach Inhalt gruppiert (Spalte category, SQL 202610300001): Berufe zu Berufe, Urlaub zu Urlaub … – data-i bleibt der Platz in der Liste
         const CAT_ORDER = AI_CATS;
-        const grouped = (list, tile) => {
+        // key: Thema eines Eintrags (Sammlung: category, Event: cat – '' = eigene Stile), act(k): Knopf neben der Überschrift (alle übernehmen / entfernen)
+        const grouped = (list, tile, act, key = x => x.category || 'Sonstiges') => {
           const groups = new Map();
-          list.forEach((x, n) => { const k = x.category || 'Sonstiges'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(tile(x, n)); });
-          const keys = [...groups.keys()].sort((a, b) => (CAT_ORDER.indexOf(a) + 1 || 99) - (CAT_ORDER.indexOf(b) + 1 || 99) || a.localeCompare(b));
-          if (keys.length === 1) return `<div class="aitiles">${groups.get(keys[0]).join('')}</div>`;
-          return keys.map(k => `<div class="aicat"><b style="display:block;margin:12px 0 6px;color:#6b6b78;font-size:12px;letter-spacing:.04em;text-transform:uppercase">${esc(k)} <span style="color:#a0a0ab">(${groups.get(k).length})</span></b><div class="aitiles">${groups.get(k).join('')}</div></div>`).join('');
+          list.forEach((x, n) => { const k = key(x); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(tile(x, n)); });
+          const keys = [...groups.keys()].sort((a, b) => (a === '' ? -1 : b === '' ? 1 : 0) || (CAT_ORDER.indexOf(a) + 1 || 99) - (CAT_ORDER.indexOf(b) + 1 || 99) || a.localeCompare(b));
+          if (keys.length === 1 && !act) return `<div class="aitiles">${groups.get(keys[0]).join('')}</div>`;
+          return keys.map(k => `<div class="aicat"><div class="row" style="justify-content:space-between;gap:8px;margin:12px 0 6px"><b style="color:#6b6b78;font-size:12px;letter-spacing:.04em;text-transform:uppercase">${esc(k || 'Eigene Stile')} <span style="color:#a0a0ab">(${groups.get(k).length})</span></b>${act ? act(k) : ''}</div><div class="aitiles">${groups.get(k).join('')}</div></div>`).join('');
         };
+        const addAll = common => k => `<button class="ghost" style="padding:4px 10px;font-size:12px" data-a="ai-cat-all" data-cat="${esc(k)}"${common ? ' data-common="1"' : ''}>+ Alle übernehmen</button>`;
+        const allBtn = (list, common) => Array.isArray(list) && list.length > 1 ? `<button class="btn pri" style="padding:6px 12px;font-size:13px" data-a="ai-cat-all" data-cat=""${common ? ' data-common="1"' : ''}>+ Alle ${list.length} übernehmen</button>` : '';
         const libCard = `<div class="card"><div class="between" style="gap:10px;flex-wrap:wrap"><b>Meine KI-Stile${Array.isArray(lib) ? ` (${lib.length})` : ''}</b><span class="row" style="gap:6px;flex-wrap:wrap">${Array.isArray(lib) && lib.length && central ? `<button class="ghost" data-a="ai-lib-pair" ${ai.busy ? 'disabled' : ''} title="Alle Bilder mit unserem Testpaar neu erzeugen (1 Credit je Stil)">🔄 Bilder mit Testpaar erneuern</button>${lib.some(x => !x.thumb) ? `<button class="btn pri" data-a="ai-lib-pair-missing" ${ai.busy ? 'disabled' : ''} title="Nur Stile ohne Bild – mit demselben Grok-Modell wie bei den Gästen (1 Credit je Stil)">🖼 ${lib.filter(x => !x.thumb).length} fehlende Bilder erzeugen</button>` : ''}` : ''}${ctx.admin && Array.isArray(lib) && lib.some(x => !x.shared) ? `<button class="ghost" data-a="ai-lib-share-all" title="Alle Stile in „Meine KI-Stile“ für alle Kunden freigeben">👥 Alle für Kunden freigeben</button>` : ''}</span></div><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Deine gesammelten Stile mit Bild – für jedes Event. Antippen übernimmt den Stil in dieses Event, ohne Credits. ✎ = Text ändern und neu generieren. Die Bilder zeigen immer unser Testpaar.</p>
           ${!lib || lib === 'loading' ? '<p style="color:#6b6b78;font-size:13px">Lädt …</p>' : lib.error ? `<p style="color:#c98a00;font-size:13px">${lib.error === 'setup' ? 'Noch nicht eingerichtet (supabase/migrations/202610170004_ki_stile.sql und 202610300001_ki_stile_kategorien.sql im SQL Editor ausführen).' : esc(lib.error)}</p>`
-            : lib.length ? grouped(lib, (x, n) => `<button data-a="ai-lib-use" data-i="${n}" class="${ai.libEdit === x.id ? 'on' : ''}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}${ctx.admin ? `<span class="fav ${x.shared ? 'on' : ''}" data-a="ai-lib-share" data-i="${n}" title="${x.shared ? 'Für alle Kunden freigegeben – antippen zum Zurücknehmen' : 'Für alle Kunden freigeben'}">👥</span>` : ''}<span class="del" data-a="ai-lib-del" data-i="${n}" title="Aus der Sammlung löschen">🗑</span><span class="edit" data-a="ai-lib-edit" data-i="${n}" title="Text ändern und neu generieren">✎</span><b>${esc(x.name)}</b></button>`)
+            : lib.length ? `<div class="row" style="justify-content:flex-end;margin-top:8px">${allBtn(lib)}</div>` + grouped(lib, (x, n) => `<button data-a="ai-lib-use" data-i="${n}" class="${ai.libEdit === x.id ? 'on' : ''}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}${ctx.admin ? `<span class="fav ${x.shared ? 'on' : ''}" data-a="ai-lib-share" data-i="${n}" title="${x.shared ? 'Für alle Kunden freigegeben – antippen zum Zurücknehmen' : 'Für alle Kunden freigeben'}">👥</span>` : ''}<span class="del" data-a="ai-lib-del" data-i="${n}" title="Aus der Sammlung löschen">🗑</span><span class="edit" data-a="ai-lib-edit" data-i="${n}" title="Text ändern und neu generieren">✎</span><b>${esc(x.name)}</b></button>`, addAll(false))
             : '<p style="color:#6b6b78;font-size:13px">Noch leer. Speichere ein Testbild mit „In Meine KI-Stile speichern“ oder tippe oben bei einem Stil auf ★.</p>'}
           ${ctx.admin && Array.isArray(lib) && lib.length ? '<p style="color:#6b6b78;font-size:13px;margin-top:8px">👥 = für alle Software-Kunden freigegeben (gelb) – antippen zum Zurücknehmen. Neu gespeicherte Stile sind sofort freigegeben. Deine Kunden sehen sie unter „Stile von Photobox Memories“.</p>' : ''}</div>
           ${(ai.common || []).length ? `<div class="card"><b>Stile von Photobox Memories (${ai.common.length})</b><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Fertige Stile mit Beispielbild. Antippen übernimmt den Stil in dieses Event, ohne Credits. ✎ = als Vorlage für einen eigenen Stil nehmen.</p>
-            ${grouped(ai.common, (x, n) => `<button data-a="ai-lib-use" data-common="1" data-i="${n}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}<span class="edit" data-a="ai-common-edit" data-i="${n}" title="Als Vorlage für einen eigenen Stil nehmen">✎</span><b>${esc(x.name)}</b></button>`)}</div>` : ''}`;
+            <div class="row" style="justify-content:flex-end;margin-top:8px">${allBtn(ai.common, true)}</div>
+            ${grouped(ai.common, (x, n) => `<button data-a="ai-lib-use" data-common="1" data-i="${n}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}<span class="edit" data-a="ai-common-edit" data-i="${n}" title="Als Vorlage für einen eigenen Stil nehmen">✎</span><b>${esc(x.name)}</b></button>`, addAll(true))}</div>` : ''}`;
         return `${titleSw('KI-Fotos', 'ai.enabled')}<p class="sub" style="margin:-6px 0 14px;color:#6b6b78">Verwandle deine Gäste mit generativer KI</p><div class="aigrid"><div class="left">
           <div class="card" data-ai-builder>${ai.custom ? '<p style="margin:0 0 6px"><a href="#" data-a="ai-new">← Zurück zu den Vorgaben</a></p>' : ''}<b>${editing ? 'Vorgabe bearbeiten: ' + esc(editing.name) : libEditing ? 'Meinen KI-Stil bearbeiten: ' + esc(libEditing.name) : ai.custom ? 'Benutzerdefinierter Prompt' : 'Vorgabe erstellen'}</b>
           ${editing || libEditing ? '<p class="small" style="margin:6px 0 0;color:#6b6b78">Text ändern, rechts neu generieren und speichern. Der Text bleibt danach offen – so kannst du ihn Schritt für Schritt verbessern.</p>' : ''}
@@ -1705,9 +1747,11 @@
           ${ai.result && !ai.busy && ai.resultId && ai.resultId === curId ? '<p style="margin-top:10px;font-weight:600">' + (editing ? '✓ Bild erstellt. Mit „Änderung speichern“ wird es das Bild auf der Kachel.' : libEditing ? '✓ Bild erstellt. Mit „In Meine KI-Stile speichern“ wird es das neue Bild dieses Stils.' : '✓ Bild erstellt. Mit „Vorgabe speichern“ wird es das Bild auf der Kachel.') + '</p>' : ''}
           <div class="row" style="margin-top:12px">${libEditing ? `<button class="btn pri" style="flex:1" data-a="ai-lib-update" ${ai.busy ? 'disabled' : ''}>In „Meine KI-Stile“ speichern</button><button class="ghost" data-a="ai-new">Fertig</button>`
             : `<button class="btn pri" style="flex:1" data-a="ai-save" ${canSave ? '' : 'disabled'} ${canSave ? '' : 'title="Erst ein Bild generieren, dann speichern"'}>${editing ? 'Änderung speichern' : 'Vorgabe speichern'}</button>${editing ? '<button class="ghost" data-a="ai-new">Fertig</button>' : ''}`}</div></div>
-          <div class="card"><b>Vorgefertigte Stile (${S.ai.prompts.length}/15)</b>
-          <div class="aitiles"><button data-a="ai-new"><span class="pic" style="background:#fafafc;border:2px dashed #cfcfd8;color:#6b6b78">+</span><b>Neue Vorgabe</b></button>
-          ${S.ai.prompts.map((p, i) => `<button data-a="ai-open" data-i="${i}" class="${ai.edit === i ? 'on' : ''}" title="Antippen zum Bearbeiten">${aiPic(p.id, p.thumb)}<span class="num">${i + 1}</span><span class="fav ${aiInLib(p) ? 'on' : ''}" data-a="ai-lib-add" data-i="${i}" title="In „Meine KI-Stile“ speichern">★</span><span class="del" data-a="ai-delete" data-i="${i}" title="Entfernen">🗑</span><span class="edit">✎</span><b>${esc(p.name)}</b></button>`).join('')}</div></div>
+          <div class="card"><div class="between" style="gap:10px;flex-wrap:wrap"><b>Stile in diesem Event (${S.ai.prompts.length})</b>${S.ai.prompts.length > 1 ? '<button class="ghost" style="padding:6px 12px;font-size:13px" data-a="ai-cat-del" data-cat="*">Alle entfernen</button>' : ''}</div>
+          ${S.ai.prompts.length > 12 && new Set(S.ai.prompts.map(p => p.cat || '')).size > 1 ? '<p style="margin:6px 0 0;color:#6b6b78;font-size:13px">Bei mehr als 12 Stilen wählen die Gäste an der Fotobox zuerst ein Thema und dann den Stil.</p>' : ''}
+          <div class="aitiles"><button data-a="ai-new"><span class="pic" style="background:#fafafc;border:2px dashed #cfcfd8;color:#6b6b78">+</span><b>Neue Vorgabe</b></button></div>
+          ${grouped(S.ai.prompts, (p, i) => `<button data-a="ai-open" data-i="${i}" class="${ai.edit === i ? 'on' : ''}" title="Antippen zum Bearbeiten">${aiPic(p.id, p.thumb)}<span class="num">${i + 1}</span><span class="fav ${aiInLib(p) ? 'on' : ''}" data-a="ai-lib-add" data-i="${i}" title="In „Meine KI-Stile“ speichern">★</span><span class="del" data-a="ai-delete" data-i="${i}" title="Entfernen">🗑</span><span class="edit">✎</span><b>${esc(p.name)}</b></button>`,
+            k => `<button class="ghost" style="padding:4px 10px;font-size:12px" data-a="ai-cat-del" data-cat="${esc(k)}">Thema entfernen</button>`, p => p.cat || '')}</div>
           ${libCard}
           <div class="card"><b>An der Fotobox</b>
           ${sw('ai.guestChoice', 'Gäste wählen ihren Stil', 'Aus = alle Fotos bekommen automatisch den Standard-Stil.')}
@@ -1886,6 +1930,25 @@
             <small id="wsMzTileNote" style="display:block;text-align:center;color:#777;margin-bottom:14px"></small>
             <b style="display:block;margin-bottom:8px">Vorschau mit Beispielfotos</b><canvas id="wsMz" width="10" height="10"></canvas>
             <b style="display:block;margin:14px 0 8px">Tafel zum Bekleben</b><div id="wsMzBoard"></div></div></div></div>`;
+      },
+      // Foto-Aufgaben: vor dem Foto zeigt die Fotobox eine zufällige Aufgabe (Fotobox: taskNext/taskShow in index.html)
+      tasks() {
+        const T0 = S.x.tasks, cats = G.FOTO_AUFGABEN?.CATS || [], on = new Set(T0.cats || []), off = new Set(T0.off || []);
+        const secs = [0, 2, 3, 4, 5, 6, 8, 10].map(n => [String(n), n ? n + ' Sekunden' : 'Keine – sofort der Countdown']);
+        const group = c => `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600"><input type="checkbox" data-taskcat="${c.id}" ${on.has(c.id) ? 'checked' : ''}>${esc(c.name)} <small style="color:#777;font-weight:400">${c.list.length} Aufgaben</small></label>
+          ${on.has(c.id) ? `<div style="display:grid;gap:4px;margin:6px 0 12px 26px">${c.list.map((s, i) => `<label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:14px"><input type="checkbox" data-taskoff="${c.id}:${i}" ${off.has(s) ? '' : 'checked'} style="margin-top:3px"><span>${esc(s)}</span></label>`).join('')}</div>` : ''}`;
+        return `<h1>Foto-Aufgaben</h1><p style="margin:-6px 0 14px;color:#6b6b78">Vor dem Foto zeigt die Fotobox den Gästen eine zufällige Aufgabe, zum Beispiel „Zeigt euren besten Tanzschritt“. So entstehen lustige und abwechslungsreiche Fotos.</p>
+          <div class="card">${sw('x.tasks.on', 'Foto-Aufgaben einschalten', 'Gilt für Fotos, Collagen, GIFs und Boomerangs. Bei Videos, 360° und dem Zeichenroboter gibt es keine Aufgabe.')}
+            <p id="taskWarn" style="background:#FFF3C4;color:#8a6400;border-radius:8px;padding:8px 10px;font-size:13px;margin:10px 0 0;${T0.on && !taskTotal() ? '' : 'display:none'}">Es ist noch keine Aufgabe ausgewählt. Haken Sie unten eine Gruppe an oder schreiben Sie eigene Aufgaben.</p>
+            ${sel('x.tasks.every', 'Wie oft kommt eine neue Aufgabe?', [['shot', 'Bei jedem Foto eine neue Aufgabe'], ['session', 'Eine Aufgabe für alle Fotos einer Sitzung']])}
+            ${sel('x.tasks.read', 'Zeit zum Lesen vor dem Countdown', secs)}
+            <div style="margin-top:12px">${sw('x.tasks.reroll', 'Knopf „Andere Aufgabe“', 'Gefällt die Aufgabe nicht, dürfen die Gäste bis zu dreimal eine andere ziehen.')}</div>
+            ${text('x.tasks.title', 'Überschrift über der Aufgabe', 'Eure Aufgabe')}</div>
+          <div class="card"><h2>Fertige Aufgaben</h2><p style="margin:0 0 10px;color:#6b6b78;font-size:14px">Haken Sie die passenden Gruppen an. Einzelne Aufgaben, die nicht passen, können Sie abwählen. Die fertigen Aufgaben erscheinen in der Sprache der Gäste.</p>
+            ${cats.map(group).join('')}<p id="taskCount" style="margin:8px 0 0;color:#555;font-size:14px">${taskCountText()}</p></div>
+          <div class="card"><h2>Eigene Aufgaben</h2><label class="l">Eine Aufgabe pro Zeile</label><textarea data-s="x.tasks.own" rows="6" maxlength="8000" placeholder="z. B. Zeigt, wie Anna und Ben sich kennengelernt haben">${esc(T0.own || '')}</textarea>
+            <small style="color:#777;display:block;margin-top:6px">Eigene Aufgaben erscheinen genau so, wie Sie sie schreiben. Sie werden nicht übersetzt.</small></div>
+          <div class="card"><h2>Aufgabe auf dem Ausdruck</h2><p style="margin:0;font-size:14px">Soll die Aufgabe mit auf das Foto? Fügen Sie im Layout-Editor unter „Sessiondaten“ das Feld „Foto-Aufgabe“ ein. Die Fotobox schreibt dort die Aufgabe hinein.</p></div>`;
       },
       lang() {
         const L = S.x.lang, list = L.list?.length ? L.list : I18N.CODES;

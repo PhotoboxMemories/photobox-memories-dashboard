@@ -1,12 +1,15 @@
 // Shared event settings and sequential portrait processing; no credentials in event data.
 (function (root) {
   function normalize(value) {
-    const prompts = Array.isArray(value?.prompts) ? value.prompts.slice(0, 30).map((p, i) => ({
+    // bis 500 Stile je Ereignis (Betreiber 08.11.2026: „alle KI-Stile für ein Event auswählen“), vorher 30
+    const prompts = Array.isArray(value?.prompts) ? value.prompts.slice(0, 500).map((p, i) => ({
       id: typeof p?.id === 'string' ? p.id : 'prompt-' + i,
       name: typeof p?.name === 'string' ? p.name.slice(0, 60) : 'Stil ' + (i + 1),
       prompt: typeof p?.prompt === 'string' ? p.prompt.slice(0, 1200) : '',
       // optionales Vorschaubild (öffentliche https-Adresse), im Dashboard beim Speichern eines getesteten Stils gesetzt
-      ...(typeof p?.thumb === 'string' && /^https:\/\/[^\s"'<>]{1,500}$/.test(p.thumb) ? { thumb: p.thumb } : {})
+      ...(typeof p?.thumb === 'string' && /^https:\/\/[^\s"'<>]{1,500}$/.test(p.thumb) ? { thumb: p.thumb } : {}),
+      // Thema aus der Stil-Sammlung (z. B. „Berufe“) – die Fotobox zeigt viele Stile nach Themen sortiert
+      ...(typeof p?.cat === 'string' && p.cat.trim() ? { cat: p.cat.trim().slice(0, 40) } : {})
     })) : typeof value?.prompt === 'string' && value.prompt.trim() ? [{ id: 'legacy', name: 'Mein Stil', prompt: value.prompt.slice(0, 1200) }] : [];
     const selected = prompts.find(p => p.id === value?.selectedId) || prompts[0];
     // Alle KI-Bilder laufen über die zentrale KI (Grok über Photobox Memories, Credits). Eigene API-Schlüssel (Gemini,

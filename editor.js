@@ -138,7 +138,7 @@
   const $ = (r, s) => r.querySelector(s);
   const clone = o => JSON.parse(JSON.stringify(o));
   const tr = s => (G.I18N_UI ? G.I18N_UI(s) : s);
-  const PH = ['titel', 'untertitel', 'datum', 'uhrzeit', 'event', 'name'];
+  const PH = ['titel', 'untertitel', 'datum', 'uhrzeit', 'event', 'name', 'aufgabe']; // aufgabe: Foto-Aufgabe der Sitzung (foto-aufgaben.js)
   const TYPE_NAME = { photo: 'Fotobox-Foto', image: 'Bild', text: 'Text', shape: 'Form', deco: 'Vorlagen-Deko', button: 'Schaltfläche „Foto“', signature: 'Unterschrift', answer: 'Umfrage-Antwort', gallery: 'Galerie-Stapel', vmsg: 'Videonachricht (QR-Code)',
     spic: 'Foto der Gäste', sfil: 'Filter-Leiste', qr: 'QR-Code' };
   const TYPE_ICON = { photo: 'camera', image: 'image', text: 'type', shape: 'shapes', deco: 'sparkles', button: 'camera', signature: 'pen', answer: 'clipboard', gallery: 'gallery', vmsg: 'qr', spic: 'image', sfil: 'sliders', qr: 'qr' };
@@ -502,7 +502,7 @@
           + T('qr', 'qr', 'QR-Code') + T('session', 'calendar', 'Sessiondaten ▸') + T('signature', 'pen', 'Unterschrift') + T('answer', 'clipboard', 'Umfrage-Antwort');
       const S2 = (k, v, n) => `<button class="bt" data-${k}="${v}">${n}</button>`;
       const sub = subm === 'shapes' ? `<div class="subm"><b>Form</b>${S2('form', 'rect', '▭ Rechteck')}${S2('form', 'ellipse', '◯ Ellipse')}${S2('form', 'line', '— Linie')}${S2('form', 'frame', '▢ Rahmen')}</div>`
-        : subm === 'session' ? `<div class="subm"><b>Sessiondaten</b>${S2('sess', 'datum', 'Datum')}${S2('sess', 'uhrzeit', 'Uhrzeit')}${S2('sess', 'event', 'Ereignisname')}${S2('sess', 'name', 'Name des Gastes')}${S2('sess', 'titel', 'Titel')}${S2('sess', 'untertitel', 'Untertitel')}</div>` : '';
+        : subm === 'session' ? `<div class="subm"><b>Sessiondaten</b>${S2('sess', 'datum', 'Datum')}${S2('sess', 'uhrzeit', 'Uhrzeit')}${S2('sess', 'event', 'Ereignisname')}${S2('sess', 'name', 'Name des Gastes')}${S2('sess', 'aufgabe', 'Foto-Aufgabe')}${S2('sess', 'titel', 'Titel')}${S2('sess', 'untertitel', 'Untertitel')}</div>` : '';
       side.innerHTML = `<div class="sec addsec"><h4>Hinzufügen</h4><div class="add ${L.screen ? '' : 'list'}">${tools}</div>${sub}</div>` + sideSecs();
     }
     const sideSecs = () => L.screen ? (opts.video ? videoSec() : '') : printSec();

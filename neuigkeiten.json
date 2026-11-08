@@ -1,6 +1,58 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.84": {
+   "date": "2026-11-08",
+   "notes": {
+    "de": [
+     "Neu: Foto-Aufgaben für Gäste. Vor dem Foto zeigt die Fotobox eine lustige Aufgabe, zum Beispiel „Mache ein Foto mit der Braut.“ – mit fertigen Aufgaben für Hochzeit, Geburtstag, Firmenfeier und Party oder eigenen Aufgaben (Dashboard → Gäste → Foto-Aufgaben).",
+     "KI-Fotos: Ganze Themen oder alle KI-Stile mit einem Klick ins Ereignis übernehmen. Bei vielen Stilen wählen die Gäste an der Fotobox zuerst ein Thema und dann den Stil."
+    ],
+    "en": [
+     "New: photo challenges for guests. Before the photo, the photo booth shows a fun challenge, for example “Take a photo with the bride.” – with ready-made challenges for weddings, birthdays, company parties and parties, or your own (Dashboard → Guests → Photo challenges).",
+     "AI photos: add whole themes or all AI styles to the event with one click. With many styles, guests at the photo booth first choose a theme and then the style."
+    ],
+    "tr": [
+     "Yeni: misafirler için fotoğraf görevleri. Fotoğraftan önce fotoğraf kabini eğlenceli bir görev gösterir, örneğin “Gelinle bir fotoğraf çek.” – düğün, doğum günü, şirket partisi ve parti için hazır görevlerle veya kendi görevlerinizle (Panel → Misafirler → Fotoğraf görevleri).",
+     "AI fotoğrafları: Bütün temaları veya tüm AI stillerini tek tıkla etkinliğe ekleyin. Çok sayıda stil olduğunda misafirler fotoğraf kabininde önce bir tema, sonra stili seçer."
+    ],
+    "fr": [
+     "Nouveau : des défis photo pour les invités. Avant la photo, le photobooth affiche un défi amusant, par exemple « Fais une photo avec la mariée. » – avec des défis prêts à l’emploi pour mariage, anniversaire, fête d’entreprise et fête, ou vos propres défis (Tableau de bord → Invités → Défis photo).",
+     "Photos IA : ajoutez en un clic des thèmes entiers ou tous les styles IA à l’événement. Avec beaucoup de styles, les invités choisissent au photobooth d’abord un thème, puis le style."
+    ],
+    "es": [
+     "Nuevo: retos fotográficos para los invitados. Antes de la foto, el fotomatón muestra un reto divertido, por ejemplo «Hazte una foto con la novia.», con retos predefinidos para bodas, cumpleaños, fiestas de empresa y fiestas, o retos propios (Panel → Invitados → Retos fotográficos).",
+     "Fotos con IA: añada con un clic temas enteros o todos los estilos de IA al evento. Con muchos estilos, los invitados eligen en el fotomatón primero un tema y luego el estilo."
+    ],
+    "it": [
+     "Novità: sfide fotografiche per gli ospiti. Prima della foto, il photobooth mostra una sfida divertente, ad esempio «Fatti una foto con la sposa.» – con sfide pronte per matrimonio, compleanno, festa aziendale e festa, o sfide personali (Dashboard → Ospiti → Sfide fotografiche).",
+     "Foto IA: aggiungi con un clic interi temi o tutti gli stili IA all’evento. Con tanti stili, al photobooth gli ospiti scelgono prima un tema e poi lo stile."
+    ]
+   }
+  },
+  "1.18.83": {
+   "date": "2026-11-07",
+   "notes": {
+    "de": [
+     "Neuer Schalter „Offline-QR-Code“ (Einstellungen → Teilen & Drucken): Hat die Fotobox kein Internet, holen sich Gäste ihr Foto per QR-Code direkt von der Fotobox, wenn ihr Handy im selben WLAN ist."
+    ],
+    "en": [
+     "New switch “Offline QR code” (Settings → Share & Print): if the photo booth has no internet, guests get their photo via QR code directly from the booth when their phone is on the same Wi-Fi."
+    ],
+    "tr": [
+     "Yeni „Çevrimdışı QR kod“ anahtarı (Ayarlar → Paylaş ve Yazdır): Fotoğraf kabininin interneti yoksa, telefonları aynı Wi-Fi’deyse misafirler fotoğraflarını QR kodla doğrudan kabinden alır."
+    ],
+    "fr": [
+     "Nouvel interrupteur « QR code hors ligne » (Réglages → Partager et imprimer) : si la photobooth n’a pas d’Internet, les invités récupèrent leur photo par QR code directement depuis la photobooth lorsque leur téléphone est sur le même Wi-Fi."
+    ],
+    "es": [
+     "Nuevo interruptor «Código QR sin conexión» (Ajustes → Compartir e imprimir): si el fotomatón no tiene internet, los invitados obtienen su foto por código QR directamente del fotomatón si su móvil está en la misma wifi."
+    ],
+    "it": [
+     "Nuovo interruttore „Codice QR offline“ (Impostazioni → Condividi e stampa): se la fotocabina non ha internet, gli ospiti ricevono la foto tramite codice QR direttamente dalla fotocabina, se il telefono è sulla stessa rete Wi-Fi."
+    ]
+   }
+  },
   "1.18.82": {
    "date": "2026-11-06",
    "notes": {
