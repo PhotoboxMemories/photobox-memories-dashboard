@@ -178,7 +178,7 @@ window.AdminSchutz = (() => {
         <div class="row" style="margin-top:10px"><button type="button" class="btn small" id="secAdd">+ Weiteres Handy einrichten</button><span class="small muted">Empfehlung: ein zweites Gerät (z. B. Tablet) als Ersatz.</span></div></div>
       <div class="card" style="margin-bottom:20px"><h2>Betreiber-Konten</h2><div id="secAdmins" class="small muted">Lädt …</div></div>
       <div class="card" style="margin-bottom:20px"><h2>Automatisch abmelden</h2>
-        <p class="small" style="margin:0">Nach ${IDLE_MIN} Minuten ohne Bedienung meldet das Dashboard dein Betreiber-Konto ab. Nach jeder Admin-Anmeldung bekommst du eine Mail – warst du es nicht, steht darin, was zu tun ist.</p></div>
+        <p class="small" style="margin:0">Ausgeschaltet: Das Dashboard bleibt angemeldet, bis du dich selbst abmeldest. Melde dich an fremden oder gemeinsam genutzten Geräten deshalb immer ab. Nach jeder Admin-Anmeldung bekommst du eine Mail – warst du es nicht, steht darin, was zu tun ist.</p></div>
       <div class="card" style="margin-bottom:20px"><div class="pagehead" style="margin-bottom:10px"><h2 style="margin:0">Protokoll</h2><button type="button" class="btn small" id="secReload">Neu laden</button></div>
         <p class="small muted" style="margin:0 0 10px">Jede Änderung, die du als Betreiber an Daten deiner Kunden machst (Lizenzen, Zusatzfunktionen, Fotoboxen, Speicher, Guthaben, Tarife, Passwörter, Mails), und jede Admin-Anmeldung. Die letzten 200 Einträge.</p>
         <div class="tablewrap"><table><thead><tr><th>Zeit</th><th>Aktion</th><th>Kunde</th><th>Details</th></tr></thead><tbody id="secLog"><tr><td colspan="4" class="empty">Lädt …</td></tr></tbody></table></div></div>
@@ -247,7 +247,8 @@ window.AdminSchutz = (() => {
       const sid = p ? JSON.parse(atob(p.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat(-p.length & 3))).session_id : '';
       if (sid && localStorage.getItem('pm.adminLoginMail') !== sid) { localStorage.setItem('pm.adminLoginMail', sid); notifyLogin(); }
     } catch {}
-    startIdle(); addPage(); return true;
+    // Keine automatische Abmeldung mehr (Betreiber 08.11.2026: „soll nicht mehr abmelden“) – startIdle() bleibt nur als Funktion stehen
+    addPage(); return true;
   }
   return { ensure };
 })();
