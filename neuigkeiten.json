@@ -1,6 +1,29 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.91": {
+   "date": "2026-11-08",
+   "notes": {
+    "de": [
+     "Hintergrund entfernen: Neuer Test mit Beispielfoto oder Kamera (Einstellungen → Hintergrund entfernen → Testen) – zeigt das Ergebnis vor dem Ereignis."
+    ],
+    "en": [
+     "Background removal: new test with a sample photo or the camera (Settings → Background removal → Test) – shows the result before the event."
+    ],
+    "tr": [
+     "Arka plan kaldırma: Örnek fotoğraf veya kamerayla yeni test (Ayarlar → Arka planı kaldır → Test et) – sonucu etkinlikten önce gösterir."
+    ],
+    "fr": [
+     "Suppression de l’arrière-plan : nouveau test avec une photo d’exemple ou l’appareil (Réglages → Supprimer l’arrière-plan → Tester) – montre le résultat avant l’événement."
+    ],
+    "es": [
+     "Eliminar fondo: nueva prueba con foto de ejemplo o con la cámara (Ajustes → Eliminar fondo → Probar), muestra el resultado antes del evento."
+    ],
+    "it": [
+     "Rimozione sfondo: nuova prova con foto di esempio o con la fotocamera (Impostazioni → Rimuovi sfondo → Prova) – mostra il risultato prima dell’evento."
+    ]
+   }
+  },
   "1.18.90": {
    "date": "2026-11-08",
    "notes": {
