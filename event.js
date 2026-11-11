@@ -4,6 +4,9 @@
   'use strict';
   // KI-Stil-Bibliothek: ein Stil = Motiv („Porträtstil“) und/oder Kunststil.
   // Beispielbilder liegen optional unter ai-styles/<key>.jpg; ohne Bild erscheint die farbige Kachel.
+  // Satz für das Logo (Stil-Editor → „Logo hinzufügen“). „Falls … mitgeschickt“: ohne Logo (z. B. als „Meinen KI-Stil“ in einem anderen Event) erfindet die KI keins
+  const AI_LOGO_HAS = t => /logo/i.test(String(t).replace(/außer dem Logo/g, '')); // steht schon etwas zum Logo im Text?
+  const AI_LOGO_TXT = 'Logo: Falls ein Logo mitgeschickt wird, setze es gut sichtbar und passend zum Stil ins Bild, zum Beispiel groß auf ein Banner oder Schild im Hintergrund – nie auf die Gesichter.';
   const AI_KEEP = 'Bearbeite das Gästefoto. Behalte die Anzahl der Personen, ihre erkennbaren Gesichter, Frisuren und ihre Pose bei. Keine zusätzliche Person, kein Schriftzug. ';
   const aiGroup = (kind, list) => list.flatMap(([cat, colors, items]) => items.map(([key, name, icon, text]) => ({ kind, cat, colors, key, name, icon, text })));
   const AI_MOTIFS = aiGroup('p', [
@@ -915,6 +918,19 @@
       if (a === 'ai-close') { ai.pick = ''; render(); return; }
       if (a === 'ai-cat') { ai.cat = t.dataset.c; render(); return; }
       if (a === 'ai-choose') { ai[ai.pick] = t.dataset.k; ai.pick = ''; ai.custom = false; render(); return; }
+      if (a === 'ai-logo-add' || a === 'ai-logo-text') {
+        const ta = $(main, '[data-ai-ctext]'), L = S.x.ai.logo;
+        if (a === 'ai-logo-add') {
+          const f = await pick('image/*'); if (!f) return;
+          if (f.size > 3 * 1024 * 1024) return ctx.toast('Das Bild ist größer als 3 MB – bitte kleiner speichern (ein Logo braucht höchstens 1000 × 1000 Pixel).', 5000);
+          status('Lädt Logo hoch …');
+          try { L.url = await ctx.uploadFile(f); } catch (error) { ctx.toast('Hochladen fehlgeschlagen: ' + error.message, 6000); status('⚠️ Hochladen fehlgeschlagen'); return; }
+          L.mode = L.on && L.mode === 'over' ? 'both' : L.mode === 'both' ? 'both' : 'ai'; L.on = true; // vorher nur drübergelegt: bleibt, dazu baut die KI es ein
+        }
+        const cur = (ta ? ta.value : (ai.ctext ?? '')).replace(/kein Schriftzug\./, 'kein Schriftzug außer dem Logo.'); // Logo hat oft Schrift
+        if (!AI_LOGO_HAS(cur)) ai.ctext = (cur.trim() + ' ' + AI_LOGO_TXT).trim().slice(0, 1200); else ai.ctext = cur;
+        save(); render(); ctx.toast(a === 'ai-logo-add' ? 'Logo hinzugefügt – jetzt rechts „Generieren“ zum Ausprobieren.' : 'Logo-Text eingefügt.', 4000); return;
+      }
       if (a === 'ai-example') { const x = aiExamples()[+t.dataset.i]; if (x) { ai.cname = x.name; ai.ctext = x.prompt; render(); } return; }
       if (a === 'ai-custom') { // vorhandene Auswahl oder den bearbeiteten Stil als Text übernehmen
         ai.seed = ai.edit >= 0 && !(ai.p || ai.a) ? S.ai.prompts[ai.edit] : (ai.p || ai.a) ? aiCompose(aiFind(AI_MOTIFS, ai.p), aiFind(AI_ARTS, ai.a)) : null;
@@ -1777,11 +1793,17 @@
           ${ai.custom ? `<label class="l">Name (sehen die Gäste)</label><input type="text" maxlength="60" data-ai-cname value="${esc(ai.cname ?? (ai.seed || editing)?.name ?? '')}" placeholder="z. B. Unser Firmenlook">
             <label class="l">Kategorie (für „Meine KI-Stile“)</label><select data-ai-ccat>${AI_CATS.map(c => `<option value="${esc(c)}" ${(ai.ccat ?? (ai.seed || editing)?.category ?? 'Sonstiges') === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
             <label class="l">Beschreibung für die KI</label><textarea rows="5" maxlength="1200" data-ai-ctext placeholder="Motiv: was die Gäste werden · Szene: wo sie sind · Stil: wie das Bild aussieht">${esc(ai.ctext ?? ((ai.seed || editing)?.prompt || AI_KEEP))}</textarea>
+            ${(() => { // Logo direkt beim Stil (Betreiber 11.11.2026): hochladen → die KI baut es ein, der passende Satz kommt in den Text
+              const L = S.x.ai.logo, has = L.on && L.url && L.mode !== 'over', txt = ai.ctext ?? ((ai.seed || editing)?.prompt || AI_KEEP);
+              return `<div class="row" style="gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">${has ? `<img src="${esc(L.url)}" alt="" style="height:44px;max-width:130px;object-fit:contain;background:#f3f3f6;border-radius:8px;padding:4px">` : ''}
+                <button class="ghost" data-a="ai-logo-add">${ICON('upload', 15)} ${has ? 'Logo ändern' : 'Logo hinzufügen'}</button>${has && !AI_LOGO_HAS(txt) ? '<button class="ghost" data-a="ai-logo-text">Logo-Text einfügen</button>' : ''}</div>
+                <small style="display:block;margin-top:6px;color:#6b6b78">${has ? 'Die KI baut dein Logo passend zum Stil ins Bild ein. Wo genau, steht im Text – zum Beispiel „auf einem Banner im Hintergrund“. Das Logo gilt für alle AI-Fotos dieses Events.' : 'Dein Logo hochladen – die KI baut es passend zum Stil ins Bild ein, zum Beispiel auf ein Banner oder Schild.'}</small>`;
+            })()}
             <small style="display:block;margin-top:10px"><b>Beispiel ausprobieren</b> · jedes lädt eine andere Kombination</small>
             <div class="aichips" style="margin-top:6px">${aiExamples().map((x, n) => `<button data-a="ai-example" data-i="${n}">${esc(x.name)}</button>`).join('')}</div>`
             : `<div class="aislots">${slot('p', pp, 'Porträtstil')}${slot('a', aa, 'Kunststil')}<button class="aislot" data-a="ai-custom"><span style="font-size:22px">+</span><div><b>Benutzerdefinierter Prompt</b><small>selbst beschreiben</small></div></button></div>
             <small>Wähle einen Porträtstil, einen Kunststil oder beides zusammen. ${pp || aa ? '<a href="#" data-a="ai-custom">Text selbst anpassen</a>' : ''}</small>`}
-          ${!libEditing ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding:10px 12px;border:1px dashed #cfcfd8;border-radius:10px">${S.x.ai.logo.on && S.x.ai.logo.url
+          ${!libEditing && !ai.custom ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding:10px 12px;border:1px dashed #cfcfd8;border-radius:10px">${S.x.ai.logo.on && S.x.ai.logo.url
             ? `<img src="${esc(S.x.ai.logo.url)}" alt="Logo" style="height:36px;max-width:120px;object-fit:contain"><span style="flex:1;min-width:160px;font-size:13px">${S.x.ai.logo.mode === 'over' ? 'Dein Logo wird auf die AI-Fotos gelegt.' : 'Die KI baut dein Logo ins Bild ein – auch beim Ausprobieren hier.'} <a href="#" data-a="ai-logo-go">Einstellungen</a></span><button class="ghost" style="padding:4px 10px;font-size:12px" data-a="ai-logo-off">Entfernen</button>`
             : `<button class="ghost" data-a="ai-logo-up">${ICON('image', 16)} Logo hinzufügen</button><span style="flex:1;min-width:160px;font-size:13px;color:#6b6b78">Die KI baut dein Logo passend zum Stil ins Bild ein, zum Beispiel auf ein Banner oder ein T-Shirt.</span>`}</div>` : ''}
           ${central && !libEditing ? '<p class="small" style="margin-top:8px;color:#6b6b78">Erst rechts „Generieren“, dann „Vorgabe speichern“: Das erzeugte Bild wird das Bild auf der Kachel. Dieses Bild sieht jeder, der die Stile sieht – nimm ein Testfoto, das gezeigt werden darf.</p>' : ''}
