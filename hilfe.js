@@ -10,7 +10,7 @@
       x: 'Vor dem Foto zeigt die Fotobox eine zufällige Aufgabe, zum Beispiel „Mache ein Foto mit der Braut.“. Im Dashboard schaltest du sie unter Gäste → Foto-Aufgaben ein, wählst fertige Gruppen (Hochzeit, Geburtstag, Firmenfeier, Party) oder schreibst eigene Aufgaben.',
       a: '', d: 'tasks#x.tasks.on' },
     { t: 'Viele KI-Stile auf einmal', k: 'ki_stile_alle_uebernehmen_viele_thema_themen_sortiert_kategorie_kategorien_auswahl_ki_fotos',
-      x: 'Im Dashboard unter KI-Fotos übernimmst du mit „Alle übernehmen“ ein ganzes Thema oder alle Stile auf einmal in das Ereignis. Bei mehr als 12 Stilen wählen die Gäste an der Fotobox zuerst ein Thema und dann den Stil.',
+      x: 'Im Dashboard unter AI-Fotos übernimmst du mit „Alle übernehmen“ ein ganzes Thema oder alle Stile auf einmal in das Ereignis. Bei mehr als 12 Stilen wählen die Gäste an der Fotobox zuerst ein Thema und dann den Stil.',
       a: '', d: 'ai' },
     { t: 'Logo in der Startanimation', k: 'logo_scheibe_mitte_standard_standardanimation_animation_startanimation_standardvideo_startvideo_firmenlogo_eigenes_kamerasymbol',
       x: 'Ohne eigenes Startvideo zeigt die Fotobox die Standard-Animation mit einer weißen Scheibe in der Mitte. Dort wählst du dein Firmenlogo, das Logo des Ereignisses, ein eigenes Bild oder nichts – dazu Größe und Darstellung.',
@@ -21,6 +21,9 @@
     { t: 'Startbildschirm gestalten', k: 'startbildschirm_gestalten_design_text_titel_datum_knopf_startknopf_schaltflaeche_editor_verschieben_schrift_name',
       x: 'Texte, Bilder, Formen und den Start-Knopf frei verschieben, in der Größe ändern und drehen – getrennt für Hoch- und Querformat.',
       a: 'design:start:design', d: 'start' },
+    { t: 'Animation auf dem Startbildschirm', k: 'animation_startanimation_startbildschirm_tippen_starten_schleife_neon_gold_stil_aendern_wechseln_auswaehlen',
+      x: 'Statt eines Videos läuft auf dem Startbildschirm eine Animation in Schleife, zum Beispiel „Tippen zum Starten!“ oder „Werde zum Star!“. Animation und Stil wählst du im Dashboard unter Startbildschirm → „Animation (selbst wählen)“.',
+      a: 'design:start:set#scrVidBox', d: 'start#startDisplay' },
     { t: 'Live-Ansicht auf dem Startbildschirm', k: 'livebild_live_ansicht_liveansicht_spiegel_mirror_kamerabild_startbildschirm',
       x: 'Statt eines Videos zeigt der Startbildschirm das Livebild der Kamera – zum Beispiel beim Spiegel.',
       a: 'design:start:set#scrLive', d: 'start#startDisplay' },
@@ -138,8 +141,8 @@
     { t: 'Hintergrund entfernen (Greenscreen)', k: 'hintergrund_entfernen_greenscreen_green_screen_gruen_austauschen_hintergruende_freistellen',
       x: 'Neuer Hintergrund per KI ohne grüne Wand oder klassisch mit Greenscreen. Eigene Hintergründe hochladen – die Gäste suchen sich einen aus.',
       a: 'bg', d: 'bg' },
-    { t: 'KI-Fotos', k: 'ki_kuenstliche_intelligenz_portraet_portraets_stil_stile_superheld_grok_ai_nur_bestimmte_layouts_layout_einzelne',
-      x: 'Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du KI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.',
+    { t: 'AI-Fotos', k: 'ki_kuenstliche_intelligenz_portraet_portraets_stil_stile_superheld_grok_ai_nur_bestimmte_layouts_layout_einzelne',
+      x: 'Gäste werden zu Filmstars, Superhelden oder Kunstwerken. Stile auswählen, Zustimmung und Texte einstellen. Unter „An der Fotobox“ kannst du AI-Fotos auf bestimmte Layouts beschränken – dann wählen die Gäste zuerst das Layout und nur bei den angehakten gibt es die KI-Stile.',
       a: 'ai', d: 'ai' },
     { t: 'Kosten und Lizenz', k: 'tarif_tarife_preis_preise_kosten_kostenlos_gratis_basis_pro_abo_lizenz_kaufen_buchen_upgrade_werbung_schloss_gesperrt_test_testen_probe',
       x: 'Die Fotobox-Software ist zurzeit komplett kostenlos – alle Funktionen, mit deinem eigenen Logo. Geld kosten nur KI-Bilder: Credits kaufst du im Online-Dashboard unter „Meine Lizenzen“ → KI-Guthaben. Fotomosaik, Live-Karikatur und Videonachricht kannst du 1 Monat kostenlos testen (mit 20 KI-Credits) oder bei Photobox Memories freischalten lassen.',
@@ -222,13 +225,13 @@
       a: '', d: 'analytics' },
   ];
   const APP_PAGES = { design: 'Bildschirm-Editor', templates: 'Fotolayout', general: 'Allgemein', modes: 'Aufnahme-Arten', camera: 'Kamera',
-    voice: 'Virtueller Berater', effects: 'Filter & Effekte', ai: 'KI-Fotos', bg: 'Hintergrund entfernen', guests: 'Umfrage', disc: 'Haftungsausschluss',
+    voice: 'Virtueller Berater', effects: 'Filter & Effekte', ai: 'AI-Fotos', bg: 'Hintergrund entfernen', guests: 'Umfrage', disc: 'Haftungsausschluss',
     share: 'Teilen', print: 'Drucken', mosaic: 'Fotomosaik', cari: 'Live-Karikatur', videomsg: 'Videonachricht',
     status: 'Upload-Status', remote: 'Fernsteuerung', lang: 'Sprache', windows: 'Windows einrichten', robot: 'Zeichenroboter' };
   const APP_SUBS = { start: 'Startbildschirm', cap: 'Aufnahmebildschirm', share: 'Bildschirm zum Teilen' }, APP_PANELS = { design: 'Design', set: 'Einstellungen' };
   const APP_ACTS = { switch: 'Ereignis wechseln', update: 'Updates', slideshow: 'Slideshow', export: 'Exportieren' };
   const DASH_PAGES = { dash: 'Übersicht', analytics: 'Analysen', layout: 'Fotolayout & Countdown', capture: 'Aufnahme-Arten', voice: 'Virtueller Berater', lang: 'Sprache',
-    start: 'Startbildschirm', fx: 'Filter & Effekte', bg: 'Hintergrund entfernen', ai: 'KI-Fotos', survey: 'Umfrage & Haftungsausschluss',
+    start: 'Startbildschirm', fx: 'Filter & Effekte', bg: 'Hintergrund entfernen', ai: 'AI-Fotos', survey: 'Umfrage & Haftungsausschluss',
     share: 'Teilen', print: 'Drucken', mosaic: 'Fotomosaik', cari: 'Live-Karikatur', videomsg: 'Videonachricht' };
   const DASH_TABS = { events: 'Ereignisse', devices: 'Geräte', leads: 'Gäste-Daten', licenses: 'Meine Lizenzen' };
 
