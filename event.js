@@ -1175,6 +1175,17 @@
       if (a === 'resetscreen') { if (await (G.pmConfirm || (async t => confirm(t)))('Gestaltung des Startbildschirms (Hoch- und Querformat) verwerfen?', 'Zurücksetzen')) { S.startScreen = null; S.startScreen2 = null; save(); render(); } return; }
       if (a === 'upattract') { await uploadAttract(t.dataset.o === 'landscape' ? 'landscape' : 'portrait'); render(); return; }
       if (a === 'delattract') { removeAttract(t.dataset.o === 'landscape' ? 'landscape' : 'portrait'); render(); return; }
+      // Logo direkt beim Erstellen der AI-Fotos (Betreiber 11.11.2026): hochladen = Logo an, „KI baut es ein“ (außer „Beides“ war schon gewählt)
+      if (a === 'ai-logo-up') {
+        const f = await pick('image/*'); if (!f) return;
+        if (f.size > 3 * 1024 * 1024) return ctx.toast('Das Bild ist größer als 3 MB – bitte kleiner speichern (ein Logo braucht höchstens 1000 × 1000 Pixel).', 5000);
+        status('Lädt Logo hoch …');
+        try { S.x.ai.logo.url = await ctx.uploadFile(f); S.x.ai.logo.on = true; if (S.x.ai.logo.mode !== 'both') S.x.ai.logo.mode = 'ai'; save(); render(); ctx.toast('Logo hinzugefügt – beim nächsten „Generieren“ baut die KI es ein.', 4000); }
+        catch (error) { ctx.toast('Hochladen fehlgeschlagen: ' + error.message, 6000); status('⚠️ Hochladen fehlgeschlagen'); }
+        return;
+      }
+      if (a === 'ai-logo-off') { S.x.ai.logo.on = false; save(); render(); return; }
+      if (a === 'ai-logo-go') { e?.preventDefault?.(); $(root, '[data-s="x.ai.logo.on"]')?.closest('.card')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
       if (a === 'x-up') {
         const f = await pick(t.dataset.accept || '*/*'); if (!f) return;
         if (f.size > 50 * 1024 * 1024) return ctx.toast('Die Datei ist größer als 50 MB.');
@@ -1770,6 +1781,9 @@
             <div class="aichips" style="margin-top:6px">${aiExamples().map((x, n) => `<button data-a="ai-example" data-i="${n}">${esc(x.name)}</button>`).join('')}</div>`
             : `<div class="aislots">${slot('p', pp, 'Porträtstil')}${slot('a', aa, 'Kunststil')}<button class="aislot" data-a="ai-custom"><span style="font-size:22px">+</span><div><b>Benutzerdefinierter Prompt</b><small>selbst beschreiben</small></div></button></div>
             <small>Wähle einen Porträtstil, einen Kunststil oder beides zusammen. ${pp || aa ? '<a href="#" data-a="ai-custom">Text selbst anpassen</a>' : ''}</small>`}
+          ${!libEditing ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding:10px 12px;border:1px dashed #cfcfd8;border-radius:10px">${S.x.ai.logo.on && S.x.ai.logo.url
+            ? `<img src="${esc(S.x.ai.logo.url)}" alt="Logo" style="height:36px;max-width:120px;object-fit:contain"><span style="flex:1;min-width:160px;font-size:13px">${S.x.ai.logo.mode === 'over' ? 'Dein Logo wird auf die AI-Fotos gelegt.' : 'Die KI baut dein Logo ins Bild ein – auch beim Ausprobieren hier.'} <a href="#" data-a="ai-logo-go">Einstellungen</a></span><button class="ghost" style="padding:4px 10px;font-size:12px" data-a="ai-logo-off">Entfernen</button>`
+            : `<button class="ghost" data-a="ai-logo-up">${ICON('image', 16)} Logo hinzufügen</button><span style="flex:1;min-width:160px;font-size:13px;color:#6b6b78">Die KI baut dein Logo passend zum Stil ins Bild ein, zum Beispiel auf ein Banner oder ein T-Shirt.</span>`}</div>` : ''}
           ${central && !libEditing ? '<p class="small" style="margin-top:8px;color:#6b6b78">Erst rechts „Generieren“, dann „Vorgabe speichern“: Das erzeugte Bild wird das Bild auf der Kachel. Dieses Bild sieht jeder, der die Stile sieht – nimm ein Testfoto, das gezeigt werden darf.</p>' : ''}
           ${ai.result && !ai.busy && ai.resultId && ai.resultId === curId ? '<p style="margin-top:10px;font-weight:600">' + (editing ? '✓ Bild erstellt. Mit „Änderung speichern“ wird es das Bild auf der Kachel.' : libEditing ? '✓ Bild erstellt. Mit „In Meine KI-Stile speichern“ wird es das neue Bild dieses Stils.' : '✓ Bild erstellt. Mit „Vorgabe speichern“ wird es das Bild auf der Kachel.') + '</p>' : ''}
           <div class="row" style="margin-top:12px">${libEditing ? `<button class="btn pri" style="flex:1" data-a="ai-lib-update" ${ai.busy ? 'disabled' : ''}>In „Meine KI-Stile“ speichern</button><button class="ghost" data-a="ai-new">Fertig</button>`
