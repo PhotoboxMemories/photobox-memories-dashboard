@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Photobox Memories – Dashboard</title>
 <link rel="stylesheet" href="fonts-fredoka/fredoka.css">
-<script>window.I18N_V = '20261108-2';</script>
+<script>window.I18N_V = '20261111-1';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -14,11 +14,11 @@
 <script src="icons.js?v=20261021-5"></script>
 <script src="ad.js?v=20261022-1"></script>
 <script src="shop.js?v=20261023-2"></script>
-<script src="render.js?v=20261104-2"></script>
+<script src="render.js?v=20261111-1"></script>
 <script src="advisor-anim.js?v=20261021-6"></script>
 <script src="mosaic.js?v=20261017-2"></script>
 <script src="editor.js?v=20261108-1"></script>
-<script src="ai-event.js?v=20261108-2"></script>
+<script src="ai-event.js?v=20261111-1"></script>
 <script src="sketch-draw.js?v=20261018-8"></script>
 <script src="caricature.js?v=20261024-1"></script>
 <script src="start-anim.js?v=20261020-1"></script>
@@ -28,7 +28,7 @@
 <script src="admin-boothdesigner.js?v=20261101-1"></script>
 <script src="designs.js?v=20261104-1"></script>
 <script src="foto-aufgaben.js?v=20261108-1"></script>
-<script src="event.js?v=20261108-2"></script>
+<script src="event.js?v=20261111-1"></script>
 <script src="studio.js?v=20261105-1"></script>
 <script src="vendor/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <style>
@@ -413,7 +413,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
             <div id="lUpdWrap" class="hidden"><label>Updates inklusive bis (leer = immer)</label><input id="lUpd" type="date"></div>
             <div id="lMaxWrap"><label>Anzahl Geräte</label><input id="lMax" type="number" min="1" value="1"></div>
             <div id="lTierWrap"><label>Tarif</label><select id="lTier"><option value="pro">Fotobox-Abo (alle Funktionen, eigenes Logo)</option><option value="basis">Basis (alter Tarif)</option><option value="free">Kostenlos (1 Layout, Logo von Photobox Memories)</option></select></div>
-            <div id="lCreditsWrap" class="hidden"><label>KI-Credits dazu (für KI-Porträts)</label><input id="lCredits" type="number" min="0" max="1000" value="20"></div>
+            <div id="lCreditsWrap" class="hidden"><label>KI-Credits dazu (für AI-Fotos)</label><input id="lCredits" type="number" min="0" max="1000" value="20"></div>
             <div><label>Freigaben</label><div class="row" style="margin-top:10px;gap:16px"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMosaic" style="width:auto"> Fotomosaik</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lCari" style="width:auto"> Live-Karikatur</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lVideo" style="width:auto"> Videonachricht</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lStudio" style="width:auto"> BoothDesigner</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lOffline" style="width:auto"> Offline-Warteschlange</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lExport" style="width:auto"> Echtzeit-Export</label></div></div>
             <div style="grid-column:1/-1"><label>Notiz (z.B. Rechnungsnummer)</label><input id="lNotes"></div>
             <div style="grid-column:1/-1"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMail" checked style="width:auto"> Willkommens-Mail an den Kunden senden (Lizenzschlüssel, Dashboard-Link und Anleitung)</label></div>
@@ -629,7 +629,7 @@ function demoClient() {
       { id: 's2', owner: 'demo', name: 'Anime-Held', shared: false, thumb: null, prompt: 'Bearbeite das Gästefoto. Behalte die Anzahl der Personen und ihre Gesichter. Motiv: Helden in einem japanischen Anime, dynamische Pose, Stadt bei Sonnenuntergang. Stil: klare Linien, leuchtende Farben, Anime-Film.' }
     ],
     plans: [
-      { id: 'monat', name: 'Monatlich', billing: 'month', cents: 3900, features: 'Alle Funktionen inklusive\nDashboard, Online-Galerie, Fotomosaik, KI-Porträts\nMonatlich kündbar', sort: 1, active: true },
+      { id: 'monat', name: 'Monatlich', billing: 'month', cents: 3900, features: 'Alle Funktionen inklusive\nDashboard, Online-Galerie, Fotomosaik, AI-Fotos\nMonatlich kündbar', sort: 1, active: true },
       { id: 'jahr', name: 'Jährlich', billing: 'year', cents: 39000, features: 'Alle Funktionen inklusive\n2 Monate geschenkt\nUpdates inklusive', sort: 2, active: true },
       { id: 'kauf', name: 'Einmalkauf', billing: 'once', cents: 69000, features: 'Dauerhaft nutzbar\n1 Jahr Updates inklusive\nDanach Updates optional', sort: 3, active: true }
     ],
@@ -1670,7 +1670,7 @@ const euro = c => (c / 100).toLocaleString('de-DE', { style: 'currency', currenc
 // Eigenes KI-Guthaben: Stand, Verbrauch je Ereignis (ai_jobs, nur erfolgreiche Bilder), Käufe/Gutschriften (ai_ledger) und Kauf
 // über Stripe (Funktion credits-checkout). Der Bereich ist immer sichtbar – ohne eingerichteten Kauf mit Hinweis statt Knöpfen.
 const showCredits = () => { $('#nav [data-tab="licenses"]')?.click(); setTimeout(() => $('#creditCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150); };
-window.showCredits = showCredits; // auch aus dem Ereignis-Editor (KI-Porträts → „Credits kaufen“)
+window.showCredits = showCredits; // auch aus dem Ereignis-Editor (AI-Fotos → „Credits kaufen“)
 $('#creditChip').onclick = showCredits;
 async function welcomeCredits() {
   try { const { data } = await sb.rpc('welcome_credits'); if (data > 0) toast('Willkommen! Du hast 20 KI-Credits zum Testen bekommen.', 8000); } catch {}
