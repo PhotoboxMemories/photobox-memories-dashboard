@@ -63,7 +63,7 @@
   // Nachschärfen fürs fertige Foto (Betreiber 03.11.2026: „beste Auflösung und scharfe Bilder“): Das Foto wird erst auf die Pixel seines Felds
   // verkleinert und dann geschärft – Verkleinern und Sublimationsdruck machen jedes Foto etwas weich. Geschärft wird nur die Helligkeit (keine
   // Farbsäume), feines Rauschen bleibt unberührt (Schwelle), starke Kanten sind begrenzt (keine hellen Ränder). Bilder, die vergrößert würden
-  // (Webcam, KI-Fotos), bleiben, wie sie sind. Das Ergebnis wird je Foto gemerkt: Ein anderer Filter braucht es nicht noch einmal.
+  // (Webcam, AI-Fotos), bleiben, wie sie sind. Das Ergebnis wird je Foto gemerkt: Ein anderer Filter braucht es nicht noch einmal.
   const SHARP = { radius: 1.2, amount: .7, thresh: 3, limit: 40 }, sharpCache = new WeakMap();
   function unsharp(c) {
     const w = c.width, h = c.height, x = c.getContext('2d'), b = document.createElement('canvas'); b.width = w; b.height = h;
