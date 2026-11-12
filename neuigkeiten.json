@@ -1,6 +1,93 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.95": {
+   "date": "2026-11-12",
+   "notes": {
+    "de": [
+     "Fotolayout: Der Editor zeigt jetzt, was der Drucker am Rand abschneidet – so bleiben Logo und Text immer ganz auf dem Ausdruck."
+    ],
+    "en": [
+     "Photo layout: the editor now shows what the printer cuts off at the edges – so your logo and text always stay fully on the print."
+    ],
+    "tr": [
+     "Fotoğraf düzeni: Düzenleyici artık yazıcının kenarlardan neyi kestiğini gösteriyor – böylece logo ve metin her zaman baskıda tam kalır."
+    ],
+    "fr": [
+     "Mise en page photo : l’éditeur montre désormais ce que l’imprimante coupe sur les bords – votre logo et votre texte restent toujours entiers sur le tirage."
+    ],
+    "es": [
+     "Diseño de fotos: el editor muestra ahora lo que la impresora recorta en los bordes, así el logo y el texto siempre quedan completos en la impresión."
+    ],
+    "it": [
+     "Layout foto: l’editor ora mostra cosa taglia la stampante ai bordi – così logo e testo restano sempre interi sulla stampa."
+    ]
+   }
+  },
+  "1.18.94": {
+   "date": "2026-11-11",
+   "notes": {
+    "de": [
+     "Eigenes Logo auf den AI-Fotos: Unter AI-Fotos lädst du dein Logo hoch und wählst Position und Größe. Es erscheint auf jedem AI-Bild, im Druck, beim QR-Code und in der Galerie.",
+     "Die KI kann dein Logo auch direkt ins Bild einbauen, passend zum Stil, zum Beispiel auf ein Banner oder ein T-Shirt. Wo es hin soll, bestimmst du im Stil-Text.",
+     "Aus „KI-Fotos“ wird überall „AI-Fotos“."
+    ],
+    "en": [
+     "Your own logo on the AI photos: under AI photos, upload your logo and choose position and size. It appears on every AI image, in print, via QR code and in the gallery.",
+     "The AI can also build your logo straight into the image to match the style, for example onto a banner or a T-shirt. You decide where in the style text.",
+     "“KI-Fotos” is now called “AI-Fotos” everywhere in the German version."
+    ],
+    "tr": [
+     "Yapay zekâ fotoğraflarında kendi logon: Yapay zekâ fotoğrafları bölümünde logonu yükle, konumunu ve boyutunu seç. Logo her görselde, baskıda, QR kodda ve galeride görünür.",
+     "Yapay zekâ logonu stile uygun olarak doğrudan görsele de yerleştirebilir, örneğin bir pankarta ya da tişörte. Yerini stil metninde sen belirlersin.",
+     "Almanca sürümde „KI-Fotos“ artık her yerde „AI-Fotos“ olarak adlandırılıyor."
+    ],
+    "fr": [
+     "Ton propre logo sur les photos IA : dans Photos IA, importe ton logo et choisis sa position et sa taille. Il apparaît sur chaque image IA, à l’impression, via le QR code et dans la galerie.",
+     "L’IA peut aussi intégrer ton logo directement dans l’image selon le style, par exemple sur une banderole ou un t-shirt. Tu choisis l’endroit dans le texte du style.",
+     "Dans la version allemande, « KI-Fotos » s’appelle désormais partout « AI-Fotos »."
+    ],
+    "es": [
+     "Tu propio logo en las fotos IA: en Fotos IA sube tu logo y elige posición y tamaño. Aparece en cada imagen IA, en la impresión, con el código QR y en la galería.",
+     "La IA también puede integrar tu logo directamente en la imagen según el estilo, por ejemplo en una pancarta o una camiseta. Tú decides dónde en el texto del estilo.",
+     "En la versión alemana, «KI-Fotos» se llama ahora «AI-Fotos» en todas partes."
+    ],
+    "it": [
+     "Il tuo logo sulle foto IA: in Foto IA carica il tuo logo e scegli posizione e dimensione. Appare su ogni immagine IA, nella stampa, tramite codice QR e nella galleria.",
+     "L’IA può anche inserire il tuo logo direttamente nell’immagine in base allo stile, ad esempio su uno striscione o una maglietta. Decidi tu dove nel testo dello stile.",
+     "Nella versione tedesca „KI-Fotos“ ora si chiama ovunque „AI-Fotos“."
+    ]
+   }
+  },
+  "1.18.93": {
+   "date": "2026-11-09",
+   "notes": {
+    "de": [
+     "Startbildschirm: Im Dashboard jetzt eine Animation selbst wählen – 7 Start-Animationen in 5 Stilen, z. B. „Werde zum Star!“ oder „Halte den Moment fest!“.",
+     "Virtueller Berater: Wer eine Animation wählt, schaltet den Berater gleich mit ein."
+    ],
+    "en": [
+     "Start screen: now choose an animation yourself in the dashboard – 7 start animations in 5 styles, e.g. “Be the star!” or “Capture the moment!”.",
+     "Virtual assistant: choosing an animation now turns the assistant on as well."
+    ],
+    "tr": [
+     "Başlangıç ekranı: artık panelde animasyonu kendin seç – 5 stilde 7 başlangıç animasyonu, örneğin “Yıldız ol!” veya “Anı yakala!”.",
+     "Sanal asistan: bir animasyon seçince asistan da hemen açılır."
+    ],
+    "fr": [
+     "Écran d’accueil : choisissez désormais vous-même une animation dans le tableau de bord – 7 animations de démarrage en 5 styles, p. ex. « Deviens la star ! » ou « Immortalise l’instant ! ».",
+     "Assistant virtuel : choisir une animation active aussi l’assistant."
+    ],
+    "es": [
+     "Pantalla de inicio: ahora puede elegir usted mismo una animación en el panel: 7 animaciones de inicio en 5 estilos, p. ej. «¡Conviértete en la estrella!» o «¡Captura el momento!».",
+     "Asistente virtual: al elegir una animación, el asistente se activa también."
+    ],
+    "it": [
+     "Schermata iniziale: ora scegli tu un’animazione nella dashboard – 7 animazioni iniziali in 5 stili, per esempio «Diventa la star!» o «Cattura il momento!».",
+     "Assistente virtuale: scegliendo un’animazione si attiva anche l’assistente."
+    ]
+   }
+  },
   "1.18.92": {
    "date": "2026-11-08",
    "notes": {
