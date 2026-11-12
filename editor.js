@@ -91,6 +91,13 @@
   ${P} .h{position:absolute;width:13px;height:13px;border-radius:50%;background:#1976d2;border:2px solid #fff;pointer-events:auto;margin:-6.5px 0 0 -6.5px}
   ${P} .h.r{background:#fff;border-color:#1976d2;cursor:grab}
   ${P} .guide{position:absolute;background:#F7C838;pointer-events:none}
+  /* Beschnitt beim Druck (Betreiber 12.11.2026: „Logo an den Seiten beschnitten“): rot = wird abgeschnitten, gepunktet = sicherer Bereich */
+  ${P} .trim{position:absolute;inset:0;pointer-events:none;z-index:2} ${P} .trim svg{width:100%;height:100%;display:block}
+  ${P} .trimBtn{position:absolute;top:8px;right:8px;z-index:3;border:1px solid rgba(0,0,0,.15);background:rgba(255,255,255,.92);color:#1d1d24;border-radius:999px;padding:5px 11px;font:600 12px/1.2 system-ui,sans-serif;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+  ${P} .trimBtn.on{background:#F7C838;border-color:#F7C838}
+  ${P} .trimInfo{display:none;position:absolute;top:40px;right:8px;z-index:3;max-width:240px;background:rgba(255,255,255,.95);color:#1d1d24;border-radius:10px;padding:8px 10px;font:12px/1.35 system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.18);pointer-events:none}
+  ${P} .trimInfo.show,${P} .trimBtn.on:hover+.trimInfo{display:block}
+  ${P} .trimInfo i{display:inline-block;width:18px;height:10px;vertical-align:-1px;margin-right:5px;border-radius:2px}
   #le .hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:12px;color:#888;white-space:nowrap}
   #leL .side{height:100%;overflow:auto} #leL .sec{padding:12px 14px 14px}
   /* Vorlagen-Leiste (Fotolayout wie Profi-Software): Auswahl, Hinzufügen, Speichern unter, Import/Export, Rückgängig, Testdruck, Löschen */
@@ -159,7 +166,7 @@
     const lib = opts.lib || null; // Fotolayouts verwalten: { list, get, add, pick, remove, print }
     if (inline) {
       const dk = opts.dark ? 'dark' : '';
-      opts.stageEl.innerHTML = `<div id="leS" class="${dk}"><div class="stage"><div class="page"><canvas></canvas><div class="ov"></div></div></div></div>`;
+      opts.stageEl.innerHTML = `<div id="leS" class="${dk}"><div class="stage"><div class="page"><canvas></canvas><div class="ov"></div><div class="trim"></div></div><button class="trimBtn" type="button"></button><div class="trimInfo"></div></div></div>`;
       opts.propsEl.innerHTML = `<div id="leP" class="${dk}"><div class="props"></div></div>`;
       if (opts.sideEl) { opts.sideEl.innerHTML = `<div id="leL" class="${dk}" style="height:100%"><div class="side"></div></div>`; side = $(opts.sideEl, '.side'); }
       if (opts.barEl) { opts.barEl.innerHTML = `<div id="leB" class="${dk}"><div class="lbar"></div></div>`; bar = $(opts.barEl, '.lbar'); }
@@ -182,7 +189,7 @@
         ${lib ? '<div class="lib" data-a="lib"></div>' : ''}
         <div class="body">
           <div class="side"></div>
-          <div class="stage"><div class="page"><canvas></canvas><div class="ov"></div></div>
+          <div class="stage"><div class="page"><canvas></canvas><div class="ov"></div><div class="trim"></div></div><button class="trimBtn" type="button"></button><div class="trimInfo"></div>
             <div class="hint">Ziehen = verschieben · Punkte = Größe · ⟳ = drehen · Entf = löschen · Pfeiltasten = fein verschieben · Elemente rasten magnetisch ein, Alt = frei</div></div>
           <div class="props"></div>
         </div>`;
@@ -192,6 +199,35 @@
     page = $(stage, '.page'); cv = $(stage, 'canvas'); ov = $(stage, '.ov');
     const q = s => root ? $(root, s) : bar ? $(bar, s) : null;
     const setStatus = t => { const n = q('[data-a=status]'); if (n) n.textContent = t; opts.onStatus?.(t); };
+
+    // ---------- Beschnitt beim Druck ----------
+    // Fotodrucker (z. B. DNP) drucken randlos etwas größer als das Papier und schneiden ab: rund 2 % je Seite. Dazu kommt die
+    // „Druck-Anpassung“ der Fotobox (opts.trim() → { scale, x, y }: Größe in %, Verschiebung in mm). Nur bei Fotolayouts zum Drucken.
+    const TRIM = 0.02, SAFE = 0.045;
+    let trimOn = true; try { trimOn = localStorage.getItem('fotoboxTrimOff') !== '1'; } catch {}
+    const trimBtn = $(stage, '.trimBtn'), trimEl = $(stage, '.trim'), trimInfo = $(stage, '.trimInfo');
+    const printLayout = () => !!L && !L.screen && L.kind !== 'share';
+    function trimCuts() { // Anteil, der links/rechts/oben/unten wegfällt (bezogen auf das Layout)
+      const a = (typeof opts.trim === 'function' ? opts.trim() : opts.trim) || {}, k = Math.max(0.5, (+a.scale || 100) / 100);
+      const land = L.w >= L.h, mmW = land ? 152.4 : 101.6, mmH = land ? 101.6 : 152.4;
+      const one = (off, mm) => { const c = 1 - (1 - 2 * TRIM) / k, d = (+off || 0) / mm / k; return [Math.max(0, c / 2 - d), Math.max(0, c / 2 + d)]; };
+      const [l, r] = one(a.x, mmW), [t, b] = one(a.y, mmH); return { l, r, t, b };
+    }
+    function drawTrim() {
+      const show = printLayout();
+      trimBtn.style.display = show ? '' : 'none'; if (!show) trimInfo.classList.remove('show');
+      if (!show) { trimEl.innerHTML = ''; return; }
+      trimBtn.classList.toggle('on', trimOn); trimBtn.textContent = '✂ ' + tr(trimOn ? 'Beschnitt ausblenden' : 'Beschnitt anzeigen');
+      if (!trimOn) { trimEl.innerHTML = ''; trimInfo.classList.remove('show'); return; }
+      const W = L.w, H = L.h, c = trimCuts(), x0 = c.l * W, x1 = W - c.r * W, y0 = c.t * H, y1 = H - c.b * H, m = SAFE * Math.min(W, H);
+      trimEl.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><pattern id="trimHatch" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="14" height="14" fill="rgba(220,38,38,.28)"/><rect width="5" height="14" fill="rgba(220,38,38,.5)"/></pattern></defs>
+        <path fill="url(#trimHatch)" fill-rule="evenodd" d="M0 0H${W}V${H}H0Z M${x0} ${y0}V${y1}H${x1}V${y0}Z"/>
+        <rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="10 6" vector-effect="non-scaling-stroke"/>
+        <rect x="${x0 + m}" y="${y0 + m}" width="${Math.max(0, x1 - x0 - 2 * m)}" height="${Math.max(0, y1 - y0 - 2 * m)}" fill="none" stroke="#1976d2" stroke-width="1.5" stroke-dasharray="2 5" vector-effect="non-scaling-stroke"/></svg>`;
+      trimInfo.innerHTML = `<div><i style="background:rgba(220,38,38,.45)"></i>${tr('Wird beim Druck abgeschnitten')}</div><div style="margin-top:4px"><i style="border:1.5px dashed #1976d2"></i>${tr('Logo und Text innerhalb der blauen Linie halten')}</div><div style="margin-top:4px;color:#6b6b78">${tr('Je nach Drucker etwas mehr oder weniger.')}</div>`;
+    }
+    let trimInfoT = 0; const trimHint = () => { trimInfo.classList.add('show'); clearTimeout(trimInfoT); trimInfoT = setTimeout(() => trimInfo.classList.remove('show'), 7000); }; // Erklärung kurz zeigen, danach beim Zeigen auf den Knopf
+    trimBtn.addEventListener('click', () => { trimOn = !trimOn; try { localStorage.setItem('fotoboxTrimOff', trimOn ? '0' : '1'); } catch {} drawTrim(); if (trimOn) trimHint(); });
 
     // ---------- Laden ----------
     // Startbildschirm: Galerie-Stapel und Videonachricht-Karte als Ebenen dazu (unverändert werden sie nicht gespeichert)
@@ -207,7 +243,7 @@
       L = prep(lay); sel = null; hist = [JSON.stringify(L)]; hi = 0; lastSaved = JSON.stringify(out()); dirty = false;
       const nm = q('[data-a=name]'); if (nm) { nm.value = L.name || ''; nm.style.display = L.screen ? 'none' : ''; }
       root?.querySelectorAll('[data-a=seg] button').forEach(b => b.classList.toggle('on', b.dataset.o === L.orient));
-      fmtLabel(); renderLib(); updUndo(); renderSide(); renderProps(); fit(); draw();
+      fmtLabel(); renderLib(); updUndo(); renderSide(); renderProps(); fit(); draw(); drawTrim(); if (trimOn && printLayout() && !trimHint.done) { trimHint.done = 1; trimHint(); }
       FBR.preloadLayout(L).then(draw);
       opts.onLayout?.(L); opts.onSelect?.(null);
     }
@@ -884,7 +920,7 @@
     return {
       close, destroy, flush, reset, setOrient, select,
       add: addKind, undo: () => jump(-1), redo: () => jump(1),
-      load: lay => load(lay), orient: () => L && L.orient, layout: () => out(), pending: () => dirty || !!drag, refreshLib: renderLib,
+      load: lay => load(lay), redrawTrim: () => drawTrim(), orient: () => L && L.orient, layout: () => out(), pending: () => dirty || !!drag, refreshLib: renderLib,
       // Platzhalter-Texte oder feste Schaltflächen (Galerie, Videonachricht) haben sich außerhalb geändert: neu zeichnen
       update(o = {}) {
         if (o.values) opts.values = o.values;
