@@ -117,7 +117,7 @@
       if (data?.screen && data.screen_at !== lastAt) { lastAt = data.screen_at; img.src = data.screen; img.hidden = false; wait.hidden = true;
         stEl.innerHTML = `<span>Verbunden</span> · ${new Date(data.screen_at).toLocaleTimeString('de-DE')} · <span>Klicken = tippen, Mausrad = scrollen</span>`; }
       else if (!lastAt && Date.now() - t0 > 45000) wait.textContent = 'Die Fotobox antwortet nicht. Ist sie eingeschaltet, mit dem Internet verbunden und auf Version 1.18.96 oder neuer?';
-      setTimeout(tick, 1000);
+      setTimeout(tick, 500);
     };
     tick();
     const keep = setInterval(() => { if (alive) sb.rpc('remote_input', { p_device: dev.id, p_events: [] }); }, 120000); // Sitzung verlängern, solange das Fenster offen ist

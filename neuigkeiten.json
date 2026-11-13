@@ -1,6 +1,29 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.97": {
+   "date": "2026-11-13",
+   "notes": {
+    "de": [
+     "Fernwartung: Das Bild kommt jetzt zuverlässig und schneller, Klicks und Eingaben werden sofort ausgeführt."
+    ],
+    "en": [
+     "Remote maintenance: the picture now arrives reliably and faster, clicks and input are carried out immediately."
+    ],
+    "tr": [
+     "Uzaktan bakım: Görüntü artık güvenilir ve daha hızlı geliyor, tıklamalar ve girişler hemen uygulanıyor."
+    ],
+    "fr": [
+     "Maintenance à distance : l’image arrive désormais de façon fiable et plus vite, les clics et saisies sont exécutés immédiatement."
+    ],
+    "es": [
+     "Mantenimiento remoto: la imagen llega ahora de forma fiable y más rápida, los clics y entradas se ejecutan al instante."
+    ],
+    "it": [
+     "Assistenza remota: l’immagine ora arriva in modo affidabile e più veloce, clic e input vengono eseguiti subito."
+    ]
+   }
+  },
   "1.18.96": {
    "date": "2026-11-13",
    "notes": {
