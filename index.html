@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Photobox Memories – Dashboard</title>
 <link rel="stylesheet" href="fonts-fredoka/fredoka.css">
-<script>window.I18N_V = '20261112-1';</script>
+<script>window.I18N_V = '20261113-1';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -28,6 +28,7 @@
 <script src="admin-boothdesigner.js?v=20261101-1"></script>
 <script src="designs.js?v=20261104-1"></script>
 <script src="foto-aufgaben.js?v=20261108-1"></script>
+<script src="fernwartung.js?v=20261113-1"></script>
 <script src="event.js?v=20261111-3"></script>
 <script src="studio.js?v=20261111-2"></script>
 <script src="vendor/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
@@ -282,6 +283,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <div style="flex:1;min-width:220px"><b>Fotobox-Software für Windows</b><div class="small muted" id="swInfo">Lädt …</div></div>
         <button class="btn" id="swDl" disabled>⬇ Neueste Version herunterladen</button>
       </div>
+      <div id="fwCard"></div>
       <div class="tablewrap"><table>
         <thead><tr><th>Gerät</th><th>Status</th><th>Event</th><th>Ausdrucke</th><th>Fotos</th><th>Version</th><th class="adminCol hidden">Kunde</th><th></th></tr></thead>
         <tbody id="deviceList"></tbody>
@@ -1037,6 +1039,7 @@ async function loadDevices() {
   const { data, error } = await sb.from('devices').select('*, events(updated_at), licenses!inner(customer_name, customer_email, owner_id)').eq('licenses.owner_id', me.id).order('last_seen', { ascending: false, nullsFirst: false });
   if (error) return toast('Fehler: ' + error.message);
   devices = data; renderDevices(); renderEvents(); startCard();
+  window.Fernwartung?.card({ sb, me, profile, toast, pmConfirm }); // Fernwartung: eigene Fotoboxen steuern, Freigabe für den Betreiber
 }
 // Willkommens-Karte „So startest du“ (Ereignisse oben): für Konten ohne eigene Fotobox. Verschwindet, sobald eine Fotobox
 // verbunden ist, oder per × (gemerkt je Konto in diesem Browser).
@@ -1090,7 +1093,7 @@ function deviceDetails(d, online, mine) {
     ${notes.length ? `<div class="small" style="margin:-6px 0 12px">${notes.map(n => `<div>• ${esc(n)}</div>`).join('')}</div>` : ''}
     ${st.sync && !(st.sync.account && st.sync.event) && !(st.sync.event && st.sync.viaKey) ? `<p class="small" style="margin:-6px 0 12px;color:#b8860b">⚠️ ${!st.sync.account ? 'Diese Fotobox ist nur mit dem Lizenzschlüssel angemeldet – Änderungen an der Fotobox kommen nicht ins Dashboard. An der Fotobox unter Einstellungen → Allgemein mit E-Mail und Passwort anmelden.' : 'An dieser Fotobox ist kein Ereignis gewählt – Änderungen kommen nicht ins Dashboard.'}</p>`
       : N(st.sync?.pending) ? `<p class="small muted" style="margin:-6px 0 12px">${N(st.sync.pending)} Änderung(en) der Fotobox warten noch auf die Übertragung ins Dashboard.</p>` : ''}
-    ${mine ? `<div class="card" style="margin-bottom:10px"><h2>Fernsteuerung</h2>
+    ${mine ? `<div class="card" style="margin-bottom:10px"><h2>Fernsteuerung</h2>${window.Fernwartung ? Fernwartung.deviceRow(d) : ''}
       ${fresh ? '' : '<p class="small muted" style="margin-bottom:8px">Die Fotobox ist gerade nicht verbunden. Befehle werden ausgeführt, sobald sie sich wieder meldet (höchstens 10 Minuten lang).</p>'}
       <div class="row" style="margin-bottom:12px"><button class="btn primary" data-dev="${d.id}" data-act="testprint">🖨 Testdruck auslösen</button><button class="btn" data-dev="${d.id}" data-act="pinreset" title="Entfernt den Sicherheitspin an der Fotobox, falls er vergessen wurde">🔓 Sicherheitspin zurücksetzen${st.locked ? ' (gesperrt)' : ''}</button>${cmd}</div>
       ${newCmds ? `<div class="row" style="margin-bottom:12px">${st.screen === 'attract' ? `<button class="btn" data-dev="${d.id}" data-act="stop">⏹ Ereignis beenden</button>` : `<button class="btn" data-dev="${d.id}" data-act="start">▶ Ereignis starten</button>`}${st.pin ? (st.locked ? `<button class="btn" data-dev="${d.id}" data-act="unlock">🔓 Entsperren</button>` : `<button class="btn" data-dev="${d.id}" data-act="lock">🔒 Sperren</button>`) : ''}<button class="btn" data-dev="${d.id}" data-act="reload" title="Holt alle Einstellungen neu aus dem Dashboard">↻ Einstellungen neu laden</button><button class="btn" data-dev="${d.id}" data-act="update">⬇ Update installieren</button><button class="btn" data-dev="${d.id}" data-act="restart">⟳ Neu starten</button></div>` : ''}
