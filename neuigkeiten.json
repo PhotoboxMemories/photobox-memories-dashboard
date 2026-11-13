@@ -1,6 +1,35 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.96": {
+   "date": "2026-11-13",
+   "notes": {
+    "de": [
+     "Fernwartung: Im Dashboard unter Geräte siehst du jetzt den Bildschirm deiner Fotobox und kannst sie direkt bedienen – klicken, tippen, Einstellungen ändern.",
+     "Hilfe von Photobox Memories nur mit deiner Erlaubnis: Du entscheidest, ob und wie lange wir auf deine Fotoboxen zugreifen dürfen."
+    ],
+    "en": [
+     "Remote maintenance: in the dashboard under Devices you now see your photo booth’s screen and can operate it directly – click, type, change settings.",
+     "Help from Photobox Memories only with your permission: you decide whether and for how long we may access your photo booths."
+    ],
+    "tr": [
+     "Uzaktan bakım: Panelde Cihazlar altında artık fotoğraf kabininin ekranını görür ve doğrudan kullanabilirsin – tıkla, yaz, ayarları değiştir.",
+     "Photobox Memories’ten yardım yalnızca senin izninle: Kabinlerine erişip erişemeyeceğimize ve ne kadar süreyle erişeceğimize sen karar verirsin."
+    ],
+    "fr": [
+     "Maintenance à distance : dans le tableau de bord, sous Appareils, vous voyez désormais l’écran de votre photobooth et pouvez l’utiliser directement – cliquer, taper, modifier les réglages.",
+     "L’aide de Photobox Memories uniquement avec votre autorisation : vous décidez si et combien de temps nous pouvons accéder à vos photobooths."
+    ],
+    "es": [
+     "Mantenimiento remoto: en el panel, en Dispositivos, ahora ve la pantalla de su fotomatón y puede manejarlo directamente: hacer clic, escribir, cambiar ajustes.",
+     "Ayuda de Photobox Memories solo con su permiso: usted decide si podemos acceder a sus fotomatones y durante cuánto tiempo."
+    ],
+    "it": [
+     "Assistenza remota: nella dashboard, in Dispositivi, ora vedi lo schermo del tuo photobooth e puoi usarlo direttamente – cliccare, scrivere, cambiare impostazioni.",
+     "Aiuto da Photobox Memories solo con il tuo permesso: decidi tu se e per quanto tempo possiamo accedere ai tuoi photobooth."
+    ]
+   }
+  },
   "1.18.95": {
    "date": "2026-11-12",
    "notes": {
