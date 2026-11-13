@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zeichnung">
+<meta name="theme-color" content="#0e0e0d">
+<title>Zeichnung</title>
+<script>window.I18N_V = '20261113-3';</script>
+<script src="i18n.js?v=20261021-4"></script>
+<script>// Sprache: ?l=… (von der Fotobox), sonst gemerkt, sonst die des iPads
+(function () { var q = new URLSearchParams(location.search).get('l'), m = ''; try { m = localStorage.getItem('pm_draw_lang') || ''; } catch (e) {}
+  var l = I18N.CODES.indexOf(m) >= 0 ? m : I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('de');
+  window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
+<link rel="stylesheet" href="fonts-fredoka/fredoka.css">
+<style>
+  :root{--y:#F9CB38;--k:#1D1D1B;--bg:#0e0e0d;--card:#1c1c1f;--line:#2e2e33;--muted:#a3a3ad}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:#fff;font:17px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  h1,h2{font-family:Fredoka,system-ui,sans-serif;font-weight:700;margin:0}
+  .scr{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+  .scr.on{display:flex}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:.4em;background:var(--y);color:var(--k);border:0;border-radius:999px;padding:18px 34px;font:700 22px Fredoka,system-ui,sans-serif;cursor:pointer;min-width:200px}
+  .btn.ghost{background:#2a2a2e;color:#fff}
+  .btn:disabled{opacity:.5}
+  .muted{color:var(--muted)}
+  /* Kamera */
+  #cam{padding:0;background:#000}
+  #live,#still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+  #live.mirror{transform:scaleX(-1)}
+  .top{position:absolute;left:0;right:0;top:0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:max(14px,env(safe-area-inset-top)) 16px 30px;background:linear-gradient(rgba(0,0,0,.6),transparent);z-index:2}
+  .top h1{font-size:clamp(24px,4vw,40px);text-shadow:0 2px 10px rgba(0,0,0,.5)}
+  .pill{display:inline-flex;align-items:center;gap:8px;margin-top:8px;background:rgba(0,0,0,.55);border-radius:999px;padding:6px 14px;font-weight:600;font-size:15px}
+  .pill i{width:10px;height:10px;border-radius:50%;background:#3ad16f;flex:none}
+  .pill.busy i{background:var(--y)}.pill.off i{background:#ff5b5b}
+  .tools{display:flex;gap:10px}
+  .ib{width:52px;height:52px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:24px;cursor:pointer}
+  .langSel{height:52px;border-radius:26px;border:0;background:rgba(0,0,0,.55);color:#fff;padding:0 14px;font:600 16px system-ui,sans-serif}
+  .bottom{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px 16px max(22px,env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.65));z-index:2}
+  .shutter{width:120px;height:120px;border-radius:50%;border:8px solid #fff;background:var(--y);cursor:pointer;box-shadow:0 0 0 6px rgba(249,203,56,.35),0 8px 30px rgba(0,0,0,.5);font-size:44px;display:flex;align-items:center;justify-content:center}
+  .shutter:active{transform:scale(.95)}
+  .shutter:disabled{opacity:.45}
+  .hint{font-weight:600;text-shadow:0 2px 8px rgba(0,0,0,.6);text-align:center}
+  .small{font-size:13px;color:#cfcfd6;text-shadow:0 1px 6px rgba(0,0,0,.6);text-align:center}
+  .row2{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+  #cd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 min(40vw,320px) Fredoka,system-ui,sans-serif;color:#fff;text-shadow:0 6px 40px rgba(0,0,0,.6);pointer-events:none;z-index:3}
+  #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:4;transition:opacity .35s}
+  #flash.on{opacity:1;transition:none}
+  #camErr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:30px;z-index:3;background:#111}
+  /* Themen */
+  #themes{justify-content:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  #themes h2{font-size:clamp(26px,4vw,42px);margin:14px 0 4px;text-align:center}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,210px));justify-content:center;gap:16px;width:100%;max-width:1100px;margin:18px 0 24px}
+  .tile{border:0;border-radius:20px;aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.55);font:700 20px Fredoka,system-ui,sans-serif;cursor:pointer;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .tile .e{font-size:58px;line-height:1}
+  /* Status */
+  #wait{gap:18px;text-align:center}
+  #wait .big{font-size:92px;line-height:1}
+  #wait h2{font-size:clamp(28px,4.5vw,48px);max-width:900px}
+  #wait p{margin:0;max-width:700px;color:#d8d8de;font-size:20px}
+  #wPhoto{width:min(36vw,260px);aspect-ratio:3/4;object-fit:cover;border-radius:18px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+  .bar{width:min(80vw,560px);height:14px;border-radius:99px;background:#2a2a2e;overflow:hidden}
+  .bar b{display:block;height:100%;width:0;background:linear-gradient(90deg,#d9a400,var(--y));transition:width .6s}
+  /* Kopplung */
+  #setup{gap:16px;text-align:center}
+  #setup .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px;max-width:560px;width:100%}
+  #setup input{width:100%;font:700 30px/1.2 ui-monospace,Menlo,monospace;letter-spacing:.12em;text-align:center;text-transform:uppercase;background:#111114;color:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin:16px 0;-webkit-user-select:text;user-select:text}
+  .err{color:#ff8a8a;font-weight:600;min-height:1.4em}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<!-- Kopplung: Code der Fotobox (Einstellungen → Extras → Zeichenroboter → Foto mit dem iPad) -->
+<section class="scr" id="setup">
+  <div class="card">
+    <h2>iPad mit der Fotobox koppeln</h2>
+    <p class="muted">Gib den Code ein, den die Fotobox unter Einstellungen → Extras → Zeichenroboter → „Foto mit dem iPad“ zeigt – oder scanne dort den QR-Code mit der Kamera des iPads.</p>
+    <input id="codeIn" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD-EFGH-JKLM" aria-label="Code">
+    <div class="err" id="setupErr"></div>
+    <button class="btn" id="codeGo" type="button">Koppeln</button>
+  </div>
+</section>
+
+<!-- Kamera: Livebild, Auslöser, Countdown, danach Vorschau -->
+<section class="scr" id="cam">
+  <video id="live" playsinline muted autoplay class="mirror"></video>
+  <img id="still" alt="" hidden>
+  <div class="top">
+    <div><h1 id="title">Lass dich vom Roboter zeichnen!</h1><div class="pill" id="pill"><i></i><span id="pillT">Einen Moment …</span></div></div>
+    <div class="tools"><select class="langSel" id="langSel" aria-label="Sprache" translate="no"></select><button class="ib" id="flip" type="button" aria-label="Kamera wechseln">🔄</button></div>
+  </div>
+  <div id="cd"></div><div id="flash"></div>
+  <div class="bottom" id="shootBar">
+    <button class="shutter" id="shoot" type="button" aria-label="Foto machen">📸</button>
+    <div class="hint" id="shootHint">Tippe auf den Auslöser – nach 3 Sekunden wird das Foto gemacht.</div>
+    <div class="small">Dein Foto wird nur für diese Zeichnung verwendet.</div>
+  </div>
+  <div class="bottom" id="revBar" hidden>
+    <div class="hint">Gefällt dir das Foto?</div>
+    <div class="row2"><button class="btn ghost" id="again" type="button">↺ Nochmal</button><button class="btn" id="ok" type="button">✓ Zeichnen lassen</button></div>
+  </div>
+  <div id="camErr" hidden><div style="font-size:64px">📷</div><h2 id="camErrT">Die Kamera ist nicht freigegeben.</h2>
+    <p class="muted" id="camErrH">Bitte erlaube den Zugriff auf die Kamera: in Safari auf „aA“ → Website-Einstellungen → Kamera → Erlauben.</p>
+    <button class="btn" id="camRetry" type="button">Erneut versuchen</button></div>
+</section>
+
+<!-- Thema wählen (wie an der Fotobox) -->
+<section class="scr" id="themes">
+  <h2 id="thTitle">Wähle ein Thema</h2>
+  <div class="muted">Tippe auf das Thema, das dir gefällt</div>
+  <div class="grid" id="grid"></div>
+  <button class="btn ghost" id="thBack" type="button">← Zurück</button>
+</section>
+
+<!-- Warteschlange / wird gezeichnet / fertig -->
+<section class="scr" id="wait">
+  <img id="wPhoto" alt="">
+  <div class="big" id="wIcon">🤖</div>
+  <h2 id="wTitle"></h2>
+  <p id="wText"></p>
+  <div class="bar" id="wBar" hidden><b id="wProg"></b></div>
+  <button class="btn" id="next" type="button">📸 Nächstes Foto</button>
+</section>
+
+<script src="config.js?v=20261025-3"></script>
+<script>
+(function () {
+  'use strict';
+  // Zeichenroboter – Foto mit dem iPad des Vermieters (13.11.2026). Das iPad steht neben dem Arm; die Seite ist mit der Fotobox gekoppelt
+  // (Code im QR-Code, #c=…). Ablauf: Auslöser → Countdown → Vorschau (nochmal/ok) → ggf. Thema → Foto an den Server (pad_robot_send) →
+  // die Fotobox holt es ab, zeichnet und meldet den Fortschritt (pad_robot_state). Danach ist das iPad wieder bereit. Keine Werbung, kein Logo.
+  const $ = s => document.querySelector(s), CFG = window.FOTOBOX_CONFIG || {};
+  const T = s => I18N.t(s, PM_LANG);
+  I18N.watch(document.body, () => PM_LANG);
+  const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} } };
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const clean = c => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const timeout = ms => (window.AbortSignal && AbortSignal.timeout ? AbortSignal.timeout(ms) : undefined);
+  async function rpc(fn, body) {
+    const r = await fetch(CFG.supabaseUrl + '/rest/v1/rpc/' + fn, { method: 'POST', body: JSON.stringify(body), signal: timeout(45000),
+      headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
+    if (!r.ok) throw new Error('net ' + r.status);
+    return r.json();
+  }
+
+  // ---------- Bildschirme ----------
+  let scr = '';
+  function show(id) { scr = id; document.querySelectorAll('.scr').forEach(s => s.classList.toggle('on', s.id === id)); idle(); }
+  let idleT = 0; // Vorschau/Themen ohne Antwort: nach einer Minute zurück zur Kamera
+  function idle() { clearTimeout(idleT); if (scr === 'themes' || (scr === 'cam' && !$('#revBar').hidden)) idleT = setTimeout(toCam, 60000); }
+
+  // ---------- Kopplung ----------
+  let code = clean((location.hash.match(/[#&]c=([A-Za-z0-9-]+)/) || [])[1]) || clean(store.get('pm_draw_code'));
+  function keepHash() { // Adresse mit Code, damit „Zum Home-Bildschirm“ ihn mitnimmt (der Home-Bildschirm hat einen eigenen Speicher)
+    const h = code ? '#c=' + code : '';
+    if (location.hash !== h) history.replaceState(null, '', location.pathname + location.search + h);
+  }
+  function setCode(c) { code = c; store.set('pm_draw_code', c || null); keepHash(); }
+  $('#codeIn').addEventListener('input', e => { const v = clean(e.target.value).slice(0, 12); e.target.value = v.replace(/(.{4})(?=.)/g, '$1-'); });
+  $('#codeGo').onclick = async () => {
+    const c = clean($('#codeIn').value); $('#setupErr').textContent = '';
+    if (c.length !== 12) { $('#setupErr').textContent = T('Der Code hat 12 Zeichen.'); return; }
+    $('#codeGo').disabled = true;
+    try { const r = await rpc('pad_robot_state', { p_code: c }); if (!r || !r.ok) throw new Error('code'); setCode(c); state = r; await start(); }
+    catch (e) { $('#setupErr').textContent = e.message === 'code' ? T('Diesen Code kennt die Fotobox nicht. Bitte noch einmal prüfen.') : T('Keine Internetverbindung. Bitte prüfen und noch einmal versuchen.'); }
+    $('#codeGo').disabled = false;
+  };
+  function toSetup(msg) { setCode(''); stopCam(); show('setup'); $('#setupErr').textContent = msg || ''; }
+  // neuer QR-Code gescannt, während die Seite offen ist (nur das # ändert sich, die Seite lädt nicht neu)
+  window.addEventListener('hashchange', () => { const c = clean((location.hash.match(/[#&]c=([A-Za-z0-9-]+)/) || [])[1]); if (c.length === 12 && c !== code) { setCode(c); state = null; shot = null; start(); } });
+
+  // ---------- Sprache ----------
+  { const sel = $('#langSel'); sel.innerHTML = I18N.LANGS.map(l => `<option value="${l.code}" ${l.code === PM_LANG ? 'selected' : ''}>${l.flag || ''} ${l.name}</option>`).join('');
+    sel.onchange = () => { store.set('pm_draw_lang', sel.value); location.reload(); }; }
+
+  // ---------- Kamera ----------
+  let stream = null, facing = store.get('pm_draw_facing') === 'environment' ? 'environment' : 'user';
+  function stopCam() { if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; }
+  async function startCam() {
+    $('#camErr').hidden = true;
+    if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { camErr(T('Diese Seite braucht eine sichere Verbindung (https) und Safari.'), ''); return false; }
+    if (stream && stream.getVideoTracks().some(t => t.readyState === 'live')) return true;
+    stopCam();
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1440 } } });
+      const v = $('#live'); v.srcObject = stream; v.classList.toggle('mirror', facing === 'user'); await Promise.race([v.play().catch(() => {}), sleep(3000)]); // play() kann im Hintergrund ewig warten
+      return true;
+    } catch (e) { camErr(T('Die Kamera ist nicht freigegeben.'), T('Bitte erlaube den Zugriff auf die Kamera: in Safari auf „aA“ → Website-Einstellungen → Kamera → Erlauben.')); return false; }
+  }
+  function camErr(t, h) { $('#camErrT').textContent = t; $('#camErrH').textContent = h; $('#camErr').hidden = false; }
+  $('#camRetry').onclick = () => startCam();
+  $('#flip').onclick = async () => { facing = facing === 'user' ? 'environment' : 'user'; store.set('pm_draw_facing', facing); stopCam(); await startCam(); };
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { wake(); if (scr === 'cam') startCam(); poll(); } });
+  // Bildschirm bleibt an (Safari 16.4+), solange die Seite offen ist
+  let lock = null;
+  async function wake() { try { if (navigator.wakeLock && (!lock || lock.released)) lock = await navigator.wakeLock.request('screen'); } catch (e) {} }
+  document.addEventListener('pointerdown', wake);
+
+  // Foto aus dem Livebild: höchstens 1600 px, wie es auf dem Bildschirm zu sehen war (Frontkamera gespiegelt)
+  function grab() {
+    const v = $('#live'), w = v.videoWidth, h = v.videoHeight; if (!w || !h) return null;
+    const k = Math.min(1, 1600 / Math.max(w, h)), c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+    const x = c.getContext('2d'); if (facing === 'user') { x.translate(c.width, 0); x.scale(-1, 1); }
+    x.drawImage(v, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', .86);
+  }
+
+  // ---------- Zustand der Fotobox ----------
+  let state = null, shot = null, photo = '';
+  function pill() {
+    const p = $('#pill'), s = state || {}, i = s.info || {}, n = +s.waiting || 0; let cls = '', t;
+    if (!state) t = T('Verbindet …');
+    else if (!s.online) { cls = 'off'; t = T('Die Fotobox ist nicht erreichbar.'); }
+    else if (i.state === 'off') { cls = 'off'; t = T('Der Zeichenroboter ist gerade nicht bereit.'); }
+    else if (i.state === 'sheet') { cls = 'busy'; t = T('Gleich geht es weiter – es wird ein neues Blatt eingelegt.'); }
+    else if (s.drawing || i.state === 'busy' || n) { cls = 'busy'; t = n ? T(`Der Roboter zeichnet gerade – ${n} warten`) : T('Der Roboter zeichnet gerade'); }
+    else t = T('Bereit');
+    p.className = 'pill ' + cls; $('#pillT').textContent = t;
+    $('#title').textContent = T('Lass dich vom Roboter zeichnen!');
+    $('#shoot').disabled = !!state && (!s.online || n >= 6);
+  }
+  let pollT = 0, polling = false;
+  async function poll() {
+    clearTimeout(pollT); if (!code) return;
+    if (!polling) {
+      polling = true;
+      try {
+        const r = await rpc('pad_robot_state', { p_code: code, p_shot: shot ? shot.id : null });
+        if (r && r.ok === false && r.error === 'code') { polling = false; toSetup(T('Die Kopplung wurde an der Fotobox aufgehoben. Bitte den neuen QR-Code scannen.')); return; }
+        if (r && r.ok) { state = r; if (shot && r.shot) shot = { ...shot, ...r.shot }; }
+      } catch (e) { state = state ? { ...state, online: false } : { online: false }; }
+      polling = false;
+      pill(); if (scr === 'wait') showWait();
+    }
+    pollT = setTimeout(poll, scr === 'wait' ? 2000 : 5000);
+  }
+
+  // ---------- Auslösen ----------
+  let counting = false;
+  $('#shoot').onclick = async () => {
+    if (counting || $('#shoot').disabled) return;
+    if (!await startCam()) return;
+    counting = true; $('#shootBar').hidden = true;
+    for (const n of [3, 2, 1]) { $('#cd').textContent = n; await sleep(1000); }
+    $('#cd').textContent = ''; const f = $('#flash'); f.classList.add('on');
+    photo = grab(); await sleep(60); f.classList.remove('on'); counting = false;
+    if (!photo) { $('#shootBar').hidden = false; return; }
+    $('#still').src = photo; $('#still').hidden = false; $('#revBar').hidden = false; idle();
+  };
+  function toCam() {
+    clearTimeout(idleT); $('#still').hidden = true; $('#revBar').hidden = true; $('#shootBar').hidden = false; photo = '';
+    show('cam'); startCam(); pill();
+  }
+  $('#again').onclick = toCam;
+  $('#ok').onclick = () => {
+    const i = (state && state.info) || {};
+    if (i.pick && (i.themes || []).length > 1) return showThemes(i);
+    send(null);
+  };
+  function showThemes(i) {
+    $('#thTitle').textContent = i.header ? i.header : T('Wähle ein Thema');
+    const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    $('#grid').innerHTML = i.themes.map((t, k) => { const bg = String(t.bg || '').split(',').filter(c => /^#[0-9a-f]{3,8}$/i.test(c.trim()));
+      return `<button class="tile" type="button" data-k="${k}" style="background:${bg.length > 1 ? `linear-gradient(150deg,${bg[0]},${bg[1]})` : bg[0] || '#F9CB38'}"><span class="e">${esc(t.icon || '✏️')}</span><span ${t.custom ? 'translate="no"' : ''}>${esc(t.custom ? t.name : T(t.name))}</span></button>`; }).join('');
+    $('#grid').onclick = e => { const b = e.target.closest('.tile'); if (b) send(i.themes[+b.dataset.k].id); };
+    show('themes');
+  }
+  $('#thBack').onclick = () => { show('cam'); idle(); };
+
+  let sending = false;
+  async function send(theme) {
+    if (sending || !photo) return; sending = true;
+    const client = (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)); // dasselbe Foto bei Wiederholung nur einmal
+    clearTimeout(backT); backT = 0; $('#wPhoto').src = photo; shot = { status: 'sending', progress: 0 }; show('wait'); showWait();
+    try {
+      let r = null;
+      for (let n = 0; n < 3 && !r; n++) { try { r = await rpc('pad_robot_send', { p_code: code, p_photo: photo, p_theme: theme, p_client: client }); } catch (e) { if (n === 2) throw e; await sleep(2000); } }
+      if (!r.ok) {
+        if (r.error === 'code') { sending = false; return toSetup(T('Die Kopplung wurde an der Fotobox aufgehoben. Bitte den neuen QR-Code scannen.')); }
+        shot = { status: 'error', why: r.error };
+      } else shot = { id: r.id, status: 'waiting', pos: r.pos, progress: 0 };
+    } catch (e) { shot = { status: 'error', why: 'net' }; }
+    sending = false; photo = ''; showWait(); poll();
+  }
+
+  // ---------- Status des eigenen Fotos ----------
+  let backT = 0;
+  function showWait() {
+    const s = shot || {}, set = (icon, title, text, prog) => {
+      $('#wIcon').textContent = icon; $('#wTitle').textContent = title; $('#wText').textContent = text || '';
+      $('#wBar').hidden = prog == null; if (prog != null) $('#wProg').style.width = Math.round(prog * 100) + '%';
+    };
+    const end = s.status === 'done' || s.status === 'failed' || s.status === 'canceled' || s.status === 'error';
+    if (s.status === 'sending') set('📤', T('Dein Foto wird gesendet …'), '', null);
+    else if (s.status === 'error') set('⚠️', s.why === 'full' ? T('Gerade warten schon viele Fotos.') : s.why === 'offline' ? T('Die Fotobox ist nicht erreichbar.') : T('Das Senden hat nicht geklappt.'),
+      s.why === 'full' ? T('Bitte versuch es in ein paar Minuten noch einmal.') : T('Bitte prüfe die Internetverbindung und versuch es noch einmal.'), null);
+    else if (s.status === 'waiting') {
+      const i = (state && state.info) || {};
+      if (i.state === 'sheet') set('📄', T('Gleich geht es los!'), T('Es wird gerade ein neues Blatt eingelegt.'), null);
+      else if ((s.pos || 1) > 1) set('⏳', T(`Du bist Nr. ${s.pos} in der Reihe`), T('Der Roboter zeichnet noch die Gäste vor dir. Bleib in der Nähe!'), null);
+      else if (state && state.info && state.info.state === 'off') set('⏳', T('Gleich geht es los!'), T('Die Fotobox ist gleich bereit.'), null);
+      else set('⏳', T('Gleich geht es los!'), T('Der Roboter macht sich bereit.'), null);
+    }
+    else if (s.status === 'taken') set('✨', T('Deine Zeichnung wird vorbereitet …'), T('Schau gleich zum Roboter!'), 0);
+    else if (s.status === 'drawing') set('✏️', T('Der Roboter zeichnet dich …'), Math.round((s.progress || 0) * 100) + ' %', s.progress || 0);
+    else if (s.status === 'done') set('🎉', T('Fertig! Nimm deine Zeichnung mit.'), '', 1);
+    else if (s.status === 'failed' || s.status === 'canceled') set('😕', T('Die Zeichnung hat leider nicht geklappt.'), T('Bitte wende dich an das Team.'), null);
+    $('#next').textContent = '📸 ' + T(end ? 'Neues Foto' : 'Nächstes Foto');
+    // fertig: nach 10 s von selbst zurück zur Kamera (nur einmal stellen – die Abfrage alle 2 s ruft das hier immer wieder auf)
+    if (!end) { clearTimeout(backT); backT = 0; }
+    else if (scr === 'wait' && !backT) backT = setTimeout(() => { backT = 0; if (scr === 'wait') { shot = null; toCam(); } }, s.status === 'error' ? 15000 : 10000);
+  }
+  // „Nächstes Foto“: Das eigene Foto bleibt in der Reihe, das iPad ist frei für die nächsten Gäste
+  $('#next').onclick = () => { clearTimeout(backT); backT = 0; shot = null; toCam(); poll(); };
+
+  // ---------- Start ----------
+  async function start() {
+    keepHash(); toCam(); wake(); poll();
+  }
+  if (!CFG.supabaseUrl) { show('setup'); $('#setupErr').textContent = 'config'; }
+  else if (code.length === 12) start();
+  else show('setup');
+})();
+</script>
+</body>
+</html>
