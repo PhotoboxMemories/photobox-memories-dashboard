@@ -1,6 +1,47 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.100": {
+   "date": "2026-11-14",
+   "notes": {
+    "de": [
+     "Zeichenroboter: Eigene Seite im Dashboard (Menü Aufnahme → Zeichenroboter). Alle Themen mit Vorschaubild, Suche, Auswahl in fester Reihenfolge per Antippen oder Ziehen.",
+     "Zeichenroboter: Wähle „Nur die Köpfe“ oder „Ganzer Körper mit großen Köpfen“. Die Fotobox erkennt die Gesichter auf dem Foto (auch vom iPad) und entfernt den Hintergrund, erst dann kommt das Thema dazu.",
+     "Zeichenroboter: Eigene Themen mit Zeichenstil, Ausschnitt, Kleidung, Figur, Handlung, Szene und Hintergrund – mit Vorschau, auch mit eigenem Testfoto. Die Gäste wählen das Thema als Bild-Kachel an der Fotobox und am iPad.",
+     "Zeichenroboter: Die Zeichnung wird nicht mehr seitlich gekippt, sondern immer so gezeichnet, dass sie für die Gäste gegenüber dem Arm richtig herum steht."
+    ],
+    "en": [
+     "Drawing robot: its own page in the dashboard (menu Capture → Drawing robot). All themes with a preview image, search, and a fixed order you set by tapping or dragging.",
+     "Drawing robot: choose “Heads only” or “Full body with big heads”. The photo booth detects the faces in the photo (also from the iPad) and removes the background before the theme is added.",
+     "Drawing robot: own themes with drawing style, framing, clothing, character, action, scene and background – with a preview, also with your own test photo. Guests choose the theme as a picture tile at the photo booth and on the iPad.",
+     "Drawing robot: the drawing is no longer turned sideways – it is always drawn so it is the right way up for the guests facing the arm."
+    ],
+    "tr": [
+     "Çizim robotu: Panelde kendi sayfası (menü Çekim → Çizim robotu). Tüm temalar önizleme görseliyle, arama ve dokunarak veya sürükleyerek belirlediğin sabit sırayla.",
+     "Çizim robotu: „Sadece kafalar“ veya „Büyük kafalı tüm vücut“ seç. Fotoğraf kabini fotoğraftaki yüzleri tanır (iPad’den de) ve tema eklenmeden önce arka planı kaldırır.",
+     "Çizim robotu: Çizim stili, kadraj, kıyafet, figür, eylem, sahne ve arka planlı kendi temaların – önizlemeyle, kendi test fotoğrafınla da. Misafirler temayı fotoğraf kabininde ve iPad’de görsel kutucuk olarak seçer.",
+     "Çizim robotu: Çizim artık yana döndürülmüyor, kolun karşısındaki misafirler için her zaman doğru yönde çiziliyor."
+    ],
+    "fr": [
+     "Robot dessinateur : sa propre page dans le tableau de bord (menu Prise de vue → Robot dessinateur). Tous les thèmes avec aperçu, recherche et ordre fixe défini en touchant ou en faisant glisser.",
+     "Robot dessinateur : choisis « Têtes seulement » ou « Corps entier avec grosses têtes ». La photobooth détecte les visages sur la photo (aussi depuis l’iPad) et supprime l’arrière-plan avant d’ajouter le thème.",
+     "Robot dessinateur : thèmes personnels avec style de dessin, cadrage, vêtements, personnage, action, scène et arrière-plan – avec aperçu, aussi avec ta propre photo test. Les invités choisissent le thème sous forme de vignette sur la photobooth et sur l’iPad.",
+     "Robot dessinateur : le dessin n’est plus tourné sur le côté, il est toujours dessiné à l’endroit pour les invités en face du bras."
+    ],
+    "es": [
+     "Robot dibujante: página propia en el panel (menú Captura → Robot dibujante). Todos los temas con imagen de vista previa, búsqueda y un orden fijo que defines tocando o arrastrando.",
+     "Robot dibujante: elige «Solo las cabezas» o «Cuerpo entero con cabezas grandes». El fotomatón detecta las caras de la foto (también del iPad) y elimina el fondo antes de añadir el tema.",
+     "Robot dibujante: temas propios con estilo de dibujo, encuadre, ropa, personaje, acción, escena y fondo, con vista previa, también con tu propia foto de prueba. Los invitados eligen el tema como mosaico de imagen en el fotomatón y en el iPad.",
+     "Robot dibujante: el dibujo ya no se gira de lado, siempre se dibuja al derecho para los invitados que están frente al brazo."
+    ],
+    "it": [
+     "Robot disegnatore: una pagina tutta sua nella dashboard (menu Scatto → Robot disegnatore). Tutti i temi con immagine di anteprima, ricerca e un ordine fisso che imposti toccando o trascinando.",
+     "Robot disegnatore: scegli „Solo le teste“ o „Corpo intero con teste grandi“. La fotocabina riconosce i volti nella foto (anche dall’iPad) e rimuove lo sfondo prima di aggiungere il tema.",
+     "Robot disegnatore: temi personali con stile di disegno, inquadratura, abbigliamento, personaggio, azione, scena e sfondo – con anteprima, anche con la tua foto di prova. Gli ospiti scelgono il tema come riquadro con immagine sulla fotocabina e sull’iPad.",
+     "Robot disegnatore: il disegno non viene più ruotato di lato, ma è sempre disegnato dritto per gli ospiti di fronte al braccio."
+    ]
+   }
+  },
   "1.18.99": {
    "date": "2026-11-13",
    "notes": {
