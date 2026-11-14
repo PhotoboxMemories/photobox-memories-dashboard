@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Zeichnung">
 <meta name="theme-color" content="#0e0e0d">
 <title>Zeichnung</title>
-<script>window.I18N_V = '20261113-3';</script>
+<script>window.I18N_V = '20261114-2';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache: ?l=… (von der Fotobox), sonst gemerkt, sonst die des iPads
 (function () { var q = new URLSearchParams(location.search).get('l'), m = ''; try { m = localStorage.getItem('pm_draw_lang') || ''; } catch (e) {}
@@ -57,6 +57,7 @@
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,210px));justify-content:center;gap:16px;width:100%;max-width:1100px;margin:18px 0 24px}
   .tile{border:0;border-radius:20px;aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.55);font:700 20px Fredoka,system-ui,sans-serif;cursor:pointer;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
   .tile .e{font-size:58px;line-height:1}
+  .tile.pic{background:#fff;color:#1D1D1B;text-shadow:none;justify-content:flex-end;gap:6px;padding:8px;font-size:17px}.tile.pic img{width:100%;flex:1;min-height:0;object-fit:contain;border-radius:12px}
   /* Status */
   #wait{gap:18px;text-align:center}
   #wait .big{font-size:92px;line-height:1}
@@ -264,6 +265,8 @@
     $('#thTitle').textContent = i.header ? i.header : T('Wähle ein Thema');
     const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     $('#grid').innerHTML = i.themes.map((t, k) => { const bg = String(t.bg || '').split(',').filter(c => /^#[0-9a-f]{3,8}$/i.test(c.trim()));
+      const th = /^(https:\/\/\S+|draw-themes\/[a-z0-9-]+\.jpg)$/.test(t.thumb || '') ? t.thumb : ''; // Vorschaubild des Themas (seit 14.11.2026)
+      if (th) return `<button class="tile pic" type="button" data-k="${k}" aria-label="${esc(t.custom ? t.name : T(t.name))}"><img src="${esc(th)}" alt="">${i.names === false ? '' : `<span ${t.custom ? 'translate="no"' : ''}>${esc(t.custom ? t.name : T(t.name))}</span>`}</button>`;
       return `<button class="tile" type="button" data-k="${k}" style="background:${bg.length > 1 ? `linear-gradient(150deg,${bg[0]},${bg[1]})` : bg[0] || '#F9CB38'}"><span class="e">${esc(t.icon || '✏️')}</span><span ${t.custom ? 'translate="no"' : ''}>${esc(t.custom ? t.name : T(t.name))}</span></button>`; }).join('');
     $('#grid').onclick = e => { const b = e.target.closest('.tile'); if (b) send(i.themes[+b.dataset.k].id); };
     show('themes');
