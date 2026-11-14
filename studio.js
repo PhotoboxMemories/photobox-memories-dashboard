@@ -138,6 +138,12 @@
   // Testzeitraum läuft bzw. Abo aktiv: Buchen bzw. „Abo & Rechnungen verwalten“ (nicht für Betreiber und dauerhaft freigeschaltete Konten)
   function aboCard() {
     const t = ctx.tier() || {}, until = t.studio_until ? new Date(t.studio_until) : null;
+    // BoothDesigner kostenlos für alle Kunden der Fotobox-Software (my_tier.studio_software, SQL 202611130003): kein Abo anbieten;
+    // nur wer noch ein eigenes BoothDesigner-Abo hat, bekommt den Hinweis zum Kündigen
+    if (!ctx.admin && !ctx.demo && t.studio_software) return aboLive() ? `<div class="card"><div class="row" style="justify-content:space-between;align-items:center;gap:12px">
+        <span><b>Kostenlos mit der Fotobox-Software</b> <span class="small muted">· BoothDesigner ist für Kunden der Fotobox-Software dauerhaft inklusive</span></span>
+        <button class="btn small" data-a="portal">Abo &amp; Rechnungen verwalten</button></div>
+        <p class="small" style="margin:8px 0 0">Du hast zusätzlich noch ein eigenes BoothDesigner-Abo. Das brauchst du nicht mehr – du kannst es unter „Abo &amp; Rechnungen verwalten“ kündigen.</p></div>` : '';
     if (ctx.admin || ctx.demo || !until || until.getFullYear() >= 2100) return '';
     // Neues Abo-Modell: BoothDesigner ist im bezahlten Fotobox-Abo enthalten (my_tier.studio_in_abo) – dann kein eigenes Abo anbieten
     if (t.studio_in_abo) return `<div class="card"><div class="row" style="justify-content:space-between;align-items:center;gap:12px">
@@ -163,6 +169,7 @@
         <h2 style="margin-top:0">Deine Kunden gestalten ihr Fotolayout selbst</h2>
         <p>Über 100 Designs für Hochzeit, Geburtstag, Taufe, Firmenfeier und mehr – auf deiner eigenen Webseite, mit deinem Logo und deinen Farben.
           Deine Kunden tragen Namen und Datum ein, passen das Design an und schicken es ab. Du bekommst eine Mail und übernimmst das Design mit einem Klick als Fotolayout in dein Ereignis.</p>
+        <p class="small" style="background:#E8F7EE;border-radius:10px;padding:8px 12px"><b>Kostenlos mit der Fotobox-Software:</b> Nutzt du die Fotobox-Software von Photobox Memories (auch die kostenlose Version), ist der BoothDesigner automatisch dabei. <a href="https://photobox-memories.de/software" target="_blank" rel="noopener">Fotobox-Software kostenlos holen</a></p>
         ${ended ? '<p class="small" style="background:#FFF3C4;border-radius:10px;padding:8px 12px">Dein Test bzw. Abo ist abgelaufen. Deine Einstellungen und Einsendungen bleiben erhalten, bis du weitermachst.</p>' : ''}
         <div class="row" style="margin-top:14px">
           ${!t.studio_trial_used ? '<button class="btn primary" data-a="trial">14 Tage kostenlos testen</button>' : ''}
@@ -203,7 +210,7 @@
     if (!tabs.some(([k]) => k === tab)) tab = 'start';
     park();
     root().innerHTML = `<div class="pagehead"><h1>BoothDesigner</h1>
-        <span class="small muted">${ctx.admin ? 'Betreiber-Konto' : until && until.getFullYear() < 2100 ? `Freigeschaltet bis ${until.toLocaleDateString('de-DE')}` : ''}</span></div>
+        <span class="small muted">${ctx.admin ? 'Betreiber-Konto' : t.studio_software ? 'Kostenlos mit der Fotobox-Software' : until && until.getFullYear() < 2100 ? `Freigeschaltet bis ${until.toLocaleDateString('de-DE')}` : ''}</span></div>
       <div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" aria-selected="${tab === k}" class="${tab === k ? 'on' : ''}" data-a="tab" data-t="${k}">${l}${k === 'subs' && n ? `<span class="cnt">${n}</span>` : ''}</button>`).join('')}</div>
       ${tab === 'subs' ? subsTab() : tab === 'settings' ? settingsCard() : tab === 'abo' ? aboHtml : tab === 'admin' ? adminTab() : startTab(n)}`;
     place();
@@ -254,8 +261,8 @@
   // Übersicht: Glücksrad-Gewinn, Status (Abo/Test), neue Einsendungen, Studio an/aus, Link für die Kunden
   function startTab(n) {
     const t = ctx.tier() || {}, until = t.studio_until ? new Date(t.studio_until) : null, forever = !until || until.getFullYear() >= 2100;
-    const status = ctx.admin ? 'Betreiber-Konto' : t.studio_in_abo ? 'Im Fotobox-Abo enthalten' : aboLive() ? 'Abo aktiv' : forever ? 'Dauerhaft freigeschaltet' : 'Testzeitraum';
-    const sub = ctx.admin ? 'Alle Funktionen frei' : aboLive() ? `verlängert sich am ${fmtDate(abo.valid_until)}` : !forever ? `bis ${fmtDate(t.studio_until)}` : '';
+    const status = ctx.admin ? 'Betreiber-Konto' : t.studio_software ? 'Kostenlos mit der Fotobox-Software' : t.studio_in_abo ? 'Im Fotobox-Abo enthalten' : aboLive() ? 'Abo aktiv' : forever ? 'Dauerhaft freigeschaltet' : 'Testzeitraum';
+    const sub = ctx.admin ? 'Alle Funktionen frei' : t.studio_software ? 'dauerhaft inklusive' : aboLive() ? `verlängert sich am ${fmtDate(abo.valid_until)}` : !forever ? `bis ${fmtDate(t.studio_until)}` : '';
     const tabBtn = (k, l, primary) => `<button class="btn small${primary ? ' primary' : ''}" data-a="tab" data-t="${k}">${l}</button>`;
     return `<div data-slot="win"></div>
       ${site ? '' : `<div class="card" style="margin-bottom:14px"><b>Willkommen bei BoothDesigner!</b>
