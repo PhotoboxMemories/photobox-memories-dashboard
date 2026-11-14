@@ -1,6 +1,58 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.99": {
+   "date": "2026-11-13",
+   "notes": {
+    "de": [
+     "Zeichenroboter: Die Gäste können das Foto jetzt auch mit deinem eigenen iPad machen, das neben dem Arm steht. Einfach an der Fotobox unter Extras → Zeichenroboter den QR-Code mit dem iPad scannen. Die Gäste sehen am iPad eine Vorschau, wählen ein Thema und verfolgen, wie der Roboter zeichnet. Kommen mehrere Fotos, warten sie in der Reihe."
+    ],
+    "en": [
+     "Drawing robot: guests can now also take the photo with your own iPad standing next to the arm. Simply scan the QR code under Extras → Drawing robot on the photo booth with the iPad. Guests see a preview on the iPad, pick a theme and follow the robot drawing. If several photos arrive, they wait in line."
+    ],
+    "tr": [
+     "Çizim robotu: Misafirler artık fotoğrafı kolun yanında duran kendi iPad’inle de çekebilir. Fotoğraf kabininde Ekstralar → Çizim robotu altındaki QR kodunu iPad ile taraman yeterli. Misafirler iPad’de bir önizleme görür, bir tema seçer ve robotun çizimini takip eder. Birden fazla fotoğraf gelirse sırada bekler."
+    ],
+    "fr": [
+     "Robot dessinateur : les invités peuvent désormais aussi prendre la photo avec ton propre iPad placé à côté du bras. Il suffit de scanner avec l’iPad le QR code affiché sur la photobooth sous Extras → Robot dessinateur. Les invités voient un aperçu sur l’iPad, choisissent un thème et suivent le dessin du robot. Si plusieurs photos arrivent, elles attendent leur tour."
+    ],
+    "es": [
+     "Robot dibujante: ahora los invitados también pueden hacer la foto con tu propio iPad colocado junto al brazo. Solo tienes que escanear con el iPad el código QR que aparece en el fotomatón en Extras → Robot dibujante. Los invitados ven una vista previa en el iPad, eligen un tema y siguen cómo dibuja el robot. Si llegan varias fotos, esperan en la cola."
+    ],
+    "it": [
+     "Robot disegnatore: ora gli ospiti possono scattare la foto anche con il tuo iPad posizionato accanto al braccio. Basta scansionare con l’iPad il codice QR che la photobooth mostra in Extra → Robot disegnatore. Gli ospiti vedono un’anteprima sull’iPad, scelgono un tema e seguono il robot mentre disegna. Se arrivano più foto, aspettano in coda."
+    ]
+   }
+  },
+  "1.18.98": {
+   "date": "2026-11-13",
+   "notes": {
+    "de": [
+     "Zeichenroboter: Das Blatt wird jetzt mit der Hand und mit Pfeilen eingemessen – für jedes Papier einzeln, auch quer oder als freie Fläche in deiner Halterung. Ein schräg liegendes Blatt und eine schiefe Unterlage gleicht die Fotobox aus.",
+     "Zeichenroboter: Die Zeichnung füllt die ganze Fläche, der Arm setzt seltener ab und zeichnet ruhiger. Das Bild steht für die Gäste gegenüber richtig herum."
+    ],
+    "en": [
+     "Drawing robot: the sheet is now calibrated by hand and with arrows – separately for each paper, also in landscape or as a free area in your holder. The photo booth compensates for a sheet lying at an angle and a tilted base.",
+     "Drawing robot: the drawing fills the whole area, the arm lifts the pen less often and draws more smoothly. The picture is the right way up for the guests opposite."
+    ],
+    "tr": [
+     "Çizim robotu: Kâğıt artık elle ve oklarla ayarlanıyor – her kâğıt için ayrı, yatay ya da tutucunuzdaki serbest alan olarak da. Fotobox eğik duran kâğıdı ve eğik zemini dengeler.",
+     "Çizim robotu: Çizim tüm alanı dolduruyor, kol kalemi daha az kaldırıyor ve daha sakin çiziyor. Resim karşıdaki misafirler için doğru yönde."
+    ],
+    "fr": [
+     "Robot dessinateur : la feuille se calibre désormais à la main et avec des flèches – séparément pour chaque papier, aussi en paysage ou comme zone libre dans ton support. La photobox compense une feuille posée de travers et un support incliné.",
+     "Robot dessinateur : le dessin remplit toute la surface, le bras lève le stylo moins souvent et dessine plus calmement. L’image est à l’endroit pour les invités en face."
+    ],
+    "es": [
+     "Robot de dibujo: la hoja se calibra ahora a mano y con flechas, por separado para cada papel, también en horizontal o como área libre en tu soporte. El fotomatón compensa una hoja torcida y una base inclinada.",
+     "Robot de dibujo: el dibujo llena toda la superficie, el brazo levanta el bolígrafo menos veces y dibuja con más suavidad. La imagen queda al derecho para los invitados de enfrente."
+    ],
+    "it": [
+     "Robot disegnatore: il foglio ora si calibra a mano e con le frecce – separatamente per ogni carta, anche in orizzontale o come area libera nel tuo supporto. La photobox compensa un foglio storto e una base inclinata.",
+     "Robot disegnatore: il disegno riempie tutta la superficie, il braccio solleva la penna meno spesso e disegna in modo più fluido. L’immagine è dritta per gli ospiti di fronte."
+    ]
+   }
+  },
   "1.18.97": {
    "date": "2026-11-13",
    "notes": {
