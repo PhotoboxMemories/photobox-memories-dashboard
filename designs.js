@@ -2,7 +2,9 @@
 // Gleiche Datei in der Fotobox und im Dashboard. Die Designs liegen nicht im Programm (rund 270 MB, jeden Tag mehr), nur das gewählte kommt ins Ereignis.
 // Die Druckvorlage zeichnet das Studio von boothdesigner.de selbst (unsichtbar im iframe, ?install=1): So sieht sie genau aus wie dort und neue Designs
 // sind sofort da. Vorlage mit transparenten Fotofeldern über den Fotos, Texte als eigene Ebenen, wie beim Übernehmen einer Einsendung (studio.js).
-// DesignKatalog.open({ upload(file) → url, canUse, lockedText, onInstall(layouts, { zip }) }) – zip: true = Vorlagen aus einer ZIP-Datei (keine Formate eines Designs)
+// DesignKatalog.open({ upload(file) → url, canUse, lockedText, onInstall(layouts, { zip }), design, onBack }) – zip: true = Vorlagen aus einer ZIP-Datei (keine Formate eines Designs);
+//   design: Schlüssel – gleich dieses Design öffnen, onBack: „Zurück“ schließt dann den Katalog und ruft onBack (zurück zu „Vorlage wählen“ in event.js)
+// DesignKatalog.list() → Promise<Katalog>, DesignKatalog.thumb(key) → Vorschaubild (für „Vorlage wählen“)
 window.DesignKatalog = (() => {
   const BASE = () => (window.BD_BASE || 'https://boothdesigner.de').replace(/\/$/, '');
   const FORMAT_OF = { '600x1800': '2x6', '1200x1800': '4x6p', '1800x1200': '4x6l', '1500x1500': '5x5' };
@@ -40,6 +42,14 @@ window.DesignKatalog = (() => {
   }));
   const esc =s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const img = (key, v) => `${BASE()}/beispiele/${v === '4x6-04' ? '' : v === '6x4-01' ? 'quer/' : v + '/'}${encodeURIComponent(key)}.jpg`;
+  // Katalog einmal laden und merken (auch für „Vorlage wählen“ in event.js); nach einem Fehler beim nächsten Mal neu versuchen
+  // Prüfung 16.11.2026: höchstens 10 Minuten merken (jeden Tag kommen Designs dazu, die Fotobox läuft tagelang); „Design installieren“ lädt immer frisch
+  let catP = null, catT = 0;
+  const catalog = (fresh = false) => {
+    if (!catP || fresh || Date.now() - catT > 600000) { catT = Date.now(); catP = fetch(`${BASE()}/studio/katalog.json`, { cache: 'no-cache' })
+      .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }).catch(e => { catP = null; throw e; }); }
+    return catP;
+  };
   const CSS = `#dkWrap{position:fixed;inset:0;z-index:100000;background:rgba(15,15,20,.6);display:grid;place-items:center;padding:2vmin;color:#1d1d1b;font-size:16px}
   #dkWrap .dkBox{background:#fff;border-radius:16px;width:min(1100px,100%);height:min(92vh,1100px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.45)}
   #dkWrap .dkHead{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #e8e6dc;flex-wrap:wrap}#dkWrap h3{margin:0;font-size:20px;color:#1d1d1b;flex:1;min-width:120px}
@@ -102,25 +112,24 @@ window.DesignKatalog = (() => {
     return { id: FBR.uid(), name: `${d.name} · ${p.name}`, format: fmt, w: F.w, h: F.h, bg: '#ffffff', twoPerPage: fmt === '2x6', secondary: false, elements: els, katalog: d.key };
   }
 
-  async function open({ upload, canUse = true, lockedText = '', onInstall }) {
+  async function open({ upload, canUse = true, lockedText = '', onInstall, design = '', onBack = null }) {
     if (!document.getElementById('dkCss')) { const st = document.createElement('style'); st.id = 'dkCss'; st.textContent = CSS; document.head.appendChild(st); }
     const w = document.createElement('div'); w.id = 'dkWrap'; w.innerHTML = '<div class="dkBox"></div>'; document.body.appendChild(w);
     let zipRun = 0, zipPk = null; // laufendes Einlesen einer ZIP-Datei (Prüfung 16.11.2026: „Zurück“/Schließen während des Lesens)
     const zipStop = () => { zipRun++; zipPk?.dispose(); zipPk = null; };
     const box = w.firstChild, close = () => { zipStop(); w.remove(); removeEventListener('keydown', esc1); };
     const esc1 = e => { if (e.key === 'Escape') close(); }; addEventListener('keydown', esc1);
-    w.addEventListener('pointerdown', e => { if (e.target === w) close(); });
+    const t0 = performance.now(); // Doppelklick auf eine Kachel in „Vorlage wählen“: der zweite Klick trifft sonst den Hintergrund und schließt gleich wieder
+    w.addEventListener('pointerdown', e => { if (e.target === w && performance.now() - t0 > 400) close(); });
     const head = (title, back) => `<div class="dkHead">${back ? '<button class="dkBack" data-back>‹ Zurück</button>' : ''}<h3>${esc(title)}</h3>${back ? '' : '<input class="dkSearch" type="search" placeholder="Design suchen …" data-q><button class="dkZip" data-zip title="Vorlagen aus einer ZIP-Datei übernehmen, z. B. aus einem anderen Fotobox-Programm">ZIP importieren</button>'}<button class="dkX" data-x aria-label="Schließen">×</button></div>`;
     box.innerHTML = head('Designs') + '<div class="dkBody"><p>Designs werden geladen …</p></div>';
     box.addEventListener('click', e => { if (e.target.closest('[data-x]')) close(); else if (e.target.closest('[data-zip]')) pickZip(); });
     let list = null;
-    try {
-      const r = await fetch(`${BASE()}/studio/katalog.json`, { cache: 'no-cache' }); if (!r.ok) throw new Error(String(r.status));
-      list = await r.json();
-    } catch { box.querySelector('.dkBody').innerHTML = '<p>Die Designs sind gerade nicht erreichbar. Bitte die Internetverbindung prüfen.</p><p>Vorlagen aus einer ZIP-Datei lassen sich trotzdem übernehmen (Knopf „ZIP importieren“).</p>'; return; }
+    try { list = await catalog(!design); } catch { box.querySelector('.dkBody').innerHTML = '<p>Die Designs sind gerade nicht erreichbar. Bitte die Internetverbindung prüfen.</p><p>Vorlagen aus einer ZIP-Datei lassen sich trotzdem übernehmen (Knopf „ZIP importieren“).</p>'; return; }
     let cat = 'Alle', q = '', top = 0;
     const F = loadFilter();
     const cats = ['Alle', ...new Set(list.map(d => d.cat).filter(Boolean))];
+    const start = design ? list.find(x => x.key === design) : null;
     const opt = (k, arr) => `<select data-k="${k}" class="${F[k] ? 'on' : ''}" aria-label="${esc(arr[0][1])}">${arr.map(([v, n]) => `<option value="${v}" ${F[k] === v ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>`;
     function sorted(hit) {
       const by = (a, b) => String(a).localeCompare(String(b), 'de', { sensitivity: 'base' });
@@ -162,7 +171,7 @@ window.DesignKatalog = (() => {
       const msg = box.querySelector('.dkMsg'), go = box.querySelector('.dkGo');
       const sync = () => { msg.textContent = !canUse ? lockedText : pick.size ? `${pick.size} von höchstens ${MAX} Formaten gewählt` : 'Bitte mindestens ein Format wählen.'; go.disabled = !canUse || !pick.size; };
       sync();
-      box.querySelector('[data-back]').onclick = showList;
+      box.querySelector('[data-back]').onclick = start && onBack ? () => { close(); onBack(); } : showList;
       const allB = box.querySelector('[data-all]'); if (allB) allB.onclick = () => showDesign(d, only, pick);
       box.querySelector('.dkGrid').onchange = e => { const k = e.target.dataset.f; if (!k) return; if (e.target.checked && pick.size >= MAX) { e.target.checked = false; return; } e.target.checked ? pick.add(k) : pick.delete(k); e.target.closest('.dkFmt').classList.toggle('on', e.target.checked); sync(); };
       go.onclick = async () => {
@@ -228,7 +237,8 @@ window.DesignKatalog = (() => {
         } catch (e) { if (alive()) { msg.textContent = '⚠️ ' + e.message; go.disabled = false; } }
       };
     }
-    showList();
+    if (start) showDesign(start, true); else showList(); // direkt geöffnet: alle Formate, der gespeicherte Filter gilt nur in der Liste
   }
-  return { open };
+  // thumb(d): Vorschau im ersten vorhandenen Format (ein reines Streifen-Design hat kein 4×6-Bild)
+  return { open, list: () => catalog(), thumb: d => typeof d === 'string' ? img(d, '4x6-04') : img(d.key, PREF.find(k => (d.v || []).includes(k)) || '4x6-04') };
 })();

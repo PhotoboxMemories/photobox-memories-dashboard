@@ -378,6 +378,8 @@
   #wsModal .tp{cursor:pointer;text-align:center;font-size:13px}
   #wsModal .tp img{width:100%;aspect-ratio:1;object-fit:contain;background:#f6f6f8;border-radius:10px;border:2px solid transparent}
   #wsModal .tp:hover img{border-color:#F7C838}
+  #wsModal .grid .gh{grid-column:1/-1;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#555;margin:6px 0 -6px}
+  #wsModal .grid .gm{grid-column:1/-1;color:#777;margin:0}
   #wsModal .two{flex:1;display:flex;min-height:0}
   #wsModal .fl{width:280px;overflow:auto;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start;border-right:1px solid #eee}
   #wsModal .fl .sec{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b6b78;margin:4px 0 -2px}
@@ -758,7 +760,7 @@
     });
     $(root, '.navshade').addEventListener('click', () => root.classList.remove('navopen'));
     // Hilfe-Suche (hilfe.js, dieselbe wie in der Fotobox): Stichwort eintippen → wie man es einstellt, „Hingehen“ öffnet die Seite
-    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261113-1'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261116-2'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     const closeEditor = () => close(); // Editor schließen (für Themen auf den Hauptseiten, z. B. „Meine Lizenzen“)
     async function openHelp() {
       try { await helpLib(); } catch { return ctx.toast('Die Hilfe konnte nicht geladen werden.'); }
@@ -1229,8 +1231,8 @@
       }
 
       if (a === 'newlay') { $(main, '.dd .menu').classList.toggle('hidden-m'); $(main, '.dd .menu').style.display = $(main, '.dd .menu').style.display === 'block' ? 'none' : 'block'; }
-      if (a === 'fromtpl') pickTemplate(vals(), addLayout);
-      if (a === 'fromplain') pickFormat(modal(''), 'plain', vals(), addLayout);
+      if (a === 'fromtpl') pickTemplate(vals(), addLayout, tplOpts());
+      if (a === 'fromplain') pickTemplate(vals(), addLayout, tplOpts({ cat: 'Leer' })); // gleich bei den leeren Layouts
       if (a === 'fromimg') fromImage();
       if (a === 'fromdesign') G.DesignKatalog.open({ upload: ctx.uploadFile, canUse: pro(), lockedText: 'Designs installieren gibt es ab dem Tarif Pro.',
         onInstall: (Ls, o) => { S.layouts.push(...Ls); if (Ls.length > 1 && !o?.zip) S.guestLayouts = true; sub.laySel = Ls[0].id; save(); render(); // ZIP mit vielen Vorlagen: Gäste-Auswahl nicht von selbst einschalten
@@ -1308,12 +1310,14 @@
         setTimeout(() => ctx.sb.from('devices').update({ command: { id: crypto.randomUUID(), at: new Date().toISOString(), type: 'sync' } }).eq('event_id', ev.id).then(() => {}, () => {}), 2500);
         return ctx.toast('Mosaik wird neu gestartet – die Fotobox übernimmt es in etwa 15 Sekunden, sobald keine Aufnahme läuft. Danach die Tafel neu drucken.', 7000);
       }
-      if (a === 'edit1') { const l = firstLayout(boxOrient()); if (l) editLayout(l.id); else pickTemplate(vals(), addLayout); } // das Layout aus der Vorschau
+      if (a === 'edit1') { const l = firstLayout(boxOrient()); if (l) editLayout(l.id); else pickTemplate(vals(), addLayout, tplOpts()); } // das Layout aus der Vorschau
     });
     const pick = accept => new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => res(i.files[0] || null); i.click(); });
 
     // ---------- Seiten ----------
-    const addLayout = L => { S.layouts.push(L); sub.laySel = L.id; save(); render(); if (pro()) editLayout(L.id); }; // Vorlage wählen geht in jedem Tarif, Bearbeiten ab Pro
+    const addLayout = (L, all) => { const Ls = all?.length ? all : [L]; S.layouts.push(...Ls); if (Ls.length > 1) S.guestLayouts = true; sub.laySel = L.id; save(); render(); if (pro()) editLayout(L.id); }; // Vorlage wählen geht in jedem Tarif, Bearbeiten ab Pro; Design mit mehreren Formaten: alle, Gäste wählen
+    // „Vorlage wählen“ zeigt auch die BoothDesigner-Designs – Installieren mit denselben Regeln wie „Design installieren“ (ab Pro)
+    const tplOpts = (o = {}) => ({ upload: ctx.uploadFile, canUse: pro(), lockedText: 'Designs installieren gibt es ab dem Tarif Pro.', ...o });
     const layoutThumb = (L, px = 300) => thumbOf(L, px, vals());
     const vals = () => ({ titel: S.title || E.name, untertitel: S.subtitle || (E.event_date ? new Date(E.event_date).toLocaleDateString('de-DE') : ''), datum: new Date().toLocaleDateString('de-DE'), uhrzeit: '20:15', event: E.name, name: 'Lisa', aufgabe: 'Zeigt euren besten Tanzschritt' });
     // Hoch- und Querformat: Die Fotobox erkennt ihren Bildschirm selbst und nimmt das erste passende Layout (quadratische passen immer).
@@ -2343,11 +2347,12 @@
 
     // ---------- Layouts ----------
     // Fotolayouts im Editor verwalten: Auswahl, Vorlage hinzufügen, Speichern unter, Import/Export, Testdruck, Löschen
+    let layRest = null; // weitere Formate eines Designs aus „Vorlage hinzufügen“, kommen mit add hinter das gewählte
     const layLib = {
       list: () => S.layouts.map(l => ({ id: l.id, name: l.name })),
       get: id => { const l = S.layouts.find(x => x.id === id); return l ? structuredClone(l) : null; },
-      add: async l => { S.layouts.push(l); sub.laySel = l.id; save(); },
-      pick: () => new Promise(res => pickTemplate(vals(), res)),
+      add: async l => { const more = layRest || []; layRest = null; S.layouts.push(l, ...more); if (more.length) S.guestLayouts = true; sub.laySel = l.id; save(); },
+      pick: () => { layRest = null; return new Promise(res => pickTemplate(vals(), (L, all) => { layRest = all?.length > 1 ? all.slice(1) : null; res(L); }, tplOpts())); }, // mehrere Formate: Gäste wählen
       remove: async id => {
         if (!await (G.pmConfirm || (async t => confirm(t)))('Dieses Fotolayout löschen?', 'Löschen')) return false;
         S.layouts = S.layouts.filter(l => l.id !== id); if (sub.laySel === id) sub.laySel = S.layouts[0]?.id; save(); return true;
@@ -2409,48 +2414,54 @@
     m.addEventListener('click', e => { if (e.target === m || e.target.closest('[data-x]')) m.remove(); });
     document.body.appendChild(m); return m;
   }
-  // Vorlagen-Galerie → Format wählen → onPick(neues Layout)
-  function pickTemplate(values, onPick) {
-    const tpls = [...FBR.TEMPLATES].sort((a, b) => !!b.plain - !!a.plain); // „Ohne Vorlage“ zuerst
-    const cats = ['Alle', ...new Set(tpls.map(t => t.cat))];
-    let cat = 'Alle', q = '';
-    const m = modal(`<div class="mh"><h3>Vorlage wählen</h3><input placeholder="Vorlagen suchen …" data-q><button class="x" data-x="1">${ICON('x', 20)}</button></div>
-      <div class="cats">${cats.map(c => `<button data-c="${c}" class="${c === cat ? 'on' : ''}">${c}</button>`).join('')}</div><div class="grid"></div>`);
-    const thumbs = {};
-    const grid = () => {
-      $(m, '.grid').innerHTML = tpls.filter(t => (cat === 'Alle' || t.cat === cat) && t.name.toLowerCase().includes(q)).map(t => {
-        thumbs[t.id] ||= thumbOf(FBR.createLayout('4x6p', 3, t.id), 260, values);
-        return `<div class="tp" data-t="${t.id}"><img src="${thumbs[t.id]}"><div>${esc(t.name)}</div></div>`;
-      }).join('');
-    };
-    grid();
-    m.addEventListener('click', e => {
-      const c = e.target.closest('[data-c]'); if (c) { cat = c.dataset.c; $$(m, '[data-c]').forEach(b => b.classList.toggle('on', b === c)); grid(); }
-      const t = e.target.closest('[data-t]'); if (t) pickFormat(m, t.dataset.t, values, onPick);
+  // Vorlage wählen (Betreiber 16.11.2026: „leere Designs und BoothDesigner-Designs sehen, die alten Vorlagen entfernen, die passen nicht“).
+  // Die eingebauten Vorlagen (Klassisch, Schwarz Elegant, Party Neon …) stehen hier nicht mehr. Stattdessen:
+  //  · Leer: Vorlage „Ohne Vorlage“ in den 6 Formaten von FBR.PRESETS (keine weiteren Formate, Notiz vorlagen-formate). Ein Klick legt das Layout an.
+  //  · BoothDesigner: Katalog von boothdesigner.de (DesignKatalog.list). Ein Klick öffnet das Design zum Formate wählen und Installieren (DesignKatalog.open).
+  // opts = { upload(file) → url, canUse, lockedText, cat: Start-Reiter z. B. 'Leer' }. Ohne upload oder ohne designs.js erscheinen nur die leeren Layouts.
+  // onPick(L, alle): Ein BoothDesigner-Design kann mehrere Formate liefern, dann stehen alle Layouts in „alle“ (L = alle[0]).
+  function pickTemplate(values, onPick, opts = {}) {
+    const DK = G.DesignKatalog, upload = opts.upload || (typeof G.appUpload === 'function' ? G.appUpload : null), bdOn = !!(DK?.list && DK?.open && upload);
+    const plain = FBR.TEMPLATES.find(t => t.plain) || FBR.TEMPLATES[0];
+    const blank = FBR.PRESETS.map(([f, n], i) => {
+      const L = FBR.createLayout(f, n, plain.id);
+      L.name = `Leer · ${FBR.FORMATS[f].label.replace(' Streifen', '')} · ${n} Foto${n > 1 ? 's' : ''}`;
+      return { i, L };
     });
-    $(m, '[data-q]').oninput = e => { q = e.target.value.toLowerCase(); grid(); };
-  }
-  function pickFormat(m, tplId, values, onPick) {
-    const t = FBR.templateById(tplId);
-    // Einzelbild, 3er-Collage und Fotostreifen – je Vorlage, auch „Ohne Vorlage“
-    const items = FBR.PRESETS.map(([f, n]) => ({ f, n, L: FBR.createLayout(f, n, tplId), sec: FBR.FORMATS[f].size === '2x6' ? 'Fotostreifen' : n === 1 ? 'Einzelbild' : 'Collage' }));
-    let cur = 0;
-    $(m, '.box').innerHTML = `<div class="mh"><button class="x" data-back="1">${ICON('chevronLeft', 20)}</button><h3>${esc(t.name)}</h3><button class="x" data-x="1">${ICON('x', 20)}</button></div>
-      <div class="two"><div class="fl">${items.map((it, i) => `${!i || items[i - 1].sec !== it.sec ? `<div class="sec">${it.sec}</div>` : ''}<div class="fi ${i === cur ? 'on' : ''}" data-i="${i}"><img data-th="${i}" alt=""><div>${FBR.FORMATS[it.f].label.replace(' Streifen', '')} · ${it.n} Foto${it.n > 1 ? 's' : ''}</div></div>`).join('')}</div>
-      <div class="bigpv"><img><div class="ft"><div><b class="fn"></b><br><small class="fs"></small></div><button class="btn" data-go="1">Layout auswählen</button></div></div></div>`;
-    const show = () => { const it = items[cur]; $(m, '.bigpv img').src = thumbOf(it.L, 700, values); $(m, '.fn').textContent = `${FBR.FORMATS[it.f].label} (${it.n} Foto${it.n > 1 ? 's' : ''})`; $(m, '.fs').textContent = `${it.L.w} × ${it.L.h} px`; $$(m, '.fi').forEach((e, i) => e.classList.toggle('on', i === cur)); };
-    show();
-    { const fl = $(m, '.fl'), on = $(m, '.fi.on'); if (fl && on) fl.scrollTop += on.getBoundingClientRect().top - fl.getBoundingClientRect().top - (fl.clientHeight - on.offsetHeight) / 2; } // gewähltes Format (4×6) sichtbar
-    // Vorschaubilder in kleinen Portionen zeichnen, damit das Fenster sofort aufgeht
-    let k = 0;
-    const fill = () => { if (!m.isConnected || !$(m, '[data-th]')) return; for (const end = Math.min(items.length, k + 4); k < end; k++) { const im = $(m, `[data-th="${k}"]`); if (im) im.src = thumbOf(items[k].L, 160, values); } if (k < items.length) setTimeout(fill, 0); };
-    fill();
-    m.onclick = e => {
-      if (e.target === m || e.target.closest('[data-x]')) return m.remove();
-      if (e.target.closest('[data-back]')) { m.remove(); return pickTemplate(values, onPick); }
-      const fi = e.target.closest('[data-i]'); if (fi) { cur = +fi.dataset.i; show(); }
-      if (e.target.closest('[data-go]')) { m.remove(); onPick(items[cur].L); }
+    let cat = opts.cat || 'Alle', q = '', bd = null, bdErr = '';
+    const m = modal(`<div class="mh"><h3>Vorlage wählen</h3><input placeholder="Vorlagen suchen …" data-q><button class="x" data-x="1">${ICON('x', 20)}</button></div>
+      <div class="cats"></div><div class="grid"></div>`);
+    const thumbs = {};
+    const cats = () => ['Alle', 'Leer', ...(bd ? [...new Set(bd.map(d => d.cat).filter(Boolean))] : [])];
+    const drawCats = () => { $(m, '.cats').innerHTML = cats().map(c => `<button data-c="${esc(c)}" class="${c === cat ? 'on' : ''}">${esc(c)}</button>`).join(''); };
+    const grid = () => {
+      const hit = s => s.toLowerCase().includes(q);
+      const b = cat === 'Alle' || cat === 'Leer' ? blank.filter(x => hit(x.L.name)) : [];
+      const d = !bdOn || cat === 'Leer' ? [] : (bd || []).filter(x => (cat === 'Alle' || x.cat === cat) && hit(`${x.name} ${x.occasion || ''} ${x.cat || ''}`));
+      let h = b.length ? '<div class="gh">Leer – nur die Fotofelder, alles Weitere im Editor</div>'
+        + b.map(x => { thumbs[x.i] ||= thumbOf(x.L, 260, values); return `<div class="tp" data-b="${x.i}"><img src="${thumbs[x.i]}" alt=""><div>${esc(x.L.name)}</div></div>`; }).join('') : '';
+      if (bdOn && cat !== 'Leer') {
+        h += `<div class="gh">BoothDesigner-Designs${bd ? ` (${d.length})` : ''}</div>`;
+        h += bd ? d.map(x => `<div class="tp" data-d="${esc(x.key)}"><img loading="lazy" src="${esc(DK.thumb(x))}" alt=""><div translate="no">${esc(x.name)}</div></div>`).join('') || '<p class="gm">Kein Design gefunden.</p>'
+          : `<p class="gm">${esc(bdErr || 'Designs werden geladen …')}</p>`;
+      }
+      $(m, '.grid').innerHTML = h || '<p class="gm">Nichts gefunden.</p>';
     };
+    drawCats(); grid();
+    if (bdOn) DK.list().then(l => { bd = Array.isArray(l) ? l : []; }, () => { bdErr = 'Die BoothDesigner-Designs sind gerade nicht erreichbar. Bitte die Internetverbindung prüfen – leere Layouts gehen immer.'; })
+      .then(() => { if (m.isConnected) { drawCats(); grid(); } });
+    m.addEventListener('click', e => {
+      const c = e.target.closest('[data-c]'); if (c) { cat = c.dataset.c; drawCats(); grid(); $(m, '.grid').scrollTop = 0; return; }
+      const b = e.target.closest('[data-b]');
+      if (b) { const L = structuredClone(blank[+b.dataset.b].L); L.id = FBR.uid(); m.remove(); onPick(L, [L]); return; }
+      const d = e.target.closest('[data-d]');
+      if (d) {
+        m.remove();
+        DK.open({ upload, canUse: opts.canUse === true, lockedText: opts.lockedText || 'Designs installieren gibt es ab dem Tarif Pro.', design: d.dataset.d, // canUse ohne Angabe: gesperrt
+          onBack: () => pickTemplate(values, onPick, opts), onInstall: Ls => { if (Ls?.length) onPick(Ls[0], Ls); } });
+      }
+    });
+    $(m, '[data-q]').oninput = e => { q = e.target.value.toLowerCase().trim(); grid(); };
   }
 
   // „Erstellen Sie ein neues Ereignis“ – Ereignisart wählen

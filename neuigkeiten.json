@@ -1,6 +1,58 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.107": {
+   "date": "2026-11-16",
+   "notes": {
+    "de": [
+     "Zeichenroboter mit dem iPad: Die Gäste wählen nach dem Foto wieder ihr Thema. Ist im Ereignis noch nichts ausgewählt, gelten dieselben Themen, die im Dashboard angehakt sind. An der Fotobox steht unter „Foto mit dem iPad“, ob und aus wie vielen Themen die Gäste wählen.",
+     "Zeichenroboter: Die Zeichengeschwindigkeit stellst du jetzt direkt auf der Zeichenroboter-Seite der Fotobox ein – von ruhig und besonders sauber bis ultraschnell."
+    ],
+    "en": [
+     "Drawing robot with the iPad: guests choose their theme after the photo again. If nothing has been selected in the event yet, the same themes that are ticked in the dashboard apply. On the photo booth, “Photo with the iPad” shows whether guests can choose and from how many themes.",
+     "Drawing robot: you now set the drawing speed directly on the photo booth’s drawing robot page – from calm and extra clean to ultra fast."
+    ],
+    "tr": [
+     "iPad ile çizim robotu: Misafirler fotoğraftan sonra yine temalarını seçer. Etkinlikte henüz bir şey seçilmemişse panelde işaretli olan temalar geçerlidir. Fotoğraf kabininde “iPad ile fotoğraf” altında misafirlerin seçim yapıp yapamayacağı ve kaç tema arasından seçeceği görünür.",
+     "Çizim robotu: Çizim hızını artık doğrudan fotoğraf kabininin çizim robotu sayfasında ayarlarsın – sakin ve çok temizden ultra hızlıya kadar."
+    ],
+    "fr": [
+     "Robot dessinateur avec l’iPad : les invités choisissent à nouveau leur thème après la photo. Si rien n’est encore sélectionné dans l’événement, ce sont les thèmes cochés dans le tableau de bord qui s’appliquent. Sur la photobox, « Photo avec l’iPad » indique si les invités peuvent choisir et parmi combien de thèmes.",
+     "Robot dessinateur : tu règles maintenant la vitesse de dessin directement sur la page du robot dessinateur de la photobox – de calme et très propre à ultra rapide."
+    ],
+    "es": [
+     "Robot dibujante con el iPad: los invitados vuelven a elegir su tema después de la foto. Si en el evento aún no hay nada seleccionado, se usan los mismos temas marcados en el panel. En el fotomatón, «Foto con el iPad» muestra si los invitados pueden elegir y entre cuántos temas.",
+     "Robot dibujante: ahora ajustas la velocidad de dibujo directamente en la página del robot dibujante del fotomatón, de tranquila y muy limpia a ultrarrápida."
+    ],
+    "it": [
+     "Robot disegnatore con l’iPad: gli ospiti scelgono di nuovo il loro tema dopo la foto. Se nell’evento non è ancora selezionato nulla, valgono gli stessi temi spuntati nella dashboard. Sulla photobooth, «Foto con l’iPad» mostra se gli ospiti possono scegliere e tra quanti temi.",
+     "Robot disegnatore: ora imposti la velocità di disegno direttamente nella pagina del robot disegnatore della photobooth – da calma e molto pulita a ultra veloce."
+    ]
+   }
+  },
+  "1.18.106": {
+   "date": "2026-11-16",
+   "notes": {
+    "de": [
+     "Vorlage wählen: Hier findest du jetzt die leeren Layouts in allen Formaten und alle BoothDesigner-Designs mit Vorschau. Ein Klick auf ein leeres Layout legt es sofort an, ein Klick auf ein Design öffnet es zum Installieren."
+    ],
+    "en": [
+     "Choose template: here you now find the blank layouts in all formats and all BoothDesigner designs with a preview. One click on a blank layout creates it right away, one click on a design opens it for installing."
+    ],
+    "tr": [
+     "Şablon seç: Burada artık tüm formatlardaki boş düzenleri ve önizlemeli tüm BoothDesigner tasarımlarını bulursun. Boş bir düzene tıklamak onu hemen oluşturur, bir tasarıma tıklamak onu yüklemek için açar."
+    ],
+    "fr": [
+     "Choisir un modèle : tu y trouves maintenant les mises en page vides dans tous les formats et tous les designs BoothDesigner avec aperçu. Un clic sur une mise en page vide la crée tout de suite, un clic sur un design l’ouvre pour l’installer."
+    ],
+    "es": [
+     "Elegir plantilla: ahora encuentras aquí los diseños vacíos en todos los formatos y todos los diseños de BoothDesigner con vista previa. Un clic en un diseño vacío lo crea al instante; un clic en un diseño lo abre para instalarlo."
+    ],
+    "it": [
+     "Scegli modello: qui trovi ora i layout vuoti in tutti i formati e tutti i design BoothDesigner con anteprima. Un clic su un layout vuoto lo crea subito, un clic su un design lo apre per installarlo."
+    ]
+   }
+  },
   "1.18.105": {
    "date": "2026-11-15",
    "notes": {
