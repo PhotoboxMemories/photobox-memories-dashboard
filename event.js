@@ -484,7 +484,7 @@
     startLogo: { src: 'own', url: '', size: 72, fit: 'contain' }, // Logo in der weißen Scheibe der Standard-Startanimation
     videomsg: { on: false, title: 'Videonachricht hinterlassen', sub: 'Scanne den Code mit deinem Handy', pos: 'tl', size: 'm', welcome: '', welcomeText: '' }, // Zusatzfunktion: Videonachricht per QR-Code (welcome = Begrüßungsvideo)
     mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false, preview: true, source: 'original' },
-    ai: { guestPay: false, guestPrice: 100, skip: false, only: false, layouts: [], logo: { on: false, url: '', pos: 'br', size: 18, mode: 'over' }, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'AI-Foto erstellen', creating: 'Ich erstelle dein AI-Foto', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das AI-Foto nicht erstellen.' } }
+    ai: { guestPay: false, guestPrice: 100, skip: false, startChoice: false, only: false, layouts: [], logo: { on: false, url: '', pos: 'br', size: 18, mode: 'over' }, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'AI-Foto erstellen', creating: 'Ich erstelle dein AI-Foto', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das AI-Foto nicht erstellen.', start: 'Was möchtest du machen?', startAi: 'AI-Foto', startNormal: 'Normales Foto' } }
   };
   const deepMerge = (def, val) => { const out = structuredClone(def); if (val && typeof val === 'object' && !Array.isArray(val)) for (const [k, v] of Object.entries(val)) out[k] = out[k] && typeof out[k] === 'object' && !Array.isArray(out[k]) ? deepMerge(out[k], v) : v; return out; };
   const NEEDSRV_S = '<span class="soon" title="Braucht zusätzlich einen Online-Dienst, der noch nicht eingerichtet ist.">Dienst folgt</span>';
@@ -1233,7 +1233,8 @@
       if (a === 'fromplain') pickFormat(modal(''), 'plain', vals(), addLayout);
       if (a === 'fromimg') fromImage();
       if (a === 'fromdesign') G.DesignKatalog.open({ upload: ctx.uploadFile, canUse: pro(), lockedText: 'Designs installieren gibt es ab dem Tarif Pro.',
-        onInstall: Ls => { S.layouts.push(...Ls); if (Ls.length > 1) S.guestLayouts = true; sub.laySel = Ls[0].id; save(); render(); ctx.toast(Ls.length === 1 ? 'Design installiert.' : `${Ls.length} Formate installiert. Die Gäste wählen an der Fotobox.`, 5000); } });
+        onInstall: (Ls, o) => { S.layouts.push(...Ls); if (Ls.length > 1 && !o?.zip) S.guestLayouts = true; sub.laySel = Ls[0].id; save(); render(); // ZIP mit vielen Vorlagen: Gäste-Auswahl nicht von selbst einschalten
+          ctx.toast(o?.zip ? (Ls.length === 1 ? '1 Vorlage übernommen.' : `${Ls.length} Vorlagen übernommen.`) : Ls.length === 1 ? 'Design installiert.' : `${Ls.length} Formate installiert. Die Gäste wählen an der Fotobox.`, 5000); } });
       if (a === 'editlay') editLayout(t.dataset.id);
       if (a === 'sellay') { sub.laySel = sub.laySel === t.dataset.id ? '' : t.dataset.id; render(); }
       if (a === 'sharelay') { // Vorschau als Bild speichern, zum Weitergeben an den Kunden
@@ -1875,6 +1876,7 @@
           <!-- Einstellungen zuerst, darunter die Stile (Betreiber 14.11.2026: „die Funktionen ganz unten sind ganz oben und darunter die Stile“) -->
           <div class="card"><b>An der Fotobox</b>
           ${sw('ai.guestChoice', 'Gäste wählen ihren Stil', 'Aus = alle Fotos bekommen automatisch den Standard-Stil.')}
+          ${sw('x.ai.startChoice', 'Am Start wählen: AI-Foto oder normales Foto', 'Gleich nach dem Tippen auf den Startbildschirm sehen die Gäste zwei Kacheln. „AI-Foto“ führt zur Stilauswahl, „Normales Foto“ direkt zum Foto ohne KI.')}
           <label class="l">Standard-Stil</label><select data-s="ai.selectedId"><option value="">Erster Stil</option>${S.ai.prompts.map(p => `<option value="${esc(p.id)}" ${p.id === S.ai.selectedId ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>
           <label class="l">Bildqualität (Grok)</label><select data-s="ai.resolution" data-rerender="1"><option value="1k" ${S.ai.resolution === '1k' ? 'selected' : ''}>1K · schneller${central ? ' · 1 Credit' : ''}</option><option value="2k" ${S.ai.resolution === '2k' ? 'selected' : ''}>2K · hohe Auflösung${central ? ' · 2 Credits' : ''}</option></select>
           ${ctx.admin ? `<div class="card"><b>Bezahlung durch Gäste</b><p style="margin:4px 0 10px;color:#6b6b78;font-size:13px">Gäste zahlen ihr AI-Foto selbst per QR-Code am Handy (Apple Pay, Google Pay, Karte). Abgebucht wird erst, wenn das Bild fertig ist – bei Fehlern nie. Das bezahlte Bild bekommt nur der Gast, es landet nicht in der Galerie. Zurzeit nur für Fotoboxen von Photobox Memories (Geld auf unser Stripe-Konto).</p>
@@ -1893,7 +1895,8 @@
           ${sw('x.ai.consent', 'Gäste vor dem AI-Foto um Zustimmung bitten', 'Aus = keine Abfrage an der Fotobox. Das Foto wird trotzdem an den KI-Dienst (xAI, USA) übertragen – die Einwilligung regelst du dann selbst, zum Beispiel im Vertrag mit deinem Kunden oder per Aushang an der Fotobox.')}</div>
           <div class="card"><details class="adv"><summary>Texte für die Gäste anpassen</summary><p style="color:#6b6b78;font-size:13px;margin:8px 0">Diese Texte sehen deine Gäste an der Fotobox, wenn sie ein AI-Foto erstellen. Du kannst jede Formulierung ändern, zum Beispiel in eine andere Sprache oder in euren Ton.</p><div class="grid3x">
             ${text('x.ai.texts.choose', 'Überschrift der Stilauswahl')}${text('x.ai.texts.creating', 'Hinweis während der Erstellung')}
-            ${text('x.ai.texts.skipBtn', 'Knopf: ohne KI weiter')}</div></details></div>
+            ${text('x.ai.texts.skipBtn', 'Knopf: ohne KI weiter')}${text('x.ai.texts.start', 'Überschrift der Auswahl am Start')}
+            ${text('x.ai.texts.startAi', 'Kachel: AI-Foto')}${text('x.ai.texts.startNormal', 'Kachel: normales Foto')}</div></details></div>
           <div class="card" data-ai-builder>${ai.custom ? '<p style="margin:0 0 6px"><a href="#" data-a="ai-new">← Zurück zu den Vorgaben</a></p>' : ''}<b>${editing ? 'Vorgabe bearbeiten: ' + esc(editing.name) : libEditing ? 'Meinen KI-Stil bearbeiten: ' + esc(libEditing.name) : ai.custom ? 'Benutzerdefinierter Prompt' : 'Vorgabe erstellen'}</b>
           ${editing || libEditing ? '<p class="small" style="margin:6px 0 0;color:#6b6b78">Text ändern, rechts neu generieren und speichern. Der Text bleibt danach offen – so kannst du ihn Schritt für Schritt verbessern.</p>' : ''}
           ${ai.custom ? `<label class="l">Name (sehen die Gäste)</label><input type="text" maxlength="60" data-ai-cname value="${esc(ai.cname ?? (ai.seed || editing)?.name ?? '')}" placeholder="z. B. Unser Firmenlook">

@@ -2,7 +2,7 @@
 // Gleiche Datei in der Fotobox und im Dashboard. Die Designs liegen nicht im Programm (rund 270 MB, jeden Tag mehr), nur das gewählte kommt ins Ereignis.
 // Die Druckvorlage zeichnet das Studio von boothdesigner.de selbst (unsichtbar im iframe, ?install=1): So sieht sie genau aus wie dort und neue Designs
 // sind sofort da. Vorlage mit transparenten Fotofeldern über den Fotos, Texte als eigene Ebenen, wie beim Übernehmen einer Einsendung (studio.js).
-// DesignKatalog.open({ upload(file) → url, canUse, lockedText, onInstall(layouts) })
+// DesignKatalog.open({ upload(file) → url, canUse, lockedText, onInstall(layouts, { zip }) }) – zip: true = Vorlagen aus einer ZIP-Datei (keine Formate eines Designs)
 window.DesignKatalog = (() => {
   const BASE = () => (window.BD_BASE || 'https://boothdesigner.de').replace(/\/$/, '');
   const FORMAT_OF = { '600x1800': '2x6', '1200x1800': '4x6p', '1800x1200': '4x6l', '1500x1500': '5x5' };
@@ -14,7 +14,31 @@ window.DesignKatalog = (() => {
     ['5x5-01', '5×5 Quadrat', '1 Foto quadratisch'],
   ];
   const MAX = 6;
-  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // Filter in der Liste (Betreiber 15.11.2026): Papierformat, Ausrichtung, Fotos je Bild, Sortierung. 4×6 Zoll = 10×15 cm, 2×6 = 5×15 cm, 5×5 = 13×13 cm.
+  // 6x4-… ist 10×15 quer, der 2×6-Streifen steht hoch, das Quadrat passt zu hoch und quer.
+  const META = Object.fromEntries(FORMATS.map(([k, , b]) => [k, { size: k.startsWith('6x4') ? '4x6' : k.slice(0, 3), orient: k.startsWith('6x4') ? 'quer' : k.startsWith('5x5') ? '' : 'hoch', n: parseInt(b, 10) || 1 }]));
+  const PREF = ['4x6-04', '6x4-01', '2x6-01', ...FORMATS.map(f => f[0]).filter(k => !['4x6-04', '6x4-01', '2x6-01'].includes(k))]; // Vorschaubild: das übliche Format zuerst
+  const SIZES = [['', 'Alle Formate'], ['4x6', '10×15 cm (4×6)'], ['2x6', 'Streifen 5×15 cm (2×6)'], ['5x5', 'Quadrat 13×13 cm (5×5)']];
+  const ORIENTS = [['', 'Hoch und quer'], ['hoch', 'Hochformat'], ['quer', 'Querformat']];
+  const COUNTS = [['', 'Alle Fotoanzahlen'], ['1', '1 Foto'], ['2', '2 Fotos'], ['3', '3 Fotos'], ['4', '4 und mehr Fotos']];
+  const SORTS = [['', 'Empfohlen'], ['name', 'Name A–Z'], ['anlass', 'Anlass A–Z'], ['format', 'Meiste passende Formate']];
+  const FKEY = 'fotoboxDesignFilter'; // Fotobox-Einstellungen immer unter fotobox…-Schlüsseln (bleiben nach Updates erhalten)
+  const loadFilter = () => { try { const f = JSON.parse(localStorage.getItem(FKEY) || '{}'); return { size: f.size || '', orient: f.orient || '', n: f.n || '', sort: f.sort || '' }; } catch { return { size: '', orient: '', n: '', sort: '' }; } };
+  const saveFilter = f => { try { localStorage.setItem(FKEY, JSON.stringify(f)); } catch { /* ohne Speicher: Filter gilt nur jetzt */ } };
+  const fits = (f, k) => { const m = META[k]; if (!m) return false;
+    return (!f.size || m.size === f.size) && (!f.orient || !m.orient || m.orient === f.orient) && (!f.n || (f.n === '4' ? m.n >= 4 : m.n === +f.n)); };
+  const filtered = f => !!(f.size || f.orient || f.n);
+  const fitsOf = (f, d) => PREF.filter(k => (d.v || []).includes(k) && fits(f, k));
+  // ZIP-Funktion (vorlagen-zip.js) erst laden, wenn sie gebraucht wird – liegt neben dieser Datei, in Fotobox und Dashboard
+  const ME = document.currentScript?.src || '';
+  let zipP = null;
+  const zipLib = () => window.VorlagenZip ? Promise.resolve(window.VorlagenZip) : zipP || (zipP = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = new URL('vorlagen-zip.js?v=20261115-1', ME || location.href).href;
+    s.onload = () => window.VorlagenZip ? res(window.VorlagenZip) : rej(new Error('Die ZIP-Funktion fehlt.'));
+    s.onerror = () => { zipP = null; s.remove(); rej(new Error('Die ZIP-Funktion konnte nicht geladen werden.')); };
+    document.head.appendChild(s);
+  }));
+  const esc =s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const img = (key, v) => `${BASE()}/beispiele/${v === '4x6-04' ? '' : v === '6x4-01' ? 'quer/' : v + '/'}${encodeURIComponent(key)}.jpg`;
   const CSS = `#dkWrap{position:fixed;inset:0;z-index:100000;background:rgba(15,15,20,.6);display:grid;place-items:center;padding:2vmin;color:#1d1d1b;font-size:16px}
   #dkWrap .dkBox{background:#fff;border-radius:16px;width:min(1100px,100%);height:min(92vh,1100px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.45)}
@@ -27,7 +51,10 @@ window.DesignKatalog = (() => {
   #dkWrap .dkFmt{cursor:pointer;position:relative}#dkWrap .dkFmt input{position:absolute;top:14px;left:14px;width:22px;height:22px}#dkWrap .dkFmt.on{border-color:#1d1d1b;box-shadow:0 0 0 2px #1d1d1b}
   #dkWrap .dkFoot{display:flex;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid #e8e6dc;flex-wrap:wrap}#dkWrap .dkMsg{flex:1;min-width:160px;font-size:14px;color:#5f5d55}
   #dkWrap .dkGo{background:#f7c838;border:0;border-radius:12px;padding:12px 22px;font-weight:700;color:#1d1d1b}#dkWrap .dkGo:disabled{opacity:.5;cursor:default}#dkWrap .dkBack{background:#fff;border:1px solid #cfcdc4;border-radius:12px;padding:12px 18px;color:#1d1d1b}
-  #dkWrap .dkTexts{display:grid;gap:12px;max-width:560px}#dkWrap .dkTexts label{display:grid;gap:4px;font-size:14px;color:#5f5d55}`;
+  #dkWrap .dkTexts{display:grid;gap:12px;max-width:560px}#dkWrap .dkTexts label{display:grid;gap:4px;font-size:14px;color:#5f5d55}
+  #dkWrap .dkFilt{display:flex;gap:8px;padding:10px 16px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #f0eee6;flex:none}#dkWrap .dkFilt select{font:inherit;font-size:15px;padding:8px 10px;border:1px solid #cfcdc4;border-radius:10px;background:#fff;color:#1d1d1b;max-width:100%}#dkWrap .dkFilt select.on{border-color:#1d1d1b;box-shadow:0 0 0 1px #1d1d1b}
+  #dkWrap .dkCount{font-size:14px;color:#77756c;margin-left:auto}#dkWrap .dkReset,#dkWrap .dkAll,#dkWrap .dkZip{background:#fff;border:1px solid #cfcdc4;border-radius:10px;padding:8px 12px;color:#1d1d1b;font-size:14px}
+  #dkWrap .dkAll{margin:0 0 12px}#dkWrap .dkFmtLbl{font-size:12px;color:#77756c}`;
 
   // Unsichtbares Studio: lädt beim ersten Installieren und bleibt für weitere Designs geladen
   let frame = null, ready = null;
@@ -78,39 +105,65 @@ window.DesignKatalog = (() => {
   async function open({ upload, canUse = true, lockedText = '', onInstall }) {
     if (!document.getElementById('dkCss')) { const st = document.createElement('style'); st.id = 'dkCss'; st.textContent = CSS; document.head.appendChild(st); }
     const w = document.createElement('div'); w.id = 'dkWrap'; w.innerHTML = '<div class="dkBox"></div>'; document.body.appendChild(w);
-    const box = w.firstChild, close = () => { w.remove(); removeEventListener('keydown', esc1); };
+    let zipRun = 0, zipPk = null; // laufendes Einlesen einer ZIP-Datei (Prüfung 16.11.2026: „Zurück“/Schließen während des Lesens)
+    const zipStop = () => { zipRun++; zipPk?.dispose(); zipPk = null; };
+    const box = w.firstChild, close = () => { zipStop(); w.remove(); removeEventListener('keydown', esc1); };
     const esc1 = e => { if (e.key === 'Escape') close(); }; addEventListener('keydown', esc1);
     w.addEventListener('pointerdown', e => { if (e.target === w) close(); });
-    const head = (title, back) => `<div class="dkHead">${back ? '<button class="dkBack" data-back>‹ Zurück</button>' : ''}<h3>${esc(title)}</h3>${back ? '' : '<input class="dkSearch" type="search" placeholder="Design suchen …" data-q>'}<button class="dkX" data-x aria-label="Schließen">×</button></div>`;
+    const head = (title, back) => `<div class="dkHead">${back ? '<button class="dkBack" data-back>‹ Zurück</button>' : ''}<h3>${esc(title)}</h3>${back ? '' : '<input class="dkSearch" type="search" placeholder="Design suchen …" data-q><button class="dkZip" data-zip title="Vorlagen aus einer ZIP-Datei übernehmen, z. B. aus einem anderen Fotobox-Programm">ZIP importieren</button>'}<button class="dkX" data-x aria-label="Schließen">×</button></div>`;
     box.innerHTML = head('Designs') + '<div class="dkBody"><p>Designs werden geladen …</p></div>';
-    box.addEventListener('click', e => { if (e.target.closest('[data-x]')) close(); });
-    let list;
+    box.addEventListener('click', e => { if (e.target.closest('[data-x]')) close(); else if (e.target.closest('[data-zip]')) pickZip(); });
+    let list = null;
     try {
       const r = await fetch(`${BASE()}/studio/katalog.json`, { cache: 'no-cache' }); if (!r.ok) throw new Error(String(r.status));
       list = await r.json();
-    } catch { box.querySelector('.dkBody').innerHTML = '<p>Die Designs sind gerade nicht erreichbar. Bitte die Internetverbindung prüfen.</p>'; return; }
+    } catch { box.querySelector('.dkBody').innerHTML = '<p>Die Designs sind gerade nicht erreichbar. Bitte die Internetverbindung prüfen.</p><p>Vorlagen aus einer ZIP-Datei lassen sich trotzdem übernehmen (Knopf „ZIP importieren“).</p>'; return; }
     let cat = 'Alle', q = '', top = 0;
+    const F = loadFilter();
     const cats = ['Alle', ...new Set(list.map(d => d.cat).filter(Boolean))];
+    const opt = (k, arr) => `<select data-k="${k}" class="${F[k] ? 'on' : ''}" aria-label="${esc(arr[0][1])}">${arr.map(([v, n]) => `<option value="${v}" ${F[k] === v ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>`;
+    function sorted(hit) {
+      const by = (a, b) => String(a).localeCompare(String(b), 'de', { sensitivity: 'base' });
+      if (F.sort === 'name') return [...hit].sort((a, b) => by(a.name, b.name));
+      if (F.sort === 'anlass') return [...hit].sort((a, b) => by(a.occasion || a.cat || '', b.occasion || b.cat || '') || by(a.name, b.name));
+      if (F.sort === 'format') return [...hit].sort((a, b) => fitsOf(F, b).length - fitsOf(F, a).length);
+      return hit;
+    }
     function showList() {
-      box.innerHTML = head('Designs') + `<div class="dkCats">${cats.map(c => `<button data-c="${esc(c)}" class="${c === cat ? 'on' : ''}">${esc(c)}</button>`).join('')}</div><div class="dkBody"><div class="dkGrid"></div></div>`;
+      box.innerHTML = head('Designs') + `<div class="dkCats">${cats.map(c => `<button data-c="${esc(c)}" class="${c === cat ? 'on' : ''}">${esc(c)}</button>`).join('')}</div>
+        <div class="dkFilt">${opt('size', SIZES)}${opt('orient', ORIENTS)}${opt('n', COUNTS)}${opt('sort', SORTS)}<button class="dkReset" data-reset ${filtered(F) || F.sort ? '' : 'hidden'}>Filter zurücksetzen</button><span class="dkCount"></span></div>
+        <div class="dkBody"><div class="dkGrid"></div></div>`;
       const grid = () => {
-        const hit = list.filter(d => (cat === 'Alle' || d.cat === cat) && (`${d.name} ${d.occasion} ${d.cat}`).toLowerCase().includes(q));
-        box.querySelector('.dkGrid').innerHTML = hit.map(d => `<button class="dkItem" data-d="${esc(d.key)}"><img loading="lazy" src="${img(d.key, '4x6-04')}" alt=""><b translate="no">${esc(d.name)}</b><small>${esc(d.occasion || d.cat || '')}</small></button>`).join('') || '<p>Kein Design gefunden.</p>';
+        const hit = sorted(list.filter(d => (cat === 'Alle' || d.cat === cat) && (`${d.name} ${d.occasion} ${d.cat}`).toLowerCase().includes(q) && fitsOf(F, d).length));
+        box.querySelector('.dkCount').textContent = hit.length === 1 ? '1 Design' : `${hit.length} Designs`;
+        box.querySelector('.dkGrid').innerHTML = hit.map(d => { const fk = fitsOf(F, d), v = fk[0] || '4x6-04', n = fk.length;
+          return `<button class="dkItem" data-d="${esc(d.key)}"><img loading="lazy" src="${img(d.key, v)}" alt=""><b translate="no">${esc(d.name)}</b><small>${esc(d.occasion || d.cat || '')}${filtered(F) ? ` · ${n === 1 ? '1 passendes Format' : `${n} passende Formate`}` : ''}</small></button>`; }).join('')
+          || '<p>Kein Design gefunden. Bitte einen anderen Filter wählen.</p>';
       };
       grid();
       const body = box.querySelector('.dkBody'); body.scrollTop = top;
       const s = box.querySelector('[data-q]'); s.value = q; s.oninput = () => { q = s.value.toLowerCase().trim(); grid(); };
       box.querySelector('.dkCats').onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return; cat = b.dataset.c; box.querySelectorAll('[data-c]').forEach(x => x.classList.toggle('on', x === b)); grid(); body.scrollTop = 0; };
+      const filt = box.querySelector('.dkFilt');
+      filt.onchange = e => { const k = e.target.dataset.k; if (!k) return; F[k] = e.target.value; e.target.classList.toggle('on', !!F[k]); saveFilter(F);
+        filt.querySelector('[data-reset]').hidden = !(filtered(F) || F.sort); grid(); body.scrollTop = 0; };
+      filt.querySelector('[data-reset]').onclick = () => { Object.assign(F, { size: '', orient: '', n: '', sort: '' }); saveFilter(F); top = 0; showList(); };
       box.querySelector('.dkGrid').onclick = e => { const b = e.target.closest('[data-d]'); if (b) { top = body.scrollTop; showDesign(list.find(d => d.key === b.dataset.d)); } };
     }
-    function showDesign(d) {
-      const have = FORMATS.filter(([k]) => (d.v || []).includes(k)), pick = new Set(have.filter(([k]) => k === '4x6-04' || k === '6x4-01').map(([k]) => k));
-      box.innerHTML = head(d.name, true) + `<div class="dkBody"><div class="dkGrid">${have.map(([k, a, b]) => `<label class="dkItem dkFmt ${pick.has(k) ? 'on' : ''}"><input type="checkbox" data-f="${k}" ${pick.has(k) ? 'checked' : ''}><img loading="lazy" src="${img(d.key, k)}" alt=""><b>${esc(a)}</b><small>${esc(b)}</small></label>`).join('')}</div></div>
+    function showDesign(d, all = false, pick = null) {
+      const avail = FORMATS.filter(([k]) => (d.v || []).includes(k)), fitK = new Set(fitsOf(F, d)), only = filtered(F) && !all;
+      const have = only ? avail.filter(([k]) => fitK.has(k)) : avail;
+      if (only && pick) { for (const k of [...pick]) if (!fitK.has(k)) pick.delete(k); if (!pick.size) pick = null; } // ausgeblendete Formate nicht mitinstallieren
+      // Vorauswahl: ohne Filter 4×6 hoch + quer wie bisher, mit Filter das erste passende Format
+      pick = pick || new Set(filtered(F) ? [...fitK].slice(0, 1) : avail.filter(([k]) => k === '4x6-04' || k === '6x4-01').map(([k]) => k));
+      const rest = avail.length - have.length;
+      box.innerHTML = head(d.name, true) + `<div class="dkBody">${filtered(F) ? `<button class="dkAll" data-all>${only ? `Alle Formate zeigen (${rest} weitere)` : 'Nur passende Formate zeigen'}</button>` : ''}<div class="dkGrid">${have.map(([k, a, b]) => `<label class="dkItem dkFmt ${pick.has(k) ? 'on' : ''}"><input type="checkbox" data-f="${k}" ${pick.has(k) ? 'checked' : ''}><img loading="lazy" src="${img(d.key, k)}" alt=""><b>${esc(a)}</b><small>${esc(b)}</small></label>`).join('')}</div></div>
         <div class="dkFoot"><div class="dkMsg"></div><button class="dkGo">Installieren</button></div>`;
       const msg = box.querySelector('.dkMsg'), go = box.querySelector('.dkGo');
       const sync = () => { msg.textContent = !canUse ? lockedText : pick.size ? `${pick.size} von höchstens ${MAX} Formaten gewählt` : 'Bitte mindestens ein Format wählen.'; go.disabled = !canUse || !pick.size; };
       sync();
       box.querySelector('[data-back]').onclick = showList;
+      const allB = box.querySelector('[data-all]'); if (allB) allB.onclick = () => showDesign(d, only, pick);
       box.querySelector('.dkGrid').onchange = e => { const k = e.target.dataset.f; if (!k) return; if (e.target.checked && pick.size >= MAX) { e.target.checked = false; return; } e.target.checked ? pick.add(k) : pick.delete(k); e.target.closest('.dkFmt').classList.toggle('on', e.target.checked); sync(); };
       go.onclick = async () => {
         go.disabled = true; msg.textContent = 'Design wird vorbereitet …';
@@ -140,6 +193,40 @@ window.DesignKatalog = (() => {
         ${texts.map((t, i) => `<label>${esc(t)}<input type="text" maxlength="120" data-t="${i}" value="${esc(t)}"></label>`).join('')}</div></div><div class="dkFoot"><div class="dkMsg"></div><button class="dkGo">Fertig installieren</button></div>`;
       box.querySelector('[data-back]').onclick = () => showDesign(d);
       box.querySelector('.dkGo').onclick = () => { const map = new Map(); box.querySelectorAll('[data-t]').forEach(i => map.set(texts[+i.dataset.t], i.value.trim())); finish(map); };
+    }
+    // Vorlagen aus einer ZIP-Datei: eigene Sicherung (Exportieren im Fotolayout) oder Vorlagen-Paket aus einem anderen Programm (PNG-Rahmen mit
+    // durchsichtigen Fotofeldern). Erst Vorschau zum Auswählen, hochgeladen wird nur, was übernommen wird.
+    function pickZip() {
+      const i = document.createElement('input'); i.type = 'file'; i.accept = '.zip,application/zip,application/x-zip-compressed';
+      i.onchange = () => { const f = i.files[0]; if (f) showZip(f); }; i.click();
+    }
+    async function showZip(file) {
+      box.innerHTML = head('Vorlagen aus ZIP', true) + `<div class="dkBody"><p data-st style="margin-top:0">ZIP-Datei wird gelesen …</p><div class="dkGrid"></div></div>
+        <div class="dkFoot"><div class="dkMsg"></div><button class="dkGo" disabled>Übernehmen</button></div>`;
+      zipStop(); const run = zipRun, alive = () => run === zipRun && w.isConnected; let pk = null;
+      const back = () => { zipStop(); list ? showList() : close(); };
+      box.querySelector('[data-back]').onclick = back;
+      const st = box.querySelector('[data-st]'), msg = box.querySelector('.dkMsg'), go = box.querySelector('.dkGo');
+      try { pk = await (await zipLib()).read(file, { onStep: t => { st.textContent = t; } }); }
+      catch (e) { st.textContent = '⚠️ ' + e.message; return; }
+      if (!alive()) { pk.dispose(); return; } // inzwischen „Zurück“ oder geschlossen: nichts mehr in die Liste schreiben
+      zipPk = pk;
+      if (!pk.items.length) { st.textContent = '⚠️ ' + pk.summary; return; }
+      st.textContent = pk.summary;
+      const pick = new Set(pk.items.map((it, i) => it.skip ? -1 : i).filter(i => i >= 0));
+      box.querySelector('.dkGrid').innerHTML = pk.items.map((it, i) => `<label class="dkItem dkFmt ${pick.has(i) ? 'on' : ''}"><input type="checkbox" data-i="${i}" ${pick.has(i) ? 'checked' : ''}>
+        <img src="${esc(it.preview)}" alt=""><b translate="no">${esc(it.layout.name)}</b><small>${esc(it.info)}</small></label>`).join('');
+      const sync = () => { msg.textContent = pick.size ? `${pick.size} von ${pk.items.length} Vorlagen gewählt` : 'Bitte mindestens eine Vorlage wählen.'; go.disabled = !pick.size; };
+      sync();
+      box.querySelector('.dkGrid').onchange = e => { const i = +e.target.dataset.i; if (e.target.dataset.i == null) return; e.target.checked ? pick.add(i) : pick.delete(i); e.target.closest('.dkFmt').classList.toggle('on', e.target.checked); sync(); };
+      go.onclick = async () => {
+        go.disabled = true;
+        try {
+          const Ls = await pk.finish([...pick].sort((a, b) => a - b), { upload, onStep: t => { if (alive()) msg.textContent = t; } });
+          if (!alive()) return; // während des Hochladens „Zurück“ oder geschlossen: nicht übernehmen
+          close(); onInstall(Ls, { zip: true });
+        } catch (e) { if (alive()) { msg.textContent = '⚠️ ' + e.message; go.disabled = false; } }
+      };
     }
     showList();
   }

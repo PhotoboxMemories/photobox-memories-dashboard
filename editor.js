@@ -145,7 +145,16 @@
   const $ = (r, s) => r.querySelector(s);
   const clone = o => JSON.parse(JSON.stringify(o));
   const tr = s => (G.I18N_UI ? G.I18N_UI(s) : s);
-  const PH = ['titel', 'untertitel', 'datum', 'uhrzeit', 'event', 'name', 'aufgabe']; // aufgabe: Foto-Aufgabe der Sitzung (foto-aufgaben.js)
+  // ZIP-Funktion (vorlagen-zip.js, liegt neben dieser Datei) erst beim Importieren/Exportieren laden
+  const ME = document.currentScript?.src || '';
+  let zipP = null;
+  const zipLib = () => G.VorlagenZip ? Promise.resolve(G.VorlagenZip) : zipP || (zipP = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = new URL('vorlagen-zip.js?v=20261115-1', ME || location.href).href;
+    s.onload = () => G.VorlagenZip ? res(G.VorlagenZip) : rej(new Error(tr('Die ZIP-Funktion fehlt.')));
+    s.onerror = () => { zipP = null; s.remove(); rej(new Error(tr('Die ZIP-Funktion konnte nicht geladen werden.'))); };
+    document.head.appendChild(s);
+  }));
+  const PH =['titel', 'untertitel', 'datum', 'uhrzeit', 'event', 'name', 'aufgabe']; // aufgabe: Foto-Aufgabe der Sitzung (foto-aufgaben.js)
   const TYPE_NAME = { photo: 'Fotobox-Foto', image: 'Bild', text: 'Text', shape: 'Form', deco: 'Vorlagen-Deko', button: 'Schaltfläche „Foto“', signature: 'Unterschrift', answer: 'Umfrage-Antwort', gallery: 'Galerie-Stapel', vmsg: 'Videonachricht (QR-Code)',
     spic: 'Foto der Gäste', sfil: 'Filter-Leiste', qr: 'QR-Code' };
   const TYPE_ICON = { photo: 'camera', image: 'image', text: 'type', shape: 'shapes', deco: 'sparkles', button: 'camera', signature: 'pen', answer: 'clipboard', gallery: 'gallery', vmsg: 'qr', spic: 'image', sfil: 'sliders', qr: 'qr' };
@@ -498,6 +507,15 @@
         i.onkeydown = e => { if (e.key === 'Enter') done(i.value); if (e.key === 'Escape') done(null); };
       });
     }
+    // Auswahl als kleines Fenster: choose('Titel', [['a', 'Text A'], ['b', 'Text B']]) → 'a' | 'b' | null
+    function choose(title, opts2) {
+      return new Promise(res => {
+        const d = document.createElement('div'); d.className = 'le-ask';
+        d.innerHTML = `<div><b>${esc(tr(title))}</b><div class="r" style="flex-wrap:wrap"><button data-x>${esc(tr('Abbrechen'))}</button>${opts2.map(([k, n], i) => `<button ${i === 0 ? 'class="p"' : ''} data-k="${esc(k)}">${esc(tr(n))}</button>`).join('')}</div></div>`;
+        document.body.appendChild(d);
+        d.onclick = e => { const b = e.target.closest('[data-k]'); if (b) { d.remove(); res(b.dataset.k); } else if (e.target === d || e.target.closest('[data-x]')) { d.remove(); res(null); } };
+      });
+    }
     async function libAct(k) {
       if (!lib) return;
       if (k === 'new') { const l = await lib.pick(); if (!l) return; await flush(); await lib.add(l); load(l); return; }
@@ -506,18 +524,40 @@
         await flush(); const c = out(); c.id = FBR.uid(); c.name = name.trim() || c.name; await lib.add(c); load(c); return;
       }
       if (k === 'import') {
-        const f = await pickFile('.json,application/json,image/png,image/*'); if (!f) return;
+        const f = await pickFile('.zip,application/zip,application/x-zip-compressed,.json,application/json,image/png,image/*'); if (!f) return;
         let l;
+        // ZIP: eigene Sicherung (eine oder mehrere Vorlagen mit Bildern) oder Vorlagen-Paket aus einem anderen Programm (PNG-Rahmen)
+        if (/zip/.test(f.type) || /\.zip$/i.test(f.name)) {
+          let Ls, pk = null;
+          try {
+            pk = await (await zipLib()).read(f, { onStep: t => setStatus(t) });
+            const take = pk.items.map((it, i) => it.skip ? -1 : i).filter(i => i >= 0);
+            if (!take.length) { pk.dispose(); throw new Error(pk.summary); }
+            const okAll = take.length < 2 || await (G.pmConfirm || (async t => confirm(t)))(`${pk.summary}\n\n${tr('Alle übernehmen?')}`, tr('Übernehmen'));
+            if (!okAll) { pk.dispose(); setStatus(''); return; }
+            Ls = await pk.finish(take, { upload: opts.uploadImage, onStep: t => setStatus(t) }); pk.dispose();
+          } catch (e) { pk?.dispose(); setStatus(''); alert(tr('Import fehlgeschlagen:') + ' ' + e.message); return; }
+          await flush(); for (const x of Ls) await lib.add(x);
+          load(Ls[0]); setStatus(Ls.length === 1 ? tr('1 Vorlage übernommen') : `${Ls.length} ${tr('Vorlagen übernommen')}`); return;
+        }
         try {
           if (/json/.test(f.type) || /\.json$/i.test(f.name)) { l = JSON.parse(await f.text()); if (!l || !Array.isArray(l.elements) || !l.w || l.screen) throw new Error(tr('Das ist keine Fotolayout-Datei.')); l.id = FBR.uid(); }
           else { setStatus('Analysiere Design …'); l = await layoutFromImage(f, opts.uploadImage); delete l.found; }
         } catch (e) { setStatus(''); alert(tr('Import fehlgeschlagen:') + ' ' + e.message); return; }
         await flush(); await lib.add(l); load(l); return;
       }
+      // Export als ZIP mit allen Bildern: geht auch auf einem anderen Konto oder ohne Internet wieder zu importieren (Betreiber 15.11.2026)
       if (k === 'export') {
-        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(out(), null, 1)], { type: 'application/json' }));
-        a.download = String(L.name || 'Fotolayout').replace(/[\\/:*?"<>|]+/g, '_') + '.fotolayout.json'; document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(a.href), 10000); return;
+        const n = lib.list().length;
+        const which = n > 1 ? await choose('Was soll exportiert werden?', [['one', 'Nur diese Vorlage'], ['all', `Alle Vorlagen (${n})`]]) : 'one';
+        if (!which) return;
+        await flush();
+        const Ls = which === 'one' ? [out()] : lib.list().map(x => x.id === L.id ? out() : lib.get(x.id)).filter(Boolean);
+        try {
+          const r = await (await zipLib()).exportZip(Ls, { name: which === 'one' ? (L.name || 'Fotolayout') : 'Fotolayouts', onStep: t => setStatus(t) });
+          setStatus(r.missing ? `${tr('Exportiert, aber Bilder fehlen:')} ${r.missing}` : tr('Exportiert'));
+        } catch (e) { setStatus('⚠️ ' + e.message); }
+        return;
       }
       if (k === 'print') { await flush(); setStatus('Testdruck …'); try { await lib.print(out()); setStatus('Testdruck gesendet'); } catch (e) { setStatus('⚠️ ' + e.message); } return; }
       if (k === 'del') {

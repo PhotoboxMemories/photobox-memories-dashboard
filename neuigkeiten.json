@@ -1,6 +1,139 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.105": {
+   "date": "2026-11-15",
+   "notes": {
+    "de": [
+     "Designs installieren: Neue Filter nach Format (10×15, Streifen, Quadrat), Hoch- oder Querformat und Anzahl der Fotos, dazu Sortieren nach Name oder Anlass. So findest du schnell das passende Design.",
+     "Vorlagen als ZIP: Unter Fotolayout → Exportieren sicherst du eine oder alle Vorlagen mit allen Bildern in einer Datei und übernimmst sie mit Importieren wieder – auch auf einer anderen Fotobox. Wechselst du von einem anderen Fotobox-Programm, übernimmst du dessen Vorlagen-Paket gleich mit: Fotofelder und Streifen werden selbst erkannt."
+    ],
+    "en": [
+     "Install designs: new filters by format (10×15, strip, square), portrait or landscape and number of photos, plus sorting by name or occasion. So you quickly find the right design.",
+     "Templates as ZIP: under Photo layout → Export you save one or all templates with all images in one file and bring them back with Import – also on another photo booth. Switching from another photo booth program? Bring its template pack along: photo areas and strips are recognised automatically."
+    ],
+    "tr": [
+     "Tasarım yükle: Formata (10×15, şerit, kare), dikey veya yatay ve fotoğraf sayısına göre yeni filtreler, ayrıca ada veya etkinliğe göre sıralama. Böylece uygun tasarımı hızla bulursun.",
+     "ZIP olarak şablonlar: Fotoğraf düzeni → Dışa aktar ile bir veya tüm şablonları tüm görselleriyle tek dosyada saklar, İçe aktar ile geri alırsın – başka bir fotoğraf kabininde de. Başka bir fotoğraf kabini programından mı geçiyorsun? Onun şablon paketini de al: fotoğraf alanları ve şeritler otomatik tanınır."
+    ],
+    "fr": [
+     "Installer des designs : nouveaux filtres par format (10×15, bande, carré), portrait ou paysage et nombre de photos, plus un tri par nom ou occasion. Tu trouves ainsi vite le bon design.",
+     "Modèles en ZIP : sous Mise en page photo → Exporter, tu enregistres un ou tous les modèles avec toutes les images dans un seul fichier et tu les récupères avec Importer – aussi sur un autre photobooth. Tu viens d’un autre logiciel de photobooth ? Reprends aussi son pack de modèles : zones photo et bandes sont reconnues automatiquement."
+    ],
+    "es": [
+     "Instalar diseños: nuevos filtros por formato (10×15, tira, cuadrado), vertical u horizontal y número de fotos, además de ordenar por nombre u ocasión. Así encuentras rápido el diseño adecuado.",
+     "Plantillas en ZIP: en Diseño de foto → Exportar guardas una o todas las plantillas con todas las imágenes en un archivo y las recuperas con Importar, también en otro fotomatón. ¿Vienes de otro programa de fotomatón? Trae también su paquete de plantillas: las zonas de foto y las tiras se reconocen solas."
+    ],
+    "it": [
+     "Installa design: nuovi filtri per formato (10×15, striscia, quadrato), verticale o orizzontale e numero di foto, più l’ordinamento per nome o occasione. Così trovi subito il design giusto.",
+     "Modelli come ZIP: in Layout foto → Esporta salvi uno o tutti i modelli con tutte le immagini in un unico file e li riprendi con Importa, anche su un’altra cabina foto. Passi da un altro programma per cabine foto? Porta con te anche il suo pacchetto di modelli: aree foto e strisce vengono riconosciute da sole."
+    ]
+   }
+  },
+  "1.18.104": {
+   "date": "2026-11-14",
+   "notes": {
+    "de": [
+     "Live-Vorschau: Das Livebild folgt jetzt den Gesichtern – genau wie das fertige Foto. Stehen die Gäste etwas seitlich, rückt der Ausschnitt sanft zu ihnen. So sehen sie schon beim Countdown, wie sie auf dem Foto sitzen."
+    ],
+    "en": [
+     "Live preview: the live image now follows the faces – just like the finished photo. If guests stand a little to the side, the frame glides over to them, so during the countdown they already see how they will sit in the photo."
+    ],
+    "tr": [
+     "Canlı önizleme: Canlı görüntü artık yüzleri takip ediyor – tıpkı bitmiş fotoğraf gibi. Konuklar biraz kenarda dururlarsa kadraj yumuşakça onlara kayar. Böylece geri sayım sırasında fotoğrafta nasıl görüneceklerini görürler."
+    ],
+    "fr": [
+     "Aperçu en direct : l’image en direct suit désormais les visages – exactement comme la photo finale. Si les invités se tiennent un peu sur le côté, le cadrage glisse doucement vers eux. Pendant le compte à rebours, ils voient déjà comment ils apparaîtront sur la photo."
+    ],
+    "es": [
+     "Vista previa en directo: la imagen en directo ahora sigue las caras, igual que la foto final. Si los invitados están un poco a un lado, el encuadre se desliza suavemente hacia ellos. Así, durante la cuenta atrás ya ven cómo saldrán en la foto."
+    ],
+    "it": [
+     "Anteprima dal vivo: l’immagine dal vivo ora segue i volti, proprio come la foto finale. Se gli ospiti sono un po’ di lato, l’inquadratura scorre dolcemente verso di loro. Così durante il conto alla rovescia vedono già come saranno nella foto."
+    ]
+   }
+  },
+  "1.18.103": {
+   "date": "2026-11-14",
+   "notes": {
+    "de": [
+     "AI-Fotos: Mit dem neuen Schalter „Am Start wählen“ (Dashboard → AI-Fotos → An der Fotobox) sehen die Gäste gleich nach dem Tippen auf den Startbildschirm zwei große Kacheln: „AI-Foto“ oder „Normales Foto“. So geht es ohne KI direkt weiter – und wer ein AI-Foto will, wählt danach seinen Stil."
+    ],
+    "en": [
+     "AI photos: with the new switch “Choose at the start” (Dashboard → AI photos → At the photo booth), guests see two big tiles right after tapping the start screen: “AI photo” or “Normal photo”. Without AI it goes straight on – and anyone who wants an AI photo picks their style next."
+    ],
+    "tr": [
+     "Yapay zekâ fotoğrafları: Yeni „Başlangıçta seç“ anahtarıyla (Panel → Yapay zekâ fotoğrafları → Fotoğraf kabininde) konuklar başlangıç ekranına dokunduktan hemen sonra iki büyük kutucuk görür: „Yapay zekâ fotoğrafı“ veya „Normal fotoğraf“. Yapay zekâ olmadan doğrudan devam edilir – yapay zekâ fotoğrafı isteyen ardından stilini seçer."
+    ],
+    "fr": [
+     "Photos IA : avec le nouvel interrupteur « Choisir au départ » (Tableau de bord → Photos IA → Au photobooth), les invités voient deux grandes tuiles juste après avoir touché l’écran d’accueil : « Photo IA » ou « Photo normale ». Sans IA, on continue directement – et qui veut une photo IA choisit ensuite son style."
+    ],
+    "es": [
+     "Fotos con IA: con el nuevo interruptor «Elegir al inicio» (Panel → Fotos con IA → En el fotomatón), los invitados ven dos casillas grandes justo después de tocar la pantalla de inicio: «Foto con IA» o «Foto normal». Sin IA se continúa directamente, y quien quiera una foto con IA elige después su estilo."
+    ],
+    "it": [
+     "Foto IA: con il nuovo interruttore «Scegliere all’inizio» (Dashboard → Foto IA → Alla cabina foto), gli ospiti vedono due grandi riquadri subito dopo aver toccato la schermata iniziale: «Foto IA» o «Foto normale». Senza IA si prosegue direttamente – e chi vuole una foto IA sceglie poi il suo stile."
+    ]
+   }
+  },
+  "1.18.102": {
+   "date": "2026-11-14",
+   "notes": {
+    "de": [
+     "Zeichenroboter: Blatt einstellen geht jetzt in einem Schritt. „Mitte zeigen“ tippen, die Stiftspitze mit der Hand auf die Mitte des Blatts führen, „Mitte merken“ – fertig. Die Fotobox legt das Rechteck in Papiergröße automatisch um diese Mitte, und der Arm fährt den Rand einmal ab. Mit den Pfeilen justierst du danach millimetergenau nach.",
+     "Zeichenroboter: Liegt das Blatt quer, setzt du einfach das Häkchen „Blatt liegt quer“ – zum Beispiel für A4."
+    ],
+    "en": [
+     "Drawing robot: setting up the sheet now takes one step. Tap “Show centre”, guide the pen tip by hand to the centre of the sheet, “Save centre” – done. The photo booth automatically places a paper-sized rectangle around this centre, and the arm traces the edge once. Afterwards you fine-tune to the millimetre with the arrows.",
+     "Drawing robot: if the sheet is landscape, just tick “Sheet is landscape” – for A4, for example."
+    ],
+    "tr": [
+     "Çizim robotu: Kâğıdı ayarlamak artık tek adım. „Ortayı göster“e dokun, kalem ucunu elinle kâğıdın ortasına götür, „Ortayı kaydet“ – bitti. Fotokabin bu ortanın etrafına otomatik olarak kâğıt boyutunda bir dikdörtgen yerleştirir ve kol kenarı bir kez dolaşır. Ardından oklarla milimetre milimetre ince ayar yaparsın.",
+     "Çizim robotu: Kâğıt yatay duruyorsa sadece „Kâğıt yatay duruyor“ işaretini koy – örneğin A4 için."
+    ],
+    "fr": [
+     "Robot dessinateur : régler la feuille se fait maintenant en une étape. Appuie sur « Montrer le centre », guide la pointe du stylo à la main jusqu’au centre de la feuille, « Mémoriser le centre » – c’est fait. Le photobooth place automatiquement un rectangle au format du papier autour de ce centre, et le bras suit le bord une fois. Ensuite, tu ajustes au millimètre avec les flèches.",
+     "Robot dessinateur : si la feuille est en paysage, coche simplement « La feuille est en paysage » – par exemple pour l’A4."
+    ],
+    "es": [
+     "Robot dibujante: ajustar la hoja ahora es un solo paso. Pulsa «Mostrar el centro», guía la punta del bolígrafo con la mano hasta el centro de la hoja, «Guardar el centro» y listo. El fotomatón coloca automáticamente un rectángulo del tamaño del papel alrededor de ese centro y el brazo recorre el borde una vez. Después afinas al milímetro con las flechas.",
+     "Robot dibujante: si la hoja está en horizontal, marca simplemente «La hoja está en horizontal», por ejemplo para A4."
+    ],
+    "it": [
+     "Robot disegnatore: regolare il foglio ora richiede un solo passaggio. Tocca «Mostra il centro», guida la punta della penna con la mano fino al centro del foglio, «Memorizza il centro» e il gioco è fatto. La cabina fotografica colloca automaticamente un rettangolo in formato carta attorno a questo centro e il braccio percorre il bordo una volta. Poi regoli al millimetro con le frecce.",
+     "Robot disegnatore: se il foglio è orizzontale, spunta semplicemente «Il foglio è orizzontale», ad esempio per l’A4."
+    ]
+   }
+  },
+  "1.18.101": {
+   "date": "2026-11-14",
+   "notes": {
+    "de": [
+     "Zeichenroboter: Neue einfache Seite „Blatt einstellen“ an der Fotobox. Mit Pfeilen schiebst du die Zeichnung millimetergenau auf dem Blatt und stellst die Stifthöhe ein – der Arm zeigt die neue Stelle gleich selbst.",
+     "Zeichenroboter: „Stift einsetzen“ fährt den Arm in die Blattmitte, so sitzt der Stift nach jedem Wechsel sofort auf der richtigen Höhe. Das Einmessen mit der Hand findest du unter „Erweitert“."
+    ],
+    "en": [
+     "Drawing robot: new simple page “Set up the sheet” on the photo booth. Use the arrows to move the drawing on the sheet to the millimetre and set the pen height – the arm shows the new position right away.",
+     "Drawing robot: “Insert pen” moves the arm to the centre of the sheet, so the pen sits at the right height after every change. Measuring by hand is under “Advanced”."
+    ],
+    "tr": [
+     "Çizim robotu: Fotokabinde yeni basit sayfa „Kâğıdı ayarla“. Oklarla çizimi kâğıt üzerinde milimetre milimetre kaydırır ve kalem yüksekliğini ayarlarsın – kol yeni yeri hemen gösterir.",
+     "Çizim robotu: „Kalemi tak“ kolu kâğıdın ortasına götürür, böylece kalem her değişimden sonra doğru yükseklikte olur. Elle ölçme „Gelişmiş“ altında."
+    ],
+    "fr": [
+     "Robot dessinateur : nouvelle page simple « Régler la feuille » sur le photobooth. Avec les flèches, tu déplaces le dessin au millimètre près et règles la hauteur du stylo – le bras montre tout de suite la nouvelle position.",
+     "Robot dessinateur : « Insérer le stylo » amène le bras au centre de la feuille, le stylo est ainsi à la bonne hauteur après chaque changement. La mesure à la main se trouve sous « Avancé »."
+    ],
+    "es": [
+     "Robot dibujante: nueva página sencilla «Ajustar la hoja» en el fotomatón. Con las flechas mueves el dibujo en la hoja al milímetro y ajustas la altura del bolígrafo; el brazo muestra la nueva posición enseguida.",
+     "Robot dibujante: «Colocar bolígrafo» lleva el brazo al centro de la hoja, así el bolígrafo queda a la altura correcta tras cada cambio. La medición a mano está en «Avanzado»."
+    ],
+    "it": [
+     "Robot disegnatore: nuova pagina semplice «Regola il foglio» sulla photobooth. Con le frecce sposti il disegno sul foglio al millimetro e regoli l’altezza della penna – il braccio mostra subito la nuova posizione.",
+     "Robot disegnatore: «Inserisci penna» porta il braccio al centro del foglio, così la penna è all’altezza giusta dopo ogni cambio. La misurazione a mano è in «Avanzate»."
+    ]
+   }
+  },
   "1.18.100": {
    "date": "2026-11-14",
    "notes": {
