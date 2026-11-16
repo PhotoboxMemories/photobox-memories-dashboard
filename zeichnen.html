@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Zeichnung">
 <meta name="theme-color" content="#0e0e0d">
 <title>Zeichnung</title>
-<script>window.I18N_V = '20261114-2';</script>
+<script>window.I18N_V = '20261116-3';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache: ?l=… (von der Fotobox), sonst gemerkt, sonst die des iPads
 (function () { var q = new URLSearchParams(location.search).get('l'), m = ''; try { m = localStorage.getItem('pm_draw_lang') || ''; } catch (e) {}
@@ -45,6 +45,7 @@
   .shutter:active{transform:scale(.95)}
   .shutter:disabled{opacity:.45}
   .hint{font-weight:600;text-shadow:0 2px 8px rgba(0,0,0,.6);text-align:center}
+  .why{max-width:min(70vw,620px);margin-top:8px;background:rgba(0,0,0,.55);border-radius:14px;padding:8px 14px;font-size:15px;font-weight:600}
   .small{font-size:13px;color:#cfcfd6;text-shadow:0 1px 6px rgba(0,0,0,.6);text-align:center}
   .row2{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
   #cd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 min(40vw,320px) Fredoka,system-ui,sans-serif;color:#fff;text-shadow:0 6px 40px rgba(0,0,0,.6);pointer-events:none;z-index:3}
@@ -91,7 +92,7 @@
   <video id="live" playsinline muted autoplay class="mirror"></video>
   <img id="still" alt="" hidden>
   <div class="top">
-    <div><h1 id="title">Lass dich vom Roboter zeichnen!</h1><div class="pill" id="pill"><i></i><span id="pillT">Einen Moment …</span></div></div>
+    <div><h1 id="title">Lass dich vom Roboter zeichnen!</h1><div class="pill" id="pill"><i></i><span id="pillT">Einen Moment …</span></div><div class="why" id="pillWhy" hidden></div></div>
     <div class="tools"><select class="langSel" id="langSel" aria-label="Sprache" translate="no"></select><button class="ib" id="flip" type="button" aria-label="Kamera wechseln">🔄</button></div>
   </div>
   <div id="cd"></div><div id="flash"></div>
@@ -211,6 +212,10 @@
 
   // ---------- Zustand der Fotobox ----------
   let state = null, shot = null, photo = '';
+  const WHY = { 'Ereignis nicht gestartet': 'Für das Team: An der Fotobox das Ereignis starten (Startbildschirm des Ereignisses) – dann ist der Roboter bereit.',
+    'kein Ereignis gewählt': 'Für das Team: An der Fotobox ein Ereignis wählen und starten.',
+    'Zeichnung für Gäste ist aus': 'Für das Team: Im Ereignis ist der Zeichenroboter aus: Dashboard → Ereignis → Zeichenroboter → „Zeichenroboter aktivieren“ einschalten.',
+    'Arm nicht bereit': 'Für das Team: Der Arm antwortet nicht – an der Fotobox prüfen, ob er eingeschaltet und per USB angeschlossen ist.' };
   function pill() {
     const p = $('#pill'), s = state || {}, i = s.info || {}, n = +s.waiting || 0; let cls = '', t;
     if (!state) t = T('Verbindet …');
@@ -220,6 +225,9 @@
     else if (s.drawing || i.state === 'busy' || n) { cls = 'busy'; t = n ? T(`Der Roboter zeichnet gerade – ${n} warten`) : T('Der Roboter zeichnet gerade'); }
     else t = T('Bereit');
     p.className = 'pill ' + cls; $('#pillT').textContent = t;
+    // Warum nicht bereit (Betreiber 16.11.2026: „am iPad steht nur ‚gerade nicht bereit‘“): Die Fotobox schickt den Grund mit (padState in index.html)
+    const why = state && s.online && i.state === 'off' ? WHY[i.why] || '' : '';
+    $('#pillWhy').hidden = !why; $('#pillWhy').textContent = why ? T(why) : '';
     $('#title').textContent = T('Lass dich vom Roboter zeichnen!');
     $('#shoot').disabled = !!state && (!s.online || n >= 6);
   }
