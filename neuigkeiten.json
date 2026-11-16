@@ -1,6 +1,41 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.108": {
+   "date": "2026-11-16",
+   "notes": {
+    "de": [
+     "Zeichenroboter mit dem iPad: Neu ist „Gäste nur am iPad“. Die Gäste machen das Foto und wählen den KI-Stil nur am iPad. Der Laptop zeigt dann nur noch die Originalfotos mit Thema und Stand der Zeichnung und steuert den Arm – ohne Startbildschirm für Gäste und ohne Kamera. Die Fotos werden zusätzlich im Fotoordner gespeichert.",
+     "Zeichenroboter: Neuer Stil „Karikatur mit Szene“ – großer Kopf, ganze Figur und eine passende Szene zum Thema, wie ein Ausmalbild. Er ist jetzt die Vorgabe. Außerdem darf eine Zeichnung jetzt bis zu 10 Minuten dauern, damit keine Striche mehr wegfallen.",
+     "AI-Fotos: Beim eigenen Prompt gibt es jetzt das Feld „Negativer Prompt“ – dort schreibst du, was nicht im Bild sein soll, zum Beispiel Schrift oder zusätzliche Personen."
+    ],
+    "en": [
+     "Drawing robot with the iPad: new “Guests only on the iPad” option. Guests take the photo and choose the AI style only on the iPad. The laptop then just shows the original photos with theme and drawing progress and controls the arm – no start screen for guests and no camera needed. The photos are also saved in the photo folder.",
+     "Drawing robot: new “Caricature with a scene” style – big head, full figure and a matching scene for the theme, like a colouring page. It is now the default. A drawing may now also take up to 10 minutes so that no lines are left out.",
+     "AI photos: your own prompt now has a “Negative prompt” field – write there what should not be in the picture, for example text or extra people."
+    ],
+    "tr": [
+     "iPad ile çizim robotu: Yeni “Misafirler yalnızca iPad’de” seçeneği. Misafirler fotoğrafı çeker ve AI stilini yalnızca iPad’de seçer. Dizüstü bilgisayar o zaman yalnızca tema ve çizim durumuyla birlikte orijinal fotoğrafları gösterir ve kolu kontrol eder – misafirler için başlangıç ekranı ve kamera gerekmez. Fotoğraflar ayrıca fotoğraf klasörüne kaydedilir.",
+     "Çizim robotu: Yeni “Sahneli karikatür” stili – büyük baş, tam boy figür ve temaya uygun bir sahne, boyama sayfası gibi. Artık varsayılan bu. Ayrıca hiçbir çizgi eksik kalmasın diye bir çizim artık 10 dakikaya kadar sürebilir.",
+     "AI fotoğrafları: Kendi isteminde artık “Negatif istem” alanı var – resimde olmaması gerekenleri oraya yaz, örneğin yazı veya fazladan kişiler."
+    ],
+    "fr": [
+     "Robot dessinateur avec l’iPad : nouvelle option « Invités uniquement sur l’iPad ». Les invités prennent la photo et choisissent le style IA uniquement sur l’iPad. L’ordinateur portable affiche alors seulement les photos originales avec le thème et l’avancement du dessin et pilote le bras – sans écran d’accueil pour les invités et sans caméra. Les photos sont aussi enregistrées dans le dossier photos.",
+     "Robot dessinateur : nouveau style « Caricature avec une scène » – grosse tête, corps entier et une scène adaptée au thème, comme un coloriage. C’est désormais le style par défaut. Un dessin peut aussi durer jusqu’à 10 minutes, pour qu’aucun trait ne manque.",
+     "Photos IA : ton propre prompt a maintenant un champ « Prompt négatif » – indique ce qui ne doit pas être dans l’image, par exemple du texte ou des personnes en plus."
+    ],
+    "es": [
+     "Robot dibujante con el iPad: nueva opción «Invitados solo en el iPad». Los invitados hacen la foto y eligen el estilo de IA solo en el iPad. El portátil solo muestra entonces las fotos originales con el tema y el progreso del dibujo y controla el brazo, sin pantalla de inicio para invitados y sin cámara. Las fotos también se guardan en la carpeta de fotos.",
+     "Robot dibujante: nuevo estilo «Caricatura con escena»: cabeza grande, cuerpo entero y una escena acorde al tema, como un dibujo para colorear. Ahora es el estilo predeterminado. Además, un dibujo puede durar hasta 10 minutos para que no falte ninguna línea.",
+     "Fotos IA: tu propio prompt tiene ahora el campo «Prompt negativo»: escribe ahí lo que no debe aparecer en la imagen, por ejemplo texto o personas adicionales."
+    ],
+    "it": [
+     "Robot disegnatore con l’iPad: nuova opzione «Ospiti solo sull’iPad». Gli ospiti scattano la foto e scelgono lo stile IA solo sull’iPad. Il laptop mostra allora solo le foto originali con tema e avanzamento del disegno e comanda il braccio – senza schermata iniziale per gli ospiti e senza fotocamera. Le foto vengono salvate anche nella cartella foto.",
+     "Robot disegnatore: nuovo stile «Caricatura con scena» – testa grande, figura intera e una scena adatta al tema, come un disegno da colorare. Ora è lo stile predefinito. Inoltre un disegno può durare fino a 10 minuti, così non manca nessuna linea.",
+     "Foto IA: il tuo prompt personale ha ora il campo «Prompt negativo» – scrivi lì cosa non deve esserci nell’immagine, ad esempio scritte o persone in più."
+    ]
+   }
+  },
   "1.18.107": {
    "date": "2026-11-16",
    "notes": {

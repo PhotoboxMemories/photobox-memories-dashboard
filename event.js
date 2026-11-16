@@ -469,7 +469,7 @@
     gif: { size: '720p-16:9', reverse: false, overlays: [], delay: 300 },
     slowmo: { enabled: false, countdown: 5, quality: 4, motion: false, flash: true, saveOriginal: true, preTextOn: false, preText: 'Bereit machen', length: 6, reverse: true, clipLen: 2, speed: '0.5x', soundtracks: [], overlays: [], size: '720p-16:9', intro: '', outro: '' },
     video: { countdown: 5, quality: 4, saveOriginal: true, preTextOn: false, preText: 'Bereit machen', overlays: [], size: '720p-16:9', intro: '', outro: '' },
-    robot: { enabled: false, cut: 'heads', names: true, themes: ['classic', 'caricature', 'superhero', 'football', 'astronaut', 'rockstar'], custom: [], guestPick: true, random: false, header: 'Wähle ein Thema' }, // Zeichenroboter: Aufnahme-Art „Zeichnung“ (Einmessen an der Fotobox unter Extras → Zeichenroboter); themes = Kennungen aus DRAW_THEMES, custom = eigene {id, name, prompt}
+    robot: { enabled: false, cut: 'scene', names: true, themes: ['classic', 'caricature', 'superhero', 'football', 'astronaut', 'rockstar'], custom: [], guestPick: true, random: false, header: 'Wähle ein Thema' }, // Zeichenroboter: Aufnahme-Art „Zeichnung“ (Einmessen an der Fotobox unter Extras → Zeichenroboter); themes = Kennungen aus DRAW_THEMES, custom = eigene {id, name, prompt}
     voice: { style: 'de-frau', randombefore: false, randomafter: false, files: { start: '', effect: '', countdown: '', before: [], after: [], signature: '', processing: '', done: '' } },
     fx: { mode: 'guest', lut: '', stickerStyle: 'standard', stickers: [] },
     bg: { smooth: 11 },
@@ -658,11 +658,18 @@
     ai.own = !!ai.photo;
     // Vorschaubilder der KI-Stile 1080 px hoch (vorher 480): die Webseite zeigt sie im Vorher/Nachher-Vergleich, dort waren sie unscharf (05.11.2026)
     const aiThumbFile = dataUrl => new Promise((res, rej) => { const img = new Image(); img.onload = () => { const k = Math.min(1, 1080 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); c.toBlob(b => b ? res(new File([b], 'ki-stil.jpg', { type: 'image/jpeg' })) : rej(new Error('Bild nicht lesbar')), 'image/jpeg', .85); }; img.onerror = () => rej(new Error('Bild nicht lesbar')); img.src = dataUrl; });
+    // Negativer Prompt (Betreiber 16.11.2026: „im KI-Prompt auch negativen Prompt schreiben“): Was nicht ins Bild soll, steht im selben Text
+    // hinter einer festen Marke – so geht er ohne Datenbank- und Fotobox-Änderung überallhin mit (Ereignis-Stile, „Meine KI-Stile“, Fotobox, Server).
+    // Im Baukasten bekommt er ein eigenes Feld; aiSplitNeg trennt beim Öffnen, aiJoinNeg setzt beim Speichern/Generieren zusammen (höchstens 1200 Zeichen).
+    const AI_NEG = 'Nicht im Bild (negativer Prompt):';
+    const aiSplitNeg = p => { const s = String(p || ''), i = s.lastIndexOf(AI_NEG); return i < 0 ? [s, ''] : [s.slice(0, i).trim(), s.slice(i + AI_NEG.length).trim().replace(/\.$/, '')]; };
+    const aiJoinNeg = (main, neg) => { main = String(main || '').trim(); neg = String(neg || '').trim().replace(/[.\s]+$/, ''); if (!neg) return main.slice(0, 1200);
+      const tail = '\n' + AI_NEG + ' ' + neg.slice(0, 300) + '.'; return main.slice(0, 1200 - tail.length) + tail; };
     // Aktuellen Entwurf aus dem Baukasten lesen (Bibliothek oder eigener Text).
     const aiDraft = () => {
       const before = ai.edit >= 0 ? S.ai.prompts[ai.edit] : null;
       return ai.custom
-        ? { id: before && !before.id.startsWith('lib-') ? before.id : (ai.draftId ||= crypto.randomUUID()), category: $(main, '[data-ai-ccat]')?.value || 'Sonstiges', name: ($(main, '[data-ai-cname]').value.trim() || 'Eigener Stil').slice(0, 60), prompt: $(main, '[data-ai-ctext]').value.trim().slice(0, 1200) }
+        ? { id: before && !before.id.startsWith('lib-') ? before.id : (ai.draftId ||= crypto.randomUUID()), category: $(main, '[data-ai-ccat]')?.value || 'Sonstiges', name: ($(main, '[data-ai-cname]').value.trim() || 'Eigener Stil').slice(0, 60), prompt: aiJoinNeg($(main, '[data-ai-ctext]').value, $(main, '[data-ai-cneg]')?.value) }
         : aiCompose(aiFind(AI_MOTIFS, ai.p), aiFind(AI_ARTS, ai.a));
     };
     // Stil anlegen oder ersetzen; mit resultImage wird dieses Bild verkleinert als Vorschaubild hochgeladen.
@@ -760,7 +767,7 @@
     });
     $(root, '.navshade').addEventListener('click', () => root.classList.remove('navopen'));
     // Hilfe-Suche (hilfe.js, dieselbe wie in der Fotobox): Stichwort eintippen → wie man es einstellt, „Hingehen“ öffnet die Seite
-    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261116-2'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261116-4'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     const closeEditor = () => close(); // Editor schließen (für Themen auf den Hauptseiten, z. B. „Meine Lizenzen“)
     async function openHelp() {
       try { await helpLib(); } catch { return ctx.toast('Die Hilfe konnte nicht geladen werden.'); }
@@ -845,6 +852,7 @@
       if (t.dataset.cariConsent !== undefined) { cariT.consent = t.checked; return; }
       if (t.dataset.aiCname !== undefined) { ai.cname = t.value; return; }
       if (t.dataset.aiCtext !== undefined) { ai.ctext = t.value; return; }
+      if (t.dataset.aiCneg !== undefined) { ai.cneg = t.value; return; }
       if (t.dataset.aiSearch !== undefined) { const q = t.value.trim().toLowerCase(); $$(main, '.aimodal [data-n]').forEach(b => { b.style.display = !q || b.dataset.n.includes(q) ? '' : 'none'; }); return; }
       if (!p) return;
       const v = t.type === 'checkbox' ? t.checked : t.dataset.num ? +t.value : t.value;
@@ -962,8 +970,8 @@
         if (!ctx.admin && !await (G.pmConfirm || (async x => confirm(x)))('Die Vorschau erzeugt mit unserem Testpaar eine Zeichnung. Das kostet 1 Credit.', 'Erzeugen')) return;
         rbBusy[c.id] = true; render();
         try {
-          const cut = (S.x.robot || {}).cut || 'heads', photo = rbOwnPhoto || await rbHeadPhoto(cut !== 'heads' || ['bigheads', 'full'].includes(c.body)); if (!photo) throw new Error('Das Testfoto konnte nicht geladen werden.');
-          const head = RB_PROMPT + (cut === 'bigheads' ? ' ' + RB_BIGHEADS : ''), tail = ' Die Verkleidung und Szene ebenfalls nur als saubere Konturen, ohne Flächen und Schraffur.';
+          const cut = (S.x.robot || {}).cut || 'scene', photo = rbOwnPhoto || await rbHeadPhoto(cut !== 'heads' || ['bigheads', 'full'].includes(c.body)); if (!photo) throw new Error('Das Testfoto konnte nicht geladen werden.');
+          const head = cut === 'scene' ? RB_SCENE : RB_PROMPT + (cut === 'bigheads' ? ' ' + RB_BIGHEADS : ''), tail = ' Die Verkleidung und Szene ebenfalls nur als saubere Konturen, ohne Flächen und Schraffur.';
           const prompt = head + ' ' + drawPrompt(c).slice(0, Math.max(0, Math.min(700, 1190 - head.length - tail.length))) + tail; // wie an der Fotobox, nie über 1200 Zeichen
           const { data, error } = await ctx.sb.functions.invoke('ai-generate', { body: { image: photo, prompt, consent: true, style: 'custom', eventId: ev.id, requestId: crypto.randomUUID(), test: true } });
           let r = data; if (error?.context?.json) { try { r = await error.context.json(); } catch {} }
@@ -997,9 +1005,9 @@
       if (a === 'ai-example') { const x = aiExamples()[+t.dataset.i]; if (x) { ai.cname = x.name; ai.ctext = x.prompt; render(); } return; }
       if (a === 'ai-custom') { // vorhandene Auswahl oder den bearbeiteten Stil als Text übernehmen
         ai.seed = ai.edit >= 0 && !(ai.p || ai.a) ? S.ai.prompts[ai.edit] : (ai.p || ai.a) ? aiCompose(aiFind(AI_MOTIFS, ai.p), aiFind(AI_ARTS, ai.a)) : null;
-        ai.p = ai.a = ''; ai.custom = true; ai.cname = ai.ctext = undefined; render(); return;
+        ai.p = ai.a = ''; ai.custom = true; ai.cname = ai.ctext = ai.cneg = undefined; render(); return;
       }
-      if (a === 'ai-new') { e.preventDefault(); ai.p = ai.a = ''; ai.custom = false; ai.edit = -1; ai.libEdit = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = undefined; render(); return; }
+      if (a === 'ai-new') { e.preventDefault(); ai.p = ai.a = ''; ai.custom = false; ai.edit = -1; ai.libEdit = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = ai.cneg = undefined; render(); return; }
       if (a === 'ai-save') {
         if (!ai.custom && !ai.p && !ai.a) return;
         const item = aiDraft();
@@ -1010,17 +1018,17 @@
         t.disabled = false;
         if (at < 0) return;
         const saved = S.ai.prompts[at];
-        if (ai.custom) { ai.edit = at; ai.seed = null; ai.draftId = ''; ai.resultId = ''; ai.cname = ai.ctext = undefined; } // eigener Text bleibt offen: weiter ändern und neu generieren
-        else { ai.p = ai.a = ''; ai.edit = -1; ai.seed = null; ai.draftId = ''; ai.resultId = ''; ai.cname = ai.ctext = undefined; }
+        if (ai.custom) { ai.edit = at; ai.seed = null; ai.draftId = ''; ai.resultId = ''; ai.cname = ai.ctext = ai.cneg = undefined; } // eigener Text bleibt offen: weiter ändern und neu generieren
+        else { ai.p = ai.a = ''; ai.edit = -1; ai.seed = null; ai.draftId = ''; ai.resultId = ''; ai.cname = ai.ctext = ai.cneg = undefined; }
         render(); ctx.toast(saved?.thumb ? 'Stil mit Vorschaubild gespeichert' : 'Stil gespeichert'); return;
       }
       if (a === 'ai-open') { // gespeicherten Stil immer mit seinem vollständigen Text öffnen: ändern, neu generieren, speichern
-        ai.edit = +t.dataset.i; ai.libEdit = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = undefined; ai.custom = true; ai.p = ai.a = '';
+        ai.edit = +t.dataset.i; ai.libEdit = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = ai.cneg = undefined; ai.custom = true; ai.p = ai.a = '';
         render(); main.querySelector('[data-ai-builder]')?.scrollIntoView({ block: 'center' }); return;
       }
       if (a === 'ai-lib-edit' || a === 'ai-common-edit') { // Stil aus „Meine KI-Stile“ bearbeiten bzw. einen fertigen Stil als Vorlage für einen eigenen nehmen
         const x = (a === 'ai-common-edit' ? ai.common || [] : Array.isArray(ai.lib) ? ai.lib : [])[+t.dataset.i]; if (!x) return;
-        ai.libEdit = a === 'ai-lib-edit' ? x.id : ''; ai.edit = -1; ai.custom = true; ai.p = ai.a = ''; ai.seed = { name: x.name, prompt: x.prompt, category: x.category }; ai.draftId = ''; ai.cname = ai.ctext = undefined;
+        ai.libEdit = a === 'ai-lib-edit' ? x.id : ''; ai.edit = -1; ai.custom = true; ai.p = ai.a = ''; ai.seed = { name: x.name, prompt: x.prompt, category: x.category }; ai.draftId = ''; ai.cname = ai.ctext = ai.cneg = undefined;
         render(); main.querySelector('[data-ai-builder]')?.scrollIntoView({ block: 'center' }); return;
       }
       if (a === 'cari-refresh') { await cariLoad(); return; }
@@ -1099,7 +1107,7 @@
         const { error } = await ctx.sb.from('ai_styles').update(patch).eq('id', x.id);
         t.disabled = false;
         if (error) return ctx.toast('Speichern fehlgeschlagen: ' + error.message, 6000);
-        Object.assign(x, patch); ai.seed = { name: x.name, prompt: x.prompt }; ai.cname = ai.ctext = undefined; ai.resultId = ''; render();
+        Object.assign(x, patch); ai.seed = { name: x.name, prompt: x.prompt }; ai.cname = ai.ctext = ai.cneg = undefined; ai.resultId = ''; render();
         ctx.toast(patch.thumb ? '„Meine KI-Stile“ gespeichert – mit neuem Bild' : '„Meine KI-Stile“ gespeichert'); return;
       }
       if (a === 'ai-lib-result') { // aktuelles Testbild samt Prompt in die Sammlung
@@ -1162,9 +1170,9 @@
         if (!await (G.pmConfirm || (async text => confirm(text)))(`„${x.name}“ aus „Meine KI-Stile“ löschen? In Events bleibt der Stil erhalten.`)) return;
         const { error } = await ctx.sb.from('ai_styles').delete().eq('id', x.id);
         if (error) return ctx.toast(error.message, 5000);
-        ai.lib = ai.lib.filter(y => y.id !== x.id); if (ai.libEdit === x.id) { ai.libEdit = ''; ai.custom = false; ai.seed = null; ai.cname = ai.ctext = undefined; } render(); return;
+        ai.lib = ai.lib.filter(y => y.id !== x.id); if (ai.libEdit === x.id) { ai.libEdit = ''; ai.custom = false; ai.seed = null; ai.cname = ai.ctext = ai.cneg = undefined; } render(); return;
       }
-      if (a === 'ai-delete') { S.ai.prompts.splice(+t.dataset.i, 1); ai.edit = -1; ai.libEdit = ''; ai.custom = false; ai.p = ai.a = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = undefined; S.ai = AIEvent.normalize(S.ai); save(); render(); return; }
+      if (a === 'ai-delete') { S.ai.prompts.splice(+t.dataset.i, 1); ai.edit = -1; ai.libEdit = ''; ai.custom = false; ai.p = ai.a = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = ai.cneg = undefined; S.ai = AIEvent.normalize(S.ai); save(); render(); return; }
       if (a === 'ai-buy') { await closeEditor(); G.showCredits?.(); return; } // Dashboard → Meine Lizenzen → KI-Guthaben
       if (a === 'ai-status') {
         t.disabled = true;
@@ -1791,8 +1799,8 @@
         return `${titleSw('Zeichenroboter')}<p class="sub" style="margin:-6px 0 14px;color:#6b6b78">Der Arm zeichnet die Gäste live als Strichzeichnung – mit Themen wie bei den AI-Fotos</p>` + `<div class="card">${sw('x.robot.enabled', 'Zeichenroboter aktivieren', 'Ein Roboterarm zeichnet das Gästefoto live als Strichzeichnung auf Papier')}
               <p style="color:#777;font-size:13px">Gäste wählen an der Fotobox „Zeichnung“, machen ein Foto, die KI macht daraus eine Strichzeichnung und der Arm zeichnet sie live aufs Blatt. Im Zeichnungs-Modus wird nicht gedruckt und nichts geteilt – die Gäste nehmen das Blatt mit.</p>
               <p style="color:#777;font-size:13px">Blatt, Stift, Versatz und Geschwindigkeit stellst du an der Fotobox ein: Einstellungen → Extras → Zeichenroboter (Arm per USB, Rotrics DexArm).</p></div>
-            <div class="card">${sel('x.robot.cut', 'Was wird gezeichnet?', [['heads', 'Nur die Köpfe'], ['bigheads', 'Ganzer Körper mit großen Köpfen'], ['photo', 'Ganzes Foto (wie aufgenommen)']])}
-              <p style="color:#777;font-size:13px;margin:6px 0 0">${S.x.robot.cut === 'photo' ? 'Das Foto (auch vom iPad) wird so gezeichnet, wie es aufgenommen wurde.' : S.x.robot.cut === 'bigheads' ? 'Die Fotobox entfernt den Hintergrund, die KI zeichnet die ganze Person mit großem Kopf auf kleinem Körper – wie eine Karikatur. Danach kommt das gewählte Thema dazu.' : 'Die Fotobox erkennt die Gesichter auf dem Foto (auch vom iPad), schneidet auf die Köpfe zu und entfernt den Hintergrund. Erst dann bekommt das Bild das gewählte Thema.'}</p></div>
+            <div class="card">${sel('x.robot.cut', 'Was wird gezeichnet?', [['scene', 'Karikatur mit Szene (wie ein Ausmalbild)'], ['heads', 'Nur die Köpfe'], ['bigheads', 'Ganzer Körper mit großen Köpfen'], ['photo', 'Ganzes Foto (wie aufgenommen)']])}
+              <p style="color:#777;font-size:13px;margin:6px 0 0">${S.x.robot.cut === 'photo' ? 'Das Foto (auch vom iPad) wird so gezeichnet, wie es aufgenommen wurde.' : S.x.robot.cut === 'scene' ? 'Die KI zeichnet die Personen als Karikatur mit großem Kopf und ganzer Figur, dazu eine einfache Szene zum gewählten Thema – wie ein Ausmalbild. Die Gesichter bleiben erkennbar.' : S.x.robot.cut === 'bigheads' ? 'Die Fotobox entfernt den Hintergrund, die KI zeichnet die ganze Person mit großem Kopf auf kleinem Körper – wie eine Karikatur. Danach kommt das gewählte Thema dazu.' : 'Die Fotobox erkennt die Gesichter auf dem Foto (auch vom iPad), schneidet auf die Köpfe zu und entfernt den Hintergrund. Erst dann bekommt das Bild das gewählte Thema.'}</p></div>
             <h2>Themen für Gäste</h2><div class="card">${sw('x.robot.guestPick', 'Gäste wählen das Thema', 'Vor dem Foto erscheint die Themen-Auswahl. Aus: das erste gewählte Thema gilt')}${sw('x.robot.random', 'Zufälliges Thema', 'Ohne Gästewahl bekommt jeder Gast ein zufälliges Thema aus der Auswahl')}${sw('x.robot.names', 'Motiv-Namen anzeigen', 'Name unter jedem Bild in der Auswahl der Gäste (Fotobox und iPad)')}${text('x.robot.header', 'Überschrift der Auswahl', 'Wähle ein Thema')}
               ${(() => { const sel = rbSel(), av = [...DRAW_THEMES.map(t => t.id), ...rbCustom().map(c => c.id)].filter(id => !sel.includes(id)).map(rbItem).filter(Boolean);
                 const tile = (it, n) => `<button class="rbt" draggable="true" data-rbid="${esc(it.id)}" data-a="${n == null ? 'rb-add' : 'rb-none'}" data-id="${esc(it.id)}" data-kw="${esc(it.kw)}" ${n == null && rbq && !it.kw.includes(rbq) ? 'hidden' : ''} title="${n == null ? 'Antippen oder nach rechts ziehen' : 'Ziehen zum Umsortieren'}">
@@ -1905,9 +1913,11 @@
           ${editing || libEditing ? '<p class="small" style="margin:6px 0 0;color:#6b6b78">Text ändern, rechts neu generieren und speichern. Der Text bleibt danach offen – so kannst du ihn Schritt für Schritt verbessern.</p>' : ''}
           ${ai.custom ? `<label class="l">Name (sehen die Gäste)</label><input type="text" maxlength="60" data-ai-cname value="${esc(ai.cname ?? (ai.seed || editing)?.name ?? '')}" placeholder="z. B. Unser Firmenlook">
             <label class="l">Kategorie (für „Meine KI-Stile“)</label><select data-ai-ccat>${AI_CATS.map(c => `<option value="${esc(c)}" ${(ai.ccat ?? (ai.seed || editing)?.category ?? 'Sonstiges') === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
-            <label class="l">Beschreibung für die KI</label><textarea rows="5" maxlength="1200" data-ai-ctext placeholder="Motiv: was die Gäste werden · Szene: wo sie sind · Stil: wie das Bild aussieht">${esc(ai.ctext ?? ((ai.seed || editing)?.prompt || AI_KEEP))}</textarea>
+            <label class="l">Beschreibung für die KI</label><textarea rows="5" maxlength="1200" data-ai-ctext placeholder="Motiv: was die Gäste werden · Szene: wo sie sind · Stil: wie das Bild aussieht">${esc(ai.ctext ?? aiSplitNeg((ai.seed || editing)?.prompt || AI_KEEP)[0])}</textarea>
+            <label class="l">Negativer Prompt: Was soll NICHT im Bild sein? (optional)</label><textarea rows="2" maxlength="300" data-ai-cneg placeholder="z. B. Schrift, Logos, zusätzliche Personen, Brillen, verzerrte Hände">${esc(ai.cneg ?? aiSplitNeg((ai.seed || editing)?.prompt || '')[1])}</textarea>
+            <small style="display:block;margin-top:4px;color:#6b6b78">Die KI bekommt das als „Nicht im Bild“ zusammen mit der Beschreibung. Kurze Stichworte, mit Komma getrennt.</small>
             ${(() => { // Logo direkt beim Stil (Betreiber 11.11.2026): hochladen → die KI baut es ein, der passende Satz kommt in den Text
-              const L = S.x.ai.logo, has = L.on && L.url && L.mode !== 'over', txt = ai.ctext ?? ((ai.seed || editing)?.prompt || AI_KEEP);
+              const L = S.x.ai.logo, has = L.on && L.url && L.mode !== 'over', txt = ai.ctext ?? aiSplitNeg((ai.seed || editing)?.prompt || AI_KEEP)[0];
               return `<div class="row" style="gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">${has ? `<img src="${esc(L.url)}" alt="" style="height:44px;max-width:130px;object-fit:contain;background:#f3f3f6;border-radius:8px;padding:4px">` : ''}
                 <button class="ghost" data-a="ai-logo-add">${ICON('upload', 15)} ${has ? 'Logo ändern' : 'Logo hinzufügen'}</button>${has && !AI_LOGO_HAS(txt) ? '<button class="ghost" data-a="ai-logo-text">Logo-Text einfügen</button>' : ''}</div>
                 <small style="display:block;margin-top:6px;color:#6b6b78">${has ? 'Die KI baut dein Logo passend zum Stil ins Bild ein. Wo genau, steht im Text – zum Beispiel „auf einem Banner im Hintergrund“. Das Logo gilt für alle AI-Fotos dieses Events.' : 'Dein Logo hochladen – die KI baut es passend zum Stil ins Bild ein, zum Beispiel auf ein Banner oder Schild.'}</small>`;
@@ -2476,7 +2486,7 @@
     ['VIDEO', 'slowmo', 'film', '360 / SLOW-MO', 'Zeitlupen-Videos mit Tempo-Rampen', { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: false }, x: { slowmo: { enabled: true } } }],
     ['VIDEO', 'video', 'video', 'VIDEO BOOTH', 'Videos mit Ton aufnehmen – für ein Video-Gästebuch', { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: true }, videoSecs: 15, videoAudio: true }],
     ['ZEICHNEN', 'robot', 'pen', 'ZEICHENROBOTER', 'Ein Roboterarm zeichnet die Gäste live als Strichzeichnung auf Papier – kein Druck, kein Teilen',
-      { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: false }, x: { robot: { enabled: true, cut: 'heads', guestPick: true } } }]
+      { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: false }, x: { robot: { enabled: true, cut: 'scene', guestPick: true } } }]
   ];
   function newEventDialog(events, onPick, opts = {}) {
     const cariOk = !opts.extra || opts.extra('caricature');
@@ -2508,6 +2518,7 @@
   // prompt = Zusatz zum Grund-Prompt der Strichzeichnung; icon/bg wie bei den KI-Stilen (Kachel ohne Beispielbild)
   // Grund-Prompt der Strichzeichnung – gleicher Text wie RB_PROMPT in der Fotobox (app/index.html), für die Vorschau eigener Themen
   const RB_PROMPT = 'Wandle das Foto in eine saubere schwarze Strichzeichnung um: reinweißer Hintergrund, nur die Konturen der Personen (Gesichter, Haare, Kleidung) mit gleichmäßig dünnen schwarzen Linien, keine Flächen, keine Schraffur, keine Grautöne, keine Farben, kein Hintergrund, kein Text. Die Gesichter müssen klar erkennbar bleiben.';
+  const RB_SCENE = 'Zeichne die Personen aus dem Foto als liebevolle Karikatur im Stil eines Ausmalbilds für Kinder: großer Kopf (etwa so groß wie der restliche Körper) auf einem kleinen Körper, ganze Figur von Kopf bis Fuß in einer fröhlichen Pose, die Gesichter mit Frisur, Brille und Schmuck sofort erkennbar. Dazu eine einfache Szene mit wenigen großen Gegenständen oder Tieren passend zum Thema (ohne Thema: eine kleine fröhliche Szene). Nur klare, gleichmäßige schwarze Konturlinien auf reinweißem Hintergrund, große geschlossene Formen, keine Flächen, keine Schraffur, keine Grautöne, keine Farben, kein Text, nichts angeschnitten.'; // gleich wie in der Fotobox (index.html)
   const RB_BIGHEADS = 'Zeige die Personen in ganzer Figur von Kopf bis Fuß, aber mit stark vergrößerten Köpfen auf einem kleinen Körper (der Kopf etwa so groß wie der restliche Körper), wie eine freundliche Karikatur; die Gesichter bleiben sofort erkennbar.'; // gleich wie in der Fotobox (index.html)
   // Stichworte für die Suche im Dashboard (Zeichenroboter → Themen)
   const DRAW_KW = {"classic": "einfach normal kontur", "caricature": "lustig witzig übertrieben großer kopf", "superhero": "held umhang comic stark", "football": "sport fußball trikot tor ball", "astronaut": "weltall raumfahrt sterne planet", "pirate": "schiff meer säbel", "chef": "küche kochen essen", "doctor": "arzt ärztin medizin krankenhaus", "firefighter": "feuer helm einsatz", "police": "polizei uniform", "soldier": "militär armee uniform", "rockstar": "musik gitarre bühne band", "dj": "musik party club mischpult", "wedding": "hochzeit braut bräutigam heirat", "christmas": "weihnachten winter geschenk advent", "halloween": "grusel kostüm vampir hexe kürbis", "cowboy": "western wilder westen pferd", "knight": "mittelalter burg rüstung", "royal": "könig königin krone prinzessin", "robot": "technik zukunft maschine", "manga": "anime japan", "comic": "comic sprechblase", "surfer": "strand meer sommer welle urlaub", "skier": "ski winter schnee berge urlaub", "pilot": "flugzeug fliegen reise", "racer": "auto rennen formel motorsport", "boxer": "sport kampf boxen", "dancer": "tanz ballett party", "gardener": "garten blumen natur", "craftsman": "handwerk bau werkzeug", "scientist": "labor forschung schule", "teacher": "schule lehrer lehrerin abschluss", "farmer": "bauernhof landwirtschaft traktor", "captain": "schiff kapitän meer segeln", "detective": "krimi lupe ermittler", "angel": "engel himmel flügel"};
