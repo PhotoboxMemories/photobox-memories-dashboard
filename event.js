@@ -219,10 +219,12 @@
   #ws .galpick .del{color:#d23b3b}#ws .galpick button:disabled{opacity:.4;cursor:default}
   #ws .gal .ck{display:none;position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.3);box-shadow:0 1px 3px rgba(0,0,0,.35);align-items:center;justify-content:center;color:transparent}
   #ws .gal.picking figure{cursor:pointer}#ws .gal.picking .ck{display:flex}
+  #ws .gal figure.versteckt img{opacity:.35;filter:grayscale(1)}#ws .gal figure .weg{position:absolute;inset:auto 0 0 0;background:rgba(29,29,27,.82);color:#fff;font:600 11px/1.3 system-ui,sans-serif;padding:5px 6px;text-align:center}
   #ws .gal figure.sel{outline:3px solid var(--y);outline-offset:-3px}#ws .gal figure.sel img{opacity:.8}
   #ws .gal figure.sel .ck{background:var(--y);border-color:var(--y);color:var(--ink)}
   #ws .linkbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
   #ws .linkbox input{flex:1;min-width:220px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #ws .dcard .kunde{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}#ws .dcard .kunde small{display:block;color:#555;font-size:12.5px;margin-top:4px;line-height:1.4}#ws .kunde .linkbox input{flex:1 1 100%;min-width:0}
   #wsLight{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px}
   #wsLight img,#wsLight video{max-width:94vw;max-height:78vh;border-radius:8px;background:#000}
   #wsLight .bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
@@ -767,7 +769,7 @@
     });
     $(root, '.navshade').addEventListener('click', () => root.classList.remove('navopen'));
     // Hilfe-Suche (hilfe.js, dieselbe wie in der Fotobox): Stichwort eintippen → wie man es einstellt, „Hingehen“ öffnet die Seite
-    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261117-1'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261117-2'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     const closeEditor = () => close(); // Editor schließen (für Themen auf den Hauptseiten, z. B. „Meine Lizenzen“)
     async function openHelp() {
       try { await helpLib(); } catch { return ctx.toast('Die Hilfe konnte nicht geladen werden.'); }
@@ -1305,6 +1307,12 @@
       if (a === 'gal-reload') { gal.list = null; render(); return loadGallery(true); }
       if (a === 'gal-zip') return downloadAll();
       if (a === 'gal-copy-show') { const link = shareLink() + '&show=1'; try { await navigator.clipboard.writeText(link); ctx.toast('Slideshow-Link kopiert'); } catch { ctx.toast(link, 8000); } return; }
+      if (a === 'kl-make') return kundeMake(false);
+      if (a === 'kl-new') { if (!await (G.pmConfirm || (async t => confirm(t)))('Neuen Kunden-Link erstellen? Der alte Link und das alte Passwort funktionieren danach nicht mehr.')) return; return kundeMake(true); }
+      if (a === 'kl-copy') { try { await navigator.clipboard.writeText(kundeLink()); ctx.toast('Kunden-Link kopiert – das Passwort steht darunter'); } catch { ctx.toast(kundeLink(), 8000); } return; }
+      if (a === 'kl-text') { try { await navigator.clipboard.writeText(kundeText()); ctx.toast('Nachricht mit Link und Passwort kopiert'); } catch { ctx.toast(kundeText(), 10000); } return; }
+      if (a === 'kl-wa') { window.open('https://wa.me/?text=' + encodeURIComponent(kundeText()), '_blank', 'noopener'); return; }
+      if (a === 'kl-mail') { location.href = 'mailto:?subject=' + encodeURIComponent(kT('Eure Online-Galerie') + ' – ' + (S.title || E.name || '')) + '&body=' + encodeURIComponent(kundeText()); return; }
       if (a === 'gal-copy') { const link = shareLink(); try { await navigator.clipboard.writeText(link); ctx.toast('Link kopiert'); } catch { ctx.toast(link, 8000); } return; }
       if (a === 'mz-fit') {
         const c = Mosaic.normalize(S.x.mosaic); if (!mzv.img) return ctx.toast('Das Hauptbild lädt noch – bitte gleich noch einmal.');
@@ -1382,6 +1390,34 @@
     if (!G.__pmGalKaputt) { G.__pmGalKaputt = true; document.addEventListener('error', e => { const el = e.target;
       if (el?.tagName === 'IMG' && el.closest('#ws .gal figure') && (+el.dataset.tries >= 5 || !G.FOTOBOX_PHOTOS?.retry)) el.closest('figure').classList.add('kaputt'); }, true); }
     const shareLink = () => E.share_token ? location.origin + location.pathname.replace(/[^/]*$/, '') + 'galerie.html?g=' + E.share_token : '';
+    // Kunden-Link (Betreiber 17.11.2026): eigener geheimer Link + Passwort nur für den Kunden des Vermieters (z. B. das Brautpaar).
+    // Dort entfernt er selbst Fotos (Papierkorb, 30 Tage wiederherstellbar) und schickt den Gäste-Link weiter. Der Vermieter verschickt
+    // ihn hier selbst: kopieren, WhatsApp oder E-Mail. Server: SQL 202611170002 (gallery_manage_link) + photo-store.
+    const kun = { token: ev.manage_token || '', pw: ev.manage_pw || '', busy: false, missing: false };
+    const kLang = () => S.x.lang?.guest || G.PM_LANG || 'de', kT = s => I18N.t(s, kLang());
+    const kundeLink = () => kun.token ? location.origin + location.pathname.replace(/[^/]*$/, '') + 'galerie.html?k=' + kun.token + (kLang() !== 'de' ? '&l=' + kLang() : '') : '';
+    const kundeText = () => [kT('Hallo! Hier ist eure Online-Galerie:') + ' ' + (S.title || E.name || ''), '',
+      kT('Zum Verwalten – nur für euch, bitte nicht weitergeben:'), kundeLink(), kT('Passwort:') + ' ' + kun.pw, '',
+      kT('Dort könnt ihr Fotos entfernen und findet den Link für eure Gäste.'),
+      ...(S.x.gallery.link && shareLink() ? ['', kT('Link für eure Gäste:'), shareLink() + (S.x.gallery.password ? '\n' + kT('Passwort:') + ' ' + S.x.gallery.password : '')] : [])].join('\n');
+    async function kundeMake(fresh) {
+      if (kun.busy) return; kun.busy = true; render();
+      try {
+        const { data, error } = await ctx.sb.rpc('gallery_manage_link', { p_event: ev.id, p_new: !!fresh });
+        if (error) { if (/function|schema cache|does not exist|PGRST202/i.test(error.message + (error.code || ''))) kun.missing = true; else throw error; }
+        else if (data?.ok) { kun.token = data.token; kun.pw = data.password; ev.manage_token = data.token; ev.manage_pw = data.password; ctx.toast(fresh ? 'Neuer Kunden-Link erstellt – der alte funktioniert nicht mehr.' : 'Kunden-Link erstellt', 5000); }
+        else throw new Error('Ereignis nicht gefunden');
+      } catch (e) { ctx.toast('Kunden-Link fehlgeschlagen: ' + e.message, 6000); }
+      kun.busy = false; render();
+    }
+    const kundeCard = () => `<div class="kunde"><b class="dt">Kunden-Link zum Verwalten</b>
+      <small>Für deinen Kunden, z. B. das Brautpaar: Mit diesem Link und dem Passwort kann er selbst Fotos aus der Galerie entfernen und den Link für die Gäste weiterschicken. Entfernte Fotos sehen die Gäste sofort nicht mehr, sie liegen noch 30 Tage im Papierkorb.</small>
+      ${kun.missing ? '<p style="color:#b26a00;font-size:13px;margin:6px 0 0">Der Kunden-Link ist auf dem Server noch nicht eingerichtet.</p>'
+        : !kun.token ? `<div class="linkbox"><button class="ghost" data-a="kl-make" ${kun.busy ? 'disabled' : ''}>${ICON('key', 15)} <span>Kunden-Link erstellen</span></button></div>`
+        : `<div class="linkbox"><input type="text" readonly value="${esc(kundeLink())}" onclick="this.select()" translate="no"><button class="ghost" data-a="kl-copy" title="Link kopieren">${ICON('copy', 15)}</button><a class="ghost" href="${esc(kundeLink())}" target="_blank" rel="noopener" title="Kunden-Ansicht öffnen" style="text-decoration:none">${ICON('share', 15)}</a></div>
+          <div style="margin-top:8px;font-size:14px"><span>Passwort:</span> <b translate="no" style="font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em">${esc(kun.pw)}</b></div>
+          <div class="linkbox"><button class="ghost" data-a="kl-wa">${ICON('share', 15)} <span>WhatsApp</span></button><button class="ghost" data-a="kl-mail">${ICON('link', 15)} <span>E-Mail</span></button><button class="ghost" data-a="kl-text">${ICON('copy', 15)} <span>Nachricht kopieren</span></button><button class="ghost" data-a="kl-new" ${kun.busy ? 'disabled' : ''} title="Der alte Link und das alte Passwort funktionieren danach nicht mehr">${ICON('refresh', 15)} <span>Neuer Link</span></button></div>
+          <small>Mit „Nachricht kopieren“ kopierst du Link, Passwort und Gäste-Link als fertigen Text – zum Einfügen in jede App oder E-Mail.</small>`}</div>`;
     async function loadGallery(force) {
       if (gal.loading || (!force && gal.list && Date.now() - gal.at < 30000)) return;
       gal.loading = true;
@@ -1389,7 +1425,8 @@
         // seitenweise: Ein Ereignis über mehrere Tage kann weit über 1000 Aufnahmen haben (der Server liefert je Abfrage höchstens 1000)
         let data = [], error = null;
         for (let from = 0; from < 20000; from += 1000) {
-          const r = await ctx.sb.from('photos').select('id,path,thumb,kind,name,bytes,created_at').eq('event_id', ev.id).order('created_at', { ascending: false }).range(from, from + 999);
+          let r = gal.noHidden ? null : await ctx.sb.from('photos').select('id,path,thumb,kind,name,bytes,created_at,hidden_at').eq('event_id', ev.id).order('created_at', { ascending: false }).range(from, from + 999);
+          if (!r || (r.error && /hidden_at/.test(r.error.message || ''))) { gal.noHidden = true; r = await ctx.sb.from('photos').select('id,path,thumb,kind,name,bytes,created_at').eq('event_id', ev.id).order('created_at', { ascending: false }).range(from, from + 999); } // SQL 202611170002 fehlt noch
           if (r.error) { error = r.error; break; }
           data = data.concat(r.data || []); if ((r.data || []).length < 1000) break;
         }
@@ -1418,7 +1455,7 @@
       document.body.appendChild(o);
       const [A, B] = o.querySelectorAll('img'), hint = o.querySelector('.hint');
       let i = 0, flip = false, seen = 0;
-      const pics = () => (gal.list || []).filter(x => x.kind !== 'video' && !isExtra(x));
+      const pics = () => (gal.list || []).filter(x => x.kind !== 'video' && !isExtra(x) && !x.hidden_at); // vom Kunden entfernte Fotos nicht zeigen
       const next = () => {
         const L = pics();
         hint.textContent = L.length ? '' : !gal.list || gal.loading ? 'Fotos werden geladen …' : 'Noch keine Fotos – neue Fotos erscheinen hier von selbst.';
@@ -1442,7 +1479,8 @@
       const o = document.createElement('div'); o.id = 'wsLight';
       const draw = () => { const x = L[n]; if (!x) return o.remove();
         o.innerHTML = `${x.kind === 'video' ? `<video src="${esc(galSrc(x, x.path))}" controls autoplay loop playsinline></video>` : `<img src="${esc(galSrc(x, x.path))}" alt="">`}
-          <div class="bar"><button data-k="dl">${ICON('download', 15)} Herunterladen</button>${x.kind !== 'video' ? `<button data-k="rep">${ICON('upload', 15)} Foto ersetzen</button>` : ''}<button data-k="del" style="color:#d23b3b">${ICON('trash', 15)} Löschen</button><button data-k="x">Schließen</button></div>
+          <div class="bar"><button data-k="dl">${ICON('download', 15)} Herunterladen</button>${x.kind !== 'video' ? `<button data-k="rep">${ICON('upload', 15)} Foto ersetzen</button>` : ''}${x.hidden_at ? `<button data-k="unhide">${ICON('undo', 15)} Wiederherstellen</button>` : ''}<button data-k="del" style="color:#d23b3b">${ICON('trash', 15)} Löschen</button><button data-k="x">Schließen</button></div>
+          ${x.hidden_at ? `<div style="color:#f5c86a;font:13px system-ui,sans-serif"><span>Dein Kunde hat dieses Foto über den Kunden-Link entfernt – die Gäste sehen es nicht mehr.</span> <span>Endgültig gelöscht am</span> ${esc(new Date(Date.parse(x.hidden_at) + 30 * 864e5).toLocaleDateString('de-DE'))}</div>` : ''}
           <div style="color:#bbb;font:13px system-ui,sans-serif">${n + 1} von ${L.length} · ${esc(new Date(x.created_at).toLocaleString('de-DE'))}${x.name ? ` · <span translate="no">${esc(x.name)}</span>` : ''}</div>
           ${L.length > 1 ? '<button class="nav l" data-k="prev">‹</button><button class="nav r" data-k="next">›</button>' : ''}`; };
       const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') { n = (n + L.length - 1) % L.length; draw(); } if (e.key === 'ArrowRight') { n = (n + 1) % L.length; draw(); } };
@@ -1455,6 +1493,8 @@
         if (k === 'next') { n = (n + 1) % L.length; return draw(); }
         if (k === 'dl') { try { saveBlob(await fetchBlob(x.path), galName(x)); } catch (err) { ctx.toast('Herunterladen fehlgeschlagen: ' + err.message, 4000); } return; }
         if (k === 'rep') { if (await replacePhoto(x)) { draw(); render(); } return; }
+        if (k === 'unhide') { const { data: nUn, error } = await ctx.sb.rpc('photo_unhide', { p_id: x.id }); if (error || !nUn) return ctx.toast('Wiederherstellen fehlgeschlagen' + (error ? ': ' + error.message : ''), 5000);
+          x.hidden_at = null; ctx.toast('Wiederhergestellt – die Gäste sehen das Foto wieder.'); draw(); render(); return; }
         if (k === 'del') {
           o.style.zIndex = 90; // Rückfrage (z-index 100) lag sonst unsichtbar hinter der Großansicht
           const ok = await (G.pmConfirm || (async t => confirm(t)))('Dieses Foto endgültig aus der Online-Galerie löschen? Auf der Fotobox bleibt es gespeichert.');
@@ -1639,7 +1679,7 @@
               ${sw('x.share.cloud', 'Fotos hochladen', 'Die Fotobox lädt jedes fertige Foto in diese Galerie')}
               ${sw('x.gallery.downloadAll', 'Alle herunterladen', 'Ermöglichen Sie Besuchern, alle Inhalte des Ereignisses herunterzuladen')}
               ${sw('x.gallery.guests', 'Gastzugriff ' + NEEDSRV_S, 'Erlauben Sie Gästen, Bilder und Videos anderer Gäste zu sehen')}
-              <div class="pw">${proOnly(text('x.gallery.password', 'Passwort', 'leer = kein Passwort'))}<small>Gäste müssen dieses Passwort eingeben, um das Ereignis anzusehen. Lassen Sie das Feld leer, um das Passwort zu deaktivieren.</small></div></div>
+              <div class="pw">${proOnly(text('x.gallery.password', 'Passwort', 'leer = kein Passwort'))}<small>Gäste müssen dieses Passwort eingeben, um das Ereignis anzusehen. Lassen Sie das Feld leer, um das Passwort zu deaktivieren.</small></div>${kundeCard()}</div>
           </div>
           <div class="dacts">
             ${act('gal-zip', 'download', 'Alle herunterladen', P.length ? '' : 'disabled')}${act('gal-upload', 'upload', 'Hochladen')}${act('gal-embed', 'copy', 'Einbetten', link ? '' : 'disabled')}
@@ -1651,7 +1691,7 @@
           ${gal.error ? `<div class="dempty">${esc(gal.error)}</div>`
             : !gal.list ? '<div class="dempty">Lädt …</div>'
             : P.length ? `<div class="galpick${sub.pick ? ' on' : ''}">${galPickBar()}</div>
-              <div class="gal wide${sub.pick ? ' picking' : ''}">${P.map((x, i) => `<figure data-a="gal-open" data-i="${i}" class="${sub.pick?.has(x.id) ? 'sel' : ''}" title="${esc(new Date(x.created_at).toLocaleString('de-DE'))}"><img loading="lazy" src="${esc(galSrc(x, x.thumb || x.path))}" alt=""><span class="kap">Foto kaputt – antippen und ersetzen</span>${x.kind !== 'photo' ? `<span class="tag">${x.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}<span class="ck">${ICON('check', 15)}</span></figure>`).join('')}</div>`
+              <div class="gal wide${sub.pick ? ' picking' : ''}">${P.map((x, i) => `<figure data-a="gal-open" data-i="${i}" class="${sub.pick?.has(x.id) ? 'sel' : ''}${x.hidden_at ? ' versteckt' : ''}" title="${esc(new Date(x.created_at).toLocaleString('de-DE'))}"><img loading="lazy" src="${esc(galSrc(x, x.thumb || x.path))}" alt=""><span class="kap">Foto kaputt – antippen und ersetzen</span>${x.hidden_at ? '<span class="weg">Vom Kunden entfernt</span>' : ''}${x.kind !== 'photo' ? `<span class="tag">${x.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}<span class="ck">${ICON('check', 15)}</span></figure>`).join('')}</div>`
             : `<div class="dempty">Noch keine Fotos oder Videos.<br><small style="font-size:15px">${S.x.share.cloud ? 'Die Galerie füllt sich, sobald an der Fotobox Sitzungen durchgeführt werden.' : 'Schalte rechts oben „Fotos hochladen“ ein – dann füllt sich die Galerie, sobald an der Fotobox Sitzungen durchgeführt werden.'}</small></div>`}`;
       },
       layout() {
