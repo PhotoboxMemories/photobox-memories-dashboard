@@ -393,6 +393,17 @@
   #wsModal .ft{display:flex;align-items:center;justify-content:space-between;padding-top:12px}
   #wsModal .et{display:flex;align-items:center;gap:14px;border:1px solid #e3e3ea;border-radius:12px;padding:12px 14px;margin:0 20px 8px;cursor:pointer;background:#fff;text-align:left;font:inherit;width:calc(100% - 40px)}
   #wsModal .et:hover{border-color:#F7C838;background:#FFFAEA}
+  #wsModal .pbody{padding:16px 20px 20px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+  #wsModal .pbody p{margin:0;color:#555;line-height:1.45}
+  #wsModal .pbody input[type=text]{border:1px solid #ddd;border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;width:100%;box-sizing:border-box}
+  #wsModal .pbody .chk{display:flex;gap:8px;align-items:center;cursor:pointer}
+  #wsModal .prow{display:flex;align-items:center;gap:8px;border:1px solid #e3e3ea;border-radius:12px;padding:10px 12px}
+  #wsModal .prow .pn{flex:1;min-width:0}#wsModal .prow .pn b{display:block;overflow-wrap:anywhere}#wsModal .prow .pn small{color:#777}
+  #wsModal .prow button{border:1px solid #ddd;background:#fff;border-radius:999px;padding:7px 12px;cursor:pointer;font:inherit;font-size:13px;display:inline-flex;gap:5px;align-items:center}
+  #wsModal .prow button.pri,#wsModal .pbody .pri{background:#F7C838;border-color:#F7C838;color:#1D1D1B;font-weight:600}
+  #wsModal .pbody .pri{border:0;border-radius:999px;padding:11px 18px;cursor:pointer;font:inherit;font-weight:600}
+  #wsModal .prow button.on{background:#FFF3C4;border-color:#F7C838}
+  #wsModal .stdtag{display:inline-block;background:#FFF3C4;color:#7a5a00;border-radius:6px;padding:1px 6px;font-size:11px;font-weight:600;margin-left:6px;vertical-align:middle}
   #wsModal .et .ei{width:46px;height:46px;border-radius:10px;background:#FFF3C4;display:flex;align-items:center;justify-content:center;color:#1D1D1B;flex:none}
   #wsModal .et b{display:block;font-family:Fredoka,system-ui,sans-serif;letter-spacing:.02em}#wsModal .et small{color:#777}
   #wsModal .et[disabled]{opacity:.5;cursor:default}
@@ -769,7 +780,7 @@
     });
     $(root, '.navshade').addEventListener('click', () => root.classList.remove('navopen'));
     // Hilfe-Suche (hilfe.js, dieselbe wie in der Fotobox): Stichwort eintippen → wie man es einstellt, „Hingehen“ öffnet die Seite
-    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261117-2'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261117-3'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     const closeEditor = () => close(); // Editor schließen (für Themen auf den Hauptseiten, z. B. „Meine Lizenzen“)
     async function openHelp() {
       try { await helpLib(); } catch { return ctx.toast('Die Hilfe konnte nicht geladen werden.'); }
@@ -1307,8 +1318,10 @@
       if (a === 'gal-reload') { gal.list = null; render(); return loadGallery(true); }
       if (a === 'gal-zip') return downloadAll();
       if (a === 'gal-copy-show') { const link = shareLink() + '&show=1'; try { await navigator.clipboard.writeText(link); ctx.toast('Slideshow-Link kopiert'); } catch { ctx.toast(link, 8000); } return; }
+      if (a === 'ps-save') return presetSaveDlg();
+      if (a === 'ps-apply') return presetApplyDlg();
       if (a === 'kl-make') return kundeMake(false);
-      if (a === 'kl-new') { if (!await (G.pmConfirm || (async t => confirm(t)))('Neuen Kunden-Link erstellen? Der alte Link und das alte Passwort funktionieren danach nicht mehr.')) return; return kundeMake(true); }
+      if (a === 'kl-new') { if (!await (G.pmConfirm || (async t => confirm(t)))('Neuen Kunden-Link erstellen? Der alte Link und das alte Passwort funktionieren danach nicht mehr.', 'Neuer Link')) return; return kundeMake(true); }
       if (a === 'kl-copy') { try { await navigator.clipboard.writeText(kundeLink()); ctx.toast('Kunden-Link kopiert – das Passwort steht darunter'); } catch { ctx.toast(kundeLink(), 8000); } return; }
       if (a === 'kl-text') { try { await navigator.clipboard.writeText(kundeText()); ctx.toast('Nachricht mit Link und Passwort kopiert'); } catch { ctx.toast(kundeText(), 10000); } return; }
       if (a === 'kl-wa') { window.open('https://wa.me/?text=' + encodeURIComponent(kundeText()), '_blank', 'noopener'); return; }
@@ -1409,6 +1422,59 @@
         else throw new Error('Ereignis nicht gefunden');
       } catch (e) { ctx.toast('Kunden-Link fehlgeschlagen: ' + e.message, 6000); }
       kun.busy = false; render();
+    }
+    // ---------- Voreinstellungen: dieses Ereignis speichern bzw. eine gespeicherte übernehmen ----------
+    const psFail = e => ctx.toast(Presets.missing(e) ? 'Voreinstellungen sind auf dem Server noch nicht eingerichtet.' : 'Fehler: ' + (e?.message || e), 6000);
+    async function presetSaveDlg() {
+      let L = []; try { L = await Presets.list(ctx.sb); } catch (e) { return psFail(e); }
+      const m = modal(`<div class="mh"><h3>Als Voreinstellung speichern</h3><button class="x" data-x>✕</button></div>
+        <div class="pbody"><p>Speichert alle Einstellungen dieses Ereignisses – Aussehen, Countdown, Layouts, Aufnahme, Drucken, Teilen und Logo – unter einem Namen, zum Beispiel für eine Location. Später übernimmst du sie mit einem Klick in ein neues oder bestehendes Ereignis.</p>
+          <p style="font-size:13px">Nicht dabei: Name, Datum, Titel und Fotos des Ereignisses sowie das Galerie-Passwort.</p>
+          <label><b>Name der Voreinstellung</b></label><input type="text" data-pn maxlength="80" placeholder="z. B. Schloss Hohenstein" value="">
+          <label class="chk"><input type="checkbox" data-pd> <span>Standard für neue Ereignisse (wird bei jedem neuen Ereignis übernommen)</span></label>
+          ${L.length ? `<p style="font-size:13px"><span>Gleicher Name wie eine vorhandene Voreinstellung = sie wird überschrieben. Vorhanden:</span> <span translate="no">${L.map(p => esc(p.name)).join(', ')}</span></p>` : ''}
+          <div><button class="pri" data-ps>${ICON('star', 15)} <span>Speichern</span></button></div></div>`);
+      m.querySelector('.box').style.cssText = 'width:min(520px,94vw);height:auto;max-height:92vh';
+      const inp = $(m, '[data-pn]'); inp.focus();
+      $(m, '[data-ps]').onclick = async () => {
+        const name = inp.value.trim().slice(0, 80); if (!name) return inp.focus();
+        const old = L.find(p => p.name.trim().toLowerCase() === name.toLowerCase()), std = $(m, '[data-pd]').checked;
+        if (old && !await (G.pmConfirm || (async t => confirm(t)))(`Die Voreinstellung „${name}“ gibt es schon. Mit den Einstellungen dieses Ereignisses überschreiben?`, 'Überschreiben')) return;
+        const row = { name, settings: Presets.clean(S), logo_url: E.logo_url || null };
+        try {
+          const r = old ? await ctx.sb.from('event_presets').update(row).eq('id', old.id).select('id').single() : await ctx.sb.from('event_presets').insert(row).select('id').single();
+          if (r.error) throw r.error;
+          m.remove();
+          if (std || old?.is_default) await Presets.setDefault(ctx.sb, r.data.id, std).catch(e => ctx.toast('Gespeichert, aber Standard nicht geändert: ' + e.message, 6000)); ctx.toast(std ? `Voreinstellung „${name}“ gespeichert – Standard für neue Ereignisse` : `Voreinstellung „${name}“ gespeichert`, 5000);
+        } catch (e) { psFail(e); }
+      };
+    }
+    async function presetApplyDlg() {
+      let L = []; try { L = await Presets.list(ctx.sb); } catch (e) { return psFail(e); }
+      const m = modal(`<div class="mh"><h3>Voreinstellung übernehmen</h3><button class="x" data-x>✕</button></div><div class="pbody"></div>`);
+      m.querySelector('.box').style.cssText = 'width:min(560px,94vw);height:auto;max-height:92vh';
+      const draw = () => { $(m, '.pbody').innerHTML = !L.length
+        ? '<p>Noch keine Voreinstellungen. Stelle ein Ereignis so ein, wie du es öfter brauchst, und tippe dann in der Übersicht auf „Als Voreinstellung speichern“.</p>'
+        : `<p>Ersetzt alle Einstellungen dieses Ereignisses. Name, Datum, Titel, Fotos und Galerie-Passwort bleiben.</p>${L.map(p => `<div class="prow"><span class="pn"><b><span translate="no">${esc(p.name)}</span>${p.is_default ? '<span class="stdtag">Standard</span>' : ''}</b><small><span>gespeichert am</span> ${fmtDay(p.updated_at)}</small></span>
+            <button class="pri" data-pa="${esc(p.id)}">Übernehmen</button><button data-pstd="${esc(p.id)}" class="${p.is_default ? 'on' : ''}" title="Standard für neue Ereignisse">${ICON('star', 14)}</button><button data-pdel="${esc(p.id)}" title="Voreinstellung löschen">${ICON('trash', 14)}</button></div>`).join('')}
+          <p style="font-size:12.5px">★ = Standard: wird bei jedem neuen Ereignis übernommen (nochmal tippen = kein Standard).</p>`; };
+      draw();
+      m.addEventListener('click', async e => {
+        const b = e.target.closest('[data-pa],[data-pstd],[data-pdel]'); if (!b) return;
+        const p = L.find(x => x.id === (b.dataset.pa || b.dataset.pstd || b.dataset.pdel)); if (!p) return;
+        const ask = (t, ok) => { m.style.zIndex = 90; return (G.pmConfirm || (async x => confirm(x)))(t, ok).finally(() => { m.style.zIndex = ''; }); };
+        try {
+          if (b.dataset.pdel) { if (!await ask(`Voreinstellung „${p.name}“ löschen? Ereignisse, die sie schon übernommen haben, ändern sich nicht.`)) return;
+            const { error } = await ctx.sb.from('event_presets').delete().eq('id', p.id); if (error) throw error; L = L.filter(x => x !== p); return draw(); }
+          if (b.dataset.pstd) { const on = !p.is_default; await Presets.setDefault(ctx.sb, p.id, on); L.forEach(x => { x.is_default = on && x === p; }); return draw(); }
+          if (!await ask(`Alle Einstellungen dieses Ereignisses durch „${p.name}“ ersetzen? Name, Datum, Titel, Fotos und Galerie-Passwort bleiben.`, 'Übernehmen')) return;
+          const keep = { pw: S.x?.gallery?.password || '', secret: S.x?.caricature?.secret }, P = norm(Presets.clean(p.settings));
+          for (const k of Object.keys(P)) if (!PRESET_SKIP.includes(k)) S[k] = P[k];
+          S.x.gallery.password = keep.pw; if (keep.secret && S.x.caricature) S.x.caricature.secret = keep.secret; withSecret(S);
+          E.logo_url = p.logo_url || null; // ganz ersetzen: ohne Logo in der Voreinstellung auch hier keins
+          m.remove(); save(); renderNav(); render(); ctx.toast(`Voreinstellung „${p.name}“ übernommen`, 4000);
+        } catch (err) { psFail(err); }
+      });
     }
     const kundeCard = () => `<div class="kunde"><b class="dt">Kunden-Link zum Verwalten</b>
       <small>Für deinen Kunden, z. B. das Brautpaar: Mit diesem Link und dem Passwort kann er selbst Fotos aus der Galerie entfernen und den Link für die Gäste weiterschicken. Entfernte Fotos sehen die Gäste sofort nicht mehr, sie liegen noch 30 Tage im Papierkorb.</small>
@@ -1684,7 +1750,7 @@
           <div class="dacts">
             ${act('gal-zip', 'download', 'Alle herunterladen', P.length ? '' : 'disabled')}${act('gal-upload', 'upload', 'Hochladen')}${act('gal-embed', 'copy', 'Einbetten', link ? '' : 'disabled')}
             <button data-a="go" data-pg="analytics">${ICON('sliders', 26)}<span>Analysen</span></button>${act('gal-slide', 'play', 'Slideshow')}
-            <button data-a="go" data-pg="shares">${ICON('share', 26)}<span>Shares</span></button>${act('gal-reload', 'refresh', 'Aktualisieren')}${act('delev', 'trash', 'Ereignis löschen')}
+            <button data-a="go" data-pg="shares">${ICON('share', 26)}<span>Shares</span></button>${act('gal-reload', 'refresh', 'Aktualisieren')}${act('ps-save', 'star', 'Als Voreinstellung speichern')}${act('ps-apply', 'layers', 'Voreinstellung übernehmen')}${act('delev', 'trash', 'Ereignis löschen')}
           </div>
           ${sub.embed && link ? `<div class="embed"><b>Einbetten</b><div style="font-size:13px;color:#555;margin-top:4px">Diesen Baustein auf deiner Internetseite einfügen, dann erscheint dort die Galerie dieses Ereignisses (nur wenn „Freigabe von Links“ eingeschaltet ist).</div>
             <textarea rows="3" readonly onclick="this.select()">&lt;iframe src="${esc(link)}" style="width:100%;height:900px;border:0" loading="lazy"&gt;&lt;/iframe&gt;</textarea></div>` : ''}
@@ -2514,6 +2580,25 @@
     $(m, '[data-q]').oninput = e => { q = e.target.value.toLowerCase().trim(); grid(); };
   }
 
+  // ---------- Voreinstellungen (Betreiber 17.11.2026: „Kunden wünschen eigene Einstellungen, damit sie schnell Ereignisse erstellen
+  // können, zum Beispiel Countdown … für jede Event-Location eigene Einstellungen und die immer wieder mit einem Klick übernehmen“).
+  // Tabelle event_presets (SQL 202611170003): Name + alle Einstellungen + Logo, eine davon kann „Standard“ für neue Ereignisse sein.
+  // Nicht dazu gehören, was nur zu einem Ereignis passt: Titel, Untertitel, Ereignisbild, Galerie-Passwort, Karikatur-Code.
+  const PRESET_SKIP = ['title', 'subtitle', 'cover'];
+  const Presets = {
+    clean(st) { const s = structuredClone(st || {}); for (const k of PRESET_SKIP) delete s[k];
+      if (s.x?.caricature) delete s.x.caricature.secret; if (s.x?.gallery) delete s.x.gallery.password; return s; },
+    missing: e => /event_presets|relation|does not exist|schema cache|PGRST205/i.test((e?.message || '') + (e?.code || '')),
+    async list(sb) { const { data, error } = await sb.from('event_presets').select('id,name,settings,logo_url,is_default,updated_at').order('name'); if (error) throw error; return data || []; },
+    async setDefault(sb, id, on) {
+      const r1 = await sb.from('event_presets').update({ is_default: false }).eq('is_default', true); if (r1.error) throw r1.error;
+      if (on) { const r2 = await sb.from('event_presets').update({ is_default: true }).eq('id', id); if (r2.error) throw r2.error; }
+    }
+  };
+  // Karikatur eingeschaltet, aber ohne gültigen Code (Voreinstellungen speichern ihn nie): neuen Code setzen, sonst prüft der Server keinen
+  const withSecret = st => { const c = st?.x?.caricature; if (c && !/^[0-9a-f]{16,64}$/.test(c.secret || '')) c.secret = Caricature.newSecret(); return st; };
+  const fmtDay = d => { try { return new Date(d).toLocaleDateString('de-DE'); } catch { return ''; } };
+
   // „Erstellen Sie ein neues Ereignis“ – Ereignisart wählen
   // Live-Karikatur steht als eigene App ganz oben: nur Einzelfotos (jedes wird eine Karikatur, 1 Credit), Handy-Selfies an
   const TYPES = [
@@ -2536,23 +2621,38 @@
     const rows = TYPES.map(([g, id, ic, t, d, preset]) => (g !== sec ? `<div class="sec">${sec = g}</div>` : '') +
       `<button class="et${id === 'cari' ? ' hl' : ''}" data-type="${id}" ${preset ? '' : 'disabled'}><span class="ei">${ICON(ic, 24)}</span><span><b>${t}${preset ? '' : ' <span class="soon">bald</span>'}${id === 'cari' ? (cariOk ? ' <span class="soon new">NEU</span>' : ' 🔒') : ''}</b><small>${d}</small></span></button>`).join('');
     m.innerHTML = `<div class="box" style="width:min(460px,94vw);height:auto;max-height:92vh"><div class="mh"><div style="flex:1"><h3>Erstellen Sie ein neues Ereignis</h3><small>Wählen Sie die Ereignisart für Ihre Fotobox</small></div><button class="x" data-x="1">${ICON('x', 20)}</button></div>
-      <div style="overflow:auto;padding-bottom:16px">${rows}<div class="sec">KOPIEREN</div>
+      <div style="overflow:auto;padding-bottom:16px"><div class="presetBox"></div>${rows}<div class="sec">KOPIEREN</div>
       <button class="et" data-type="dup" ${events.length ? '' : 'disabled'}><span class="ei">${ICON('copy', 24)}</span><span><b>VORHERIGES EREIGNIS DUPLIZIEREN</b><small>Einstellungen eines früheren Ereignisses übernehmen</small></span></button>
       <div class="dupList" style="display:none;margin:0 20px">${events.map(e => `<button class="et" data-dup="${e.id}" style="width:100%;margin:0 0 6px"><span class="ei">${ICON('calendar', 20)}</span><span><b style="font-family:inherit">${esc(e.name)}</b><small>${e.event_date ? new Date(e.event_date).toLocaleDateString('de-DE') : ''}</small></span></button>`).join('')}</div></div></div>`;
-    m.addEventListener('click', e => {
+    // eigene Voreinstellungen (fehlt die Tabelle noch oder ist kein Konto da: keine)
+    let presets = [];
+    const loadP = opts.sb ? Presets.list(opts.sb).then(L => { presets = L; }).catch(() => {}) : Promise.resolve();
+    m.addEventListener('click', async e => {
       if (e.target === m || e.target.closest('[data-x]')) return m.remove();
-      const b = e.target.closest('[data-type],[data-dup]'); if (!b || b.disabled) return;
+      const b = e.target.closest('[data-type],[data-dup],[data-preset]'); if (!b || b.disabled) return;
+      if (b.dataset.type && b.dataset.type !== 'dup') await loadP; // Standard-Voreinstellung erst kennen
       if (b.dataset.type === 'dup') { const l = $(m, '.dupList'); l.style.display = l.style.display === 'none' ? 'block' : 'none'; return; }
       if (b.dataset.dup) { const src = events.find(x => x.id === b.dataset.dup); m.remove(); return onPick(structuredClone(src.settings || {}), src.logo_url, src.name + ' (Kopie)'); }
+      if (b.dataset.preset) { const p = presets.find(x => x.id === b.dataset.preset); if (!p) return; m.remove();
+        return onPick(withSecret(Presets.clean(p.settings)), p.logo_url || null, new Date().toLocaleDateString('de-DE') + ' · ' + p.name); }
       const t = TYPES.find(x => x[1] === b.dataset.type);
       if (t[1] === 'cari' && !cariOk) return (opts.toast || alert)('Live-Karikatur ist für Ihr Konto noch nicht freigeschaltet – bitte bei Photobox Memories melden.', 6000);
-      const set = structuredClone(t[5]); m.remove();
+      // Standard-Voreinstellung: gilt für jedes neue Ereignis, die Ereignisart setzt ihre eigenen Werte darüber
+      const def = presets.find(x => x.is_default), set = def ? withSecret(deepMerge(Presets.clean(def.settings), structuredClone(t[5]))) : structuredClone(t[5]); m.remove();
       if (!set.modes) set.modes = { single: true, strip: false, grid: false, gif: false, boomerang: false, video: false }; // neues Ereignis: nur „Foto“ an, alles andere schaltet der Betreiber selbst ein
+      if (def?.logo_url) { if (t[1] === 'cari') { set.x.caricature.secret = Caricature.newSecret(); return onPick(set, def.logo_url, null, 'Live-Karikatur', 'cari'); }
+        return onPick(set, def.logo_url, null, t[3], t[1] === 'robot' ? 'robot' : undefined); }
       if (t[1] === 'cari') { set.x.caricature.secret = Caricature.newSecret(); return onPick(set, null, null, 'Live-Karikatur', 'cari'); } // gleich auf der Karikatur-Seite öffnen
       if (t[1] === 'robot') return onPick(set, null, null, t[3], 'robot'); // gleich auf der Seite „Zeichenroboter“ öffnen: Themen, Köpfe, eigene Themen (Betreiber 14.11.2026)
       onPick(set, null, null, t[3]);
     });
     document.body.appendChild(m);
+    // eigene Voreinstellungen oben anzeigen
+    loadP.then(() => { const L = presets; if (!L.length || !document.body.contains(m)) return;
+      const def = L.find(x => x.is_default);
+      $(m, '.presetBox').innerHTML = `<div class="sec">MEINE VOREINSTELLUNGEN</div>${L.map(p => `<button class="et" data-preset="${esc(p.id)}"><span class="ei">${ICON(p.is_default ? 'star' : 'layers', 22)}</span><span><b style="font-family:inherit">${esc(p.name)}${p.is_default ? '<span class="stdtag">Standard</span>' : ''}</b><small>Alle Einstellungen übernehmen</small></span></button>`).join('')}
+        ${def ? `<p style="margin:0 20px 6px;color:#777;font-size:12.5px"><span>Bei jeder anderen Ereignisart werden die Einstellungen der Standard-Voreinstellung übernommen:</span> <b translate="no">${esc(def.name)}</b></p>` : ''}`;
+    });
   }
   // Themen für den Zeichenroboter (Aufnahme-Art „Zeichnung“): Gäste wählen vor dem Foto, die KI zeichnet sie passend als Strichzeichnung.
   // prompt = Zusatz zum Grund-Prompt der Strichzeichnung; icon/bg wie bei den KI-Stilen (Kachel ohne Beispielbild)
