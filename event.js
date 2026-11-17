@@ -4,6 +4,9 @@
   'use strict';
   // KI-Stil-Bibliothek: ein Stil = Motiv („Porträtstil“) und/oder Kunststil.
   // Beispielbilder liegen optional unter ai-styles/<key>.jpg; ohne Bild erscheint die farbige Kachel.
+  // Satz für das Logo (Stil-Editor → „Logo hinzufügen“). „Falls … mitgeschickt“: ohne Logo (z. B. als „Meinen KI-Stil“ in einem anderen Event) erfindet die KI keins
+  const AI_LOGO_HAS = t => /logo/i.test(String(t).replace(/außer dem Logo/g, '')); // steht schon etwas zum Logo im Text?
+  const AI_LOGO_TXT = 'Logo: Falls ein Logo mitgeschickt wird, setze es gut sichtbar und in seinen Originalfarben ins Bild, zum Beispiel groß auf ein Banner oder Schild im Hintergrund – nie auf die Gesichter.';
   const AI_KEEP = 'Bearbeite das Gästefoto. Behalte die Anzahl der Personen, ihre erkennbaren Gesichter, Frisuren und ihre Pose bei. Keine zusätzliche Person, kein Schriftzug. ';
   const aiGroup = (kind, list) => list.flatMap(([cat, colors, items]) => items.map(([key, name, icon, text]) => ({ kind, cat, colors, key, name, icon, text })));
   const AI_MOTIFS = aiGroup('p', [
@@ -216,13 +219,12 @@
   #ws .galpick .del{color:#d23b3b}#ws .galpick button:disabled{opacity:.4;cursor:default}
   #ws .gal .ck{display:none;position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.3);box-shadow:0 1px 3px rgba(0,0,0,.35);align-items:center;justify-content:center;color:transparent}
   #ws .gal.picking figure{cursor:pointer}#ws .gal.picking .ck{display:flex}
-  #ws .gal figure.cover{outline:3px solid var(--y);outline-offset:-3px}
-  #ws .gal .cvb{position:absolute;left:6px;top:6px;display:flex;align-items:center;gap:4px;background:var(--y);color:var(--ink);font:600 11px/1 system-ui,sans-serif;border-radius:999px;padding:4px 8px 4px 6px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
-  #wsLight button.on{background:var(--y,#F7C838)}
+  #ws .gal figure.versteckt img{opacity:.35;filter:grayscale(1)}#ws .gal figure .weg{position:absolute;inset:auto 0 0 0;background:rgba(29,29,27,.82);color:#fff;font:600 11px/1.3 system-ui,sans-serif;padding:5px 6px;text-align:center}
   #ws .gal figure.sel{outline:3px solid var(--y);outline-offset:-3px}#ws .gal figure.sel img{opacity:.8}
   #ws .gal figure.sel .ck{background:var(--y);border-color:var(--y);color:var(--ink)}
   #ws .linkbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
   #ws .linkbox input{flex:1;min-width:220px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #ws .dcard .kunde{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}#ws .dcard .kunde small{display:block;color:#555;font-size:12.5px;margin-top:4px;line-height:1.4}#ws .kunde .linkbox input{flex:1 1 100%;min-width:0}
   #wsLight{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px}
   #wsLight img,#wsLight video{max-width:94vw;max-height:78vh;border-radius:8px;background:#000}
   #wsLight .bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
@@ -287,6 +289,15 @@
   #ws .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
   #ws .pic{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:44px;aspect-ratio:3/4;width:100%}
   #ws .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  #ws .rbcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px;margin-top:10px}
+  #ws .rbcol{border:1px solid #e6e6ec;border-radius:12px;padding:10px;min-height:140px;background:#fff}#ws .rbcol h3{margin:0 0 8px;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  #ws .rbgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;max-height:460px;overflow:auto;padding:2px}
+  #ws .rbt{position:relative;border:2px solid transparent;border-radius:10px;background:#fafafc;padding:4px;cursor:pointer;font:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;color:inherit}
+  #ws .rbt .pic{width:100%;aspect-ratio:3/4;border-radius:7px;background:#fff center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:30px}
+  #ws .rbt b{font-size:12px;text-align:center;line-height:1.2}#ws .rbsel .rbt{border-color:#F7C838;background:#FFFBEA}#ws .rbt.drop{border-color:#1D1D1B}
+  #ws .rbt .n{position:absolute;left:7px;top:7px;background:#F7C838;color:#1D1D1B;border-radius:999px;font:700 11px/1 system-ui,sans-serif;padding:4px 7px}
+  #ws .rbt .x{position:absolute;right:6px;top:6px;background:rgba(0,0,0,.6);color:#fff;border-radius:999px;width:22px;height:22px;font-size:13px;line-height:22px;text-align:center}
+  #ws .rbt .mv{display:flex;gap:4px}#ws .rbt .mv span{border:1px solid #ddd;border-radius:6px;padding:0 7px;font-size:12px;background:#fff}
   #ws .aitiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-top:12px}
   #ws .aitiles button{position:relative;border:2px solid transparent;background:none;border-radius:14px;padding:0;cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:6px;align-items:center;color:inherit}
   #ws .aitiles button b{font-size:13px;padding:0 4px 6px;text-align:center}
@@ -369,6 +380,8 @@
   #wsModal .tp{cursor:pointer;text-align:center;font-size:13px}
   #wsModal .tp img{width:100%;aspect-ratio:1;object-fit:contain;background:#f6f6f8;border-radius:10px;border:2px solid transparent}
   #wsModal .tp:hover img{border-color:#F7C838}
+  #wsModal .grid .gh{grid-column:1/-1;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#555;margin:6px 0 -6px}
+  #wsModal .grid .gm{grid-column:1/-1;color:#777;margin:0}
   #wsModal .two{flex:1;display:flex;min-height:0}
   #wsModal .fl{width:280px;overflow:auto;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start;border-right:1px solid #eee}
   #wsModal .fl .sec{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b6b78;margin:4px 0 -2px}
@@ -380,6 +393,17 @@
   #wsModal .ft{display:flex;align-items:center;justify-content:space-between;padding-top:12px}
   #wsModal .et{display:flex;align-items:center;gap:14px;border:1px solid #e3e3ea;border-radius:12px;padding:12px 14px;margin:0 20px 8px;cursor:pointer;background:#fff;text-align:left;font:inherit;width:calc(100% - 40px)}
   #wsModal .et:hover{border-color:#F7C838;background:#FFFAEA}
+  #wsModal .pbody{padding:16px 20px 20px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+  #wsModal .pbody p{margin:0;color:#555;line-height:1.45}
+  #wsModal .pbody input[type=text]{border:1px solid #ddd;border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;width:100%;box-sizing:border-box}
+  #wsModal .pbody .chk{display:flex;gap:8px;align-items:center;cursor:pointer}
+  #wsModal .prow{display:flex;align-items:center;gap:8px;border:1px solid #e3e3ea;border-radius:12px;padding:10px 12px}
+  #wsModal .prow .pn{flex:1;min-width:0}#wsModal .prow .pn b{display:block;overflow-wrap:anywhere}#wsModal .prow .pn small{color:#777}
+  #wsModal .prow button{border:1px solid #ddd;background:#fff;border-radius:999px;padding:7px 12px;cursor:pointer;font:inherit;font-size:13px;display:inline-flex;gap:5px;align-items:center}
+  #wsModal .prow button.pri,#wsModal .pbody .pri{background:#F7C838;border-color:#F7C838;color:#1D1D1B;font-weight:600}
+  #wsModal .pbody .pri{border:0;border-radius:999px;padding:11px 18px;cursor:pointer;font:inherit;font-weight:600}
+  #wsModal .prow button.on{background:#FFF3C4;border-color:#F7C838}
+  #wsModal .stdtag{display:inline-block;background:#FFF3C4;color:#7a5a00;border-radius:6px;padding:1px 6px;font-size:11px;font-weight:600;margin-left:6px;vertical-align:middle}
   #wsModal .et .ei{width:46px;height:46px;border-radius:10px;background:#FFF3C4;display:flex;align-items:center;justify-content:center;color:#1D1D1B;flex:none}
   #wsModal .et b{display:block;font-family:Fredoka,system-ui,sans-serif;letter-spacing:.02em}#wsModal .et small{color:#777}
   #wsModal .et[disabled]{opacity:.5;cursor:default}
@@ -446,7 +470,7 @@
     ai: { enabled: false, prompt: '' },
     title: '', subtitle: '', startText: 'Tippen zum Starten', startScreen: null, startScreen2: null, shareScreen: null, shareScreen2: null, attractP: null, attractL: null, accent: '#F7C838', attractUrl: '', attractType: '', attractFit: 'cover', startDisplay: 'media', font: 'modern', frame: '#ffffff', textColor: '#222222', template: 'classic',
     layouts: [], guestLayouts: false, gifFromPhotos: false,
-    countdown: 3, countdownNext: 3, between: 2, autoReturn: 30, sound: true, mirror: true, mirrorPhoto: false, cropLive: true, liveView: 'template',
+    countdown: 3, countdownNext: 3, between: 2, autoReturn: 30, sound: true, mirror: true, mirrorPhoto: false, cropLive: true, faces: true, liveView: 'template',
     modes: { single: true, strip: true, grid: true, gif: true, boomerang: true, video: true }, gifFrames: 4, gifDelay: 600, gifReverse: false, boomerangLen: 'mittel', videoSecs: 10, videoAudio: true,
     voice: false, beauty: false, beautyStrength: 40, filtersOn: true, filters: FILTERS.map(f => f[0]), stickers: true,
     bgMode: 'off', keyStrength: 50, bgUrls: [], bgGuestChoice: true,
@@ -458,7 +482,7 @@
     gif: { size: '720p-16:9', reverse: false, overlays: [], delay: 300 },
     slowmo: { enabled: false, countdown: 5, quality: 4, motion: false, flash: true, saveOriginal: true, preTextOn: false, preText: 'Bereit machen', length: 6, reverse: true, clipLen: 2, speed: '0.5x', soundtracks: [], overlays: [], size: '720p-16:9', intro: '', outro: '' },
     video: { countdown: 5, quality: 4, saveOriginal: true, preTextOn: false, preText: 'Bereit machen', overlays: [], size: '720p-16:9', intro: '', outro: '' },
-    robot: { enabled: false, themes: ['classic', 'caricature', 'superhero', 'football', 'astronaut', 'rockstar'], custom: [], guestPick: true, random: false, header: 'Wähle ein Thema' }, // Zeichenroboter: Aufnahme-Art „Zeichnung“ (Einmessen an der Fotobox unter Extras → Zeichenroboter); themes = Kennungen aus DRAW_THEMES, custom = eigene {id, name, prompt}
+    robot: { enabled: false, cut: 'scene', names: true, themes: ['classic', 'caricature', 'superhero', 'football', 'astronaut', 'rockstar'], custom: [], guestPick: true, random: false, header: 'Wähle ein Thema' }, // Zeichenroboter: Aufnahme-Art „Zeichnung“ (Einmessen an der Fotobox unter Extras → Zeichenroboter); themes = Kennungen aus DRAW_THEMES, custom = eigene {id, name, prompt}
     voice: { style: 'de-frau', randombefore: false, randomafter: false, files: { start: '', effect: '', countdown: '', before: [], after: [], signature: '', processing: '', done: '' } },
     fx: { mode: 'guest', lut: '', stickerStyle: 'standard', stickers: [] },
     bg: { smooth: 11 },
@@ -475,7 +499,7 @@
     startLogo: { src: 'own', url: '', size: 72, fit: 'contain' }, // Logo in der weißen Scheibe der Standard-Startanimation
     videomsg: { on: false, title: 'Videonachricht hinterlassen', sub: 'Scanne den Code mit deinem Handy', pos: 'tl', size: 'm', welcome: '', welcomeText: '' }, // Zusatzfunktion: Videonachricht per QR-Code (welcome = Begrüßungsvideo)
     mosaic: { on: false, mode: 'both', who: 'all', shots: 'one', image: '', overlay: 40, boardW: 150, boardH: 100, tileW: 50.8, tileH: 50.8, numbering: 'xy', paper: 'photo', label: true, codeSize: 100, codeAlpha: 100, boardImage: false, preview: true, source: 'original' },
-    ai: { guestPay: false, guestPrice: 100, skip: false, only: false, layouts: [], texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'KI-Foto erstellen', creating: 'Ich erstelle das Porträt mit KI', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das Porträt mit KI nicht erstellen.' } }
+    ai: { guestPay: false, guestPrice: 100, skip: false, startChoice: false, only: false, layouts: [], logo: { on: false, url: '', pos: 'br', size: 18, mode: 'over' }, texts: { choose: 'Stil auswählen', chooseBtn: 'Stil auswählen', createBtn: 'AI-Foto erstellen', creating: 'Ich erstelle dein AI-Foto', retrying: 'Ich versuche es erneut', retryBtn: 'Erneut versuchen', skipBtn: 'Überspringen', failed: 'Ich konnte das AI-Foto nicht erstellen.', start: 'Was möchtest du machen?', startAi: 'AI-Foto', startNormal: 'Normales Foto' } }
   };
   const deepMerge = (def, val) => { const out = structuredClone(def); if (val && typeof val === 'object' && !Array.isArray(val)) for (const [k, v] of Object.entries(val)) out[k] = out[k] && typeof out[k] === 'object' && !Array.isArray(out[k]) ? deepMerge(out[k], v) : v; return out; };
   const NEEDSRV_S = '<span class="soon" title="Braucht zusätzlich einen Online-Dienst, der noch nicht eingerichtet ist.">Dienst folgt</span>';
@@ -484,7 +508,7 @@
     // Gruppen wie im Menü der Fotobox (eigene Optik seit 28.10.2026): Symbole in gelben Kacheln, Zusatzfunktionen markiert
     ['dash', 'dashboard', 'Übersicht'],
     ['h', 'Aussehen'], ['start', 'monitor', 'Startbildschirm'], ['layout', 'aperture', 'Fotolayout & Countdown'], ['fx', 'sparkles', 'Filter & Effekte'], ['bg', 'wand', 'Hintergrund entfernen'],
-    ['h', 'Aufnahme'], ['capture', 'sliders', 'Aufnahme-Arten'], ['voice', 'mic', 'Virtueller Berater'], ['ai', 'user', 'KI-Fotos'],
+    ['h', 'Aufnahme'], ['capture', 'sliders', 'Aufnahme-Arten'], ['voice', 'mic', 'Virtueller Berater'], ['ai', 'user', 'AI-Fotos'], ['robot', 'pen', 'Zeichenroboter'],
     ['h', 'Gäste'], ['survey', 'clipboard', 'Umfrage & Haftungsausschluss'], ['tasks', 'star', 'Foto-Aufgaben'], ['lang', 'globe', 'Sprache'],
     ['h', 'Teilen & Drucken'], ['share', 'share', 'Teilen'], ['print', 'printer', 'Drucken'],
     ['h', 'Extras'], ['mosaic', 'mosaic', 'Fotomosaik', 1], ['cari', 'smile', 'Live-Karikatur', 1], ['videomsg', 'video', 'Videonachricht', 1]
@@ -647,11 +671,18 @@
     ai.own = !!ai.photo;
     // Vorschaubilder der KI-Stile 1080 px hoch (vorher 480): die Webseite zeigt sie im Vorher/Nachher-Vergleich, dort waren sie unscharf (05.11.2026)
     const aiThumbFile = dataUrl => new Promise((res, rej) => { const img = new Image(); img.onload = () => { const k = Math.min(1, 1080 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); c.toBlob(b => b ? res(new File([b], 'ki-stil.jpg', { type: 'image/jpeg' })) : rej(new Error('Bild nicht lesbar')), 'image/jpeg', .85); }; img.onerror = () => rej(new Error('Bild nicht lesbar')); img.src = dataUrl; });
+    // Negativer Prompt (Betreiber 16.11.2026: „im KI-Prompt auch negativen Prompt schreiben“): Was nicht ins Bild soll, steht im selben Text
+    // hinter einer festen Marke – so geht er ohne Datenbank- und Fotobox-Änderung überallhin mit (Ereignis-Stile, „Meine KI-Stile“, Fotobox, Server).
+    // Im Baukasten bekommt er ein eigenes Feld; aiSplitNeg trennt beim Öffnen, aiJoinNeg setzt beim Speichern/Generieren zusammen (höchstens 1200 Zeichen).
+    const AI_NEG = 'Nicht im Bild (negativer Prompt):';
+    const aiSplitNeg = p => { const s = String(p || ''), i = s.lastIndexOf(AI_NEG); return i < 0 ? [s, ''] : [s.slice(0, i).trim(), s.slice(i + AI_NEG.length).trim().replace(/\.$/, '')]; };
+    const aiJoinNeg = (main, neg) => { main = String(main || '').trim(); neg = String(neg || '').trim().replace(/[.\s]+$/, ''); if (!neg) return main.slice(0, 1200);
+      const tail = '\n' + AI_NEG + ' ' + neg.slice(0, 300) + '.'; return main.slice(0, 1200 - tail.length) + tail; };
     // Aktuellen Entwurf aus dem Baukasten lesen (Bibliothek oder eigener Text).
     const aiDraft = () => {
       const before = ai.edit >= 0 ? S.ai.prompts[ai.edit] : null;
       return ai.custom
-        ? { id: before && !before.id.startsWith('lib-') ? before.id : (ai.draftId ||= crypto.randomUUID()), category: $(main, '[data-ai-ccat]')?.value || 'Sonstiges', name: ($(main, '[data-ai-cname]').value.trim() || 'Eigener Stil').slice(0, 60), prompt: $(main, '[data-ai-ctext]').value.trim().slice(0, 1200) }
+        ? { id: before && !before.id.startsWith('lib-') ? before.id : (ai.draftId ||= crypto.randomUUID()), category: $(main, '[data-ai-ccat]')?.value || 'Sonstiges', name: ($(main, '[data-ai-cname]').value.trim() || 'Eigener Stil').slice(0, 60), prompt: aiJoinNeg($(main, '[data-ai-ctext]').value, $(main, '[data-ai-cneg]')?.value) }
         : aiCompose(aiFind(AI_MOTIFS, ai.p), aiFind(AI_ARTS, ai.a));
     };
     // Stil anlegen oder ersetzen; mit resultImage wird dieses Bild verkleinert als Vorschaubild hochgeladen.
@@ -708,6 +739,14 @@
       if (!result?.image) throw new Error('Der KI-Dienst hat kein Bild geliefert.');
       return ctx.uploadFile(await aiThumbFile(result.image));
     }
+    // Logo für „Die KI baut es ins Bild ein“ (x.ai.logo.mode 'ai'/'both'): wie an der Fotobox als PNG mit höchstens 1000 px
+    async function aiLogoData() {
+      const L = S.x.ai.logo; if (!L?.on || !L.url || L.mode === 'over') return null;
+      if (ai.logoData?.u === L.url) return ai.logoData.d;
+      const bm = await createImageBitmap(await (await fetch(L.url)).blob()), k = Math.min(1, 1000 / Math.max(bm.width, bm.height)), c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(bm.width * k)); c.height = Math.max(1, Math.round(bm.height * k)); c.getContext('2d').drawImage(bm, 0, 0, c.width, c.height);
+      ai.logoData = { u: L.url, d: c.toDataURL('image/png') }; return ai.logoData.d;
+    }
     // Testbild mit eigenem Foto: für „Meine KI-Stile“ stattdessen ein Bild mit dem Testpaar erzeugen (nach Rückfrage)
     const aiPairAsk = () => (G.pmConfirm || (async x => confirm(x)))('Für „Meine KI-Stile“ nehmen wir als Bild immer unser Testpaar – nicht dein eigenes Testfoto. Jetzt ein Bild mit dem Testpaar erzeugen? (1 Credit)', 'Erzeugen');
     if (!ai.own) aiDefaultPhoto().then(u => { if (u && !ai.own && !ai.photo) { ai.photo = u; if (page === 'ai' || page === 'fx' || page === 'cari') render(); } });
@@ -741,7 +780,7 @@
     });
     $(root, '.navshade').addEventListener('click', () => root.classList.remove('navopen'));
     // Hilfe-Suche (hilfe.js, dieselbe wie in der Fotobox): Stichwort eintippen → wie man es einstellt, „Hingehen“ öffnet die Seite
-    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261109-1'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261117-4'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     const closeEditor = () => close(); // Editor schließen (für Themen auf den Hauptseiten, z. B. „Meine Lizenzen“)
     async function openHelp() {
       try { await helpLib(); } catch { return ctx.toast('Die Hilfe konnte nicht geladen werden.'); }
@@ -806,6 +845,7 @@
     const titleSw = (t, p) => `<h1>${t}${p ? ` <label class="sw"><input type="checkbox" data-s="${p}" ${getP(S, p) ? 'checked' : ''}><i></i></label><span class="swl">${getP(S, p) ? 'Ein' : 'Aus'}</span>` : ''}</h1>`;
 
     main.addEventListener('input', e => {
+      if (e.target.matches?.('[data-rbq]')) { rbq = e.target.value.trim().toLowerCase(); main.querySelectorAll('.rbav .rbt').forEach(b => { b.hidden = !!rbq && !(b.dataset.kw || '').includes(rbq); }); return; }
       const t = e.target, p = t.dataset.s;
       if (t.dataset.langl) { // angebotene Gästesprachen (mindestens die Standardsprache)
         const list = $$(main, '[data-langl]').filter(x => x.checked).map(x => x.dataset.langl), g = S.x.lang.guest;
@@ -825,6 +865,7 @@
       if (t.dataset.cariConsent !== undefined) { cariT.consent = t.checked; return; }
       if (t.dataset.aiCname !== undefined) { ai.cname = t.value; return; }
       if (t.dataset.aiCtext !== undefined) { ai.ctext = t.value; return; }
+      if (t.dataset.aiCneg !== undefined) { ai.cneg = t.value; return; }
       if (t.dataset.aiSearch !== undefined) { const q = t.value.trim().toLowerCase(); $$(main, '.aimodal [data-n]').forEach(b => { b.style.display = !q || b.dataset.n.includes(q) ? '' : 'none'; }); return; }
       if (!p) return;
       const v = t.type === 'checkbox' ? t.checked : t.dataset.num ? +t.value : t.value;
@@ -841,7 +882,7 @@
       if (swBtn && v) for (const L of [S.shareScreen, S.shareScreen2]) L?.elements?.forEach(e => { if (e.type === 'sbtn' && e.key === swBtn) e.hidden = false; });
       save(); drawPreview();
       if (p === 'x.tasks.own') taskInfo();
-      if (t.type === 'radio' || p === 'startDisplay' || p === 'askCopies' || p === 'x.caricature.on' || p === 'x.ai.only' || p === 'x.tasks.on' || t.dataset.rerender || (p.startsWith('x.videomsg.') && t.tagName === 'SELECT')) render();
+      if (t.type === 'radio' || p === 'startDisplay' || p === 'askCopies' || p === 'x.caricature.on' || p === 'x.ai.only' || p === 'x.robot.cut' || p === 'x.ai.logo.on' || p === 'x.ai.logo.mode' || p === 'x.ai.logo.pos' || p === 'x.ai.logo.size' || p === 'x.tasks.on' || t.dataset.rerender || (p.startsWith('x.videomsg.') && t.tagName === 'SELECT')) render();
     });
     main.addEventListener('change', e => {
       const t = e.target;
@@ -850,6 +891,28 @@
       // Schalter auf der Übersicht ändern auch den Link-Text und den Hinweis in der Galerie
       if (page === 'dash' && (t.dataset.s === 'x.gallery.link' || t.dataset.s === 'x.share.cloud')) render();
     });
+    let rbq = '', rbDrag = null, rbOwnPhoto = ''; const rbBusy = {}; // rbOwnPhoto: eigenes Testfoto für die Vorschau (nur in diesem Fenster) // Zeichenroboter: Suche, Ziehen, Vorschau in Arbeit
+    // Zeichenroboter-Themen (Betreiber 14.11.2026, „Motive auswählen“): Auswahl in fester Reihenfolge, eigene Themen mit Kennung „c…“ dürfen darin stehen.
+    // Eigene Themen ohne Eintrag und ohne off gelten als ausgewählt (wie bisher, ans Ende). rbSel() liest, rbSet() schreibt Reihenfolge und off zurück.
+    const rbCustom = () => (S.x.robot.custom || []).filter(c => c && c.id);
+    // Testpaar nur mit den Köpfen (wie an der Fotobox mit „Nur die Köpfe zeichnen“; testfoto.jpg hat schon weißen Hintergrund)
+    const rbHeadPhoto = (whole = false) => new Promise(res => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'), W = whole ? img.width : 640, H = whole ? img.height : 660, k = Math.min(1, 1024 / Math.max(W, H)); c.width = Math.round(W * k); c.height = Math.round(H * k); const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); if (whole) g.drawImage(img, 0, 0, c.width, c.height); else g.drawImage(img, 220, 0, 640, 660, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', .92)); }; img.onerror = () => res(''); img.src = 'testfoto.jpg?v=1'; });
+    const rbSel = () => { const cs = rbCustom(), ids = (Array.isArray(S.x.robot.themes) ? S.x.robot.themes : []).filter(id => DRAW_THEMES.some(t => t.id === id) || cs.some(c => c.id === id));
+      cs.forEach(c => { if (!c.off && !ids.includes(c.id)) ids.push(c.id); }); return ids; };
+    const rbSet = ids => { S.x.robot.themes = ids; rbCustom().forEach(c => { c.off = !ids.includes(c.id); }); save(); render(); };
+    const rbThumb = u => /^(https:\/\/[^'"()\s\\]+|draw-themes\/[a-z0-9_-]+\.jpg)$/i.test(String(u || '')) ? String(u) : ''; // nur sichere Bildadressen in url('…')
+    const rbItem = id => { const t = DRAW_THEMES.find(x => x.id === id); if (t) return { id, name: t.name, icon: t.icon, thumb: rbThumb(t.thumb), kw: (t.name + ' ' + t.kw).toLowerCase() };
+      const c = rbCustom().find(x => x.id === id); return c && { id, name: c.name || 'Eigenes Thema', icon: '✨', thumb: rbThumb(c.thumb), kw: [c.name, c.kw, c.figure, c.scene, c.prompt, 'eigen'].map(v => String(v || '')).join(' ').toLowerCase(), custom: true }; };
+    main.addEventListener('dragstart', e => { const b = e.target.closest?.('.rbt[data-rbid]'); if (b) { rbDrag = { id: b.dataset.rbid, from: b.closest('.rbsel') ? 'sel' : 'av' }; e.dataTransfer.effectAllowed = 'move'; } });
+    main.addEventListener('dragover', e => { if (!rbDrag) return; const z = e.target.closest?.('.rbsel, .rbav'); if (!z) return; e.preventDefault(); main.querySelectorAll('.rbt.drop').forEach(n => n.classList.remove('drop')); e.target.closest?.('.rbsel .rbt')?.classList.add('drop'); });
+    main.addEventListener('drop', e => {
+      if (!rbDrag) return; const z = e.target.closest?.('.rbsel, .rbav'); const d = rbDrag; rbDrag = null; if (!z) return; e.preventDefault();
+      const ids = rbSel().filter(x => x !== d.id);
+      if (z.classList.contains('rbav')) return d.from === 'sel' ? rbSet(ids) : render(); // nach links gezogen = abwählen
+      const tgt = e.target.closest('.rbsel .rbt[data-rbid]')?.dataset.rbid, at = tgt && tgt !== d.id ? ids.indexOf(tgt) : -1;
+      ids.splice(at < 0 ? ids.length : at, 0, d.id); rbSet(ids);
+    });
+    main.addEventListener('dragend', () => { rbDrag = null; main.querySelectorAll('.rbt.drop').forEach(n => n.classList.remove('drop')); });
     let dragLay = '';
     main.addEventListener('dragstart', e => { const l = e.target.closest?.('.lay[data-id]'); if (l) { dragLay = l.dataset.id; e.dataTransfer.effectAllowed = 'move'; } });
     main.addEventListener('dragover', e => { const l = e.target.closest?.('.lay[data-id]'); if (dragLay && l) { e.preventDefault(); main.querySelectorAll('.lay.drop').forEach(n => n.classList.remove('drop')); if (l.dataset.id !== dragLay) l.classList.add('drop'); } });
@@ -902,20 +965,62 @@
         if (!r || !r.ids.length) return;
         S.x.startAnim = { id: r.ids[0], style: r.style }; save(); render(); return;
       }
-      if (a === 'rb-theme') { const l = S.x.robot.themes || []; S.x.robot.themes = l.includes(t.dataset.id) ? l.filter(x => x !== t.dataset.id) : [...l, t.dataset.id]; save(); render(); return; }
-      if (a === 'rb-cadd') { S.x.robot.custom = [...(S.x.robot.custom || []), { id: 'c' + Date.now().toString(36), name: '', prompt: '' }]; save(); render(); return; }
-      if (a === 'rb-cdel') { S.x.robot.custom = (S.x.robot.custom || []).filter((_, i) => i !== +t.dataset.i); save(); render(); return; }
+      if (a === 'rb-theme' || a === 'rb-add') { const ids = rbSel(); if (!ids.includes(t.dataset.id)) rbSet([...ids, t.dataset.id]); else if (a === 'rb-theme') rbSet(ids.filter(x => x !== t.dataset.id)); return; }
+      if (a === 'rb-rem') { e.stopPropagation(); rbSet(rbSel().filter(x => x !== t.dataset.id)); return; }
+      if (a === 'rb-up' || a === 'rb-down') { e.stopPropagation(); const ids = rbSel(), i = ids.indexOf(t.dataset.id), j = i + (a === 'rb-up' ? -1 : 1); if (i < 0 || j < 0 || j >= ids.length) return; [ids[i], ids[j]] = [ids[j], ids[i]]; rbSet(ids); return; }
+      if (a === 'rb-clear') { rbSet([]); return; }
+      if (a === 'rb-cadd') { const id = 'c' + Date.now().toString(36); S.x.robot.custom = [...(S.x.robot.custom || []), { id, name: '', style: '', body: '', clothes: '', figure: '', action: '', scene: '', prompt: '', bgMode: '', kw: '' }]; rbSet([...rbSel(), id]); return; }
+      if (a === 'rb-cdel') { const c = (S.x.robot.custom || [])[+t.dataset.i]; S.x.robot.custom = (S.x.robot.custom || []).filter((_, i) => i !== +t.dataset.i); rbSet(rbSel().filter(x => x !== c?.id)); return; }
+      if (a === 'rb-cphoto0') { rbOwnPhoto = ''; render(); return; }
+      if (a === 'rb-cphoto') { // eigenes Testfoto für die Vorschau (wird nicht gespeichert)
+        const f = await pick('image/*'); if (!f) return;
+        rbOwnPhoto = await new Promise(res => { const u = URL.createObjectURL(f), img = new Image(); img.onload = () => { const k = Math.min(1, 1280 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(u); res(c.toDataURL('image/jpeg', .9)); }; img.onerror = () => res(''); img.src = u; });
+        if (!rbOwnPhoto) ctx.toast('Das Foto konnte nicht geöffnet werden.'); render(); return;
+      }
+      if (a === 'rb-cprev') { // Vorschau eines eigenen Themas mit dem Testpaar (wie an der Fotobox: Grund-Prompt + Thema)
+        const c = (S.x.robot.custom || [])[+t.dataset.i]; if (!c || rbBusy[c.id]) return;
+        if (!drawPrompt(c)) return ctx.toast('Bitte zuerst Figur, Handlung, Szene oder eine Beschreibung eintragen.', 4000);
+        if (!ctx.admin && !await (G.pmConfirm || (async x => confirm(x)))('Die Vorschau erzeugt mit unserem Testpaar eine Zeichnung. Das kostet 1 Credit.', 'Erzeugen')) return;
+        rbBusy[c.id] = true; render();
+        try {
+          const cut = (S.x.robot || {}).cut || 'scene', photo = rbOwnPhoto || await rbHeadPhoto(cut !== 'heads' || ['bigheads', 'full'].includes(c.body)); if (!photo) throw new Error('Das Testfoto konnte nicht geladen werden.');
+          const head = cut === 'scene' ? RB_SCENE : RB_PROMPT + (cut === 'bigheads' ? ' ' + RB_BIGHEADS : ''), tail = ' Die Verkleidung und Szene ebenfalls nur als saubere Konturen, ohne Flächen und Schraffur.';
+          const prompt = head + ' ' + drawPrompt(c).slice(0, Math.max(0, Math.min(700, 1190 - head.length - tail.length))) + tail; // wie an der Fotobox, nie über 1200 Zeichen
+          const { data, error } = await ctx.sb.functions.invoke('ai-generate', { body: { image: photo, prompt, consent: true, style: 'custom', eventId: ev.id, requestId: crypto.randomUUID(), test: true } });
+          let r = data; if (error?.context?.json) { try { r = await error.context.json(); } catch {} }
+          if (error || r?.error || !r?.image) throw new Error(r?.error || error?.message || 'Keine Zeichnung erhalten');
+          const im = new Image(); im.src = r.image; await im.decode();
+          const k = Math.min(1, 640 / Math.max(im.width, im.height)), cv = document.createElement('canvas'); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k);
+          const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(im, 0, 0, cv.width, cv.height);
+          const blob = await new Promise(res => cv.toBlob(res, 'image/jpeg', .85));
+          c.thumb = await ctx.uploadFile(new File([blob], 'zeichnung-' + c.id + '.jpg', { type: 'image/jpeg' })); save();
+        } catch (err) { ctx.toast('Vorschau nicht möglich: ' + err.message, 7000); }
+        delete rbBusy[c.id]; render(); return;
+      }
       if (a === 'ai-clear') { ai[t.dataset.k] = ''; render(); return; }
       if (a === 'ai-pick') { ai.pick = t.dataset.k; ai.cat = ''; render(); return; }
       if (a === 'ai-close') { ai.pick = ''; render(); return; }
       if (a === 'ai-cat') { ai.cat = t.dataset.c; render(); return; }
       if (a === 'ai-choose') { ai[ai.pick] = t.dataset.k; ai.pick = ''; ai.custom = false; render(); return; }
+      if (a === 'ai-logo-add' || a === 'ai-logo-text') {
+        const ta = $(main, '[data-ai-ctext]'), L = S.x.ai.logo;
+        if (a === 'ai-logo-add') {
+          const f = await pick('image/*'); if (!f) return;
+          if (f.size > 3 * 1024 * 1024) return ctx.toast('Das Bild ist größer als 3 MB – bitte kleiner speichern (ein Logo braucht höchstens 1000 × 1000 Pixel).', 5000);
+          status('Lädt Logo hoch …');
+          try { L.url = await ctx.uploadFile(f); } catch (error) { ctx.toast('Hochladen fehlgeschlagen: ' + error.message, 6000); status('⚠️ Hochladen fehlgeschlagen'); return; }
+          L.mode = L.on && L.mode === 'over' ? 'both' : L.mode === 'both' ? 'both' : 'ai'; L.on = true; // vorher nur drübergelegt: bleibt, dazu baut die KI es ein
+        }
+        const cur = (ta ? ta.value : (ai.ctext ?? '')).replace(/kein Schriftzug\./, 'kein Schriftzug außer dem Logo.'); // Logo hat oft Schrift
+        if (!AI_LOGO_HAS(cur)) ai.ctext = (cur.trim() + ' ' + AI_LOGO_TXT).trim().slice(0, 1200); else ai.ctext = cur;
+        save(); render(); ctx.toast(a === 'ai-logo-add' ? 'Logo hinzugefügt – jetzt rechts „Generieren“ zum Ausprobieren.' : 'Logo-Text eingefügt.', 4000); return;
+      }
       if (a === 'ai-example') { const x = aiExamples()[+t.dataset.i]; if (x) { ai.cname = x.name; ai.ctext = x.prompt; render(); } return; }
       if (a === 'ai-custom') { // vorhandene Auswahl oder den bearbeiteten Stil als Text übernehmen
         ai.seed = ai.edit >= 0 && !(ai.p || ai.a) ? S.ai.prompts[ai.edit] : (ai.p || ai.a) ? aiCompose(aiFind(AI_MOTIFS, ai.p), aiFind(AI_ARTS, ai.a)) : null;
-        ai.p = ai.a = ''; ai.custom = true; ai.cname = ai.ctext = undefined; render(); return;
+        ai.p = ai.a = ''; ai.custom = true; ai.cname = ai.ctext = ai.cneg = undefined; render(); return;
       }
-      if (a === 'ai-new') { e.preventDefault(); ai.p = ai.a = ''; ai.custom = false; ai.edit = -1; ai.libEdit = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = undefined; render(); return; }
+      if (a === 'ai-new') { e.preventDefault(); ai.p = ai.a = ''; ai.custom = false; ai.edit = -1; ai.libEdit = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = ai.cneg = undefined; render(); return; }
       if (a === 'ai-save') {
         if (!ai.custom && !ai.p && !ai.a) return;
         const item = aiDraft();
@@ -926,17 +1031,17 @@
         t.disabled = false;
         if (at < 0) return;
         const saved = S.ai.prompts[at];
-        if (ai.custom) { ai.edit = at; ai.seed = null; ai.draftId = ''; ai.resultId = ''; ai.cname = ai.ctext = undefined; } // eigener Text bleibt offen: weiter ändern und neu generieren
-        else { ai.p = ai.a = ''; ai.edit = -1; ai.seed = null; ai.draftId = ''; ai.resultId = ''; ai.cname = ai.ctext = undefined; }
+        if (ai.custom) { ai.edit = at; ai.seed = null; ai.draftId = ''; ai.resultId = ''; ai.cname = ai.ctext = ai.cneg = undefined; } // eigener Text bleibt offen: weiter ändern und neu generieren
+        else { ai.p = ai.a = ''; ai.edit = -1; ai.seed = null; ai.draftId = ''; ai.resultId = ''; ai.cname = ai.ctext = ai.cneg = undefined; }
         render(); ctx.toast(saved?.thumb ? 'Stil mit Vorschaubild gespeichert' : 'Stil gespeichert'); return;
       }
       if (a === 'ai-open') { // gespeicherten Stil immer mit seinem vollständigen Text öffnen: ändern, neu generieren, speichern
-        ai.edit = +t.dataset.i; ai.libEdit = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = undefined; ai.custom = true; ai.p = ai.a = '';
+        ai.edit = +t.dataset.i; ai.libEdit = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = ai.cneg = undefined; ai.custom = true; ai.p = ai.a = '';
         render(); main.querySelector('[data-ai-builder]')?.scrollIntoView({ block: 'center' }); return;
       }
       if (a === 'ai-lib-edit' || a === 'ai-common-edit') { // Stil aus „Meine KI-Stile“ bearbeiten bzw. einen fertigen Stil als Vorlage für einen eigenen nehmen
         const x = (a === 'ai-common-edit' ? ai.common || [] : Array.isArray(ai.lib) ? ai.lib : [])[+t.dataset.i]; if (!x) return;
-        ai.libEdit = a === 'ai-lib-edit' ? x.id : ''; ai.edit = -1; ai.custom = true; ai.p = ai.a = ''; ai.seed = { name: x.name, prompt: x.prompt, category: x.category }; ai.draftId = ''; ai.cname = ai.ctext = undefined;
+        ai.libEdit = a === 'ai-lib-edit' ? x.id : ''; ai.edit = -1; ai.custom = true; ai.p = ai.a = ''; ai.seed = { name: x.name, prompt: x.prompt, category: x.category }; ai.draftId = ''; ai.cname = ai.ctext = ai.cneg = undefined;
         render(); main.querySelector('[data-ai-builder]')?.scrollIntoView({ block: 'center' }); return;
       }
       if (a === 'cari-refresh') { await cariLoad(); return; }
@@ -1015,7 +1120,7 @@
         const { error } = await ctx.sb.from('ai_styles').update(patch).eq('id', x.id);
         t.disabled = false;
         if (error) return ctx.toast('Speichern fehlgeschlagen: ' + error.message, 6000);
-        Object.assign(x, patch); ai.seed = { name: x.name, prompt: x.prompt }; ai.cname = ai.ctext = undefined; ai.resultId = ''; render();
+        Object.assign(x, patch); ai.seed = { name: x.name, prompt: x.prompt }; ai.cname = ai.ctext = ai.cneg = undefined; ai.resultId = ''; render();
         ctx.toast(patch.thumb ? '„Meine KI-Stile“ gespeichert – mit neuem Bild' : '„Meine KI-Stile“ gespeichert'); return;
       }
       if (a === 'ai-lib-result') { // aktuelles Testbild samt Prompt in die Sammlung
@@ -1078,9 +1183,9 @@
         if (!await (G.pmConfirm || (async text => confirm(text)))(`„${x.name}“ aus „Meine KI-Stile“ löschen? In Events bleibt der Stil erhalten.`)) return;
         const { error } = await ctx.sb.from('ai_styles').delete().eq('id', x.id);
         if (error) return ctx.toast(error.message, 5000);
-        ai.lib = ai.lib.filter(y => y.id !== x.id); if (ai.libEdit === x.id) { ai.libEdit = ''; ai.custom = false; ai.seed = null; ai.cname = ai.ctext = undefined; } render(); return;
+        ai.lib = ai.lib.filter(y => y.id !== x.id); if (ai.libEdit === x.id) { ai.libEdit = ''; ai.custom = false; ai.seed = null; ai.cname = ai.ctext = ai.cneg = undefined; } render(); return;
       }
-      if (a === 'ai-delete') { S.ai.prompts.splice(+t.dataset.i, 1); ai.edit = -1; ai.libEdit = ''; ai.custom = false; ai.p = ai.a = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = undefined; S.ai = AIEvent.normalize(S.ai); save(); render(); return; }
+      if (a === 'ai-delete') { S.ai.prompts.splice(+t.dataset.i, 1); ai.edit = -1; ai.libEdit = ''; ai.custom = false; ai.p = ai.a = ''; ai.seed = null; ai.draftId = ''; ai.cname = ai.ctext = ai.cneg = undefined; S.ai = AIEvent.normalize(S.ai); save(); render(); return; }
       if (a === 'ai-buy') { await closeEditor(); G.showCredits?.(); return; } // Dashboard → Meine Lizenzen → KI-Guthaben
       if (a === 'ai-status') {
         t.disabled = true;
@@ -1118,7 +1223,7 @@
         if (!ai.custom && !ai.p && !ai.a) return ctx.toast('Bitte zuerst einen Porträtstil oder einen Kunststil wählen.');
         const item = aiDraft();
         if (aiEmptyText(item.prompt)) return ctx.toast('Bitte beschreibe zuerst, wie das Bild aussehen soll.');
-        const central = S.ai.connection === 'central'; // Test geht auch, wenn KI-Fotos für die Gäste noch aus sind
+        const central = S.ai.connection === 'central'; // Test geht auch, wenn AI-Fotos für die Gäste noch aus sind
         if (central) {
           clearTimeout(saveT);
           const {error} = await persistNow();
@@ -1132,7 +1237,8 @@
         ai.busy = true; ai.result = ''; render();
         try {
           const t0 = performance.now(); // Dauer anzeigen – so sieht man, ob die KI gerade langsam ist
-          const {data,error} = await ctx.sb.functions.invoke('ai-generate', {body: {image: ai.photo, prompt: item.prompt.trim(), consent: true, eventId: ev.id, requestId: crypto.randomUUID(), test: true}});
+          const logo = await aiLogoData().catch(() => null); // „KI baut das Logo ein“: beim Ausprobieren gleich mit Logo
+          const {data,error} = await ctx.sb.functions.invoke('ai-generate', {body: {image: ai.photo, prompt: item.prompt.trim(), consent: true, eventId: ev.id, requestId: crypto.randomUUID(), test: true, ...(logo ? { logo, prompt: AIEvent.logoPrompt(item.prompt) } : {})}});
           let result = data;
           if (error?.context?.json) { try { result = await error.context.json(); } catch {} }
           if (error || result?.error) throw new Error(result?.error || error.message);
@@ -1146,11 +1252,12 @@
       }
 
       if (a === 'newlay') { $(main, '.dd .menu').classList.toggle('hidden-m'); $(main, '.dd .menu').style.display = $(main, '.dd .menu').style.display === 'block' ? 'none' : 'block'; }
-      if (a === 'fromtpl') pickTemplate(vals(), addLayout);
-      if (a === 'fromplain') pickFormat(modal(''), 'plain', vals(), addLayout);
+      if (a === 'fromtpl') pickTemplate(vals(), addLayout, tplOpts());
+      if (a === 'fromplain') pickTemplate(vals(), addLayout, tplOpts({ cat: 'Leer' })); // gleich bei den leeren Layouts
       if (a === 'fromimg') fromImage();
       if (a === 'fromdesign') G.DesignKatalog.open({ upload: ctx.uploadFile, canUse: pro(), lockedText: 'Designs installieren gibt es ab dem Tarif Pro.',
-        onInstall: Ls => { S.layouts.push(...Ls); if (Ls.length > 1) S.guestLayouts = true; sub.laySel = Ls[0].id; save(); render(); ctx.toast(Ls.length === 1 ? 'Design installiert.' : `${Ls.length} Formate installiert. Die Gäste wählen an der Fotobox.`, 5000); } });
+        onInstall: (Ls, o) => { S.layouts.push(...Ls); if (Ls.length > 1 && !o?.zip) S.guestLayouts = true; sub.laySel = Ls[0].id; save(); render(); // ZIP mit vielen Vorlagen: Gäste-Auswahl nicht von selbst einschalten
+          ctx.toast(o?.zip ? (Ls.length === 1 ? '1 Vorlage übernommen.' : `${Ls.length} Vorlagen übernommen.`) : Ls.length === 1 ? 'Design installiert.' : `${Ls.length} Formate installiert. Die Gäste wählen an der Fotobox.`, 5000); } });
       if (a === 'editlay') editLayout(t.dataset.id);
       if (a === 'sellay') { sub.laySel = sub.laySel === t.dataset.id ? '' : t.dataset.id; render(); }
       if (a === 'sharelay') { // Vorschau als Bild speichern, zum Weitergeben an den Kunden
@@ -1169,10 +1276,21 @@
       if (a === 'resetscreen') { if (await (G.pmConfirm || (async t => confirm(t)))('Gestaltung des Startbildschirms (Hoch- und Querformat) verwerfen?', 'Zurücksetzen')) { S.startScreen = null; S.startScreen2 = null; save(); render(); } return; }
       if (a === 'upattract') { await uploadAttract(t.dataset.o === 'landscape' ? 'landscape' : 'portrait'); render(); return; }
       if (a === 'delattract') { removeAttract(t.dataset.o === 'landscape' ? 'landscape' : 'portrait'); render(); return; }
+      // Logo direkt beim Erstellen der AI-Fotos (Betreiber 11.11.2026): hochladen = Logo an, „KI baut es ein“ (außer „Beides“ war schon gewählt)
+      if (a === 'ai-logo-up') {
+        const f = await pick('image/*'); if (!f) return;
+        if (f.size > 3 * 1024 * 1024) return ctx.toast('Das Bild ist größer als 3 MB – bitte kleiner speichern (ein Logo braucht höchstens 1000 × 1000 Pixel).', 5000);
+        status('Lädt Logo hoch …');
+        try { S.x.ai.logo.url = await ctx.uploadFile(f); S.x.ai.logo.on = true; if (S.x.ai.logo.mode !== 'both') S.x.ai.logo.mode = 'ai'; save(); render(); ctx.toast('Logo hinzugefügt – beim nächsten „Generieren“ baut die KI es ein.', 4000); }
+        catch (error) { ctx.toast('Hochladen fehlgeschlagen: ' + error.message, 6000); status('⚠️ Hochladen fehlgeschlagen'); }
+        return;
+      }
+      if (a === 'ai-logo-off') { S.x.ai.logo.on = false; save(); render(); return; }
+      if (a === 'ai-logo-go') { e?.preventDefault?.(); $(root, '[data-s="x.ai.logo.on"]')?.closest('.card')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
       if (a === 'x-up') {
         const f = await pick(t.dataset.accept || '*/*'); if (!f) return;
         if (f.size > 50 * 1024 * 1024) return ctx.toast('Die Datei ist größer als 50 MB.');
-        if (t.dataset.p === 'x.startLogo.url' && f.size > 3 * 1024 * 1024) return ctx.toast('Das Bild ist größer als 3 MB – bitte kleiner speichern (ein Logo braucht höchstens 1000 × 1000 Pixel).', 5000);
+        if ((t.dataset.p === 'x.startLogo.url' || t.dataset.p === 'x.ai.logo.url') && f.size > 3 * 1024 * 1024) return ctx.toast('Das Bild ist größer als 3 MB – bitte kleiner speichern (ein Logo braucht höchstens 1000 × 1000 Pixel).', 5000);
         status('Lädt Datei hoch …');
         try { const url = await ctx.uploadFile(f); if (t.dataset.list) setP(S, t.dataset.p, [...(getP(S, t.dataset.p) || []), url]); else setP(S, t.dataset.p, url); save(); render(); }
         catch (error) { ctx.toast('Hochladen fehlgeschlagen: ' + error.message, 6000); status('⚠️ Hochladen fehlgeschlagen'); }
@@ -1200,6 +1318,14 @@
       if (a === 'gal-reload') { gal.list = null; render(); return loadGallery(true); }
       if (a === 'gal-zip') return downloadAll();
       if (a === 'gal-copy-show') { const link = shareLink() + '&show=1'; try { await navigator.clipboard.writeText(link); ctx.toast('Slideshow-Link kopiert'); } catch { ctx.toast(link, 8000); } return; }
+      if (a === 'ps-save') return presetSaveDlg();
+      if (a === 'ps-apply') return presetApplyDlg();
+      if (a === 'kl-make') return kundeMake(false);
+      if (a === 'kl-new') { if (!await (G.pmConfirm || (async t => confirm(t)))('Neuen Kunden-Link erstellen? Der alte Link und das alte Passwort funktionieren danach nicht mehr.', 'Neuer Link')) return; return kundeMake(true); }
+      if (a === 'kl-copy') { try { await navigator.clipboard.writeText(kundeLink()); ctx.toast('Kunden-Link kopiert – das Passwort steht darunter'); } catch { ctx.toast(kundeLink(), 8000); } return; }
+      if (a === 'kl-text') { try { await navigator.clipboard.writeText(kundeText()); ctx.toast('Nachricht mit Link und Passwort kopiert'); } catch { ctx.toast(kundeText(), 10000); } return; }
+      if (a === 'kl-wa') { window.open('https://wa.me/?text=' + encodeURIComponent(kundeText()), '_blank', 'noopener'); return; }
+      if (a === 'kl-mail') { location.href = 'mailto:?subject=' + encodeURIComponent(kT('Eure Online-Galerie') + ' – ' + (S.title || E.name || '')) + '&body=' + encodeURIComponent(kundeText()); return; }
       if (a === 'gal-copy') { const link = shareLink(); try { await navigator.clipboard.writeText(link); ctx.toast('Link kopiert'); } catch { ctx.toast(link, 8000); } return; }
       if (a === 'mz-fit') {
         const c = Mosaic.normalize(S.x.mosaic); if (!mzv.img) return ctx.toast('Das Hauptbild lädt noch – bitte gleich noch einmal.');
@@ -1213,12 +1339,14 @@
         setTimeout(() => ctx.sb.from('devices').update({ command: { id: crypto.randomUUID(), at: new Date().toISOString(), type: 'sync' } }).eq('event_id', ev.id).then(() => {}, () => {}), 2500);
         return ctx.toast('Mosaik wird neu gestartet – die Fotobox übernimmt es in etwa 15 Sekunden, sobald keine Aufnahme läuft. Danach die Tafel neu drucken.', 7000);
       }
-      if (a === 'edit1') { const l = firstLayout(boxOrient()); if (l) editLayout(l.id); else pickTemplate(vals(), addLayout); } // das Layout aus der Vorschau
+      if (a === 'edit1') { const l = firstLayout(boxOrient()); if (l) editLayout(l.id); else pickTemplate(vals(), addLayout, tplOpts()); } // das Layout aus der Vorschau
     });
     const pick = accept => new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => res(i.files[0] || null); i.click(); });
 
     // ---------- Seiten ----------
-    const addLayout = L => { S.layouts.push(L); sub.laySel = L.id; save(); render(); if (pro()) editLayout(L.id); }; // Vorlage wählen geht in jedem Tarif, Bearbeiten ab Pro
+    const addLayout = (L, all) => { const Ls = all?.length ? all : [L]; S.layouts.push(...Ls); if (Ls.length > 1) S.guestLayouts = true; sub.laySel = L.id; save(); render(); if (pro()) editLayout(L.id); }; // Vorlage wählen geht in jedem Tarif, Bearbeiten ab Pro; Design mit mehreren Formaten: alle, Gäste wählen
+    // „Vorlage wählen“ zeigt auch die BoothDesigner-Designs – Installieren mit denselben Regeln wie „Design installieren“ (ab Pro)
+    const tplOpts = (o = {}) => ({ upload: ctx.uploadFile, canUse: pro(), lockedText: 'Designs installieren gibt es ab dem Tarif Pro.', ...o });
     const layoutThumb = (L, px = 300) => thumbOf(L, px, vals());
     const vals = () => ({ titel: S.title || E.name, untertitel: S.subtitle || (E.event_date ? new Date(E.event_date).toLocaleDateString('de-DE') : ''), datum: new Date().toLocaleDateString('de-DE'), uhrzeit: '20:15', event: E.name, name: 'Lisa', aufgabe: 'Zeigt euren besten Tanzschritt' });
     // Hoch- und Querformat: Die Fotobox erkennt ihren Bildschirm selbst und nimmt das erste passende Layout (quadratische passen immer).
@@ -1251,8 +1379,8 @@
       const items = S.layouts.length
         ? S.layouts.map(L => ['L_' + L.id, `<span translate="no">${esc(L.name)}</span> · ${FBR.photoCount(L)} Foto(s)`, `<img src="${layoutThumb(L)}" alt="" style="height:44px;border-radius:6px;background:#eee">`])
         : [['single', 'Einzelfoto'], ['strip', 'Fotostreifen'], ['grid', 'Collage']].filter(([k]) => S.modes[k]).map(([k, n]) => [k, n, '']);
-      return `<p style="margin:8px 0 6px;color:#6b6b78;font-size:13px">KI-Fotos gibt es bei diesen Layouts:</p><div style="display:flex;flex-wrap:wrap;gap:10px 22px">${items.map(([k, n, pic]) => `<label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" data-ailay="${esc(k)}" ${list.includes(k) ? 'checked' : ''}>${pic}${n}</label>`).join('')}</div>
-        ${items.length && !items.some(([k]) => list.includes(k)) ? '<p style="margin:8px 0 0;color:#c98a00;font-size:13px">Noch kein Layout angehakt – so gibt es in diesem Ereignis keine KI-Fotos.</p>' : ''}`;
+      return `<p style="margin:8px 0 6px;color:#6b6b78;font-size:13px">AI-Fotos gibt es bei diesen Layouts:</p><div style="display:flex;flex-wrap:wrap;gap:10px 22px">${items.map(([k, n, pic]) => `<label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" data-ailay="${esc(k)}" ${list.includes(k) ? 'checked' : ''}>${pic}${n}</label>`).join('')}</div>
+        ${items.length && !items.some(([k]) => list.includes(k)) ? '<p style="margin:8px 0 0;color:#c98a00;font-size:13px">Noch kein Layout angehakt – so gibt es in diesem Ereignis keine AI-Fotos.</p>' : ''}`;
     }
     function layoutCards() {
       return `<div class="dd"><button class="btn" data-a="newlay">${ICON('plus', 16)} Neues Layout ${ICON('chevronDown', 16)}</button><div class="menu" style="display:none">
@@ -1275,6 +1403,87 @@
     if (!G.__pmGalKaputt) { G.__pmGalKaputt = true; document.addEventListener('error', e => { const el = e.target;
       if (el?.tagName === 'IMG' && el.closest('#ws .gal figure') && (+el.dataset.tries >= 5 || !G.FOTOBOX_PHOTOS?.retry)) el.closest('figure').classList.add('kaputt'); }, true); }
     const shareLink = () => E.share_token ? location.origin + location.pathname.replace(/[^/]*$/, '') + 'galerie.html?g=' + E.share_token : '';
+    // Kunden-Link (Betreiber 17.11.2026): eigener geheimer Link + Passwort nur für den Kunden des Vermieters (z. B. das Brautpaar).
+    // Dort entfernt er selbst Fotos (Papierkorb, 30 Tage wiederherstellbar) und schickt den Gäste-Link weiter. Der Vermieter verschickt
+    // ihn hier selbst: kopieren, WhatsApp oder E-Mail. Server: SQL 202611170002 (gallery_manage_link) + photo-store.
+    const kun = { token: ev.manage_token || '', pw: ev.manage_pw || '', busy: false, missing: false };
+    const kLang = () => S.x.lang?.guest || G.PM_LANG || 'de', kT = s => I18N.t(s, kLang());
+    const kundeLink = () => kun.token ? location.origin + location.pathname.replace(/[^/]*$/, '') + 'galerie.html?k=' + kun.token + (kLang() !== 'de' ? '&l=' + kLang() : '') : '';
+    const kundeText = () => [kT('Hallo! Hier ist eure Online-Galerie:') + ' ' + (S.title || E.name || ''), '',
+      kT('Zum Verwalten – nur für euch, bitte nicht weitergeben:'), kundeLink(), kT('Passwort:') + ' ' + kun.pw, '',
+      kT('Dort könnt ihr Fotos entfernen und findet den Link für eure Gäste.'),
+      ...(S.x.gallery.link && shareLink() ? ['', kT('Link für eure Gäste:'), shareLink() + (S.x.gallery.password ? '\n' + kT('Passwort:') + ' ' + S.x.gallery.password : '')] : [])].join('\n');
+    async function kundeMake(fresh) {
+      if (kun.busy) return; kun.busy = true; render();
+      try {
+        const { data, error } = await ctx.sb.rpc('gallery_manage_link', { p_event: ev.id, p_new: !!fresh });
+        if (error) { if (/function|schema cache|does not exist|PGRST202/i.test(error.message + (error.code || ''))) kun.missing = true; else throw error; }
+        else if (data?.ok) { kun.token = data.token; kun.pw = data.password; ev.manage_token = data.token; ev.manage_pw = data.password; ctx.toast(fresh ? 'Neuer Kunden-Link erstellt – der alte funktioniert nicht mehr.' : 'Kunden-Link erstellt', 5000); }
+        else throw new Error('Ereignis nicht gefunden');
+      } catch (e) { ctx.toast('Kunden-Link fehlgeschlagen: ' + e.message, 6000); }
+      kun.busy = false; render();
+    }
+    // ---------- Voreinstellungen: dieses Ereignis speichern bzw. eine gespeicherte übernehmen ----------
+    const psFail = e => ctx.toast(Presets.missing(e) ? 'Voreinstellungen sind auf dem Server noch nicht eingerichtet.' : 'Fehler: ' + (e?.message || e), 6000);
+    async function presetSaveDlg() {
+      let L = []; try { L = await Presets.list(ctx.sb); } catch (e) { return psFail(e); }
+      const m = modal(`<div class="mh"><h3>Als Voreinstellung speichern</h3><button class="x" data-x>✕</button></div>
+        <div class="pbody"><p>Speichert alle Einstellungen dieses Ereignisses – Aussehen, Countdown, Layouts, Aufnahme, Drucken, Teilen und Logo – unter einem Namen, zum Beispiel für eine Location. Später übernimmst du sie mit einem Klick in ein neues oder bestehendes Ereignis.</p>
+          <p style="font-size:13px">Nicht dabei: Name, Datum, Titel und Fotos des Ereignisses sowie das Galerie-Passwort.</p>
+          <label><b>Name der Voreinstellung</b></label><input type="text" data-pn maxlength="80" placeholder="z. B. Schloss Hohenstein" value="">
+          <label class="chk"><input type="checkbox" data-pd> <span>Standard für neue Ereignisse (wird bei jedem neuen Ereignis übernommen)</span></label>
+          ${L.length ? `<p style="font-size:13px"><span>Gleicher Name wie eine vorhandene Voreinstellung = sie wird überschrieben. Vorhanden:</span> <span translate="no">${L.map(p => esc(p.name)).join(', ')}</span></p>` : ''}
+          <div><button class="pri" data-ps>${ICON('star', 15)} <span>Speichern</span></button></div></div>`);
+      m.querySelector('.box').style.cssText = 'width:min(520px,94vw);height:auto;max-height:92vh';
+      const inp = $(m, '[data-pn]'); inp.focus();
+      $(m, '[data-ps]').onclick = async () => {
+        const name = inp.value.trim().slice(0, 80); if (!name) return inp.focus();
+        const old = L.find(p => p.name.trim().toLowerCase() === name.toLowerCase()), std = $(m, '[data-pd]').checked;
+        if (old && !await (G.pmConfirm || (async t => confirm(t)))(`Die Voreinstellung „${name}“ gibt es schon. Mit den Einstellungen dieses Ereignisses überschreiben?`, 'Überschreiben')) return;
+        const row = { name, settings: Presets.clean(S), logo_url: E.logo_url || null };
+        try {
+          const r = old ? await ctx.sb.from('event_presets').update(row).eq('id', old.id).select('id').single() : await ctx.sb.from('event_presets').insert(row).select('id').single();
+          if (r.error) throw r.error;
+          m.remove();
+          if (std || old?.is_default) await Presets.setDefault(ctx.sb, r.data.id, std).catch(e => ctx.toast('Gespeichert, aber Standard nicht geändert: ' + e.message, 6000)); ctx.toast(std ? `Voreinstellung „${name}“ gespeichert – Standard für neue Ereignisse` : `Voreinstellung „${name}“ gespeichert`, 5000);
+        } catch (e) { psFail(e); }
+      };
+    }
+    async function presetApplyDlg() {
+      let L = []; try { L = await Presets.list(ctx.sb); } catch (e) { return psFail(e); }
+      const m = modal(`<div class="mh"><h3>Voreinstellung übernehmen</h3><button class="x" data-x>✕</button></div><div class="pbody"></div>`);
+      m.querySelector('.box').style.cssText = 'width:min(560px,94vw);height:auto;max-height:92vh';
+      const draw = () => { $(m, '.pbody').innerHTML = !L.length
+        ? '<p>Noch keine Voreinstellungen. Stelle ein Ereignis so ein, wie du es öfter brauchst, und tippe dann in der Übersicht auf „Als Voreinstellung speichern“.</p>'
+        : `<p>Ersetzt alle Einstellungen dieses Ereignisses. Name, Datum, Titel, Fotos und Galerie-Passwort bleiben.</p>${L.map(p => `<div class="prow"><span class="pn"><b><span translate="no">${esc(p.name)}</span>${p.is_default ? '<span class="stdtag">Standard</span>' : ''}</b><small><span>gespeichert am</span> ${fmtDay(p.updated_at)}</small></span>
+            <button class="pri" data-pa="${esc(p.id)}">Übernehmen</button><button data-pstd="${esc(p.id)}" class="${p.is_default ? 'on' : ''}" title="Standard für neue Ereignisse">${ICON('star', 14)}</button><button data-pdel="${esc(p.id)}" title="Voreinstellung löschen">${ICON('trash', 14)}</button></div>`).join('')}
+          <p style="font-size:12.5px">★ = Standard: wird bei jedem neuen Ereignis übernommen (nochmal tippen = kein Standard).</p>`; };
+      draw();
+      m.addEventListener('click', async e => {
+        const b = e.target.closest('[data-pa],[data-pstd],[data-pdel]'); if (!b) return;
+        const p = L.find(x => x.id === (b.dataset.pa || b.dataset.pstd || b.dataset.pdel)); if (!p) return;
+        const ask = (t, ok) => { m.style.zIndex = 90; return (G.pmConfirm || (async x => confirm(x)))(t, ok).finally(() => { m.style.zIndex = ''; }); };
+        try {
+          if (b.dataset.pdel) { if (!await ask(`Voreinstellung „${p.name}“ löschen? Ereignisse, die sie schon übernommen haben, ändern sich nicht.`)) return;
+            const { error } = await ctx.sb.from('event_presets').delete().eq('id', p.id); if (error) throw error; L = L.filter(x => x !== p); return draw(); }
+          if (b.dataset.pstd) { const on = !p.is_default; await Presets.setDefault(ctx.sb, p.id, on); L.forEach(x => { x.is_default = on && x === p; }); return draw(); }
+          if (!await ask(`Alle Einstellungen dieses Ereignisses durch „${p.name}“ ersetzen? Name, Datum, Titel, Fotos und Galerie-Passwort bleiben.`, 'Übernehmen')) return;
+          const keep = { pw: S.x?.gallery?.password || '', secret: S.x?.caricature?.secret }, P = norm(Presets.clean(p.settings));
+          for (const k of Object.keys(P)) if (!PRESET_SKIP.includes(k)) S[k] = P[k];
+          S.x.gallery.password = keep.pw; if (keep.secret && S.x.caricature) S.x.caricature.secret = keep.secret; withSecret(S);
+          E.logo_url = p.logo_url || null; // ganz ersetzen: ohne Logo in der Voreinstellung auch hier keins
+          m.remove(); save(); renderNav(); render(); ctx.toast(`Voreinstellung „${p.name}“ übernommen`, 4000);
+        } catch (err) { psFail(err); }
+      });
+    }
+    const kundeCard = () => `<div class="kunde"><b class="dt">Kunden-Link zum Verwalten</b>
+      <small>Für deinen Kunden, z. B. das Brautpaar: Mit diesem Link und dem Passwort kann er selbst Fotos aus der Galerie entfernen und den Link für die Gäste weiterschicken. Entfernte Fotos sehen die Gäste sofort nicht mehr, sie liegen noch 30 Tage im Papierkorb.</small>
+      ${kun.missing ? '<p style="color:#b26a00;font-size:13px;margin:6px 0 0">Der Kunden-Link ist auf dem Server noch nicht eingerichtet.</p>'
+        : !kun.token ? `<div class="linkbox"><button class="ghost" data-a="kl-make" ${kun.busy ? 'disabled' : ''}>${ICON('key', 15)} <span>Kunden-Link erstellen</span></button></div>`
+        : `<div class="linkbox"><input type="text" readonly value="${esc(kundeLink())}" onclick="this.select()" translate="no"><button class="ghost" data-a="kl-copy" title="Link kopieren">${ICON('copy', 15)}</button><a class="ghost" href="${esc(kundeLink())}" target="_blank" rel="noopener" title="Kunden-Ansicht öffnen" style="text-decoration:none">${ICON('share', 15)}</a></div>
+          <div style="margin-top:8px;font-size:14px"><span>Passwort:</span> <b translate="no" style="font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em">${esc(kun.pw)}</b></div>
+          <div class="linkbox"><button class="ghost" data-a="kl-wa">${ICON('share', 15)} <span>WhatsApp</span></button><button class="ghost" data-a="kl-mail">${ICON('link', 15)} <span>E-Mail</span></button><button class="ghost" data-a="kl-text">${ICON('copy', 15)} <span>Nachricht kopieren</span></button><button class="ghost" data-a="kl-new" ${kun.busy ? 'disabled' : ''} title="Der alte Link und das alte Passwort funktionieren danach nicht mehr">${ICON('refresh', 15)} <span>Neuer Link</span></button></div>
+          <small>Mit „Nachricht kopieren“ kopierst du Link, Passwort und Gäste-Link als fertigen Text – zum Einfügen in jede App oder E-Mail.</small>`}</div>`;
     async function loadGallery(force) {
       if (gal.loading || (!force && gal.list && Date.now() - gal.at < 30000)) return;
       gal.loading = true;
@@ -1282,7 +1491,8 @@
         // seitenweise: Ein Ereignis über mehrere Tage kann weit über 1000 Aufnahmen haben (der Server liefert je Abfrage höchstens 1000)
         let data = [], error = null;
         for (let from = 0; from < 20000; from += 1000) {
-          const r = await ctx.sb.from('photos').select('id,path,thumb,kind,name,bytes,created_at').eq('event_id', ev.id).order('created_at', { ascending: false }).range(from, from + 999);
+          let r = gal.noHidden ? null : await ctx.sb.from('photos').select('id,path,thumb,kind,name,bytes,created_at,hidden_at').eq('event_id', ev.id).order('created_at', { ascending: false }).range(from, from + 999);
+          if (!r || (r.error && /hidden_at/.test(r.error.message || ''))) { gal.noHidden = true; r = await ctx.sb.from('photos').select('id,path,thumb,kind,name,bytes,created_at').eq('event_id', ev.id).order('created_at', { ascending: false }).range(from, from + 999); } // SQL 202611170002 fehlt noch
           if (r.error) { error = r.error; break; }
           data = data.concat(r.data || []); if ((r.data || []).length < 1000) break;
         }
@@ -1311,7 +1521,7 @@
       document.body.appendChild(o);
       const [A, B] = o.querySelectorAll('img'), hint = o.querySelector('.hint');
       let i = 0, flip = false, seen = 0;
-      const pics = () => (gal.list || []).filter(x => x.kind !== 'video' && !isExtra(x));
+      const pics = () => (gal.list || []).filter(x => x.kind !== 'video' && !isExtra(x) && !x.hidden_at); // vom Kunden entfernte Fotos nicht zeigen
       const next = () => {
         const L = pics();
         hint.textContent = L.length ? '' : !gal.list || gal.loading ? 'Fotos werden geladen …' : 'Noch keine Fotos – neue Fotos erscheinen hier von selbst.';
@@ -1335,9 +1545,8 @@
       const o = document.createElement('div'); o.id = 'wsLight';
       const draw = () => { const x = L[n]; if (!x) return o.remove();
         o.innerHTML = `${x.kind === 'video' ? `<video src="${esc(galSrc(x, x.path))}" controls autoplay loop playsinline></video>` : `<img src="${esc(galSrc(x, x.path))}" alt="">`}
-          <div class="bar"><button data-k="dl">${ICON('download', 15)} Herunterladen</button>${x.kind !== 'video' ? `<button data-k="rep">${ICON('upload', 15)} Foto ersetzen</button>` : ''}${x.kind !== 'video' ? (S.cover?.id === x.id
-            ? `<button data-k="cover" class="on" title="Antippen: wieder automatisch das neueste Foto zeigen">${ICON('star', 15)} Ist das Ereignisbild</button>`
-            : `<button data-k="cover" title="Dieses Foto auf der Kachel des Ereignisses im Dashboard zeigen">${ICON('star', 15)} Als Ereignisbild</button>`) : ''}<button data-k="del" style="color:#d23b3b">${ICON('trash', 15)} Löschen</button><button data-k="x">Schließen</button></div>
+          <div class="bar"><button data-k="dl">${ICON('download', 15)} Herunterladen</button>${x.kind !== 'video' ? `<button data-k="rep">${ICON('upload', 15)} Foto ersetzen</button>` : ''}${x.hidden_at ? `<button data-k="unhide">${ICON('undo', 15)} Wiederherstellen</button>` : ''}<button data-k="del" style="color:#d23b3b">${ICON('trash', 15)} Löschen</button><button data-k="x">Schließen</button></div>
+          ${x.hidden_at ? `<div style="color:#f5c86a;font:13px system-ui,sans-serif"><span>Dein Kunde hat dieses Foto über den Kunden-Link entfernt – die Gäste sehen es nicht mehr.</span> <span>Endgültig gelöscht am</span> ${esc(new Date(Date.parse(x.hidden_at) + 30 * 864e5).toLocaleDateString('de-DE'))}</div>` : ''}
           <div style="color:#bbb;font:13px system-ui,sans-serif">${n + 1} von ${L.length} · ${esc(new Date(x.created_at).toLocaleString('de-DE'))}${x.name ? ` · <span translate="no">${esc(x.name)}</span>` : ''}</div>
           ${L.length > 1 ? '<button class="nav l" data-k="prev">‹</button><button class="nav r" data-k="next">›</button>' : ''}`; };
       const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') { n = (n + L.length - 1) % L.length; draw(); } if (e.key === 'ArrowRight') { n = (n + 1) % L.length; draw(); } };
@@ -1350,12 +1559,8 @@
         if (k === 'next') { n = (n + 1) % L.length; return draw(); }
         if (k === 'dl') { try { saveBlob(await fetchBlob(x.path), galName(x)); } catch (err) { ctx.toast('Herunterladen fehlgeschlagen: ' + err.message, 4000); } return; }
         if (k === 'rep') { if (await replacePhoto(x)) { draw(); render(); } return; }
-        if (k === 'cover') { // Ereignisbild für die Kachel im Dashboard; nochmal antippen = wieder automatisch das neueste Foto
-          const off = S.cover?.id === x.id;
-          S.cover = off ? null : { id: x.id, path: x.path, thumb: x.thumb || null };
-          save(); draw(); render();
-          return ctx.toast(off ? 'Die Kachel zeigt wieder automatisch das neueste Foto' : 'Dieses Foto ist jetzt das Ereignisbild', 3000);
-        }
+        if (k === 'unhide') { const { data: nUn, error } = await ctx.sb.rpc('photo_unhide', { p_id: x.id }); if (error || !nUn) return ctx.toast('Wiederherstellen fehlgeschlagen' + (error ? ': ' + error.message : ''), 5000);
+          x.hidden_at = null; ctx.toast('Wiederhergestellt – die Gäste sehen das Foto wieder.'); draw(); render(); return; }
         if (k === 'del') {
           o.style.zIndex = 90; // Rückfrage (z-index 100) lag sonst unsichtbar hinter der Großansicht
           const ok = await (G.pmConfirm || (async t => confirm(t)))('Dieses Foto endgültig aus der Online-Galerie löschen? Auf der Fotobox bleibt es gespeichert.');
@@ -1373,7 +1578,6 @@
       for (const f of ext) await G.FOTOBOX_PHOTOS.del(f, token);
       if (sbf.length) { const { error } = await ctx.sb.storage.from('photos').remove(sbf); if (error) throw error; }
       const { error } = await ctx.sb.from('photos').delete().eq('id', x.id); if (error) throw error;
-      if (S.cover?.id === x.id) { S.cover = null; save(); } // gelöschtes Ereignisbild: wieder das neueste Foto
     }
     // Mehrere Fotos auswählen (Galerie im Ereignis-Dashboard): antippen markiert, mit Umschalt-Taste einen ganzen Bereich.
     // Nur Kacheln und Leiste werden angepasst – kein neues Zeichnen der ganzen Seite (bei 2000 Fotos sonst spürbar).
@@ -1541,19 +1745,19 @@
               ${sw('x.share.cloud', 'Fotos hochladen', 'Die Fotobox lädt jedes fertige Foto in diese Galerie')}
               ${sw('x.gallery.downloadAll', 'Alle herunterladen', 'Ermöglichen Sie Besuchern, alle Inhalte des Ereignisses herunterzuladen')}
               ${sw('x.gallery.guests', 'Gastzugriff ' + NEEDSRV_S, 'Erlauben Sie Gästen, Bilder und Videos anderer Gäste zu sehen')}
-              <div class="pw">${proOnly(text('x.gallery.password', 'Passwort', 'leer = kein Passwort'))}<small>Gäste müssen dieses Passwort eingeben, um das Ereignis anzusehen. Lassen Sie das Feld leer, um das Passwort zu deaktivieren.</small></div></div>
+              <div class="pw">${proOnly(text('x.gallery.password', 'Passwort', 'leer = kein Passwort'))}<small>Gäste müssen dieses Passwort eingeben, um das Ereignis anzusehen. Lassen Sie das Feld leer, um das Passwort zu deaktivieren.</small></div>${kundeCard()}</div>
           </div>
           <div class="dacts">
             ${act('gal-zip', 'download', 'Alle herunterladen', P.length ? '' : 'disabled')}${act('gal-upload', 'upload', 'Hochladen')}${act('gal-embed', 'copy', 'Einbetten', link ? '' : 'disabled')}
             <button data-a="go" data-pg="analytics">${ICON('sliders', 26)}<span>Analysen</span></button>${act('gal-slide', 'play', 'Slideshow')}
-            <button data-a="go" data-pg="shares">${ICON('share', 26)}<span>Shares</span></button>${act('gal-reload', 'refresh', 'Aktualisieren')}${act('delev', 'trash', 'Ereignis löschen')}
+            <button data-a="go" data-pg="shares">${ICON('share', 26)}<span>Shares</span></button>${act('gal-reload', 'refresh', 'Aktualisieren')}${act('ps-save', 'star', 'Als Voreinstellung speichern')}${act('ps-apply', 'layers', 'Voreinstellung übernehmen')}${act('delev', 'trash', 'Ereignis löschen')}
           </div>
           ${sub.embed && link ? `<div class="embed"><b>Einbetten</b><div style="font-size:13px;color:#555;margin-top:4px">Diesen Baustein auf deiner Internetseite einfügen, dann erscheint dort die Galerie dieses Ereignisses (nur wenn „Freigabe von Links“ eingeschaltet ist).</div>
             <textarea rows="3" readonly onclick="this.select()">&lt;iframe src="${esc(link)}" style="width:100%;height:900px;border:0" loading="lazy"&gt;&lt;/iframe&gt;</textarea></div>` : ''}
           ${gal.error ? `<div class="dempty">${esc(gal.error)}</div>`
             : !gal.list ? '<div class="dempty">Lädt …</div>'
             : P.length ? `<div class="galpick${sub.pick ? ' on' : ''}">${galPickBar()}</div>
-              <div class="gal wide${sub.pick ? ' picking' : ''}">${P.map((x, i) => `<figure data-a="gal-open" data-i="${i}" class="${sub.pick?.has(x.id) ? 'sel' : ''}${S.cover?.id === x.id ? ' cover' : ''}" title="${esc(new Date(x.created_at).toLocaleString('de-DE'))}"><img loading="lazy" src="${esc(galSrc(x, x.thumb || x.path))}" alt="">${S.cover?.id === x.id ? `<span class="cvb">${ICON('star', 12)} Ereignisbild</span>` : ''}<span class="kap">Foto kaputt – antippen und ersetzen</span>${x.kind !== 'photo' ? `<span class="tag">${x.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}<span class="ck">${ICON('check', 15)}</span></figure>`).join('')}</div>`
+              <div class="gal wide${sub.pick ? ' picking' : ''}">${P.map((x, i) => `<figure data-a="gal-open" data-i="${i}" class="${sub.pick?.has(x.id) ? 'sel' : ''}${x.hidden_at ? ' versteckt' : ''}" title="${esc(new Date(x.created_at).toLocaleString('de-DE'))}"><img loading="lazy" src="${esc(galSrc(x, x.thumb || x.path))}" alt=""><span class="kap">Foto kaputt – antippen und ersetzen</span>${x.hidden_at ? '<span class="weg">Vom Kunden entfernt</span>' : ''}${x.kind !== 'photo' ? `<span class="tag">${x.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}<span class="ck">${ICON('check', 15)}</span></figure>`).join('')}</div>`
             : `<div class="dempty">Noch keine Fotos oder Videos.<br><small style="font-size:15px">${S.x.share.cloud ? 'Die Galerie füllt sich, sobald an der Fotobox Sitzungen durchgeführt werden.' : 'Schalte rechts oben „Fotos hochladen“ ein – dann füllt sich die Galerie, sobald an der Fotobox Sitzungen durchgeführt werden.'}</small></div>`}`;
       },
       layout() {
@@ -1593,16 +1797,8 @@
             <h2>Overlays</h2><div class="card">${sel('x.slowmo.size', 'Ausgabegröße', sizes)}${upList('x.slowmo.overlays', 'image/png', 'Overlay hinzufügen (PNG)')}</div>
             <h2>Intro/Outro</h2><div class="card">${up('x.slowmo.intro', 'Intro-Video', 'video/mp4', 'MP4, max. 15 MB, 1280×720')}${up('x.slowmo.outro', 'Outro-Video', 'video/mp4', 'MP4, max. 15 MB, 1280×720')}</div>`
           : sub.mode === 'robot' ? `<div class="card">${sw('x.robot.enabled', 'Zeichenroboter aktivieren', 'Ein Roboterarm zeichnet das Gästefoto live als Strichzeichnung auf Papier')}
-              <p style="color:#777;font-size:13px">Gäste wählen an der Fotobox „Zeichnung“, machen ein Foto, die KI macht daraus eine Strichzeichnung und der Arm zeichnet sie live aufs Blatt. Im Zeichnungs-Modus wird nicht gedruckt und nichts geteilt – die Gäste nehmen das Blatt mit.</p>
-              <p style="color:#777;font-size:13px">Blatt, Stift, Versatz und Geschwindigkeit stellst du an der Fotobox ein: Einstellungen → Extras → Zeichenroboter (Arm per USB, Rotrics DexArm).</p></div>
-            <h2>Themen für Gäste</h2><div class="card">${sw('x.robot.guestPick', 'Gäste wählen das Thema', 'Vor dem Foto erscheint die Themen-Auswahl. Aus: das erste gewählte Thema gilt')}${sw('x.robot.random', 'Zufälliges Thema', 'Ohne Gästewahl bekommt jeder Gast ein zufälliges Thema aus der Auswahl')}${text('x.robot.header', 'Überschrift der Auswahl', 'Wähle ein Thema')}
-              <label class="l">Bibliothek – antippen zum Aus- oder Abwählen (${(S.x.robot.themes || []).length} gewählt)</label>
-              <div class="row" style="flex-wrap:wrap;gap:8px">${DRAW_THEMES.map(t => { const on = (S.x.robot.themes || []).includes(t.id); return `<button class="ghost" data-a="rb-theme" data-id="${t.id}" style="padding:6px 10px;${on ? 'background:#FFF4C2;border-color:#F7C838;font-weight:600' : 'opacity:.75'}" title="${esc(t.prompt || 'Nur die Konturen, ohne Verkleidung')}">${t.icon} ${esc(t.name)}${on ? ' ✓' : ''}</button>`; }).join('')}</div></div>
-            <h2>Eigene Themen</h2><div class="card">${(S.x.robot.custom || []).map((c, i) => `<div style="border:1px solid #eee;border-radius:8px;padding:10px;margin-bottom:8px">${text(`x.robot.custom.${i}.name`, 'Name des Themas', 'z. B. Firmenjubiläum')}
-                <label class="l">Beschreibung für die KI – was die Personen tragen oder tun</label><textarea data-s="x.robot.custom.${i}.prompt" rows="2" maxlength="700" placeholder="z. B. Zeige die Personen im Firmen-Shirt mit Konfetti und einer Torte." style="width:100%">${esc(c.prompt || '')}</textarea>
-                <div class="row" style="justify-content:flex-end;margin-top:6px"><button class="ghost" data-a="rb-cdel" data-i="${i}">${ICON('trash', 14)} Entfernen</button></div></div>`).join('')}
-              <button class="ghost" data-a="rb-cadd">${ICON('plus', 15)} Eigenes Thema hinzufügen</button>
-              <p style="color:#777;font-size:13px;margin:8px 0 0">Jedes Thema wird an den Grund-Prompt „saubere schwarze Strichzeichnung, Gesichter erkennbar“ angehängt. Eigene Themen erscheinen bei den Gästen mit einem ✨.</p></div>`
+              <p style="color:#777;font-size:13px">Themen, „Nur die Köpfe“ und eigene Themen stellst du auf der eigenen Seite „Zeichenroboter“ ein (im Menü unter Aufnahme, direkt nach AI-Fotos).</p>
+              <button class="btn pri" data-a="go" data-pg="robot">Zum Zeichenroboter ›</button></div>`
           : `<div class="card">${sw('modes.video', 'Videomodus aktivieren', 'Nehmen Sie ein Video mit Ton auf')}</div>
             <h2>Allgemein</h2><div class="card">${slider('x.video.countdown', 'Countdown', 0, 30)}${slider('x.video.quality', 'Ausgabequalität', 1, 8, 1, 'mbps')}${slider('videoSecs', 'Aufnahmedauer', 1, 60, 1)}
               ${sw('videoAudio', 'Ton aufnehmen')}${sw('x.video.saveOriginal', 'Originalvideo speichern')}${sw('x.video.preTextOn', 'Text vor der Aufnahme anzeigen')}${text('x.video.preText', 'Text', 'Bereit machen')}</div>`;
@@ -1611,7 +1807,7 @@
           ${sub.mode !== 'photo' && !pro() ? '<div class="card" style="background:#FFFAEA"><b>GIF, Boomerang, Video und 360° gibt es ab dem Tarif Pro.</b><p style="margin:8px 0 0"><button class="btn pri" data-a="tarife">Tarife ansehen</button></p></div>' : body}
           <h2>Live-Ansicht</h2><div class="card"><div class="between"><div><b>Live-Ansicht in der Vorlage</b><br><small style="color:#6b6b78">Gäste sehen sich beim Countdown im Fotolayout – so wie das fertige Foto. Aus: nur das Kamerabild.</small></div>
             <div class="row"><label class="sw"><input type="checkbox" data-livetpl ${S.liveView !== 'plain' ? 'checked' : ''}><i></i></label><span class="swl">${S.liveView !== 'plain' ? 'Ein' : 'Aus'}</span></div></div></div>
-          <h2>Spiegeln</h2><div class="card">${sw('mirror', 'Gespiegelte Live-Ansicht')}${sw('mirrorPhoto', 'Aufgenommene Fotos und Videos spiegeln', 'Spiegelt das gespeicherte und gedruckte Ergebnis')}${sw('cropLive', 'Live-Ansicht auf das Fotofeld zuschneiden')}</div>
+          <h2>Spiegeln</h2><div class="card">${sw('mirror', 'Gespiegelte Live-Ansicht')}${sw('mirrorPhoto', 'Aufgenommene Fotos und Videos spiegeln', 'Spiegelt das gespeicherte und gedruckte Ergebnis')}${sw('cropLive', 'Live-Ansicht auf das Fotofeld zuschneiden')}${sw('faces', 'Gesichter erkennen', 'Live-Ansicht und Foto folgen den Gesichtern. Aus: Bild immer mittig.')}</div>
         </div>${previewBox()}</div>`;
       },
       voice() { // Stil, je Schritt Animationen aus der Bibliothek (Live-Vorschau) und eigene Dateien
@@ -1704,6 +1900,37 @@
           <div class="thumbs">${(S.bgUrls || []).map((u, i) => `<div><img src="${esc(u)}"><button data-a="delbg" data-i="${i}">✕</button></div>`).join('')}</div>
           <button class="ghost" data-a="upbg" style="margin-top:10px">${ICON('upload', 15)} Bild hochladen (JPG/PNG, max. 10 MB, empfohlen 1800×1200)</button></div>`;
       },
+      // Zeichenroboter mit eigener Seite (Betreiber 14.11.2026: „in AI auch einen Platz nur für Zeichenroboter-Sachen“)
+      robot() {
+        return `${titleSw('Zeichenroboter')}<p class="sub" style="margin:-6px 0 14px;color:#6b6b78">Der Arm zeichnet die Gäste live als Strichzeichnung – mit Themen wie bei den AI-Fotos</p>` + `<div class="card">${sw('x.robot.enabled', 'Zeichenroboter aktivieren', 'Ein Roboterarm zeichnet das Gästefoto live als Strichzeichnung auf Papier')}
+              <p style="color:#777;font-size:13px">Gäste wählen an der Fotobox „Zeichnung“, machen ein Foto, die KI macht daraus eine Strichzeichnung und der Arm zeichnet sie live aufs Blatt. Im Zeichnungs-Modus wird nicht gedruckt und nichts geteilt – die Gäste nehmen das Blatt mit.</p>
+              <p style="color:#777;font-size:13px">Blatt, Stift, Versatz und Geschwindigkeit stellst du an der Fotobox ein: Einstellungen → Extras → Zeichenroboter (Arm per USB, Rotrics DexArm).</p></div>
+            <div class="card">${sel('x.robot.cut', 'Was wird gezeichnet?', [['scene', 'Karikatur mit Szene (wie ein Ausmalbild)'], ['heads', 'Nur die Köpfe'], ['bigheads', 'Ganzer Körper mit großen Köpfen'], ['photo', 'Ganzes Foto (wie aufgenommen)']])}
+              <p style="color:#777;font-size:13px;margin:6px 0 0">${S.x.robot.cut === 'photo' ? 'Das Foto (auch vom iPad) wird so gezeichnet, wie es aufgenommen wurde.' : S.x.robot.cut === 'scene' ? 'Die KI zeichnet die Personen als Karikatur mit großem Kopf und ganzer Figur, dazu eine einfache Szene zum gewählten Thema – wie ein Ausmalbild. Die Gesichter bleiben erkennbar.' : S.x.robot.cut === 'bigheads' ? 'Die Fotobox entfernt den Hintergrund, die KI zeichnet die ganze Person mit großem Kopf auf kleinem Körper – wie eine Karikatur. Danach kommt das gewählte Thema dazu.' : 'Die Fotobox erkennt die Gesichter auf dem Foto (auch vom iPad), schneidet auf die Köpfe zu und entfernt den Hintergrund. Erst dann bekommt das Bild das gewählte Thema.'}</p></div>
+            <h2>Themen für Gäste</h2><div class="card">${sw('x.robot.guestPick', 'Gäste wählen das Thema', 'Vor dem Foto erscheint die Themen-Auswahl. Aus: das erste gewählte Thema gilt')}${sw('x.robot.random', 'Zufälliges Thema', 'Ohne Gästewahl bekommt jeder Gast ein zufälliges Thema aus der Auswahl')}${sw('x.robot.names', 'Motiv-Namen anzeigen', 'Name unter jedem Bild in der Auswahl der Gäste (Fotobox und iPad)')}${text('x.robot.header', 'Überschrift der Auswahl', 'Wähle ein Thema')}
+              ${(() => { const sel = rbSel(), av = [...DRAW_THEMES.map(t => t.id), ...rbCustom().map(c => c.id)].filter(id => !sel.includes(id)).map(rbItem).filter(Boolean);
+                const tile = (it, n) => `<button class="rbt" draggable="true" data-rbid="${esc(it.id)}" data-a="${n == null ? 'rb-add' : 'rb-none'}" data-id="${esc(it.id)}" data-kw="${esc(it.kw)}" ${n == null && rbq && !it.kw.includes(rbq) ? 'hidden' : ''} title="${n == null ? 'Antippen oder nach rechts ziehen' : 'Ziehen zum Umsortieren'}">
+                  <span class="pic" ${it.thumb ? `style="background-image:url('${esc(it.thumb)}')"` : ''}>${it.thumb ? '' : it.icon}</span>${n != null ? `<span class="n">${n + 1}</span><span class="x" data-a="rb-rem" data-id="${esc(it.id)}" title="Entfernen">×</span>` : ''}
+                  <b ${it.custom ? 'translate="no"' : ''}>${esc(it.name)}${it.custom ? ' ✨' : ''}</b>${n != null ? `<span class="mv"><span data-a="rb-up" data-id="${esc(it.id)}" title="Nach vorn">‹</span><span data-a="rb-down" data-id="${esc(it.id)}" title="Nach hinten">›</span></span>` : ''}</button>`;
+                return `<div class="rbcols"><div class="rbcol rbav"><h3><span>Verfügbar</span></h3><input type="search" data-rbq placeholder="Suchen: Thema, Hobby, Stichwort" value="${esc(rbq)}" style="width:100%;margin-bottom:8px">
+                  <div class="rbgrid">${av.map(it => tile(it)).join('') || '<small style="color:#777">Alle Themen sind ausgewählt.</small>'}</div></div>
+                  <div class="rbcol rbsel"><h3><span>Ausgewählt (${sel.length})</span>${sel.length ? '<button class="ghost" style="padding:4px 10px;font-size:12px" data-a="rb-clear">Alle entfernen</button>' : ''}</h3>
+                  <div class="rbgrid">${sel.map(rbItem).filter(Boolean).map((it, n) => tile(it, n)).join('') || '<small style="color:#777">Noch nichts ausgewählt – links antippen oder hierher ziehen. Ohne Auswahl zeichnet der Arm „Klassisch“.</small>'}</div>
+                  <p style="color:#777;font-size:12px;margin:8px 0 0">Die Reihenfolge sehen die Gäste genauso. Wählen sie nicht selbst, gilt das erste Thema (oder ein zufälliges, wenn „Zufälliges Thema“ an ist).</p></div></div>`; })()}</div>
+            <h2>Eigene Themen</h2><div class="card">${(S.x.robot.custom || []).map((c, i) => { const P = `x.robot.custom.${i}`; return `<div style="border:1px solid #eee;border-radius:10px;padding:12px;margin-bottom:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
+                <div>${text(`${P}.name`, 'Name des Themas (sehen die Gäste)', 'z. B. Firmenjubiläum')}
+                <div class="row" style="gap:10px;flex-wrap:wrap">${sel(`${P}.style`, 'Zeichenstil', [['', 'Strichzeichnung'], ['cari', 'Karikatur'], ['comic', 'Comic'], ['manga', 'Manga']])}${sel(`${P}.body`, 'Ausschnitt', [['', 'Wie beim Ereignis'], ['heads', 'Nur Köpfe'], ['bust', 'Brustbild'], ['bigheads', 'Ganzer Körper, große Köpfe'], ['full', 'Ganzer Körper']])}</div>
+                <div class="row" style="gap:10px;flex-wrap:wrap">${sel(`${P}.clothes`, 'Kleidung', [['', 'Wie die KI es macht'], ['keep', 'Kleidung der Person übernehmen'], ['theme', 'Kleidung passend zur Figur']])}${sel(`${P}.bgMode`, 'Hintergrund', [['', 'Wie im Text'], ['rich', 'Ausführlich'], ['plain', 'Schlicht'], ['none', 'Keiner']])}</div>
+                ${text(`${P}.figure`, 'Figur – wer sind die Gäste?', 'z. B. Astronauten, Brautpaar, Rockstars')}${text(`${P}.action`, 'Handlung – was tun sie?', 'z. B. stoßen mit Sekt an')}${text(`${P}.scene`, 'Szene – wo sind sie?', 'z. B. auf einer Bühne mit Konfetti')}
+                <label class="l">Weitere Beschreibung (optional)</label><textarea data-s="${P}.prompt" rows="2" maxlength="700" placeholder="z. B. Firmenlogo als Aufnäher auf der Brust" style="width:100%">${esc(c.prompt || '')}</textarea>
+                ${text(`${P}.kw`, 'Stichworte für die Suche', 'z. B. firma feier jubiläum')}</div>
+                <div><label class="l">Vorschau</label><div style="aspect-ratio:3/4;border-radius:8px;border:1px dashed #ddd;background:#fff ${rbThumb(c.thumb) ? `url('${esc(rbThumb(c.thumb))}') center/contain no-repeat` : ''};display:flex;align-items:center;justify-content:center;color:#999;font-size:12px;text-align:center;padding:6px">${c.thumb ? '' : rbBusy[c.id] ? 'Zeichnung entsteht …' : 'Noch keine Vorschau'}</div>
+                <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center"><small style="color:#777">Testfoto: ${rbOwnPhoto ? 'eigenes Foto' : 'Testpaar'}</small><button class="ghost" style="padding:4px 10px;font-size:12px" data-a="rb-cphoto">${rbOwnPhoto ? 'Anderes Foto' : 'Eigenes Foto'}</button>${rbOwnPhoto ? '<button class="ghost" style="padding:4px 10px;font-size:12px" data-a="rb-cphoto0">Testpaar</button>' : ''}</div>
+                <button class="btn pri" style="width:100%;margin-top:8px" data-a="rb-cprev" data-i="${i}" ${rbBusy[c.id] ? 'disabled' : ''}>${rbBusy[c.id] ? 'Zeichnung entsteht …' : (c.thumb ? 'Neu erzeugen' : 'Erzeugen')}${ctx.admin ? '' : ' (1 Credit)'}</button>
+                <button class="ghost" style="width:100%;margin-top:6px" data-a="rb-cdel" data-i="${i}">${ICON('trash', 14)} Thema entfernen</button></div></div>`; }).join('')}
+              <button class="ghost" data-a="rb-cadd">${ICON('plus', 15)} Eigenes Thema hinzufügen</button>
+              <p style="color:#777;font-size:13px;margin:8px 0 0">Jedes Thema wird an den Grund-Prompt „saubere schwarze Strichzeichnung, Gesichter erkennbar“ angehängt. Die Vorschau entsteht mit unserem Testpaar. Eigene Themen erscheinen bei den Gästen mit ihrer Vorschau oder einem ✨.</p></div>`;
+      },
       ai() {
         const central = S.ai.connection === 'central';
         if (ai.lib === null) aiLibLoad();
@@ -1730,7 +1957,7 @@
         const modal = !ai.pick ? '' : `<div class="aimodal"><div><div class="mh"><b>${ai.pick === 'a' ? 'Kunststil' : 'Porträtstil'} auswählen</b><input type="search" placeholder="Stile suchen …" data-ai-search><button class="ghost" data-a="ai-close">✕</button></div>
           <div class="aichips"><button data-a="ai-cat" data-c="" class="${ai.cat ? '' : 'on'}">Alle</button>${cats.map(c => `<button data-a="ai-cat" data-c="${esc(c)}" class="${ai.cat === c ? 'on' : ''}">${esc(c)}</button>`).join('')}</div>
           <div class="body">${cats.filter(c => !ai.cat || ai.cat === c).map(c => `<h4>${esc(c)}</h4><div class="aitiles">${list.filter(x => x.cat === c).map(x => `<button data-a="ai-choose" data-k="${x.key}" data-n="${esc(x.name.toLowerCase())}" class="${ai[ai.pick] === x.key ? 'on' : ''}">${aiTile(x)}<b>${esc(x.name)}</b></button>`).join('')}</div>`).join('')}</div></div></div>`;
-        const right = `<div class="card"><div class="aiphoto">${ai.busy ? '<div class="aiwait">KI-Foto wird erstellt …<br><small>Das dauert meist 10–40 Sekunden.</small></div>'
+        const right = `<div class="card"><div class="aiphoto">${ai.busy ? '<div class="aiwait">AI-Foto wird erstellt …<br><small>Das dauert meist 10–40 Sekunden.</small></div>'
             : ai.result ? `<div class="aipair" style="padding:10px"><figure class="src"><img src="${ai.photo}" alt="">Testfoto</figure><span class="arrow">→</span><figure class="out"><img src="${ai.result}" alt="" data-a="ai-zoom" title="Anklicken zum Vergrößern" style="cursor:zoom-in">Ergebnis · zum Vergrößern anklicken</figure></div>`
             : ai.photo ? `<img src="${ai.photo}" alt="Testfoto">` : '<div class="ph" data-a="ai-photo"><div style="font-size:34px">📷</div><b>Testfoto hochladen</b><br><small>Ein eigenes Foto, um Stile auszuprobieren. Es bleibt in diesem Browser.</small></div>'}</div>
           <div class="between" style="margin-top:10px"><small>${ai.own ? 'Eigenes Testfoto' : 'Standard-Testfoto'}</small><span>${ai.own ? '<a href="#" data-a="ai-photo-reset">Standardbild</a> · ' : ''}<a href="#" data-a="ai-photo">${ai.photo ? 'Bild ändern' : 'Bild wählen'}</a></span></div>
@@ -1763,16 +1990,51 @@
           ${(ai.common || []).length ? `<div class="card"><b>Stile von Photobox Memories (${ai.common.length})</b><p style="margin:4px 0 0;color:#6b6b78;font-size:13px">Fertige Stile mit Beispielbild. Antippen übernimmt den Stil in dieses Event, ohne Credits. ✎ = als Vorlage für einen eigenen Stil nehmen.</p>
             <div class="row" style="justify-content:flex-end;margin-top:8px">${allBtn(ai.common, true)}</div>
             ${grouped(ai.common, (x, n) => `<button data-a="ai-lib-use" data-common="1" data-i="${n}" title="In dieses Event übernehmen">${aiPic('', x.thumb)}<span class="edit" data-a="ai-common-edit" data-i="${n}" title="Als Vorlage für einen eigenen Stil nehmen">✎</span><b>${esc(x.name)}</b></button>`, addAll(true))}</div>` : ''}`;
-        return `${titleSw('KI-Fotos', 'ai.enabled')}<p class="sub" style="margin:-6px 0 14px;color:#6b6b78">Verwandle deine Gäste mit generativer KI</p><div class="aigrid"><div class="left">
+        return `${titleSw('AI-Fotos', 'ai.enabled')}<p class="sub" style="margin:-6px 0 14px;color:#6b6b78">Verwandle deine Gäste mit generativer KI</p><div class="aigrid"><div class="left">
+          <!-- Einstellungen zuerst, darunter die Stile (Betreiber 14.11.2026: „die Funktionen ganz unten sind ganz oben und darunter die Stile“) -->
+          <div class="card"><b>An der Fotobox</b>
+          ${sw('ai.guestChoice', 'Gäste wählen ihren Stil', 'Aus = alle Fotos bekommen automatisch den Standard-Stil.')}
+          ${sw('x.ai.startChoice', 'Am Start wählen: AI-Foto oder normales Foto', 'Gleich nach dem Tippen auf den Startbildschirm sehen die Gäste zwei Kacheln. „AI-Foto“ führt zur Stilauswahl, „Normales Foto“ direkt zum Foto ohne KI.')}
+          <label class="l">Standard-Stil</label><select data-s="ai.selectedId"><option value="">Erster Stil</option>${S.ai.prompts.map(p => `<option value="${esc(p.id)}" ${p.id === S.ai.selectedId ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>
+          <label class="l">Bildqualität (Grok)</label><select data-s="ai.resolution" data-rerender="1"><option value="1k" ${S.ai.resolution === '1k' ? 'selected' : ''}>1K · schneller${central ? ' · 1 Credit' : ''}</option><option value="2k" ${S.ai.resolution === '2k' ? 'selected' : ''}>2K · hohe Auflösung${central ? ' · 2 Credits' : ''}</option></select>
+          ${ctx.admin ? `<div class="card"><b>Bezahlung durch Gäste</b><p style="margin:4px 0 10px;color:#6b6b78;font-size:13px">Gäste zahlen ihr AI-Foto selbst per QR-Code am Handy (Apple Pay, Google Pay, Karte). Abgebucht wird erst, wenn das Bild fertig ist – bei Fehlern nie. Das bezahlte Bild bekommt nur der Gast, es landet nicht in der Galerie. Zurzeit nur für Fotoboxen von Photobox Memories (Geld auf unser Stripe-Konto).</p>
+          ${sw('x.ai.guestPay', 'Gäste zahlen selbst', 'Statt Credits aus dem Paket')}${slider('x.ai.guestPrice', 'Preis je Bild', 50, 500, 10, 'Cent')}</div>` : ''}
+          <div class="card">${sw('x.ai.logo.on', 'Logo auf die AI-Fotos', 'Dein Logo erscheint auf jedem KI-Bild – im Druck, beim QR-Code und in der Galerie.')}
+          ${S.x.ai.logo.on ? `${up('x.ai.logo.url', 'Logo', 'image/*', 'Am schönsten: PNG mit durchsichtigem Hintergrund, höchstens 3 MB')}
+          ${sel('x.ai.logo.mode', 'Wie kommt das Logo aufs Bild?', [['over', 'Oben drüberlegen – immer an derselben Stelle'], ['ai', 'Die KI baut es passend zum Stil ins Bild ein'], ['both', 'Beides']])}
+          ${S.x.ai.logo.mode !== 'over' ? '<p style="margin:6px 0 0;color:#6b6b78;font-size:13px">Die KI setzt dein Logo zum Beispiel auf ein Schild, ein Banner oder ein T-Shirt. Wo genau, kannst du im Stil-Text bestimmen, zum Beispiel „Logo groß auf dem Banner im Hintergrund“. Steht dort nichts, sucht die KI selbst einen passenden Platz. Beim Ausprobieren eines Stils hier im Dashboard ist das Logo schon dabei.</p><p style="margin:6px 0 0;color:#6b6b78;font-size:13px">Die KI malt das ganze Bild neu und soll das Logo in seinen Originalfarben lassen – ganz genau klappt das aber nicht immer. Müssen Farben und Schrift exakt stimmen, wähle „Beides“: Dann liegt zusätzlich das Original-Logo auf dem Foto.</p>' : ''}
+          ${S.x.ai.logo.mode !== 'ai' ? `${sel('x.ai.logo.pos', 'Position', [['br', 'Unten rechts'], ['bl', 'Unten links'], ['bc', 'Unten Mitte'], ['tr', 'Oben rechts'], ['tl', 'Oben links'], ['tc', 'Oben Mitte']])}
+          ${slider('x.ai.logo.size', 'Größe (Breite des Bildes)', 5, 40, 1, '%')}
+          ${S.x.ai.logo.url ? (() => { const L = S.x.ai.logo, w = Math.min(40, Math.max(5, +L.size || 18)), h = L.pos[1] === 'l' ? 'left:2%' : L.pos[1] === 'r' ? 'right:2%' : `left:${(100 - w) / 2}%`, v = L.pos[0] === 't' ? 'top:3%' : 'bottom:3%';
+            return `<label class="l">Vorschau</label><div style="position:relative;aspect-ratio:3/2;border-radius:10px;overflow:hidden;background:#e9e9ee url(testfoto.jpg) center/cover"><img src="${esc(L.url)}" alt="" style="position:absolute;${h};${v};width:${w}%;height:auto"></div>`; })() : ''}` : ''}` : ''}</div>
+          <div class="card">${sw('x.ai.only', 'KI nur bei bestimmten Layouts', 'Aus = AI-Fotos bei allen Foto-Layouts. Ein = Gäste wählen zuerst das Layout; nur bei den angehakten Layouts kommt danach die Stilauswahl, alle anderen bleiben normale Fotos.')}
+          ${S.x.ai.only ? aiLayoutList() : ''}</div>
+          <div class="card">${sw('x.ai.skip', 'Option zum Überspringen der AI-Fotos hinzufügen', 'Gäste können ihr Foto auch ohne KI-Stil behalten')}
+          ${sw('x.ai.consent', 'Gäste vor dem AI-Foto um Zustimmung bitten', 'Aus = keine Abfrage an der Fotobox. Das Foto wird trotzdem an den KI-Dienst (xAI, USA) übertragen – die Einwilligung regelst du dann selbst, zum Beispiel im Vertrag mit deinem Kunden oder per Aushang an der Fotobox.')}</div>
+          <div class="card"><details class="adv"><summary>Texte für die Gäste anpassen</summary><p style="color:#6b6b78;font-size:13px;margin:8px 0">Diese Texte sehen deine Gäste an der Fotobox, wenn sie ein AI-Foto erstellen. Du kannst jede Formulierung ändern, zum Beispiel in eine andere Sprache oder in euren Ton.</p><div class="grid3x">
+            ${text('x.ai.texts.choose', 'Überschrift der Stilauswahl')}${text('x.ai.texts.creating', 'Hinweis während der Erstellung')}
+            ${text('x.ai.texts.skipBtn', 'Knopf: ohne KI weiter')}${text('x.ai.texts.start', 'Überschrift der Auswahl am Start')}
+            ${text('x.ai.texts.startAi', 'Kachel: AI-Foto')}${text('x.ai.texts.startNormal', 'Kachel: normales Foto')}</div></details></div>
           <div class="card" data-ai-builder>${ai.custom ? '<p style="margin:0 0 6px"><a href="#" data-a="ai-new">← Zurück zu den Vorgaben</a></p>' : ''}<b>${editing ? 'Vorgabe bearbeiten: ' + esc(editing.name) : libEditing ? 'Meinen KI-Stil bearbeiten: ' + esc(libEditing.name) : ai.custom ? 'Benutzerdefinierter Prompt' : 'Vorgabe erstellen'}</b>
           ${editing || libEditing ? '<p class="small" style="margin:6px 0 0;color:#6b6b78">Text ändern, rechts neu generieren und speichern. Der Text bleibt danach offen – so kannst du ihn Schritt für Schritt verbessern.</p>' : ''}
           ${ai.custom ? `<label class="l">Name (sehen die Gäste)</label><input type="text" maxlength="60" data-ai-cname value="${esc(ai.cname ?? (ai.seed || editing)?.name ?? '')}" placeholder="z. B. Unser Firmenlook">
             <label class="l">Kategorie (für „Meine KI-Stile“)</label><select data-ai-ccat>${AI_CATS.map(c => `<option value="${esc(c)}" ${(ai.ccat ?? (ai.seed || editing)?.category ?? 'Sonstiges') === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
-            <label class="l">Beschreibung für die KI</label><textarea rows="5" maxlength="1200" data-ai-ctext placeholder="Motiv: was die Gäste werden · Szene: wo sie sind · Stil: wie das Bild aussieht">${esc(ai.ctext ?? ((ai.seed || editing)?.prompt || AI_KEEP))}</textarea>
+            <label class="l">Beschreibung für die KI</label><textarea rows="5" maxlength="1200" data-ai-ctext placeholder="Motiv: was die Gäste werden · Szene: wo sie sind · Stil: wie das Bild aussieht">${esc(ai.ctext ?? aiSplitNeg((ai.seed || editing)?.prompt || AI_KEEP)[0])}</textarea>
+            <label class="l">Negativer Prompt: Was soll NICHT im Bild sein? (optional)</label><textarea rows="2" maxlength="300" data-ai-cneg placeholder="z. B. Schrift, Logos, zusätzliche Personen, Brillen, verzerrte Hände">${esc(ai.cneg ?? aiSplitNeg((ai.seed || editing)?.prompt || '')[1])}</textarea>
+            <small style="display:block;margin-top:4px;color:#6b6b78">Die KI bekommt das als „Nicht im Bild“ zusammen mit der Beschreibung. Kurze Stichworte, mit Komma getrennt.</small>
+            ${(() => { // Logo direkt beim Stil (Betreiber 11.11.2026): hochladen → die KI baut es ein, der passende Satz kommt in den Text
+              const L = S.x.ai.logo, has = L.on && L.url && L.mode !== 'over', txt = ai.ctext ?? aiSplitNeg((ai.seed || editing)?.prompt || AI_KEEP)[0];
+              return `<div class="row" style="gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">${has ? `<img src="${esc(L.url)}" alt="" style="height:44px;max-width:130px;object-fit:contain;background:#f3f3f6;border-radius:8px;padding:4px">` : ''}
+                <button class="ghost" data-a="ai-logo-add">${ICON('upload', 15)} ${has ? 'Logo ändern' : 'Logo hinzufügen'}</button>${has && !AI_LOGO_HAS(txt) ? '<button class="ghost" data-a="ai-logo-text">Logo-Text einfügen</button>' : ''}</div>
+                <small style="display:block;margin-top:6px;color:#6b6b78">${has ? 'Die KI baut dein Logo passend zum Stil ins Bild ein. Wo genau, steht im Text – zum Beispiel „auf einem Banner im Hintergrund“. Das Logo gilt für alle AI-Fotos dieses Events.' : 'Dein Logo hochladen – die KI baut es passend zum Stil ins Bild ein, zum Beispiel auf ein Banner oder Schild.'}</small>`;
+            })()}
             <small style="display:block;margin-top:10px"><b>Beispiel ausprobieren</b> · jedes lädt eine andere Kombination</small>
             <div class="aichips" style="margin-top:6px">${aiExamples().map((x, n) => `<button data-a="ai-example" data-i="${n}">${esc(x.name)}</button>`).join('')}</div>`
             : `<div class="aislots">${slot('p', pp, 'Porträtstil')}${slot('a', aa, 'Kunststil')}<button class="aislot" data-a="ai-custom"><span style="font-size:22px">+</span><div><b>Benutzerdefinierter Prompt</b><small>selbst beschreiben</small></div></button></div>
             <small>Wähle einen Porträtstil, einen Kunststil oder beides zusammen. ${pp || aa ? '<a href="#" data-a="ai-custom">Text selbst anpassen</a>' : ''}</small>`}
+          ${!libEditing && !ai.custom ? `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding:10px 12px;border:1px dashed #cfcfd8;border-radius:10px">${S.x.ai.logo.on && S.x.ai.logo.url
+            ? `<img src="${esc(S.x.ai.logo.url)}" alt="Logo" style="height:36px;max-width:120px;object-fit:contain"><span style="flex:1;min-width:160px;font-size:13px">${S.x.ai.logo.mode === 'over' ? 'Dein Logo wird auf die AI-Fotos gelegt.' : 'Die KI baut dein Logo ins Bild ein – auch beim Ausprobieren hier.'} <a href="#" data-a="ai-logo-go">Einstellungen</a></span><button class="ghost" style="padding:4px 10px;font-size:12px" data-a="ai-logo-off">Entfernen</button>`
+            : `<button class="ghost" data-a="ai-logo-up">${ICON('image', 16)} Logo hinzufügen</button><span style="flex:1;min-width:160px;font-size:13px;color:#6b6b78">Die KI baut dein Logo passend zum Stil ins Bild ein, zum Beispiel auf ein Banner oder ein T-Shirt.</span>`}</div>` : ''}
           ${central && !libEditing ? '<p class="small" style="margin-top:8px;color:#6b6b78">Erst rechts „Generieren“, dann „Vorgabe speichern“: Das erzeugte Bild wird das Bild auf der Kachel. Dieses Bild sieht jeder, der die Stile sieht – nimm ein Testfoto, das gezeigt werden darf.</p>' : ''}
           ${ai.result && !ai.busy && ai.resultId && ai.resultId === curId ? '<p style="margin-top:10px;font-weight:600">' + (editing ? '✓ Bild erstellt. Mit „Änderung speichern“ wird es das Bild auf der Kachel.' : libEditing ? '✓ Bild erstellt. Mit „In Meine KI-Stile speichern“ wird es das neue Bild dieses Stils.' : '✓ Bild erstellt. Mit „Vorgabe speichern“ wird es das Bild auf der Kachel.') + '</p>' : ''}
           <div class="row" style="margin-top:12px">${libEditing ? `<button class="btn pri" style="flex:1" data-a="ai-lib-update" ${ai.busy ? 'disabled' : ''}>In „Meine KI-Stile“ speichern</button><button class="ghost" data-a="ai-new">Fertig</button>`
@@ -1783,19 +2045,6 @@
           ${grouped(S.ai.prompts, (p, i) => `<button data-a="ai-open" data-i="${i}" class="${ai.edit === i ? 'on' : ''}" title="Antippen zum Bearbeiten">${aiPic(p.id, p.thumb)}<span class="num">${i + 1}</span><span class="fav ${aiInLib(p) ? 'on' : ''}" data-a="ai-lib-add" data-i="${i}" title="In „Meine KI-Stile“ speichern">★</span><span class="del" data-a="ai-delete" data-i="${i}" title="Entfernen">🗑</span><span class="edit">✎</span><b>${esc(p.name)}</b></button>`,
             k => `<button class="ghost" style="padding:4px 10px;font-size:12px" data-a="ai-cat-del" data-cat="${esc(k)}">Thema entfernen</button>`, p => p.cat || '')}</div>
           ${libCard}
-          <div class="card"><b>An der Fotobox</b>
-          ${sw('ai.guestChoice', 'Gäste wählen ihren Stil', 'Aus = alle Fotos bekommen automatisch den Standard-Stil.')}
-          <label class="l">Standard-Stil</label><select data-s="ai.selectedId"><option value="">Erster Stil</option>${S.ai.prompts.map(p => `<option value="${esc(p.id)}" ${p.id === S.ai.selectedId ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>
-          <label class="l">Bildqualität (Grok)</label><select data-s="ai.resolution" data-rerender="1"><option value="1k" ${S.ai.resolution === '1k' ? 'selected' : ''}>1K · schneller${central ? ' · 1 Credit' : ''}</option><option value="2k" ${S.ai.resolution === '2k' ? 'selected' : ''}>2K · hohe Auflösung${central ? ' · 2 Credits' : ''}</option></select>
-          ${ctx.admin ? `<div class="card"><b>Bezahlung durch Gäste</b><p style="margin:4px 0 10px;color:#6b6b78;font-size:13px">Gäste zahlen ihr KI-Foto selbst per QR-Code am Handy (Apple Pay, Google Pay, Karte). Abgebucht wird erst, wenn das Bild fertig ist – bei Fehlern nie. Das bezahlte Bild bekommt nur der Gast, es landet nicht in der Galerie. Zurzeit nur für Fotoboxen von Photobox Memories (Geld auf unser Stripe-Konto).</p>
-          ${sw('x.ai.guestPay', 'Gäste zahlen selbst', 'Statt Credits aus dem Paket')}${slider('x.ai.guestPrice', 'Preis je Bild', 50, 500, 10, 'Cent')}</div>` : ''}
-          <div class="card">${sw('x.ai.only', 'KI nur bei bestimmten Layouts', 'Aus = KI-Fotos bei allen Foto-Layouts. Ein = Gäste wählen zuerst das Layout; nur bei den angehakten Layouts kommt danach die Stilauswahl, alle anderen bleiben normale Fotos.')}
-          ${S.x.ai.only ? aiLayoutList() : ''}</div>
-          <div class="card">${sw('x.ai.skip', 'Option zum Überspringen der KI-Fotos hinzufügen', 'Gäste können ihr Foto auch ohne KI-Stil behalten')}
-          ${sw('x.ai.consent', 'Gäste vor dem KI-Foto um Zustimmung bitten', 'Aus = keine Abfrage an der Fotobox. Das Foto wird trotzdem an den KI-Dienst (xAI, USA) übertragen – die Einwilligung regelst du dann selbst, zum Beispiel im Vertrag mit deinem Kunden oder per Aushang an der Fotobox.')}</div>
-          <div class="card"><details class="adv"><summary>Texte für die Gäste anpassen</summary><p style="color:#6b6b78;font-size:13px;margin:8px 0">Diese Texte sehen deine Gäste an der Fotobox, wenn sie ein KI-Foto erstellen. Du kannst jede Formulierung ändern, zum Beispiel in eine andere Sprache oder in euren Ton.</p><div class="grid3x">
-            ${text('x.ai.texts.choose', 'Überschrift der Stilauswahl')}${text('x.ai.texts.creating', 'Hinweis während der Erstellung')}
-            ${text('x.ai.texts.skipBtn', 'Knopf: ohne KI weiter')}</div></details></div>
           <div class="card"><details class="adv"><summary>Mehr zu den KI-Bildern</summary>
           <p>Die KI-Bilder entstehen über Photobox Memories (Grok) und nutzen das Guthaben des angemeldeten Kontos – auf der Fotobox ist kein eigener Schlüssel nötig.</p>
           <p><small>Pro Foto eine KI-Anfrage, Internet erforderlich. Schlägt die KI fehl, erhalten die Gäste einen Hinweis und ihre Originalfotos. Videos, GIFs und Boomerangs bleiben unverändert. Testfotos werden nicht gespeichert.</small></p></details></div></div><div class="right">${right}</div></div>${modal}`;
@@ -1878,7 +2127,7 @@
           <div class="card"><b>So funktioniert es</b>
             <ol style="margin:8px 0 6px;padding-left:20px;line-height:1.6"><li>Der Gast macht an der Fotobox ein Foto.</li><li>Die KI macht daraus eine Karikatur – je nach Bildqualität 1 Credit (1K) oder 2 Credits (2K) pro Foto (zentrale KI).</li>
             <li>Auf dem Bildschirm der Fotobox und auf dem zweiten Bildschirm (Fernseher/Beamer) wird sie Strich für Strich gezeichnet und eingefärbt.</li><li>Danach wie gewohnt: Drucken, QR-Code, Galerie.</li></ol>
-            <p style="margin:0;color:#6b6b78;font-size:13px">Ist die Live-Karikatur an, entfällt die Stilauswahl der KI-Fotos. Den zweiten Bildschirm öffnest du an der Fotobox unter Menü → Live-Karikatur.</p></div>
+            <p style="margin:0;color:#6b6b78;font-size:13px">Ist die Live-Karikatur an, entfällt die Stilauswahl der AI-Fotos. Den zweiten Bildschirm öffnest du an der Fotobox unter Menü → Live-Karikatur.</p></div>
           <div class="card"><b>Selfies vom Handy</b>
             <p style="margin:4px 0 10px;color:#6b6b78;font-size:13px">Auf dem Startbildschirm der Fotobox (unten rechts) und auf der Karikaturen-Wand (zweiter Bildschirm) stehen ein QR-Code und ein Code. Gäste schicken damit vom eigenen Handy ein Selfie mit Gruß und Namen – ohne App. Die Fotobox zeichnet, zeigt und druckt jede Karikatur.</p>
             ${sw('x.caricature.phone', 'Gäste schicken Selfies vom Handy', 'Aus = nur Fotos direkt an der Fotobox.')}
@@ -1895,7 +2144,7 @@
             ${text('x.caricature.title', 'Überschrift beim Zeichnen', Caricature.TITLE)}
             <label class="l">Beschreibung für die KI</label><textarea rows="6" maxlength="1200" data-s="x.caricature.prompt">${esc(Caricature.promptOf(c))}</textarea>
             <div class="between" style="margin-top:6px"><small style="color:#6b6b78">Wichtig für die Zeichnung: kräftige schwarze Linien und weißer Hintergrund.</small><a href="#" data-a="cari-reset">Standard-Text einsetzen</a></div></div>
-          <div class="card"><b>Ausprobieren</b><p style="margin:4px 0 10px;color:#6b6b78;font-size:13px">Mit dem Testfoto eine Karikatur erstellen und die Live-Zeichnung ansehen. Das Testfoto änderst du unter KI-Fotos.</p>
+          <div class="card"><b>Ausprobieren</b><p style="margin:4px 0 10px;color:#6b6b78;font-size:13px">Mit dem Testfoto eine Karikatur erstellen und die Live-Zeichnung ansehen. Das Testfoto änderst du unter AI-Fotos.</p>
             <div class="row" style="gap:10px;align-items:center">${ai.photo ? `<img src="${ai.photo}" alt="Testfoto" style="height:120px;border-radius:8px">` : ''}${cariT.result ? `<span style="font-size:22px">→</span><img src="${cariT.result}" alt="Karikatur" data-a="cari-play" title="Zeichnung ansehen" style="height:120px;border-radius:8px;cursor:pointer;box-shadow:0 0 0 1px #e5e5ec">` : ''}</div>
             <label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0;font-size:13px"><input type="checkbox" data-cari-consent ${cariT.consent ? 'checked' : ''} style="margin-top:3px"> Dieses Foto darf zum Testen an den KI-Dienst (xAI) übertragen werden.</label>
             <div class="row" style="gap:8px"><button class="btn pri" data-a="cari-test" ${cariT.busy || !c.on ? 'disabled' : ''}>${cariT.busy ? 'KI zeichnet … (10–40 Sekunden)' : `✨ Karikatur erstellen und zeichnen <small>(${k2 ? '2 Credits' : '1 Credit'})</small>`}</button>${cariT.result && !cariT.busy ? '<button class="ghost" data-a="cari-play">▶ Zeichnung nochmal ansehen</button>' : ''}</div>
@@ -2214,11 +2463,12 @@
 
     // ---------- Layouts ----------
     // Fotolayouts im Editor verwalten: Auswahl, Vorlage hinzufügen, Speichern unter, Import/Export, Testdruck, Löschen
+    let layRest = null; // weitere Formate eines Designs aus „Vorlage hinzufügen“, kommen mit add hinter das gewählte
     const layLib = {
       list: () => S.layouts.map(l => ({ id: l.id, name: l.name })),
       get: id => { const l = S.layouts.find(x => x.id === id); return l ? structuredClone(l) : null; },
-      add: async l => { S.layouts.push(l); sub.laySel = l.id; save(); },
-      pick: () => new Promise(res => pickTemplate(vals(), res)),
+      add: async l => { const more = layRest || []; layRest = null; S.layouts.push(l, ...more); if (more.length) S.guestLayouts = true; sub.laySel = l.id; save(); },
+      pick: () => { layRest = null; return new Promise(res => pickTemplate(vals(), (L, all) => { layRest = all?.length > 1 ? all.slice(1) : null; res(L); }, tplOpts())); }, // mehrere Formate: Gäste wählen
       remove: async id => {
         if (!await (G.pmConfirm || (async t => confirm(t)))('Dieses Fotolayout löschen?', 'Löschen')) return false;
         S.layouts = S.layouts.filter(l => l.id !== id); if (sub.laySel === id) sub.laySel = S.layouts[0]?.id; save(); return true;
@@ -2280,49 +2530,74 @@
     m.addEventListener('click', e => { if (e.target === m || e.target.closest('[data-x]')) m.remove(); });
     document.body.appendChild(m); return m;
   }
-  // Vorlagen-Galerie → Format wählen → onPick(neues Layout)
-  function pickTemplate(values, onPick) {
-    const tpls = [...FBR.TEMPLATES].sort((a, b) => !!b.plain - !!a.plain); // „Ohne Vorlage“ zuerst
-    const cats = ['Alle', ...new Set(tpls.map(t => t.cat))];
-    let cat = 'Alle', q = '';
-    const m = modal(`<div class="mh"><h3>Vorlage wählen</h3><input placeholder="Vorlagen suchen …" data-q><button class="x" data-x="1">${ICON('x', 20)}</button></div>
-      <div class="cats">${cats.map(c => `<button data-c="${c}" class="${c === cat ? 'on' : ''}">${c}</button>`).join('')}</div><div class="grid"></div>`);
-    const thumbs = {};
-    const grid = () => {
-      $(m, '.grid').innerHTML = tpls.filter(t => (cat === 'Alle' || t.cat === cat) && t.name.toLowerCase().includes(q)).map(t => {
-        thumbs[t.id] ||= thumbOf(FBR.createLayout('4x6p', 3, t.id), 260, values);
-        return `<div class="tp" data-t="${t.id}"><img src="${thumbs[t.id]}"><div>${esc(t.name)}</div></div>`;
-      }).join('');
-    };
-    grid();
-    m.addEventListener('click', e => {
-      const c = e.target.closest('[data-c]'); if (c) { cat = c.dataset.c; $$(m, '[data-c]').forEach(b => b.classList.toggle('on', b === c)); grid(); }
-      const t = e.target.closest('[data-t]'); if (t) pickFormat(m, t.dataset.t, values, onPick);
+  // Vorlage wählen (Betreiber 16.11.2026: „leere Designs und BoothDesigner-Designs sehen, die alten Vorlagen entfernen, die passen nicht“).
+  // Die eingebauten Vorlagen (Klassisch, Schwarz Elegant, Party Neon …) stehen hier nicht mehr. Stattdessen:
+  //  · Leer: Vorlage „Ohne Vorlage“ in den 6 Formaten von FBR.PRESETS (keine weiteren Formate, Notiz vorlagen-formate). Ein Klick legt das Layout an.
+  //  · BoothDesigner: Katalog von boothdesigner.de (DesignKatalog.list). Ein Klick öffnet das Design zum Formate wählen und Installieren (DesignKatalog.open).
+  // opts = { upload(file) → url, canUse, lockedText, cat: Start-Reiter z. B. 'Leer' }. Ohne upload oder ohne designs.js erscheinen nur die leeren Layouts.
+  // onPick(L, alle): Ein BoothDesigner-Design kann mehrere Formate liefern, dann stehen alle Layouts in „alle“ (L = alle[0]).
+  function pickTemplate(values, onPick, opts = {}) {
+    const DK = G.DesignKatalog, upload = opts.upload || (typeof G.appUpload === 'function' ? G.appUpload : null), bdOn = !!(DK?.list && DK?.open && upload);
+    const plain = FBR.TEMPLATES.find(t => t.plain) || FBR.TEMPLATES[0];
+    const blank = FBR.PRESETS.map(([f, n], i) => {
+      const L = FBR.createLayout(f, n, plain.id);
+      L.name = `Leer · ${FBR.FORMATS[f].label.replace(' Streifen', '')} · ${n} Foto${n > 1 ? 's' : ''}`;
+      return { i, L };
     });
-    $(m, '[data-q]').oninput = e => { q = e.target.value.toLowerCase(); grid(); };
-  }
-  function pickFormat(m, tplId, values, onPick) {
-    const t = FBR.templateById(tplId);
-    // Einzelbild, 3er-Collage und Fotostreifen – je Vorlage, auch „Ohne Vorlage“
-    const items = FBR.PRESETS.map(([f, n]) => ({ f, n, L: FBR.createLayout(f, n, tplId), sec: FBR.FORMATS[f].size === '2x6' ? 'Fotostreifen' : n === 1 ? 'Einzelbild' : 'Collage' }));
-    let cur = 0;
-    $(m, '.box').innerHTML = `<div class="mh"><button class="x" data-back="1">${ICON('chevronLeft', 20)}</button><h3>${esc(t.name)}</h3><button class="x" data-x="1">${ICON('x', 20)}</button></div>
-      <div class="two"><div class="fl">${items.map((it, i) => `${!i || items[i - 1].sec !== it.sec ? `<div class="sec">${it.sec}</div>` : ''}<div class="fi ${i === cur ? 'on' : ''}" data-i="${i}"><img data-th="${i}" alt=""><div>${FBR.FORMATS[it.f].label.replace(' Streifen', '')} · ${it.n} Foto${it.n > 1 ? 's' : ''}</div></div>`).join('')}</div>
-      <div class="bigpv"><img><div class="ft"><div><b class="fn"></b><br><small class="fs"></small></div><button class="btn" data-go="1">Layout auswählen</button></div></div></div>`;
-    const show = () => { const it = items[cur]; $(m, '.bigpv img').src = thumbOf(it.L, 700, values); $(m, '.fn').textContent = `${FBR.FORMATS[it.f].label} (${it.n} Foto${it.n > 1 ? 's' : ''})`; $(m, '.fs').textContent = `${it.L.w} × ${it.L.h} px`; $$(m, '.fi').forEach((e, i) => e.classList.toggle('on', i === cur)); };
-    show();
-    { const fl = $(m, '.fl'), on = $(m, '.fi.on'); if (fl && on) fl.scrollTop += on.getBoundingClientRect().top - fl.getBoundingClientRect().top - (fl.clientHeight - on.offsetHeight) / 2; } // gewähltes Format (4×6) sichtbar
-    // Vorschaubilder in kleinen Portionen zeichnen, damit das Fenster sofort aufgeht
-    let k = 0;
-    const fill = () => { if (!m.isConnected || !$(m, '[data-th]')) return; for (const end = Math.min(items.length, k + 4); k < end; k++) { const im = $(m, `[data-th="${k}"]`); if (im) im.src = thumbOf(items[k].L, 160, values); } if (k < items.length) setTimeout(fill, 0); };
-    fill();
-    m.onclick = e => {
-      if (e.target === m || e.target.closest('[data-x]')) return m.remove();
-      if (e.target.closest('[data-back]')) { m.remove(); return pickTemplate(values, onPick); }
-      const fi = e.target.closest('[data-i]'); if (fi) { cur = +fi.dataset.i; show(); }
-      if (e.target.closest('[data-go]')) { m.remove(); onPick(items[cur].L); }
+    let cat = opts.cat || 'Alle', q = '', bd = null, bdErr = '';
+    const m = modal(`<div class="mh"><h3>Vorlage wählen</h3><input placeholder="Vorlagen suchen …" data-q><button class="x" data-x="1">${ICON('x', 20)}</button></div>
+      <div class="cats"></div><div class="grid"></div>`);
+    const thumbs = {};
+    const cats = () => ['Alle', 'Leer', ...(bd ? [...new Set(bd.map(d => d.cat).filter(Boolean))] : [])];
+    const drawCats = () => { $(m, '.cats').innerHTML = cats().map(c => `<button data-c="${esc(c)}" class="${c === cat ? 'on' : ''}">${esc(c)}</button>`).join(''); };
+    const grid = () => {
+      const hit = s => s.toLowerCase().includes(q);
+      const b = cat === 'Alle' || cat === 'Leer' ? blank.filter(x => hit(x.L.name)) : [];
+      const d = !bdOn || cat === 'Leer' ? [] : (bd || []).filter(x => (cat === 'Alle' || x.cat === cat) && hit(`${x.name} ${x.occasion || ''} ${x.cat || ''}`));
+      let h = b.length ? '<div class="gh">Leer – nur die Fotofelder, alles Weitere im Editor</div>'
+        + b.map(x => { thumbs[x.i] ||= thumbOf(x.L, 260, values); return `<div class="tp" data-b="${x.i}"><img src="${thumbs[x.i]}" alt=""><div>${esc(x.L.name)}</div></div>`; }).join('') : '';
+      if (bdOn && cat !== 'Leer') {
+        h += `<div class="gh">BoothDesigner-Designs${bd ? ` (${d.length})` : ''}</div>`;
+        h += bd ? d.map(x => `<div class="tp" data-d="${esc(x.key)}"><img loading="lazy" src="${esc(DK.thumb(x))}" alt=""><div translate="no">${esc(x.name)}</div></div>`).join('') || '<p class="gm">Kein Design gefunden.</p>'
+          : `<p class="gm">${esc(bdErr || 'Designs werden geladen …')}</p>`;
+      }
+      $(m, '.grid').innerHTML = h || '<p class="gm">Nichts gefunden.</p>';
     };
+    drawCats(); grid();
+    if (bdOn) DK.list().then(l => { bd = Array.isArray(l) ? l : []; }, () => { bdErr = 'Die BoothDesigner-Designs sind gerade nicht erreichbar. Bitte die Internetverbindung prüfen – leere Layouts gehen immer.'; })
+      .then(() => { if (m.isConnected) { drawCats(); grid(); } });
+    m.addEventListener('click', e => {
+      const c = e.target.closest('[data-c]'); if (c) { cat = c.dataset.c; drawCats(); grid(); $(m, '.grid').scrollTop = 0; return; }
+      const b = e.target.closest('[data-b]');
+      if (b) { const L = structuredClone(blank[+b.dataset.b].L); L.id = FBR.uid(); m.remove(); onPick(L, [L]); return; }
+      const d = e.target.closest('[data-d]');
+      if (d) {
+        m.remove();
+        DK.open({ upload, canUse: opts.canUse === true, lockedText: opts.lockedText || 'Designs installieren gibt es ab dem Tarif Pro.', design: d.dataset.d, // canUse ohne Angabe: gesperrt
+          onBack: () => pickTemplate(values, onPick, opts), onInstall: Ls => { if (Ls?.length) onPick(Ls[0], Ls); } });
+      }
+    });
+    $(m, '[data-q]').oninput = e => { q = e.target.value.toLowerCase().trim(); grid(); };
   }
+
+  // ---------- Voreinstellungen (Betreiber 17.11.2026: „Kunden wünschen eigene Einstellungen, damit sie schnell Ereignisse erstellen
+  // können, zum Beispiel Countdown … für jede Event-Location eigene Einstellungen und die immer wieder mit einem Klick übernehmen“).
+  // Tabelle event_presets (SQL 202611170003): Name + alle Einstellungen + Logo, eine davon kann „Standard“ für neue Ereignisse sein.
+  // Nicht dazu gehören, was nur zu einem Ereignis passt: Titel, Untertitel, Ereignisbild, Galerie-Passwort, Karikatur-Code.
+  const PRESET_SKIP = ['title', 'subtitle', 'cover'];
+  const Presets = {
+    clean(st) { const s = structuredClone(st || {}); for (const k of PRESET_SKIP) delete s[k];
+      if (s.x?.caricature) delete s.x.caricature.secret; if (s.x?.gallery) delete s.x.gallery.password; return s; },
+    missing: e => /event_presets|relation|does not exist|schema cache|PGRST205/i.test((e?.message || '') + (e?.code || '')),
+    async list(sb) { const { data, error } = await sb.from('event_presets').select('id,name,settings,logo_url,is_default,updated_at').order('name'); if (error) throw error; return data || []; },
+    async setDefault(sb, id, on) {
+      const r1 = await sb.from('event_presets').update({ is_default: false }).eq('is_default', true); if (r1.error) throw r1.error;
+      if (on) { const r2 = await sb.from('event_presets').update({ is_default: true }).eq('id', id); if (r2.error) throw r2.error; }
+    }
+  };
+  // Karikatur eingeschaltet, aber ohne gültigen Code (Voreinstellungen speichern ihn nie): neuen Code setzen, sonst prüft der Server keinen
+  const withSecret = st => { const c = st?.x?.caricature; if (c && !/^[0-9a-f]{16,64}$/.test(c.secret || '')) c.secret = Caricature.newSecret(); return st; };
+  const fmtDay = d => { try { return new Date(d).toLocaleDateString('de-DE'); } catch { return ''; } };
 
   // „Erstellen Sie ein neues Ereignis“ – Ereignisart wählen
   // Live-Karikatur steht als eigene App ganz oben: nur Einzelfotos (jedes wird eine Karikatur, 1 Credit), Handy-Selfies an
@@ -2336,7 +2611,7 @@
     ['VIDEO', 'slowmo', 'film', '360 / SLOW-MO', 'Zeitlupen-Videos mit Tempo-Rampen', { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: false }, x: { slowmo: { enabled: true } } }],
     ['VIDEO', 'video', 'video', 'VIDEO BOOTH', 'Videos mit Ton aufnehmen – für ein Video-Gästebuch', { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: true }, videoSecs: 15, videoAudio: true }],
     ['ZEICHNEN', 'robot', 'pen', 'ZEICHENROBOTER', 'Ein Roboterarm zeichnet die Gäste live als Strichzeichnung auf Papier – kein Druck, kein Teilen',
-      { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: false }, x: { robot: { enabled: true } } }]
+      { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: false }, x: { robot: { enabled: true, cut: 'scene', guestPick: true } } }]
   ];
   function newEventDialog(events, onPick, opts = {}) {
     const cariOk = !opts.extra || opts.extra('caricature');
@@ -2346,29 +2621,51 @@
     const rows = TYPES.map(([g, id, ic, t, d, preset]) => (g !== sec ? `<div class="sec">${sec = g}</div>` : '') +
       `<button class="et${id === 'cari' ? ' hl' : ''}" data-type="${id}" ${preset ? '' : 'disabled'}><span class="ei">${ICON(ic, 24)}</span><span><b>${t}${preset ? '' : ' <span class="soon">bald</span>'}${id === 'cari' ? (cariOk ? ' <span class="soon new">NEU</span>' : ' 🔒') : ''}</b><small>${d}</small></span></button>`).join('');
     m.innerHTML = `<div class="box" style="width:min(460px,94vw);height:auto;max-height:92vh"><div class="mh"><div style="flex:1"><h3>Erstellen Sie ein neues Ereignis</h3><small>Wählen Sie die Ereignisart für Ihre Fotobox</small></div><button class="x" data-x="1">${ICON('x', 20)}</button></div>
-      <div style="overflow:auto;padding-bottom:16px">${rows}<div class="sec">KOPIEREN</div>
+      <div style="overflow:auto;padding-bottom:16px"><div class="presetBox"></div>${rows}<div class="sec">KOPIEREN</div>
       <button class="et" data-type="dup" ${events.length ? '' : 'disabled'}><span class="ei">${ICON('copy', 24)}</span><span><b>VORHERIGES EREIGNIS DUPLIZIEREN</b><small>Einstellungen eines früheren Ereignisses übernehmen</small></span></button>
       <div class="dupList" style="display:none;margin:0 20px">${events.map(e => `<button class="et" data-dup="${e.id}" style="width:100%;margin:0 0 6px"><span class="ei">${ICON('calendar', 20)}</span><span><b style="font-family:inherit">${esc(e.name)}</b><small>${e.event_date ? new Date(e.event_date).toLocaleDateString('de-DE') : ''}</small></span></button>`).join('')}</div></div></div>`;
-    m.addEventListener('click', e => {
+    // eigene Voreinstellungen (fehlt die Tabelle noch oder ist kein Konto da: keine)
+    let presets = [];
+    const loadP = opts.sb ? Presets.list(opts.sb).then(L => { presets = L; }).catch(() => {}) : Promise.resolve();
+    m.addEventListener('click', async e => {
       if (e.target === m || e.target.closest('[data-x]')) return m.remove();
-      const b = e.target.closest('[data-type],[data-dup]'); if (!b || b.disabled) return;
+      const b = e.target.closest('[data-type],[data-dup],[data-preset]'); if (!b || b.disabled) return;
+      if (b.dataset.type && b.dataset.type !== 'dup') await loadP; // Standard-Voreinstellung erst kennen
       if (b.dataset.type === 'dup') { const l = $(m, '.dupList'); l.style.display = l.style.display === 'none' ? 'block' : 'none'; return; }
       if (b.dataset.dup) { const src = events.find(x => x.id === b.dataset.dup); m.remove(); return onPick(structuredClone(src.settings || {}), src.logo_url, src.name + ' (Kopie)'); }
+      if (b.dataset.preset) { const p = presets.find(x => x.id === b.dataset.preset); if (!p) return; m.remove();
+        return onPick(withSecret(Presets.clean(p.settings)), p.logo_url || null, new Date().toLocaleDateString('de-DE') + ' · ' + p.name); }
       const t = TYPES.find(x => x[1] === b.dataset.type);
       if (t[1] === 'cari' && !cariOk) return (opts.toast || alert)('Live-Karikatur ist für Ihr Konto noch nicht freigeschaltet – bitte bei Photobox Memories melden.', 6000);
-      const set = structuredClone(t[5]); m.remove();
+      // Standard-Voreinstellung: gilt für jedes neue Ereignis, die Ereignisart setzt ihre eigenen Werte darüber
+      const def = presets.find(x => x.is_default), set = def ? withSecret(deepMerge(Presets.clean(def.settings), structuredClone(t[5]))) : structuredClone(t[5]); m.remove();
       if (!set.modes) set.modes = { single: true, strip: false, grid: false, gif: false, boomerang: false, video: false }; // neues Ereignis: nur „Foto“ an, alles andere schaltet der Betreiber selbst ein
+      if (def?.logo_url) { if (t[1] === 'cari') { set.x.caricature.secret = Caricature.newSecret(); return onPick(set, def.logo_url, null, 'Live-Karikatur', 'cari'); }
+        return onPick(set, def.logo_url, null, t[3], t[1] === 'robot' ? 'robot' : undefined); }
       if (t[1] === 'cari') { set.x.caricature.secret = Caricature.newSecret(); return onPick(set, null, null, 'Live-Karikatur', 'cari'); } // gleich auf der Karikatur-Seite öffnen
+      if (t[1] === 'robot') return onPick(set, null, null, t[3], 'robot'); // gleich auf der Seite „Zeichenroboter“ öffnen: Themen, Köpfe, eigene Themen (Betreiber 14.11.2026)
       onPick(set, null, null, t[3]);
     });
     document.body.appendChild(m);
+    // eigene Voreinstellungen oben anzeigen
+    loadP.then(() => { const L = presets; if (!L.length || !document.body.contains(m)) return;
+      const def = L.find(x => x.is_default);
+      $(m, '.presetBox').innerHTML = `<div class="sec">MEINE VOREINSTELLUNGEN</div>${L.map(p => `<button class="et" data-preset="${esc(p.id)}"><span class="ei">${ICON(p.is_default ? 'star' : 'layers', 22)}</span><span><b style="font-family:inherit">${esc(p.name)}${p.is_default ? '<span class="stdtag">Standard</span>' : ''}</b><small>Alle Einstellungen übernehmen</small></span></button>`).join('')}
+        ${def ? `<p style="margin:0 20px 6px;color:#777;font-size:12.5px"><span>Bei jeder anderen Ereignisart werden die Einstellungen der Standard-Voreinstellung übernommen:</span> <b translate="no">${esc(def.name)}</b></p>` : ''}`;
+    });
   }
   // Themen für den Zeichenroboter (Aufnahme-Art „Zeichnung“): Gäste wählen vor dem Foto, die KI zeichnet sie passend als Strichzeichnung.
   // prompt = Zusatz zum Grund-Prompt der Strichzeichnung; icon/bg wie bei den KI-Stilen (Kachel ohne Beispielbild)
+  // Grund-Prompt der Strichzeichnung – gleicher Text wie RB_PROMPT in der Fotobox (app/index.html), für die Vorschau eigener Themen
+  const RB_PROMPT = 'Wandle das Foto in eine saubere schwarze Strichzeichnung um: reinweißer Hintergrund, nur die Konturen der Personen (Gesichter, Haare, Kleidung) mit gleichmäßig dünnen schwarzen Linien, keine Flächen, keine Schraffur, keine Grautöne, keine Farben, kein Hintergrund, kein Text. Die Gesichter müssen klar erkennbar bleiben; nichts von den Personen weglassen (Frisur, Brille, Bart, Schmuck, Kopfbedeckung, Dinge in der Hand).';
+  const RB_SCENE = 'Wandle das Foto in eine saubere schwarze Strichzeichnung um. Zeichne die Personen aus dem Foto als liebevolle Karikatur im Stil eines Ausmalbilds für Kinder: großer Kopf (etwa so groß wie der restliche Körper) auf einem kleinen Körper, ganze Figur von Kopf bis Fuß in einer fröhlichen Pose, die Gesichter sofort erkennbar; nichts von den Personen weglassen (Frisur, Brille, Bart, Schmuck, Kopfbedeckung, Kleidung, Dinge in der Hand). Dazu eine einfache Szene mit wenigen großen Gegenständen oder Tieren passend zum Thema (ohne Thema: eine kleine fröhliche Szene). Nur klare, gleichmäßige schwarze Konturlinien auf reinweißem Hintergrund, große geschlossene Formen, keine Flächen, keine Schraffur, keine Grautöne, keine Farben, kein Text, nichts angeschnitten.'; // gleich wie in der Fotobox (index.html)
+  const RB_BIGHEADS = 'Zeige die Personen in ganzer Figur von Kopf bis Fuß, aber mit stark vergrößerten Köpfen auf einem kleinen Körper (der Kopf etwa so groß wie der restliche Körper), wie eine freundliche Karikatur; die Gesichter bleiben sofort erkennbar.'; // gleich wie in der Fotobox (index.html)
+  // Stichworte für die Suche im Dashboard (Zeichenroboter → Themen)
+  const DRAW_KW = {"classic": "einfach normal kontur", "caricature": "lustig witzig übertrieben großer kopf", "superhero": "held umhang comic stark", "football": "sport fußball trikot tor ball", "astronaut": "weltall raumfahrt sterne planet", "pirate": "schiff meer säbel", "chef": "küche kochen essen", "doctor": "arzt ärztin medizin krankenhaus", "firefighter": "feuer helm einsatz", "police": "polizei uniform", "soldier": "militär armee uniform", "rockstar": "musik gitarre bühne band", "dj": "musik party club mischpult", "wedding": "hochzeit braut bräutigam heirat", "christmas": "weihnachten winter geschenk advent", "halloween": "grusel kostüm vampir hexe kürbis", "cowboy": "western wilder westen pferd", "knight": "mittelalter burg rüstung", "royal": "könig königin krone prinzessin", "robot": "technik zukunft maschine", "manga": "anime japan", "comic": "comic sprechblase", "surfer": "strand meer sommer welle urlaub", "skier": "ski winter schnee berge urlaub", "pilot": "flugzeug fliegen reise", "racer": "auto rennen formel motorsport", "boxer": "sport kampf boxen", "dancer": "tanz ballett party", "gardener": "garten blumen natur", "craftsman": "handwerk bau werkzeug", "scientist": "labor forschung schule", "teacher": "schule lehrer lehrerin abschluss", "farmer": "bauernhof landwirtschaft traktor", "captain": "schiff kapitän meer segeln", "detective": "krimi lupe ermittler", "angel": "engel himmel flügel"};
   const DRAW_THEMES = [
     ['classic', 'Klassisch', '✏️', '#3a3a3a,#777', ''],
-    ['caricature', 'Karikatur', '😄', '#f7c838,#ff9f43', 'Zeichne die Personen als freundliche Karikatur: Kopf deutlich größer als der Körper, markante Gesichtszüge liebevoll übertrieben, Körper klein und verspielt.'],
-    ['superhero', 'Superheld', '🦸', '#1e3c72,#e52d27', 'Zeige die Personen als Superhelden in engem Anzug mit Umhang und Emblem auf der Brust, heroische Pose, Fäuste in die Hüften gestemmt.'],
+    ['caricature', 'Karikatur', '😄', '#f7c838,#ff9f43', 'Zeichne die Personen als witzige Karikatur wie ein Schnellzeichner auf dem Jahrmarkt: riesiger Kopf auf einem winzigen Körper, Lächeln, Augen, Nase und Frisur stark und liebevoll übertrieben – die Personen bleiben trotzdem sofort erkennbar.'],
+    ['superhero', 'Superheld', '🦸', '#1e3c72,#e52d27', 'Zeige die Personen als Superhelden in engem Anzug mit Umhang und einem einfachen Stern als Emblem auf der Brust (kein bekanntes Logo, keine bekannte Figur), heroische Pose.'],
     ['football', 'Fußball', '⚽', '#0b6623,#2ecc71', 'Zeige die Personen als Fußballspieler im Trikot mit Ball am Fuß, im Hintergrund angedeutet ein Tor.'],
     ['astronaut', 'Astronaut', '🚀', '#0f0c29,#302b63', 'Zeige die Personen als Astronauten im Raumanzug mit offenem Helm, angedeutete Sterne und ein Planet im Hintergrund.'],
     ['pirate', 'Pirat', '🏴‍☠️', '#2c3e50,#7f8c8d', 'Zeige die Personen als Piraten mit Dreispitz, Augenklappe oder Säbel, angedeutetes Schiffsdeck.'],
@@ -2402,6 +2699,17 @@
     ['captain', 'Kapitän', '⚓', '#0b2545,#13315c', 'Zeige die Personen als Kapitäne mit Mütze und Steuerrad, Wellen angedeutet.'],
     ['detective', 'Detektiv', '🕵️', '#2b1055,#7597de', 'Zeige die Personen als Detektive mit Hut, Mantel und Lupe.'],
     ['angel', 'Engel', '😇', '#fdfbfb,#ebedee', 'Zeige die Personen als Engel mit Flügeln und Heiligenschein, kleine Wolken.'],
-  ].map(([id, name, icon, bg, prompt]) => ({ id, name, icon, bg, prompt }));
-  G.EventWS = { open, newEventDialog, pickTemplate, thumbOf, modal, DRAW_THEMES };
+  ].map(([id, name, icon, bg, prompt]) => ({ id, name, icon, bg, prompt, thumb: 'draw-themes/' + id + '.jpg', kw: DRAW_KW[id] || '' })); // Vorschaubild: einmal mit dem Testpaar erzeugt (14.11.2026)
+  // Eigene Themen: Hilfsfelder „ganzer Körper / Porträt“ und „Hintergrund“ werden an die Beschreibung gehängt (Fotobox, iPad und Vorschau im Dashboard gleich)
+  // Eigenes Thema wie im Sketchbot-Vorbild (Betreiber 14.11.2026): Zeichenstil, Ausschnitt, Kleidung übernehmen, Figur, Handlung, Szene, Hintergrund.
+  // Alles wird zu Sätzen an die Beschreibung gehängt (Fotobox, iPad und Vorschau im Dashboard gleich). Leere Felder fallen weg.
+  const DRAW_STYLE = { cari: 'Zeichne die Personen als witzige Karikatur mit liebevoll übertriebenen Gesichtszügen.', comic: 'Zeichne die Personen im Comic-Stil mit kräftigen Konturen.', manga: 'Zeichne die Personen im Manga-Stil mit großen Augen.' };
+  const DRAW_BODY = { heads: 'Zeige nur die Köpfe mit Haaren und Hals.', bust: 'Zeige die Personen als Brustbild.', portrait: 'Zeige die Personen als Porträt bis zur Brust.',
+    bigheads: 'Zeige die Personen in ganzer Figur, aber mit stark vergrößerten Köpfen auf einem kleinen Körper.', full: 'Zeige die Personen in ganzer Figur von Kopf bis Fuß.' };
+  const DRAW_BG = { rich: 'Zeichne einen ausführlichen Hintergrund passend zum Thema.', plain: 'Nur ein schlichter, angedeuteter Hintergrund mit wenigen Linien.', none: 'Kein Hintergrund, nur die Personen.' };
+  const dtx = (v, n = 160) => String(v || '').trim().replace(/[.!?]*$/, '').slice(0, n);
+  const drawPrompt = c => [DRAW_STYLE[c?.style] || '', DRAW_BODY[c?.body] || '', dtx(c?.figure) ? `Die Personen sind ${dtx(c.figure)}.` : '', dtx(c?.action) ? `Sie ${dtx(c.action)}.` : '',
+    dtx(c?.scene) ? `Szene: ${dtx(c.scene)}.` : '', c?.clothes === 'keep' ? 'Übernimm die Kleidung der Personen aus dem Foto.' : c?.clothes === 'theme' ? 'Die Kleidung passt zur Figur.' : '',
+    String(c?.prompt || '').trim(), DRAW_BG[c?.bgMode] || ''].filter(Boolean).join(' ');
+  G.EventWS = { open, newEventDialog, pickTemplate, thumbOf, modal, DRAW_THEMES, drawPrompt };
 })(window);
