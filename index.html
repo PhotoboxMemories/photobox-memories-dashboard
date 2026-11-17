@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Photobox Memories – Dashboard</title>
 <link rel="stylesheet" href="fonts-fredoka/fredoka.css">
-<script>window.I18N_V = '20261103-4';</script>
+<script>window.I18N_V = '20261117-4';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -14,21 +14,23 @@
 <script src="icons.js?v=20261021-5"></script>
 <script src="ad.js?v=20261022-1"></script>
 <script src="shop.js?v=20261023-2"></script>
-<script src="render.js?v=20261103-1"></script>
-<script src="advisor-anim.js?v=20261021-6"></script>
+<script src="render.js?v=20261111-1"></script>
+<script src="advisor-anim.js?v=20261117-4"></script>
 <script src="mosaic.js?v=20261017-2"></script>
-<script src="editor.js?v=20261021-4"></script>
-<script src="ai-event.js?v=20261019-3"></script>
+<script src="editor.js?v=20261116-1"></script>
+<script src="ai-event.js?v=20261117-4"></script>
 <script src="sketch-draw.js?v=20261018-8"></script>
 <script src="caricature.js?v=20261024-1"></script>
 <script src="start-anim.js?v=20261020-1"></script>
-<script src="admin-schutz.js?v=20261025-3"></script>
+<script src="admin-schutz.js?v=20261108-1"></script>
 <script src="admin-kunde.js?v=20261028-2"></script>
 <script src="admin-besucher.js?v=20261101-1"></script>
 <script src="admin-boothdesigner.js?v=20261101-1"></script>
-<script src="designs.js?v=20261104-1"></script>
-<script src="event.js?v=20261103-4"></script>
-<script src="studio.js?v=20261103-1"></script>
+<script src="designs.js?v=20261116-2"></script>
+<script src="foto-aufgaben.js?v=20261108-1"></script>
+<script src="fernwartung.js?v=20261113-2"></script>
+<script src="event.js?v=20261117-4"></script>
+<script src="studio.js?v=20261114-1"></script>
 <script src="vendor/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--fg:#17171c;--muted:#6b6b78;--line:#e7e7ee;--shadow:0 1px 2px rgba(16,16,24,.04);--accent:#F7C838;--accent-fg:#1D1D1B;--brand-dark:#1D1D1B;--ok:#1a9d5c;--warn:#c98a00;--bad:#d23b3b;--soft:#fbfbfc}
@@ -207,6 +209,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
     <div class="muted small" id="authHint">Melde dich an, um deine Events und Fotoboxen zu verwalten.</div>
     <div><label>E-Mail</label><input type="email" id="aEmail" autocomplete="email"></div>
     <div id="aPwWrap"><label>Passwort</label><input type="password" id="aPw" autocomplete="current-password"></div>
+    <div id="aCaptcha"></div>
     <button class="btn primary" id="aGo">Anmelden</button>
     <div class="row small" style="justify-content:space-between">
       <a href="#" id="aSwitch">Neues Konto erstellen</a>
@@ -280,6 +283,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <div style="flex:1;min-width:220px"><b>Fotobox-Software für Windows</b><div class="small muted" id="swInfo">Lädt …</div></div>
         <button class="btn" id="swDl" disabled>⬇ Neueste Version herunterladen</button>
       </div>
+      <div id="fwCard"></div>
       <div class="tablewrap"><table>
         <thead><tr><th>Gerät</th><th>Status</th><th>Event</th><th>Ausdrucke</th><th>Fotos</th><th>Version</th><th class="adminCol hidden">Kunde</th><th></th></tr></thead>
         <tbody id="deviceList"></tbody>
@@ -319,7 +323,8 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <p id="shopTier" style="margin:0 0 6px"></p>
         <p class="small muted" id="shopHint" style="margin-bottom:14px" data-paid></p>
         <div class="plans" id="shopPlans" data-paid></div>
-        <div class="row hidden" id="trialRow" style="margin-top:16px"><button class="btn primary" id="trialGo"><span data-freemode class="hidden">1 Monat Zusatzfunktionen kostenlos testen</span><span data-paid>30 Tage alles kostenlos testen</span></button><span class="small muted hidden" data-freemode>Ohne Zahlungsdaten · Fotomosaik, Live-Karikatur, Videonachricht und 10 KI-Credits · endet von selbst, danach geht es kostenlos weiter</span><span class="small muted" data-paid>Fotobox-Abo und alle Zusatzfunktionen · ohne Zahlungsdaten · endet nach 30 Tagen von selbst, danach geht es kostenlos weiter</span></div>
+        <div class="row hidden" id="trialRow" style="margin-top:16px"><button class="btn primary" id="trialGo"><span data-freemode class="hidden">1 Monat Zusatzfunktionen kostenlos testen</span><span data-paid>1 Jahr alles kostenlos testen</span></button><span class="small muted hidden" data-freemode>Ohne Zahlungsdaten · Fotomosaik, Live-Karikatur, Videonachricht und 10 KI-Credits · endet von selbst, danach geht es kostenlos weiter</span><span class="small muted" data-paid>Fotobox-Abo und alle Zusatzfunktionen · ohne Zahlungsdaten · endet nach 1 Jahr von selbst</span></div>
+        <div class="row" id="promoRow" style="margin-top:12px;gap:8px;flex-wrap:wrap"><input id="promoCode" maxlength="40" placeholder="Gutscheincode" autocomplete="off" spellcheck="false" style="max-width:200px;text-transform:uppercase"><button class="btn" id="promoGo" type="button">Einlösen</button><span class="small muted" id="promoMsg"></span></div>
         <h3 style="margin:22px 0 6px">Zusatzfunktionen</h3>
         <p class="small muted" style="margin:0 0 10px" data-paid>Einzeln dazubuchbar – monatlich oder jährlich.</p>
         <p class="small muted hidden" style="margin:0 0 10px" data-freemode>Fotomosaik, Live-Karikatur und Videonachricht schaltet Photobox Memories auf Anfrage frei – oder du testest sie 1 Monat kostenlos.</p>
@@ -369,7 +374,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
       </div>
       <div class="card" id="storeCard" style="margin-top:20px">
         <h2>Speicher für deine Online-Galerien</h2>
-        <p class="small muted" style="margin:4px 0 12px">Zählt alle Fotos, Videos und Videonachrichten deiner Online-Galerien. Fotos werden nach 1 Jahr automatisch gelöscht.</p>
+        <p class="small muted" style="margin:4px 0 12px"><span>Zählt alle Fotos, Videos und Videonachrichten deiner Online-Galerien.</span> <span id="storeKeep">Sie werden nach 1 Monat automatisch gelöscht.</span><span id="storeKeepPm" class="hidden">Sie werden nach 6 Monaten automatisch gelöscht.</span></p>
         <div id="storeBar" class="small muted">Wird berechnet …</div>
       </div>
     </div>
@@ -410,8 +415,8 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
             <div id="lUpdWrap" class="hidden"><label>Updates inklusive bis (leer = immer)</label><input id="lUpd" type="date"></div>
             <div id="lMaxWrap"><label>Anzahl Geräte</label><input id="lMax" type="number" min="1" value="1"></div>
             <div id="lTierWrap"><label>Tarif</label><select id="lTier"><option value="pro">Fotobox-Abo (alle Funktionen, eigenes Logo)</option><option value="basis">Basis (alter Tarif)</option><option value="free">Kostenlos (1 Layout, Logo von Photobox Memories)</option></select></div>
-            <div id="lCreditsWrap" class="hidden"><label>KI-Credits dazu (für KI-Fotos)</label><input id="lCredits" type="number" min="0" max="1000" value="20"></div>
-            <div><label>Freigaben</label><div class="row" style="margin-top:10px;gap:16px"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMosaic" style="width:auto"> Fotomosaik</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lCari" style="width:auto"> Live-Karikatur</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lVideo" style="width:auto"> Videonachricht</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lStudio" style="width:auto"> BoothDesigner</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lOffline" style="width:auto"> Offline-Warteschlange</label></div></div>
+            <div id="lCreditsWrap" class="hidden"><label>KI-Credits dazu (für AI-Fotos)</label><input id="lCredits" type="number" min="0" max="1000" value="20"></div>
+            <div><label>Freigaben</label><div class="row" style="margin-top:10px;gap:16px"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMosaic" style="width:auto"> Fotomosaik</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lCari" style="width:auto"> Live-Karikatur</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lVideo" style="width:auto"> Videonachricht</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lStudio" style="width:auto"> BoothDesigner</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lOffline" style="width:auto"> Offline-Warteschlange</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lExport" style="width:auto"> Echtzeit-Export</label></div></div>
             <div style="grid-column:1/-1"><label>Notiz (z.B. Rechnungsnummer)</label><input id="lNotes"></div>
             <div style="grid-column:1/-1"><label style="display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer"><input type="checkbox" id="lMail" checked style="width:auto"> Willkommens-Mail an den Kunden senden (Lizenzschlüssel, Dashboard-Link und Anleitung)</label></div>
           </div>
@@ -452,23 +457,53 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
           <p class="small hidden" id="planFreeNote" style="background:#FFFAEA;border-radius:10px;padding:8px 12px;margin:0 0 12px">Kostenlos-Modus aktiv – Kunden sehen die Tarife erst nach dem Umschalten (SQL 202610250005). Hier kannst du sie schon vorbereiten.</p>
           <div id="planList"><p class="small muted">Lädt …</p></div>
         </div>
+        <div class="card" style="margin-bottom:20px" id="promoCard">
+          <h2 style="margin:0 0 6px">Gutscheincodes</h2>
+          <p class="small muted" style="margin:0 0 12px">Ein Code verlängert den Test eines Kunden um die angegebenen Tage, einmal je Konto. Kunden geben ihn unter „Meine Lizenzen“ ein oder öffnen den Link <b translate="no">dashboard.photobox-memories.de/?code=CODE</b>. Ist der Test noch nicht gestartet, werden die Tage gemerkt und beim Start dazugerechnet.</p>
+          <div id="promoList"></div>
+          <div class="grid3" style="margin-top:12px">
+            <div><label>Code</label><input id="pcCode" maxlength="40" placeholder="z. B. MIRKO" style="text-transform:uppercase"></div>
+            <div><label>Tage zusätzlich</label><input id="pcDays" type="number" min="1" max="1830" value="365"></div>
+            <div><label>Höchstens so oft (leer = ohne Grenze)</label><input id="pcMax" type="number" min="1"></div>
+            <div style="grid-column:1/-1"><label>Notiz</label><input id="pcNote" maxlength="120" placeholder="z. B. Facebook-Gruppe"></div>
+          </div>
+          <div class="row" style="margin-top:10px"><button class="btn primary" id="pcSave" type="button">Code speichern</button></div>
+        </div>
         <div class="card" style="margin-bottom:20px" id="photoShopCard">
           <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Foto-Shop für Gäste</h2><span class="badge" id="shState"></span></div>
-          <p class="small muted" style="margin:0 0 12px">Gäste bestellen auf ihrer Fotoseite (QR-Code an der Fotobox) ihr Foto als Tasse, Mauspad, Magnet und mehr. Bezahlt wird über Stripe, gedruckt und verschickt wird von Gelato oder Printful. Gilt für die Fotos aller Fotoboxen – auch die deiner Software-Kunden; Verkäufer bist immer du. Bei Printful-Produkten schiebt der Gast sein Foto selbst zurecht.</p>
+          <div style="background:#FFFAEA;border-radius:12px;padding:12px 14px;margin:0 0 14px;font-size:14px;line-height:1.55">
+            <b>So funktioniert der Foto-Shop</b>
+            <ol style="margin:6px 0 8px 20px;padding:0">
+              <li>Der Gast scannt an der Fotobox den QR-Code und sieht sein Foto auf dem Handy.</li>
+              <li>Darunter bestellt er das Foto zum Beispiel als Tasse oder Mauspad und bezahlt über Stripe den <b>Preis, den du unten einträgst</b>, plus Versand.</li>
+              <li>Gelato oder Printful drucken das Produkt und schicken es direkt zum Gast. Den Einkaufspreis rechnen sie mit dir ab.</li>
+              <li>Der Rest gehört dir, abzüglich der Gebühr von Stripe.</li>
+            </ol>
+            <b>Wenn du hier etwas änderst:</b> Nach „Speichern“ gilt es sofort auf allen Fotoseiten, auch für die Fotos deiner Software-Kunden. Verkäufer bist immer du. Schon bezahlte Bestellungen ändern sich nicht.
+          </div>
           <div class="small" id="shServer" style="margin-bottom:12px"></div>
+          <h3 style="margin:18px 0 8px">1. Shop ein- oder ausschalten</h3>
           <div class="grid3">
-            <div><label>Shop</label><select id="sh_mode"></select></div>
-            <div><label>Verkäufer (Name oder Firma)</label><input id="sh_seller" maxlength="80" placeholder="z. B. Photobox Memories"></div>
-            <div><label>Versand pro Bestellung (€, brutto)</label><input id="sh_ship" type="number" min="0" step="0.01"></div>
+            <div><label>Shop</label><select id="sh_mode"></select><small class="muted">Aus: niemand sieht den Shop. Test: nur du über „Fotoseite ansehen“. Live: alle Gäste.</small></div>
+            <div><label>Verkäufer (Name oder Firma)</label><input id="sh_seller" maxlength="80" placeholder="z. B. Photobox Memories"><small class="muted">Steht beim Bestellen als Verkäufer.</small></div>
+          </div>
+          <h3 style="margin:18px 0 8px">2. Versand und Steuer</h3>
+          <div class="grid3">
+            <div><label>Versand pro Bestellung (€, brutto)</label><input id="sh_ship" type="number" min="0" step="0.01"><small class="muted">Kommt einmal zu jeder Bestellung dazu.</small></div>
             <div><label>Umsatzsteuer</label><select id="sh_vat"></select></div>
-            <div><label>Lieferländer (Ländercodes)</label><input id="sh_countries" placeholder="DE, AT"></div>
+            <div><label>Lieferländer (Ländercodes)</label><input id="sh_countries" placeholder="DE, AT"><small class="muted">Nur in diese Länder wird geliefert.</small></div>
+          </div>
+          <h3 style="margin:18px 0 8px">3. Rechtstexte</h3>
+          <p class="small muted" style="margin:0 0 8px">AGB, Datenschutz und Impressum sind Pflicht, sonst bleibt der Shop aus.</p>
+          <div class="grid3">
             <div><label>AGB (Link)</label><input id="sh_agb" placeholder="https://…"></div>
             <div><label>Datenschutz (Link)</label><input id="sh_privacy" placeholder="https://…"></div>
             <div><label>Impressum (Link)</label><input id="sh_imprint" placeholder="https://…"></div>
             <div><label>Widerrufsbelehrung (Link, freiwillig)</label><input id="sh_withdrawal" placeholder="https://…"></div>
           </div>
-          <label style="margin-top:16px">Produkte</label>
-          <p class="small muted" style="margin:0 0 8px"><span>Gelato-Produktnummer: in Gelato unter „Produktkatalog“ Produkt und Größe wählen, dann unter der Beschreibung die „Product UID“ kopieren. Hoch- oder Querformat wählt der Shop selbst passend zum Foto.</span> <span>Printful: die Varianten-ID (eine Zahl) aus dem Printful-Katalog.</span> <span>Produkte ohne Nummer erscheinen nicht.</span></p>
+          <h3 style="margin:18px 0 8px">4. Produkte und Preise</h3>
+          <p class="small muted" style="margin:0 0 8px">Der Preis ist das, was der Gast bezahlt, inklusive Umsatzsteuer und ohne Versand. Ein Produkt erscheint erst, wenn Preis und Produktnummer eingetragen sind und „Im Shop zeigen“ angehakt ist.</p>
+          <details class="small muted" style="margin:0 0 10px"><summary style="cursor:pointer">Wo finde ich die Produktnummer?</summary><p style="margin:6px 0 0"><span>Gelato-Produktnummer: in Gelato unter „Produktkatalog“ Produkt und Größe wählen, dann unter der Beschreibung die „Product UID“ kopieren. Hoch- oder Querformat wählt der Shop selbst passend zum Foto.</span> <span>Printful: die Varianten-ID (eine Zahl) aus dem Printful-Katalog.</span> <span>Produkte ohne Nummer erscheinen nicht.</span></p></details>
           <div id="shProducts"></div>
           <div class="row" style="margin-top:12px"><button class="btn" id="shAdd" type="button">+ Produkt</button><span style="flex:1"></span><a class="btn hidden" id="shTest" target="_blank" rel="noopener">Fotoseite ansehen</a><button class="btn primary" id="shSave" type="button">Speichern</button></div>
           <h3 style="margin:22px 0 8px">Bestellungen</h3>
@@ -596,7 +631,7 @@ function demoClient() {
       { id: 's2', owner: 'demo', name: 'Anime-Held', shared: false, thumb: null, prompt: 'Bearbeite das Gästefoto. Behalte die Anzahl der Personen und ihre Gesichter. Motiv: Helden in einem japanischen Anime, dynamische Pose, Stadt bei Sonnenuntergang. Stil: klare Linien, leuchtende Farben, Anime-Film.' }
     ],
     plans: [
-      { id: 'monat', name: 'Monatlich', billing: 'month', cents: 3900, features: 'Alle Funktionen inklusive\nDashboard, Online-Galerie, Fotomosaik, KI-Fotos\nMonatlich kündbar', sort: 1, active: true },
+      { id: 'monat', name: 'Monatlich', billing: 'month', cents: 3900, features: 'Alle Funktionen inklusive\nDashboard, Online-Galerie, Fotomosaik, AI-Fotos\nMonatlich kündbar', sort: 1, active: true },
       { id: 'jahr', name: 'Jährlich', billing: 'year', cents: 39000, features: 'Alle Funktionen inklusive\n2 Monate geschenkt\nUpdates inklusive', sort: 2, active: true },
       { id: 'kauf', name: 'Einmalkauf', billing: 'once', cents: 69000, features: 'Dauerhaft nutzbar\n1 Jahr Updates inklusive\nDanach Updates optional', sort: 3, active: true }
     ],
@@ -652,13 +687,39 @@ $('#aSwitch').onclick = e => {
   $('#aSwitch').textContent = signup ? 'Ich habe schon ein Konto' : 'Neues Konto erstellen';
   $('#authHint').textContent = signup ? 'Erstelle dein kostenloses Konto – mit derselben E-Mail und demselben Passwort meldest du dich auch in der Fotobox an.' : 'Melde dich an, um deine Events und Fotoboxen zu verwalten.';
 };
+// Schutz gegen Bots (Betreiber 01.11.2026, statt Zwei-Faktor): Cloudflare Turnstile. Wird nur auf der Anmeldeseite geladen und
+// prüft meist unsichtbar; Supabase verlangt das Token für Anmelden, Registrieren, Passwort vergessen und Mail erneut senden.
+const TS_KEY = '0x4AAAAAAFvZRBRU8_Vr1VLM';
+let tsId = null, tsToken = '', tsWait = null;
+const tsLoad = () => window.turnstile ? Promise.resolve() : (tsWait ||= new Promise((res, rej) => {
+  const s = document.createElement('script'); s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; s.async = true;
+  s.onload = res; s.onerror = () => { tsWait = null; rej(new Error('Turnstile')); }; document.head.appendChild(s);
+}));
+async function tsRender() {
+  if (DEMO || tsId !== null) return;
+  try { await tsLoad(); } catch { return; }
+  if (tsId !== null || !window.turnstile) return;
+  tsId = turnstile.render('#aCaptcha', { sitekey: TS_KEY, appearance: 'interaction-only', callback: t => { tsToken = t; },
+    'expired-callback': () => { tsToken = ''; }, 'error-callback': () => { tsToken = ''; } });
+}
+async function captcha() { // frisches Token für genau eine Anfrage (jedes Token gilt nur einmal)
+  if (DEMO) return undefined;
+  await tsRender();
+  // bis 12 s warten; zeigt Cloudflare das Kästchen „Ich bin ein Mensch“, bis 90 s (der Gast muss es erst anklicken)
+  for (let i = 0; i < 450 && !tsToken && tsId !== null && (i < 60 || $('#aCaptcha iframe')?.offsetHeight > 0); i++) await new Promise(r => setTimeout(r, 200));
+  const t = tsToken; tsToken = ''; if (tsId !== null) try { turnstile.reset(tsId); } catch {}
+  return t || undefined;
+}
+$('#aEmail').addEventListener('focus', () => { tsRender(); });
+setTimeout(() => { if ($('#aEmail')?.offsetParent) tsRender(); }, 500);
 $('#aGo').onclick = async () => {
   const email = $('#aEmail').value.trim(), password = $('#aPw').value;
   if (!email || password.length < 6) return authMsg('Bitte E-Mail und ein Passwort mit mindestens 6 Zeichen eingeben.');
   $('#aGo').disabled = true;
+  const captchaToken = await captcha();
   const { data, error } = signup
-    ? await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.href.split('#')[0] } })
-    : await sb.auth.signInWithPassword({ email, password });
+    ? await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.href.split('#')[0], captchaToken } })
+    : await sb.auth.signInWithPassword({ email, password, options: { captchaToken } });
   $('#aGo').disabled = false;
   if (error) {
     if (/not confirmed/i.test(error.message)) return authUnconfirmed(email);
@@ -667,7 +728,8 @@ $('#aGo').onclick = async () => {
   if (signup && !data.session) authMsg('Fast geschafft! Bitte bestätige deine E-Mail über den Link, den wir dir geschickt haben. Keine Mail da? Bitte auch im Spam-Ordner nachsehen.', true);
 };
 // Anmelde-Fehler von Supabase (englisch) verständlich auf Deutsch
-const AUTH_ERR = m => /Invalid login credentials/i.test(m) ? 'E-Mail oder Passwort falsch.'
+const AUTH_ERR = m => /captcha/i.test(m) ? (window.turnstile ? 'Das hat nicht geklappt. Bitte noch einmal versuchen.' : 'Bitte die Internetverbindung prüfen und die Seite neu laden.')
+  : /Invalid login credentials/i.test(m) ? 'E-Mail oder Passwort falsch.'
   : /already registered|already been registered/i.test(m) ? 'Für diese E-Mail-Adresse gibt es schon ein Konto – bitte anmelden.'
   : /rate limit|too many/i.test(m) ? 'Gerade wurden zu viele Mails verschickt. Bitte in ein paar Minuten noch einmal versuchen.'
   : /expired|invalid.*link/i.test(m) ? 'Der Link ist abgelaufen. Bitte noch einmal anfordern.'
@@ -679,7 +741,7 @@ function authUnconfirmed(email) {
   m.innerHTML = 'Ihre E-Mail-Adresse ist noch nicht bestätigt. Bitte klicken Sie auf den Link in unserer Mail – auch im Spam-Ordner nachsehen. Der Link gilt nur eine begrenzte Zeit.<br><button type="button" class="btn" id="aResend" style="margin-top:10px">✉ Bestätigungs-Mail erneut senden</button>';
   $('#aResend').onclick = async () => {
     $('#aResend').disabled = true;
-    const { error } = await sb.auth.resend({ type: 'signup', email, options: { emailRedirectTo: location.href.split('#')[0] } });
+    const { error } = await sb.auth.resend({ type: 'signup', email, options: { emailRedirectTo: location.href.split('#')[0], captchaToken: await captcha() } });
     error ? authMsg(AUTH_ERR(error.message)) : authMsg('Neue Bestätigungs-Mail an ' + email + ' gesendet. Bitte den Link darin anklicken (auch im Spam-Ordner nachsehen).', true);
   };
 }
@@ -687,7 +749,7 @@ $('#aForgot').onclick = async e => {
   e.preventDefault();
   const email = $('#aEmail').value.trim();
   if (!email) return authMsg('Bitte zuerst die E-Mail-Adresse eingeben.');
-  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0] });
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0], captchaToken: await captcha() });
   error ? authMsg(AUTH_ERR(error.message)) : authMsg('Wir haben dir einen Link zum Zurücksetzen geschickt.', true);
 };
 $('#rGo').onclick = async () => {
@@ -757,6 +819,8 @@ async function boot() {
   if (profile.is_admin && !DEMO && !await AdminSchutz.ensure({ sb, esc, toast })) return;
   $('#navAdmin').classList.toggle('hidden', !profile.is_admin);
   $$('.adminCol').forEach(e => e.classList.toggle('hidden', !profile.is_admin));
+  // Fotos bleiben beim Betreiber 6 Monate online, in der kostenlosen Version 1 Monat (Server photo_keep_days, 17.11.2026)
+  $('#storeKeep')?.classList.toggle('hidden', !!profile.is_admin); $('#storeKeepPm')?.classList.toggle('hidden', !profile.is_admin);
   await loadMyTier(); // zuerst: Kostenlos-Modus entscheidet, ob Tarife und Preise erscheinen
   await welcomeCredits(); // vor den Lizenzen: kostenlose Lizenz sofort, neue Konten einmal 20 KI-Credits (der Server prüft, ob schon bekommen)
   welcomeMail(); // danach: neue Konten bekommen einmal die Willkommens-Mail mit Download-Link (samt Lizenzschlüssel)
@@ -823,31 +887,16 @@ async function loadEvents() {
   events = data; renderEvents();
   loadPhotoCovers();
 }
-// Die Kachel zeigt das Ereignisbild: das in der Galerie gewählte Foto (settings.cover, „Als Ereignisbild“ in der Großansicht),
-// sonst das neueste Foto des Ereignisses, sobald es Fotos in der Online-Galerie gibt
+// Die Kachel zeigt das neueste Foto des Ereignisses, sobald es Fotos in der Online-Galerie gibt
 let photoCovers = {};
 async function loadPhotoCovers() {
   if (DEMO) return;
   try {
     if (!events.length) return;
-    const url = p => window.FOTOBOX_PHOTOS ? FOTOBOX_PHOTOS.url(p) : sb.storage.from('photos').getPublicUrl(p).data.publicUrl;
+    const { data, error } = await sb.from('photos').select('event_id,thumb,path,kind').in('event_id', events.map(e => e.id)).order('created_at', { ascending: false }).limit(800);
+    if (error || !data) return;
     const next = {};
-    // Gewähltes Ereignisbild – nur, wenn das Foto noch in der Galerie ist
-    const chosen = events.filter(e => e.settings?.cover?.id);
-    if (chosen.length) {
-      const { data } = await sb.from('photos').select('id,event_id,thumb,path').in('id', chosen.map(e => e.settings.cover.id));
-      for (const x of data || []) next[x.event_id] = url(x.thumb || x.path);
-    }
-    // Sonst das neueste Foto, je Ereignis einzeln (eine gemeinsame Abfrage verteilt sich ungleich: ein großes Ereignis mit
-    // vielen neuen Fotos verdrängt sonst die älteren Ereignisse)
-    const todo = events.filter(e => !next[e.id]);
-    await Promise.all(Array.from({ length: 6 }, async () => {
-      while (todo.length) {
-        const e = todo.shift();
-        const { data } = await sb.from('photos').select('thumb,path').eq('event_id', e.id).or('kind.is.null,kind.neq.video').order('created_at', { ascending: false }).limit(1);
-        if (data?.[0]) next[e.id] = url(data[0].thumb || data[0].path);
-      }
-    }));
+    for (const x of data) if (!next[x.event_id] && x.kind !== 'video') next[x.event_id] = window.FOTOBOX_PHOTOS ? FOTOBOX_PHOTOS.url(x.thumb || x.path) : sb.storage.from('photos').getPublicUrl(x.thumb || x.path).data.publicUrl;
     photoCovers = next; if (Object.keys(next).length) renderEvents();
   } catch {}
 }
@@ -967,14 +1016,14 @@ async function deleteEventFull(e) {
     await Promise.all(Array.from({ length: 6 }, async () => { while (todo.length) { const f = todo.shift(); try { await P.del(f, token); } catch { failed++; }
       if (++done % 20 === 0) toast(`Lösche Fotos … ${done} von ${hz.length}`, 2000); } }));
     for (let i = 0; i < local.length; i += 100) await sb.storage.from('photos').remove(local.slice(i, i + 100)).catch(() => {});
-    if (failed) toast(`${failed} Dateien konnten nicht gelöscht werden – sie verschwinden spätestens nach einem Jahr von selbst.`, 6000);
+    if (failed) toast(`${failed} Dateien konnten nicht gelöscht werden – sie verschwinden spätestens nach 6 Monaten von selbst.`, 6000);
   }
   const { error } = await sb.from('events').delete().eq('id', e.id);
   if (error) { toast('Fehler: ' + error.message, 6000); return false; }
   toast('Ereignis gelöscht'); return true;
 }
 function newEvent() {
-  EventWS.newEventDialog(events, (settings, logo_url, name, typeName, page) => createEvent(settings, logo_url, name, typeName, page), { extra: hasExtra, toast });
+  EventWS.newEventDialog(events, (settings, logo_url, name, typeName, page) => createEvent(settings, logo_url, name, typeName, page), { extra: hasExtra, toast, sb: DEMO ? null : sb }); // sb: eigene Voreinstellungen (17.11.2026)
 }
 async function createEvent(settings, logo_url, name, typeName, page) {
   const today = new Date().toISOString().slice(0, 10);
@@ -992,6 +1041,7 @@ async function loadDevices() {
   const { data, error } = await sb.from('devices').select('*, events(updated_at), licenses!inner(customer_name, customer_email, owner_id)').eq('licenses.owner_id', me.id).order('last_seen', { ascending: false, nullsFirst: false });
   if (error) return toast('Fehler: ' + error.message);
   devices = data; renderDevices(); renderEvents(); startCard();
+  window.Fernwartung?.card({ sb, me, profile, toast, pmConfirm }); // Fernwartung: eigene Fotoboxen steuern, Freigabe für den Betreiber
 }
 // Willkommens-Karte „So startest du“ (Ereignisse oben): für Konten ohne eigene Fotobox. Verschwindet, sobald eine Fotobox
 // verbunden ist, oder per × (gemerkt je Konto in diesem Browser).
@@ -1034,7 +1084,7 @@ function deviceDetails(d, online, mine) {
       ${up ? `<div class="card"><b>${N(st.uploads)}</b><span>Warten auf den Upload</span><span class="small muted">${N(up.done)} hochgeladen bei diesem Ereignis${N(up.bytes) ? ' · noch ' + upMb(N(up.bytes)) : ''}${N(up.orig) ? ' · ' + N(up.orig) + ' Originale' : ''}</span>${up.now ? `<span class="small muted" translate="no">⬆️ ${esc(up.now)}</span>` : ''}</div>` : ''}
       <div class="card"><b>${N(st.prints)}${N(st.printLimit) ? ` <span style="font-size:16px">/ ${N(st.printLimit)}</span>` : ''}</b><span>Ausdrucke bei diesem Ereignis</span><span class="small muted">${N(st.printLimit) ? 'noch ' + Math.max(0, N(st.printLimit) - N(st.prints)) + ' übrig' : 'kein Limit eingestellt'}</span></div>
       <div class="card"><b style="font-size:17px">${esc(st.camera?.name || '–')}</b><span>Kamera</span><span class="small">${ok(st.camera?.ready)}</span></div>
-      <div class="card"><b style="font-size:17px">${esc(st.printer?.name || '–')}</b><span>Drucker</span><span class="small">${ok(st.printer?.ok)}${N(st.printer?.code) ? ' · Windows-Statuscode ' + N(st.printer.code) : ''}</span></div>
+      <div class="card"><b style="font-size:17px">${esc(st.printer?.name || '–')}</b><span>Drucker</span><span class="small">${ok(st.printer?.ok)}${N(st.printer?.code) ? ' · Windows-Statuscode ' + N(st.printer.code) : ''}</span>${[].concat(st.media || []).filter(m => m && N(m.size)).map(m => `<span class="small" style="display:block;margin-top:4px${N(m.left) <= 30 ? ';color:#d33;font-weight:600' : ''}">${(st.media || []).length > 1 ? `<span translate="no">${esc(m.printer)}</span>: ` : ''}<span>Druckerrolle</span> · <span>Noch ${N(m.left)} von ${N(m.size)} Drucken</span>${N(m.left) <= 30 ? ' · <span>Rolle fast leer</span>' : ''}</span>`).join('')}</div>
       <div class="card"><b style="font-size:17px">${esc(scr)}</b><span>Bildschirm</span><span class="small muted">${esc(st.event || 'kein Ereignis')} · gemeldet vor ${age < 120 ? age + ' s' : Math.round(age / 60) + ' min'}</span></div>
       ${ori}
     </div>
@@ -1045,7 +1095,7 @@ function deviceDetails(d, online, mine) {
     ${notes.length ? `<div class="small" style="margin:-6px 0 12px">${notes.map(n => `<div>• ${esc(n)}</div>`).join('')}</div>` : ''}
     ${st.sync && !(st.sync.account && st.sync.event) && !(st.sync.event && st.sync.viaKey) ? `<p class="small" style="margin:-6px 0 12px;color:#b8860b">⚠️ ${!st.sync.account ? 'Diese Fotobox ist nur mit dem Lizenzschlüssel angemeldet – Änderungen an der Fotobox kommen nicht ins Dashboard. An der Fotobox unter Einstellungen → Allgemein mit E-Mail und Passwort anmelden.' : 'An dieser Fotobox ist kein Ereignis gewählt – Änderungen kommen nicht ins Dashboard.'}</p>`
       : N(st.sync?.pending) ? `<p class="small muted" style="margin:-6px 0 12px">${N(st.sync.pending)} Änderung(en) der Fotobox warten noch auf die Übertragung ins Dashboard.</p>` : ''}
-    ${mine ? `<div class="card" style="margin-bottom:10px"><h2>Fernsteuerung</h2>
+    ${mine ? `<div class="card" style="margin-bottom:10px"><h2>Fernsteuerung</h2>${window.Fernwartung ? Fernwartung.deviceRow(d) : ''}
       ${fresh ? '' : '<p class="small muted" style="margin-bottom:8px">Die Fotobox ist gerade nicht verbunden. Befehle werden ausgeführt, sobald sie sich wieder meldet (höchstens 10 Minuten lang).</p>'}
       <div class="row" style="margin-bottom:12px"><button class="btn primary" data-dev="${d.id}" data-act="testprint">🖨 Testdruck auslösen</button><button class="btn" data-dev="${d.id}" data-act="pinreset" title="Entfernt den Sicherheitspin an der Fotobox, falls er vergessen wurde">🔓 Sicherheitspin zurücksetzen${st.locked ? ' (gesperrt)' : ''}</button>${cmd}</div>
       ${newCmds ? `<div class="row" style="margin-bottom:12px">${st.screen === 'attract' ? `<button class="btn" data-dev="${d.id}" data-act="stop">⏹ Ereignis beenden</button>` : `<button class="btn" data-dev="${d.id}" data-act="start">▶ Ereignis starten</button>`}${st.pin ? (st.locked ? `<button class="btn" data-dev="${d.id}" data-act="unlock">🔓 Entsperren</button>` : `<button class="btn" data-dev="${d.id}" data-act="lock">🔒 Sperren</button>`) : ''}<button class="btn" data-dev="${d.id}" data-act="reload" title="Holt alle Einstellungen neu aus dem Dashboard">↻ Einstellungen neu laden</button><button class="btn" data-dev="${d.id}" data-act="update">⬇ Update installieren</button><button class="btn" data-dev="${d.id}" data-act="restart">⟳ Neu starten</button></div>` : ''}
@@ -1097,7 +1147,7 @@ function renderDevices() {
       <td><input value="${esc(d.name || 'FotoBox')}" data-dev="${d.id}" data-act="name" style="max-width:200px"></td>
       <td><span class="dot ${online ? 'on' : ''}"></span>${online ? 'Online' : d.last_seen ? 'zuletzt ' + new Date(d.last_seen).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : 'nie'}${N(st.uploads) > 0 ? `<div class="small" style="color:#c98a00;margin-top:2px" title="Liegen sicher auf der Fotobox und werden automatisch hochgeladen, sobald der Foto-Speicher erreichbar ist">⏳ ${N(st.uploads)} ${N(st.uploads) === 1 ? 'Foto wartet' : 'Fotos warten'} auf den Upload</div>` : ''}</td>
       <td>${opts}</td>
-      <td>${st.prints != null ? `<b>${N(st.prints)}</b>${N(st.printLimit) ? ' / ' + N(st.printLimit) : ''}` : '–'}</td>
+      <td>${st.prints != null ? `<b>${N(st.prints)}</b>${N(st.printLimit) ? ' / ' + N(st.printLimit) : ''}` : '–'}${[].concat(st.media || []).filter(m => m && N(m.size)).map(m => `<div class="small" title="Druckerrolle" style="margin-top:2px;${N(m.left) <= 30 ? 'color:#d33;font-weight:600' : 'color:#888'}">🧻 ${N(m.left)} / ${N(m.size)}</div>`).join('')}</td>
       <td>${d.photos_total}</td>
       <td class="small">${esc(d.app_version || '–')}</td>
       <td class="adminCol small ${profile.is_admin ? '' : 'hidden'}">${esc(d.licenses?.customer_name || d.licenses?.customer_email || '')}</td>
@@ -1211,7 +1261,7 @@ function licStatus(l) {
 }
 const kindName = k => k === 'lifetime' ? 'Einmalkauf' : 'Abo';
 // Zusatzfunktionen, die der Betreiber je Lizenz freischaltet (Spalte licenses.extras); der Betreiber selbst hat immer alle
-const EXTRAS = [['mosaic', 'Fotomosaik'], ['caricature', 'Live-Karikatur'], ['videomsg', 'Videonachricht'], ['studio', 'BoothDesigner'], ['offline', 'Offline-Warteschlange']];
+const EXTRAS = [['mosaic', 'Fotomosaik'], ['caricature', 'Live-Karikatur'], ['videomsg', 'Videonachricht'], ['studio', 'BoothDesigner'], ['offline', 'Offline-Warteschlange'], ['export', 'Echtzeit-Export']];
 // Template-Studio (studio.js): eigene Seite im Menü; #studio springt nach der Anmeldung dorthin (Link von der Studio-Webseite)
 const openStudio = () => StudioPage.open({ sb, me, toast, uploadFile, extra: hasExtra, tier: () => myTier, reloadTier: loadMyTier,
   events: () => events, reloadEvents: loadEvents, admin: !!profile?.is_admin, demo: DEMO });
@@ -1321,6 +1371,7 @@ document.addEventListener('click', e => {
 let shCfg = null, shSample = '';
 const shCents = v => Math.round(parseFloat(String(v).replace(',', '.')) * 100);
 async function loadShopCfg() {
+  loadPromos();
   if (!profile?.is_admin || !$('#photoShopCard')) return;
   const b = DEMO ? null : await fetch(`${CFG.supabaseUrl}/storage/v1/object/public/photos/${PM_SHOP.path(me.id)}?t=${Date.now()}`, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
   shCfg = PM_SHOP.normalize(b);
@@ -1329,7 +1380,7 @@ async function loadShopCfg() {
   $('#sh_vat').innerHTML = PM_SHOP.VATS.map(([k, n]) => `<option value="${k}">${n}</option>`).join(''); $('#sh_vat').value = String(shCfg.vat);
   $('#sh_countries').value = shCfg.countries.join(', ');
   for (const k of ['agb', 'privacy', 'imprint', 'withdrawal']) $('#sh_' + k).value = shCfg.legal[k];
-  shRender(); shServer(); shOrders(); shSampleLink();
+  shRender(); shSums(); shServer(); shOrders(); shSampleLink();
 }
 function shRender() {
   $('#shProducts').innerHTML = shCfg.products.map(p => `<div class="planrow" data-id="${esc(p.id)}">
@@ -1340,8 +1391,15 @@ function shRender() {
         ${p.type === 'mug' ? `<div><label>Tasse: Foto auf der Druckfläche</label><select data-f="side">${PM_SHOP.SIDES.map(([k, n]) => `<option value="${k}" ${p.side === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>` : ''}
         <div style="grid-column:1/-1"><label>Produktnummer (Gelato: Product UID · Printful: Varianten-ID)</label><input data-f="uid" value="${esc(p.uid)}" placeholder="${p.provider === 'printful' ? 'z. B. 13097' : 'z. B. mug_product_msz_11-oz_…'}" spellcheck="false"></div></div>
       <div class="row" style="margin-top:10px"><label class="row" style="margin:0;color:var(--fg);font-weight:400;font-size:14px"><input type="checkbox" data-f="on" ${p.on ? 'checked' : ''}> Im Shop zeigen</label>
-        <span style="flex:1"></span><span class="small muted">${p.on && p.uid && p.cents ? '' : 'erscheint noch nicht'}</span><button class="btn small danger" type="button" data-sh-del>Entfernen</button></div></div>`).join('')
+        <span style="flex:1"></span><span class="small muted">${p.on && p.uid && p.cents ? '' : 'erscheint noch nicht'}</span><button class="btn small danger" type="button" data-sh-del>Entfernen</button></div>
+      <div class="small" data-sh-sum style="margin-top:8px"></div></div>`).join('')
     || '<p class="small muted">Noch keine Produkte – mit „+ Produkt“ anlegen.</p>';
+}
+// Je Produkt: was der Gast insgesamt bezahlt (Preis + Versand), aktualisiert sich beim Tippen
+function shSums() {
+  const eur = c => (c / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }), ship = shCents($('#sh_ship').value || 0) || 0;
+  document.querySelectorAll('#shProducts .planrow').forEach(r => { const c = shCents(r.querySelector('[data-f="price"]').value) || 0, el = r.querySelector('[data-sh-sum]'); if (!el) return;
+    el.innerHTML = c ? `Der Gast zahlt <b>${eur(c)}</b> + ${eur(ship)} Versand = <b>${eur(c + ship)}</b> für ein Stück` : '<span class="muted">Noch kein Preis eingetragen.</span>'; });
 }
 // Felder ins Objekt übernehmen (vor Speichern, Hinzufügen und Entfernen)
 function shCollect() {
@@ -1352,12 +1410,13 @@ function shCollect() {
   return { mode: $('#sh_mode').value, seller: $('#sh_seller').value, ship: shCents($('#sh_ship').value || 0), vat: Number($('#sh_vat').value), countries: $('#sh_countries').value,
     legal: { agb: $('#sh_agb').value, privacy: $('#sh_privacy').value, imprint: $('#sh_imprint').value, withdrawal: $('#sh_withdrawal').value }, products };
 }
-$('#shAdd').onclick = () => { shCfg = PM_SHOP.normalize(shCollect()); shCfg.products.push({ id: 'p' + Date.now().toString(36), type: 'mug', provider: 'printful', name: 'Tasse', cents: 0, uid: '', on: true, side: 'left' }); shRender(); };
+$('#shAdd').onclick = () => { shCfg = PM_SHOP.normalize(shCollect()); shCfg.products.push({ id: 'p' + Date.now().toString(36), type: 'mug', provider: 'printful', name: 'Tasse', cents: 0, uid: '', on: true, side: 'left' }); shRender(); shSums(); };
 $('#shProducts').addEventListener('click', e => {
   const row = e.target.closest('[data-sh-del]')?.closest('.planrow'); if (!row) return;
-  shCfg = PM_SHOP.normalize(shCollect()); shCfg.products = shCfg.products.filter(p => p.id !== row.dataset.id); shRender();
+  shCfg = PM_SHOP.normalize(shCollect()); shCfg.products = shCfg.products.filter(p => p.id !== row.dataset.id); shRender(); shSums();
 });
 $('#sh_mode').addEventListener('change', shSampleLink);
+$('#sh_ship').addEventListener('input', shSums); $('#shProducts').addEventListener('input', e => { if (e.target.dataset.f === 'price') shSums(); });
 $('#shProducts').addEventListener('change', e => {
   if (e.target.dataset.f !== 'provider') return;
   e.target.closest('.planrow').querySelector('[data-f="uid"]').placeholder = e.target.value === 'printful' ? 'z. B. 13097' : 'z. B. mug_product_msz_11-oz_…';
@@ -1449,7 +1508,7 @@ $('#hzSetup').onclick = async () => {
     const line = (ok, text) => `<div>${ok ? '✅' : '❌'} ${text}</div>`;
     out.innerHTML = line(r.cors === 200, 'Zugriff für Fotobox und Galerie (CORS)' + (r.corsText ? ': ' + esc(r.corsText) : ''))
       + line(r.policy < 300, 'Fotos über den Link lesbar (Regel gesetzt)' + (r.policyText ? ': ' + esc(r.policyText) : ''))
-      + line(r.lifecycleDays === 365, 'Fotos nach 1 Jahr automatisch löschen' + (r.lifecycleText ? ': ' + esc(r.lifecycleText) : ''))
+      + line(r.lifecycleDays === 180, 'Fotos nach 6 Monaten automatisch löschen' + (r.lifecycleText ? ': ' + esc(r.lifecycleText) : ''))
       + line(r.write === 200, 'Probe-Datei schreiben' + (r.writeText ? ': ' + esc(r.writeText) : ''))
       + line(r.publicRead === 200, 'Probe-Datei ohne Anmeldung lesen')
       + line(r.publicList !== 200, 'Liste aller Fotos für Fremde gesperrt')
@@ -1477,7 +1536,7 @@ $('#lCreate').onclick = async () => {
     updates_until: life && $('#lUpd').value ? new Date($('#lUpd').value + 'T23:59:59').toISOString() : null,
     max_devices: Math.max(1, +$('#lMax').value || 1), notes: $('#lNotes').value.trim() || (test ? 'Testversion' : null)
   };
-  const extras = [$('#lMosaic').checked && 'mosaic', $('#lCari').checked && 'caricature', $('#lVideo').checked && 'videomsg', $('#lStudio').checked && 'studio', $('#lOffline').checked && 'offline'].filter(Boolean); if (extras.length) row.extras = extras;
+  const extras = [$('#lMosaic').checked && 'mosaic', $('#lCari').checked && 'caricature', $('#lVideo').checked && 'videomsg', $('#lStudio').checked && 'studio', $('#lOffline').checked && 'offline', $('#lExport').checked && 'export'].filter(Boolean); if (extras.length) row.extras = extras;
   if ($('#lTier').value !== 'pro') row.tier = $('#lTier').value; // Pro ist Standard (auch ohne Tarif-Spalte in der Datenbank)
   const credits = test ? Math.max(0, Math.min(1000, Math.round(+$('#lCredits').value || 0))) : 0;
   const { data, error } = await sb.from('licenses').insert(row).select().single();
@@ -1490,7 +1549,7 @@ $('#lCreate').onclick = async () => {
   }
   if ($('#lMail').checked && !DEMO) extra += ' · ' + await sendLicenseMail(data.id);
   toast('Lizenz erstellt – Schlüssel kopiert: ' + data.key + extra, 9000);
-  ['#lName', '#lEmail', '#lNotes'].forEach(s => $(s).value = ''); $('#lMosaic').checked = $('#lCari').checked = $('#lVideo').checked = $('#lStudio').checked = $('#lOffline').checked = false;
+  ['#lName', '#lEmail', '#lNotes'].forEach(s => $(s).value = ''); $('#lMosaic').checked = $('#lCari').checked = $('#lVideo').checked = $('#lStudio').checked = $('#lOffline').checked = $('#lExport').checked = false;
   loadLicenses();
 };
 $('#lSearch').oninput = renderAdmin;
@@ -1616,7 +1675,7 @@ const euro = c => (c / 100).toLocaleString('de-DE', { style: 'currency', currenc
 // Eigenes KI-Guthaben: Stand, Verbrauch je Ereignis (ai_jobs, nur erfolgreiche Bilder), Käufe/Gutschriften (ai_ledger) und Kauf
 // über Stripe (Funktion credits-checkout). Der Bereich ist immer sichtbar – ohne eingerichteten Kauf mit Hinweis statt Knöpfen.
 const showCredits = () => { $('#nav [data-tab="licenses"]')?.click(); setTimeout(() => $('#creditCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150); };
-window.showCredits = showCredits; // auch aus dem Ereignis-Editor (KI-Fotos → „Credits kaufen“)
+window.showCredits = showCredits; // auch aus dem Ereignis-Editor (AI-Fotos → „Credits kaufen“)
 $('#creditChip').onclick = showCredits;
 async function welcomeCredits() {
   try { const { data } = await sb.rpc('welcome_credits'); if (data > 0) toast('Willkommen! Du hast 20 KI-Credits zum Testen bekommen.', 8000); } catch {}
@@ -1732,7 +1791,13 @@ if (location.hash === '#tarife') addEventListener('pm-ready', showTarife, { once
 //   Registrierung und Bestätigungs-Mail hinweg. Alte Links (basis-, pro-, alles-…) führen zum Fotobox-Abo.
 let shopPick = null;
 {
-  const sp = new URLSearchParams(location.search), q = sp.get('tarif'), neu = sp.get('konto') === 'neu';
+  const sp = new URLSearchParams(location.search), q = sp.get('tarif'), neu = sp.get('konto') === 'neu', pc = sp.get('code');
+  if (pc && /^[A-Za-z0-9-]{3,40}$/.test(pc)) try { localStorage.setItem('pm.code', JSON.stringify({ c: pc.toUpperCase(), t: Date.now() })); } catch {}
+  if (pc) { sp.delete('code'); history.replaceState(null, '', location.pathname + (String(sp) ? '?' + sp : '') + location.hash); }
+  let pcw = null; try { pcw = JSON.parse(localStorage.getItem('pm.code') || 'null'); } catch {}
+  if (pcw && !(pcw.c && Date.now() - pcw.t < 7 * 864e5)) { pcw = null; try { localStorage.removeItem('pm.code'); } catch {} }
+  if (pcw) addEventListener('pm-ready', () => { try { localStorage.removeItem('pm.code'); } catch {} $('#promoCode').value = pcw.c; redeemPromo(pcw.c); }, { once: true });
+  if (pc && !q && !neu && !signup) $('#aSwitch').click();
   if (q || neu) {
     sp.delete('tarif'); sp.delete('konto'); // nur die eigenen Zusätze entfernen – ?download=1 bleibt bis nach der Anmeldung
     history.replaceState(null, '', location.pathname + (String(sp) ? '?' + sp : '') + location.hash);
@@ -1784,7 +1849,7 @@ async function pickTarif(q) {
     if (q !== 'kostenlos') toast('Alle Funktionen sind zurzeit kostenlos.', 6000);
     const b = $(freeMode() ? '#shopTier [data-free]' : '#shopPlans [data-free]'); return b ? b.click() : q === 'kostenlos' && toast('Du hast schon eine Lizenz – sie steht oben unter „Meine Lizenzen“.', 7000); }
   if (q === 'test' && !freeMode() && trialOn()) // nach dem Umschalten startet der Test schon beim ersten Anmelden
-    return toast(`Dein 30-Tage-Test läuft bis ${dayMonth(myTier.trial_until)} Melde dich in der Fotobox mit diesem Konto an.`, 8000);
+    return toast(`Dein Test läuft bis ${dayMonth(myTier.trial_until)} Melde dich in der Fotobox mit diesem Konto an.`, 8000);
   if (q === 'test') return $('#trialRow').classList.contains('hidden') ? toast('Für dieses Konto gibt es schon eine Lizenz oder einen Test.', 7000) : $('#trialGo').click();
   const c = $(`#shopCard [data-plan="${q}"]`), b = c?.querySelector('[data-buy]'), p = shop.plans.find(x => x.id === q);
   if (!c) return toast('Diesen Tarif gibt es nicht – hier sind alle Tarife.', 6000);
@@ -1823,7 +1888,7 @@ function renderShop() {
   $('#shopTier').innerHTML = FREE ? `<span>Alle Funktionen sind kostenlos – mit deinem eigenen Logo. Nur KI-Bilder brauchen Credits.</span>${ext.length ? ` <span class="small muted">+ ${esc(ext.join(', '))}</span>` : ''}${trial}${mine.length ? '' : ' <button class="btn primary" data-free style="margin-left:8px">Kostenlos starten</button>'}`
     : cur ? `<span>Dein Tarif:</span> <b>${shown === 'test' ? 'Test' : esc(TIER_NAME[shown])}</b>${shown === 'pro' && boxes > 1 ? ` <span class="small muted">· ${boxN(boxes)}</span>` : ''}${ext.length ? ` <span class="small muted">+ ${esc(ext.join(', '))}</span>` : ''}${paid ? '' : ' ' + trialBadge()}${shown === 'test'
       ? '<br><span class="small muted">Nach dem Test läuft deine Fotobox kostenlos weiter (1 Layout, mit Photobox-Memories-Logo).</span>' : ''}`
-    : '<span>Du hast noch keine Lizenz. Starte kostenlos – oder teste 30 Tage alles kostenlos.</span>';
+    : '<span>Du hast noch keine Lizenz. Teste die Software 1 Jahr kostenlos mit allen Funktionen.</span>';
   $('#shopHint').textContent = shop.ready ? 'Bezahlung sicher über Stripe. Der Tarif wird direkt nach der Zahlung freigeschaltet – deine Fotobox bleibt angemeldet.'
     : 'Der Kauf wird gerade eingerichtet und ist bald verfügbar.';
   // Rabatt beim Jahrespreis: aus den eingeschalteten Plänen, sonst aus den geplanten Preisen (nie gemischt)
@@ -1887,13 +1952,54 @@ $('#shopPortal').onclick = async () => {
   if (error || !/^https:\/\/billing\.stripe\.com\//.test(data?.url || '')) return toast(data?.error || 'Die Verwaltung bei Stripe konnte nicht geöffnet werden.', 5000);
   location.href = data.url;
 };
+// Gutscheincode (SQL 202611050004): verlängert den Test um die Tage des Codes, einmal je Konto
+async function redeemPromo(code) {
+  code = String(code || '').trim().toUpperCase(); const msg = t => { $('#promoMsg').textContent = t; };
+  if (!code) return msg('Bitte einen Gutscheincode eingeben.');
+  if (DEMO) return toast('Demo-Modus – es wird nichts gespeichert');
+  $('#promoGo').disabled = true;
+  try {
+    const { data, error } = await sb.rpc('redeem_promo', { p_code: code });
+    if (error) throw error;
+    if (!data?.ok) return msg(data?.error || 'Der Gutschein konnte nicht eingelöst werden.');
+    const t = data.days === 365 ? 'Gutschein eingelöst: Dein Test verlängert sich um 1 Jahr.' : `Gutschein eingelöst: Dein Test verlängert sich um ${data.days} Tage.`;
+    msg(t); toast(t, 8000); $('#promoCode').value = '';
+    try { await loadMyTier(); renderShop(); } catch {}
+  } catch (e) { msg(/redeem_promo|schema cache|does not exist/i.test(e.message || '') ? 'Gutscheine sind gerade nicht verfügbar.' : 'Der Gutschein konnte nicht eingelöst werden.'); }
+  finally { $('#promoGo').disabled = false; }
+}
+$('#promoGo').onclick = () => redeemPromo($('#promoCode').value);
+$('#promoCode').addEventListener('keydown', e => { if (e.key === 'Enter') redeemPromo($('#promoCode').value); });
+// Betreiber: Gutscheincodes anlegen, ein-/ausschalten, Einlösungen sehen
+async function loadPromos() {
+  if (!profile?.is_admin || !$('#promoCard')) return;
+  if (DEMO) { $('#promoList').innerHTML = '<p class="small muted">Im Demo-Modus gibt es keine Codes.</p>'; return; }
+  const { data, error } = await sb.rpc('promo_overview');
+  if (error) { $('#promoList').innerHTML = '<p class="small" style="color:var(--warn)">Gutscheine sind auf dem Server noch nicht eingerichtet (SQL 202611050004_gutscheine.sql).</p>'; return; }
+  // Statistik (Betreiber 05.11.2026: „wie viele den Code benutzt haben“): gesamt, letzte 7 Tage, schon im Test angerechnet bzw. wartet auf den Teststart
+  const wk = Date.now() - 7 * 864e5, recent = u => new Date(u.at).getTime() > wk, all = (data || []).flatMap(c => c.uses || []), done = all.filter(u => u.applied).length;
+  const stat = all.length ? `<div class="row" style="gap:18px;flex-wrap:wrap;margin:0 0 12px"><span><b style="font-size:20px">${all.length}</b> <span class="small muted">mal eingelöst</span></span>
+      <span><b style="font-size:20px">${all.filter(recent).length}</b> <span class="small muted">in den letzten 7 Tagen</span></span>
+      <span><b style="font-size:20px">${done}</b> <span class="small muted">im Test angerechnet</span></span><span><b style="font-size:20px">${all.length - done}</b> <span class="small muted">warten auf den Teststart</span></span></div>` : '';
+  $('#promoList').innerHTML = stat + (data || []).map(c => `<div class="planrow"><div class="row" style="gap:10px;flex-wrap:wrap"><b translate="no">${esc(c.code)}</b>
+      <span class="small muted">+${c.days} Tage · ${c.uses.length}${c.max ? ' von ' + c.max : ''} eingelöst${c.uses.length ? ' · ' + c.uses.filter(recent).length + ' in 7 Tagen' : ''}${c.active ? '' : ' · ausgeschaltet'}${c.note ? ' · ' + esc(c.note) : ''}</span><span style="flex:1"></span>
+      <button class="btn small" type="button" data-pc-toggle="${esc(c.code)}" data-days="${c.days}" data-max="${c.max ?? ''}" data-note="${esc(c.note || '')}" data-on="${c.active ? 1 : 0}">${c.active ? 'Ausschalten' : 'Einschalten'}</button></div>
+      ${c.uses.length ? `<div class="small muted" style="margin-top:6px">${c.uses.slice(0, 100).map(u => `${esc(u.email || '?')} (${new Date(u.at).toLocaleDateString('de-DE')}${u.applied ? '' : ', wartet'})`).join(' · ')}</div>` : ''}</div>`).join('') || '<p class="small muted">Noch keine Codes.</p>';
+}
+const promoSave = async (code, days, active, max, note) => {
+  const { error } = await sb.rpc('promo_save', { p_code: code, p_days: days, p_active: active, p_max: max || null, p_note: note || null });
+  if (error) { toast('Fehler: ' + error.message, 6000); return false; } loadPromos(); return true;
+};
+$('#promoList').addEventListener('click', e => { const b = e.target.closest('[data-pc-toggle]'); if (!b) return;
+  promoSave(b.dataset.pcToggle, +b.dataset.days, b.dataset.on !== '1', +b.dataset.max || null, b.dataset.note); });
+$('#pcSave').onclick = async () => { if (await promoSave($('#pcCode').value, +$('#pcDays').value, true, +$('#pcMax').value || null, $('#pcNote').value)) { toast('Code gespeichert.'); $('#pcCode').value = ''; $('#pcNote').value = ''; } };
 $('#trialGo').onclick = async () => {
   $('#trialGo').disabled = true;
   const { error } = await sb.rpc('start_trial');
   $('#trialGo').disabled = false;
   if (error) return toast(error.message, 5000);
   toast(freeMode() ? 'Dein Test läuft 1 Monat: Fotomosaik, Live-Karikatur und Videonachricht sind freigeschaltet, dazu 20 KI-Credits. Melde dich in der Fotobox mit diesem Konto an.'
-    : 'Dein Test läuft 30 Tage: alle Fotobox-Funktionen und alle Zusatzfunktionen sind freigeschaltet. Melde dich in der Fotobox mit diesem Konto an.', 9000);
+    : 'Dein Test läuft 1 Jahr: alle Fotobox-Funktionen und alle Zusatzfunktionen sind freigeschaltet. Melde dich in der Fotobox mit diesem Konto an.', 9000);
   await loadMyTier(); loadLicenses(); loadMyCredits();
 };
 { // Rückkehr von der Bezahlseite (Lizenz)
