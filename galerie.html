@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Fotogalerie</title>
-<script>window.I18N_V = '20261117-1';</script>
+<script>window.I18N_V = '20261117-2';</script>
 <script src="i18n.js?v=20261017-2"></script>
 <script>// Sprache: vom QR-Code der Fotobox (?l=…), sonst die des Handys
 (function () { var q = new URLSearchParams(location.search).get('l'), l = I18N.CODES.indexOf(q) >= 0 ? q : I18N.guess('en');
@@ -183,6 +183,25 @@
   .sdone{display:flex;flex-direction:column;gap:4px;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:14px;margin-bottom:16px}
   .sdone.ok{background:rgba(249,203,56,.14);border-color:rgba(249,203,56,.5)}
   .sdone span{color:var(--muted);font-size:14px}
+  /* Kunden-Link (?k=…): Fotos entfernen, Papierkorb, Gäste-Link weitergeben */
+  .mnote{background:rgba(249,203,56,.12);border:1px solid rgba(249,203,56,.45);border-radius:14px;padding:14px 16px;margin-bottom:14px;display:flex;flex-direction:column;gap:4px}
+  .mnote b{color:var(--y)}.mnote span{color:#ddd;font-size:14px}
+  .mshare{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:16px}
+  .mshare h3{margin:0 0 4px;font:600 17px Fredoka,system-ui,sans-serif}.mshare p{margin:0 0 10px;color:var(--muted);font-size:14px}
+  .mshare input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#0f0f12;color:#fff;font:inherit;font-size:14px;margin-bottom:10px}
+  .mrow{display:flex;gap:8px;flex-wrap:wrap}.mrow .btn{padding:9px 16px;font-size:14px}
+  .mwarn{color:#ffb86b;font-size:14px;margin:8px 0 0}
+  .mtabs{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+  .mtabs button{background:#2a2a2e;color:#fff;border:0;border-radius:999px;padding:9px 16px;font:600 14px system-ui,sans-serif;cursor:pointer}
+  .mtabs button.on{background:var(--y);color:var(--k)}
+  .mbar{position:sticky;top:0;z-index:5;background:rgba(17,17,16,.94);backdrop-filter:blur(6px);padding:10px 0}
+  .mbar .btn{padding:9px 16px;font-size:14px}.btn.red{background:#e05252;color:#fff}
+  .grid.pick figure{cursor:pointer}
+  .grid.pick figure.sel{outline:4px solid var(--y);outline-offset:-4px}
+  .grid.pick figure .ck{position:absolute;right:6px;top:6px;width:26px;height:26px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--k)}
+  .grid.pick figure.sel .ck{background:var(--y);border-color:var(--y)}
+  .grid.pick figure .zoom{position:absolute;left:6px;top:6px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:14px;cursor:zoom-in;padding:0}
+  .grid.pick figure .left{position:absolute;left:0;right:0;bottom:0;padding:14px 6px 5px;font-size:11.5px;text-align:center;background:linear-gradient(transparent,rgba(0,0,0,.8))}
 </style>
 </head>
 <body>
@@ -817,8 +836,114 @@
     setInterval(async () => { try { const r = await fetchGallery(password); if (r.ok) { const had = photos.length; photos = r.photos || []; if (photos.length > had) i = 0; } } catch {} }, 30000); // neue Fotos zuerst
   }
 
+  // ---------- Kunden-Link (galerie.html?k=…, Betreiber 17.11.2026) ----------
+  // Nur für den Kunden des Vermieters (z. B. das Brautpaar), mit Passwort: Fotos entfernen (erst Papierkorb, 30 Tage wiederherstellbar,
+  // Gäste sehen sie sofort nicht mehr), endgültig löschen und den Gäste-Link selbst weiterschicken. Server: SQL 202611170002 + photo-store.
+  const mtoken = (Q.get('k') || '').toLowerCase();
+  const rpc = async (fn, body) => {
+    const r = await fetch(CFG.supabaseUrl + '/rest/v1/rpc/' + fn, { method: 'POST', body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey } });
+    if (r.status === 404) throw Object.assign(new Error('fehlt'), { missing: true });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  };
+  const TRASH_DAYS = 30;
+  async function manage(password) {
+    password = String(password || '').trim().toLowerCase(); // das Passwort hat nur Kleinbuchstaben und Ziffern (Server: pm_random_pw)
+    if (!/^[0-9a-f]{32,64}$/i.test(mtoken) || !CFG.supabaseUrl) return box('<h2>Galerie nicht gefunden</h2><p>Der Link ist unvollständig. Bitte den Link noch einmal öffnen.</p>');
+    let r;
+    try { r = await rpc('gallery_manage', { p_token: mtoken, p_password: password || null }); }
+    catch (e) { return box(e.missing ? '<h2>Noch nicht eingerichtet</h2><p>Diese Funktion ist auf dem Server noch nicht eingerichtet. Bitte beim Vermieter melden.</p>'
+      : '<h2>Galerie nicht erreichbar</h2><p>Bitte die Internetverbindung prüfen und die Seite neu laden.</p>'); }
+    if (r.name) { $('#title').textContent = r.name; $('#title').setAttribute('translate', 'no'); document.title = r.name + ' – ' + T('Fotogalerie'); }
+    if (!r.ok) {
+      if (r.error === 'password') {
+        box(`<h2>Passwort erforderlich</h2><p>Das ist der Verwaltungs-Link für deine Galerie. Das Passwort hast du zusammen mit dem Link bekommen.</p><form id="pwForm"><input type="text" id="pw" placeholder="Passwort" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus><div class="err" id="pwErr">${password ? 'Das Passwort stimmt nicht.' : ''}</div><button class="btn">Galerie öffnen</button></form>`);
+        $('#pwForm').onsubmit = e => { e.preventDefault(); const v = $('#pw').value.trim(); if (v) manage(v); };
+        return;
+      }
+      return box('<h2>Galerie nicht gefunden</h2><p>Diesen Link gibt es nicht (mehr). Vielleicht hat dein Vermieter einen neuen Link erstellt.</p>');
+    }
+    try { sessionStorage.setItem('pm-man-' + mtoken, password || ''); } catch {}
+    const M = { all: r.photos || [], bin: false, sel: new Set(), busy: false };
+    showAd(window.PM_AD?.ownerOf(M.all[0]?.path));
+    $('#sub').setAttribute('translate', 'no');
+    $('#sub').textContent = [r.subtitle, r.date ? new Date(r.date).toLocaleDateString(LOC) : ''].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(' · ');
+    const guestLink = location.origin + location.pathname + '?g=' + r.share_token;
+    const shareText = () => T('Hier sind die Fotos von unserer Feier:') + ' ' + guestLink + (r.guest_pw ? '\n' + T('Passwort:') + ' ' + r.guest_pw : '');
+    const left = p => Math.max(1, Math.ceil((Date.parse(p.hidden) + TRASH_DAYS * 864e5 - Date.now()) / 864e5));
+    const view = () => M.all.filter(p => !!p.hidden === M.bin);
+    const draw = () => {
+      const L = view(), nBin = M.all.filter(p => p.hidden).length, nOn = M.all.length - nBin, k = M.sel.size;
+      photos = L; // Großansicht (Lupe) und Herunterladen zeigen die gerade sichtbare Liste
+      $('#main').innerHTML = `<div class="mnote"><b>Dein persönlicher Verwaltungs-Link</b><span>Nur für dich – bitte nicht weitergeben. Hier kannst du Fotos aus der Galerie entfernen. Deine Gäste sehen entfernte Fotos sofort nicht mehr.</span></div>
+        <div class="mshare"><h3>Link für deine Gäste</h3><p>Diesen Link kannst du an alle Gäste weiterschicken. Dort können sie die Fotos nur ansehen und herunterladen.</p>
+          <input type="text" readonly value="${esc(guestLink)}" onclick="this.select()" translate="no">
+          ${r.guest_pw ? `<p><span>Passwort für die Gäste:</span> <b translate="no">${esc(r.guest_pw)}</b></p>` : ''}
+          <div class="mrow"><button class="btn" data-m="copy">Link kopieren</button><button class="btn ghost" data-m="wa">WhatsApp</button><button class="btn ghost" data-m="mail">E-Mail</button>${navigator.share ? '<button class="btn ghost" data-m="share">Teilen …</button>' : ''}</div>
+          ${r.link_on ? '' : '<p class="mwarn">Der Gäste-Link ist zurzeit ausgeschaltet. Bitte deinen Vermieter, ihn freizugeben.</p>'}</div>
+        <div class="mtabs"><button data-m="tab-on" class="${M.bin ? '' : 'on'}"><span>Fotos</span> (${nOn})</button><button data-m="tab-bin" class="${M.bin ? 'on' : ''}"><span>Papierkorb</span> (${nBin})</button></div>
+        <div class="bar mbar"><span>${!L.length ? '' : k ? `<span>${k}</span> <span>ausgewählt</span>` : M.bin ? '<span>Tippe Fotos an, um sie wiederherzustellen oder endgültig zu löschen.</span>' : '<span>Tippe Fotos an, um sie auszuwählen.</span>'}</span>
+          <span class="mrow">${L.length ? `<button class="btn ghost" data-m="all">${k === L.length ? 'Keine auswählen' : 'Alle auswählen'}</button>` : ''}
+          ${M.bin ? `<button class="btn" data-m="restore" ${k && !M.busy ? '' : 'disabled'}>Wiederherstellen</button><button class="btn red" data-m="purge" ${k && !M.busy ? '' : 'disabled'}>Endgültig löschen</button>`
+            : `<button class="btn red" data-m="hide" ${k && !M.busy ? '' : 'disabled'}>Entfernen</button>`}</span></div>
+        ${M.bin ? `<p class="keep" style="margin:0 0 12px"><span>Fotos im Papierkorb werden nach 30 Tagen automatisch gelöscht.</span></p>` : ''}
+        ${L.length ? `<div class="grid pick">${L.map((p, i) => `<figure data-i="${i}" class="${M.sel.has(p.path) ? 'sel' : ''}">${p.thumb || p.kind !== 'video' ? `<img loading="lazy" src="${esc(url(p.thumb || p.path))}" alt="">` : `<video src="${esc(url(p.path))}#t=0.5" preload="metadata" muted playsinline></video>`}<span class="ck">${M.sel.has(p.path) ? '✓' : ''}</span><button class="zoom" data-z="${i}" aria-label="Groß ansehen" title="Groß ansehen">🔍</button>${M.bin ? `<span class="left"><span>noch</span> ${left(p)} <span>${left(p) === 1 ? 'Tag' : 'Tage'}</span></span>` : p.kind !== 'photo' ? `<span class="tag">${p.kind === 'video' ? 'Video' : 'GIF'}</span>` : ''}</figure>`).join('')}</div>`
+          : `<div class="box" style="margin:4vh auto"><p>${M.bin ? 'Der Papierkorb ist leer.' : 'Noch keine Fotos – sobald Fotos gemacht wurden, erscheinen sie hier.'}</p></div>`}`;
+    };
+    const toast = t => { const d = document.createElement('div'); d.textContent = T(t); d.style.cssText = 'position:fixed;left:50%;bottom:24px;translate:-50% 0;z-index:30;background:#fff;color:#111;padding:10px 16px;border-radius:999px;font:600 14px system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.4)'; document.body.appendChild(d); setTimeout(() => d.remove(), 3000); };
+    const reload = async () => { try { const n = await rpc('gallery_manage', { p_token: mtoken, p_password: password }); if (n.ok) M.all = n.photos || []; } catch {} };
+    // Passwort gilt nicht mehr (der Vermieter hat einen neuen Kunden-Link erstellt): Seite neu mit Passwortabfrage
+    const gone = () => { M.busy = false; try { sessionStorage.removeItem('pm-man-' + mtoken); } catch {} manage(''); };
+    const setHidden = async hide => {
+      const paths = [...M.sel]; M.busy = true; draw();
+      try { const j = await rpc('gallery_manage_hide', { p_token: mtoken, p_password: password, p_paths: paths, p_hide: hide });
+        if (!j.ok) { if (j.error === 'password') return gone(); throw new Error(j.error); }
+        const now = new Date().toISOString(), set = new Set(paths); for (const p of M.all) if (set.has(p.path)) p.hidden = hide ? (p.hidden || now) : null;
+        toast(hide ? 'In den Papierkorb gelegt – deine Gäste sehen diese Fotos nicht mehr.' : 'Wiederhergestellt – die Fotos sind wieder in der Galerie.'); M.sel.clear();
+      } catch { alert(T('Das hat nicht geklappt. Bitte die Internetverbindung prüfen und noch einmal versuchen.')); }
+      M.busy = false; draw();
+    };
+    const purge = async () => {
+      if (!confirm(T('Die ausgewählten Fotos endgültig löschen? Das kann nicht rückgängig gemacht werden.'))) return;
+      const paths = [...M.sel]; M.busy = true; draw();
+      try {
+        for (let i = 0; i < paths.length; i += 500) {
+          const res = await fetch(CFG.supabaseUrl + '/functions/v1/photo-store', { method: 'POST', body: JSON.stringify({ action: 'manage-delete', token: mtoken, password, paths: paths.slice(i, i + 500) }),
+            headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey, 'X-Galerie-Kunde': '1' } });
+          if (res.status === 403) return gone();
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+        }
+        toast('Endgültig gelöscht.'); M.sel.clear(); await reload();
+      } catch { alert(T('Das hat nicht geklappt. Bitte die Internetverbindung prüfen und noch einmal versuchen.')); await reload(); }
+      M.busy = false; draw();
+    };
+    $('#main').onclick = async e => {
+      const z = e.target.closest('[data-z]'); if (z) { e.stopPropagation(); return open(+z.dataset.z); }
+      const m = e.target.closest('[data-m]')?.dataset.m;
+      if (m === 'copy') { try { await navigator.clipboard.writeText(shareText()); toast('Link kopiert – jetzt z. B. in WhatsApp einfügen.'); } catch { prompt(T('Link für deine Gäste'), guestLink); } return; }
+      if (m === 'wa') return window.open('https://wa.me/?text=' + encodeURIComponent(shareText()), '_blank', 'noopener');
+      if (m === 'mail') { location.href = 'mailto:?subject=' + encodeURIComponent(T('Unsere Fotos') + ' – ' + (r.name || '')) + '&body=' + encodeURIComponent(shareText()); return; }
+      if (m === 'share') { navigator.share({ title: r.name || T('Fotogalerie'), text: shareText() }).catch(() => {}); return; }
+      if (M.busy && m) return;
+      if (m === 'tab-on' || m === 'tab-bin') { M.bin = m === 'tab-bin'; M.sel.clear(); return draw(); }
+      if (m === 'all') { const L = view(); if (M.sel.size === L.length) M.sel.clear(); else L.forEach(p => M.sel.add(p.path)); return draw(); }
+      if (M.busy) return;
+      if (m === 'hide') return setHidden(true);
+      if (m === 'restore') return setHidden(false);
+      if (m === 'purge') return purge();
+      const f = e.target.closest('.grid.pick figure'); if (!f) return;
+      const p = view()[+f.dataset.i]; if (!p) return;
+      if (M.sel.has(p.path)) M.sel.delete(p.path); else M.sel.add(p.path);
+      draw();
+    };
+    draw();
+  }
+
   let saved = ''; try { saved = sessionStorage.getItem('pm-gal-' + token) || ''; } catch {}
-  if (single) showSingle(); else { langSel(); load(saved); }
+  if (mtoken) { let ms = ''; try { ms = sessionStorage.getItem('pm-man-' + mtoken) || ''; } catch {}
+    $('footer').textContent = 'Diese Seite ist nur für dich. Bitte den Verwaltungs-Link nicht weitergeben – für deine Gäste ist der Link oben.'; langSel(); manage(ms); }
+  else if (single) showSingle(); else { langSel(); load(saved); }
 })();
 </script>
 </body>
