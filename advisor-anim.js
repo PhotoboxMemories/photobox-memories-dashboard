@@ -8,6 +8,13 @@
   // Animationen: Schritt = wofür sie gedacht ist (Vorschlag in der Bibliothek), loop = läuft, bis der nächste Schritt kommt
   const LIB = [
     { id: 'touch', name: 'Tippen zum Starten', text: 'Tippen zum Starten!', icon: 'pointer', step: 'touch', loop: true, soft: true },
+    // weitere Startbildschirm-Animationen (Dashboard → Startbildschirm → „Animation (selbst wählen)“), laufen in Schleife
+    { id: 'st_photo', name: 'Foto-Zeit', text: 'Zeit für ein Foto – tipp mich an!', icon: 'camera', step: 'touch', loop: true, soft: true },
+    { id: 'st_smile', name: 'Lächeln & tippen', text: 'Lächeln und antippen!', icon: 'smile', step: 'touch', loop: true, soft: true },
+    { id: 'st_come', name: 'Komm vorbei', text: 'Komm vorbei und mach ein Foto!', icon: 'party', step: 'touch', loop: true, soft: true },
+    { id: 'st_moment', name: 'Halte den Moment fest', text: 'Halte den Moment fest!', icon: 'heart', step: 'touch', loop: true, soft: true },
+    { id: 'st_friends', name: 'Schnapp dir deine Freunde', text: 'Schnapp dir deine Freunde!', icon: 'users', step: 'touch', loop: true, soft: true },
+    { id: 'st_star', name: 'Werde zum Star', text: 'Werde zum Star!', icon: 'star', step: 'touch', loop: true, soft: true },
     { id: 'ready', name: 'Mach dich bereit', text: 'Mach dich bereit!', icon: 'camera', step: 'pre' },
     { id: 'pose', name: 'Lustige Pose', text: 'Und jetzt eine lustige Pose!', icon: 'smile', step: 'pre' },
     { id: 'together', name: 'Alle zusammen', text: 'Alle schön zusammenrücken!', icon: 'users', step: 'pre' },
@@ -85,6 +92,7 @@
   // Symbol-Bewegung je Animation (Tippen, Sanduhr, Herzschlag, Blitz …)
   function iconMotion(it, sec, a) {
     if (it.id === 'touch') { const p = (sec % 1.6) / 1.6; return { s: 1 - .12 * Math.sin(clamp(p / .25) * Math.PI), r: 0, tap: p }; }
+    if (it.step === 'touch') return { s: outBack(a) * (1 + .07 * Math.sin(sec * 3.2)), r: Math.sin(sec * 1.8) * .07 * a, tap: -1 }; // sanftes Wippen in Schleife
     if (it.id === 'processing') { const p = (sec % 1.6) / 1.6; return { s: 1, r: outCubic(clamp((p - .55) / .35)) * Math.PI, tap: -1 }; }
     if (it.icon === 'heart') return { s: outBack(a) * (1 + .08 * Math.max(0, Math.sin(sec * 7))), r: 0, tap: -1 };
     return { s: outBack(a), r: Math.sin(sec * 3) * .06 * a, tap: -1 };
@@ -259,7 +267,7 @@
   .aa-dlg .ft{display:flex;justify-content:flex-end;gap:10px;padding:12px 18px;border-top:1px solid #3d3d44}
   .aa-dlg .ft button{border-radius:999px;padding:8px 18px;font:inherit;cursor:pointer;border:1px solid #8e8e94;background:none;color:#f2f2f2}
   .aa-dlg .ft button.p{background:#F7C838;border-color:#F7C838;color:#1D1D1B;font-weight:700}`;
-  // o: { style, selected: [ids], multi, step } → Promise<{ ids, style } | null>
+  // o: { style, selected: [ids], multi, step, title } → Promise<{ ids, style } | null>
   function pick(o = {}) {
     if (!document.getElementById('aa-css')) { const st = document.createElement('style'); st.id = 'aa-css'; st.textContent = CSS; document.head.appendChild(st); }
     let style = DRAW[o.style] ? o.style : 'neon', land = false; const sel = new Set(o.selected || []), stops = [];
@@ -272,7 +280,7 @@
       gr.innerHTML = order.map(it => `<button class="it ${sel.has(it.id) ? 'on' : ''}" data-id="${it.id}"><div class="pv"></div><div class="nm">${esc(tr(it.name))}${it.step === o.step ? `<small>${esc(tr('passt zu diesem Schritt'))}</small>` : ''}</div></button>`).join('');
       gr.querySelectorAll('.it').forEach(b => stops.push(tile(b.querySelector('.pv'), b.dataset.id, style, tr(byId(b.dataset.id).text))));
     };
-    d.innerHTML = `<div><div class="hd"><b>${esc(tr('Animationen für den Virtuellen Berater'))}${stepName ? ' · ' + esc(tr(stepName)) : ''}</b>
+    d.innerHTML = `<div><div class="hd"><b>${o.title ? esc(tr(o.title)) : esc(tr('Animationen für den Virtuellen Berater')) + (stepName ? ' · ' + esc(tr(stepName)) : '')}</b>
       <select data-st>${STYLES.map(s => `<option value="${s.id}" ${s.id === style ? 'selected' : ''}>${esc(tr(s.name))}</option>`).join('')}</select>
       <span class="seg"><button data-o="p" class="on">${esc(tr('Hochformat'))}</button><button data-o="l">${esc(tr('Querformat'))}</button></span></div>
       <div class="gr"></div>
