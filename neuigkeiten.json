@@ -1,6 +1,104 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.116": {
+   "date": "2026-11-18",
+   "notes": {
+    "de": [
+     "Ein neues Ereignis übernimmt jetzt den Ablauf Ihres letzten Ereignisses – zum Beispiel Countdown, Aufnahme-Arten, Drucken und Teilen. Sie müssen das nicht jedes Mal neu einstellen. Layouts, Bilder und Texte wählen Sie für jedes Ereignis neu. Für bestimmte Locations können Sie weiterhin eigene Voreinstellungen mit Namen speichern und mit einem Klick übernehmen.",
+     "Der Knopf zum Abbrechen während der Aufnahme ist größer und trägt jetzt die Aufschrift „Abbrechen“."
+    ],
+    "en": [
+     "A new event now takes over the flow of your last event – for example countdown, capture modes, printing and sharing. You no longer have to set this up every time. Layouts, images and texts are chosen anew for each event. For particular venues you can still save your own named presets and apply them with one click.",
+     "The button for cancelling during capture is bigger and now says “Cancel”."
+    ],
+    "tr": [
+     "Yeni bir etkinlik artık son etkinliğinizin akışını devralıyor – örneğin geri sayım, çekim türleri, yazdırma ve paylaşım. Bunu her seferinde yeniden ayarlamanız gerekmiyor. Düzenleri, görselleri ve metinleri her etkinlik için yeniden seçersiniz. Belirli mekânlar için yine adlandırılmış kendi ön ayarlarınızı kaydedip tek tıkla uygulayabilirsiniz.",
+     "Çekim sırasında iptal düğmesi daha büyük ve artık üzerinde „İptal“ yazıyor."
+    ],
+    "fr": [
+     "Un nouvel événement reprend désormais le déroulement de votre dernier événement – par exemple le compte à rebours, les modes de prise de vue, l’impression et le partage. Vous n’avez plus à tout régler à chaque fois. Les mises en page, images et textes se choisissent à nouveau pour chaque événement. Pour certains lieux, vous pouvez toujours enregistrer vos propres préréglages nommés et les appliquer en un clic.",
+     "Le bouton pour annuler pendant la prise de vue est plus grand et porte désormais l’inscription « Annuler »."
+    ],
+    "es": [
+     "Un evento nuevo adopta ahora el desarrollo de su último evento, por ejemplo la cuenta atrás, los modos de captura, la impresión y el compartir. Ya no tiene que configurarlo cada vez. Los diseños, imágenes y textos se eligen de nuevo para cada evento. Para lugares concretos puede seguir guardando sus propios ajustes predefinidos con nombre y aplicarlos con un clic.",
+     "El botón para cancelar durante la captura es más grande y ahora dice «Cancelar»."
+    ],
+    "it": [
+     "Un nuovo evento ora riprende lo svolgimento del tuo ultimo evento – ad esempio conto alla rovescia, modalità di scatto, stampa e condivisione. Non devi più impostarlo ogni volta. Layout, immagini e testi si scelgono di nuovo per ogni evento. Per location specifiche puoi continuare a salvare preimpostazioni con un nome e applicarle con un clic.",
+     "Il pulsante per annullare durante lo scatto è più grande e ora riporta la scritta «Annulla»."
+    ]
+   }
+  },
+  "1.18.115": {
+   "date": "2026-11-18",
+   "notes": {
+    "de": [
+     "Neue Ereignisse lassen sich jetzt direkt an der Fotobox anlegen, auch wenn sie nur mit dem Lizenzschlüssel angemeldet ist. Das Ereignis erscheint sofort in Ihrem Konto im Dashboard, und Ihre Voreinstellungen stehen dabei zur Auswahl."
+    ],
+    "en": [
+     "New events can now be created directly on the photo booth, even when it is signed in with the licence key only. The event appears in your dashboard account right away, and your presets are available to choose from."
+    ],
+    "tr": [
+     "Yeni etkinlikler artık fotoğraf kabini yalnızca lisans anahtarıyla oturum açmış olsa bile doğrudan kabinde oluşturulabiliyor. Etkinlik hemen kontrol panelindeki hesabınızda görünür ve ön ayarlarınız seçime hazırdır."
+    ],
+    "fr": [
+     "Les nouveaux événements peuvent désormais être créés directement sur la photobooth, même si elle n’est connectée qu’avec la clé de licence. L’événement apparaît aussitôt dans votre compte du tableau de bord, et vos préréglages sont proposés."
+    ],
+    "es": [
+     "Ahora se pueden crear nuevos eventos directamente en el fotomatón, aunque solo esté conectado con la clave de licencia. El evento aparece al instante en su cuenta del panel y sus ajustes predefinidos están disponibles para elegir."
+    ],
+    "it": [
+     "Ora è possibile creare nuovi eventi direttamente sul photobooth, anche se è collegato solo con la chiave di licenza. L’evento compare subito nel tuo account della dashboard e le tue preimpostazioni sono disponibili per la scelta."
+    ]
+   }
+  },
+  "1.18.114": {
+   "date": "2026-11-17",
+   "notes": {
+    "de": [
+     "Der Bildschirm zum Teilen passt sich jetzt selbst an, wenn die Fotobox hochkant oder quer steht: Wurde er nur für eine Ausrichtung gestaltet, stehen Foto, Filter und Knöpfe in der anderen trotzdem ordentlich nebeneinander – mit Ihren Farben und Texten. Die Filter verdecken die Beschriftung der Knöpfe nicht mehr."
+    ],
+    "en": [
+     "The sharing screen now adapts by itself when the photo booth stands upright or sideways: if it was designed for only one orientation, the photo, filters and buttons still line up neatly in the other one – with your colours and texts. The filters no longer cover the button labels."
+    ],
+    "tr": [
+     "Paylaşım ekranı artık fotoğraf kabini dik ya da yatay durduğunda kendini otomatik olarak uyarlıyor: Yalnızca bir yön için tasarlanmış olsa bile fotoğraf, filtreler ve düğmeler diğer yönde de renkleriniz ve metinlerinizle düzgünce yan yana durur. Filtreler artık düğme yazılarını kapatmıyor."
+    ],
+    "fr": [
+     "L’écran de partage s’adapte désormais tout seul lorsque la photobooth est à la verticale ou à l’horizontale : s’il n’a été conçu que pour une orientation, la photo, les filtres et les boutons restent bien alignés dans l’autre – avec vos couleurs et vos textes. Les filtres ne cachent plus les libellés des boutons."
+    ],
+    "es": [
+     "La pantalla para compartir ahora se adapta sola cuando el fotomatón está en vertical u horizontal: si solo se diseñó para una orientación, la foto, los filtros y los botones quedan bien ordenados también en la otra, con sus colores y textos. Los filtros ya no tapan los textos de los botones."
+    ],
+    "it": [
+     "La schermata di condivisione ora si adatta da sola quando il photobooth è in verticale o in orizzontale: se è stata progettata per un solo orientamento, foto, filtri e pulsanti restano ben ordinati anche nell’altro, con i tuoi colori e testi. I filtri non coprono più le scritte dei pulsanti."
+    ]
+   }
+  },
+  "1.18.113": {
+   "date": "2026-11-17",
+   "notes": {
+    "de": [
+     "Farben wählen geht jetzt bequem mit dem Finger: Beim Antippen eines Farbfelds öffnet sich ein großes Fenster mit passenden Farbvorschlägen, zuletzt benutzten Farben und großen Reglern für Farbton, Helligkeit und Farbkraft – ganz ohne Tastatur."
+    ],
+    "en": [
+     "Choosing colours is now easy with your finger: tapping a colour field opens a large window with matching colour suggestions, recently used colours and big sliders for hue, brightness and intensity – no keyboard needed."
+    ],
+    "tr": [
+     "Renk seçmek artık parmakla çok kolay: Bir renk alanına dokunduğunda uygun renk önerileri, son kullanılan renkler ve renk tonu, parlaklık ve renk yoğunluğu için büyük kaydırıcılar içeren büyük bir pencere açılır – klavyeye gerek yok."
+    ],
+    "fr": [
+     "Choisir une couleur se fait maintenant facilement au doigt : en touchant un champ de couleur, une grande fenêtre s'ouvre avec des suggestions assorties, les couleurs récemment utilisées et de grands curseurs pour la teinte, la luminosité et l'intensité – sans clavier."
+    ],
+    "es": [
+     "Elegir colores ahora es cómodo con el dedo: al tocar un campo de color se abre una ventana grande con sugerencias de colores, los colores usados recientemente y controles grandes para tono, brillo e intensidad, sin teclado."
+    ],
+    "it": [
+     "Scegliere i colori ora è comodo con il dito: toccando un campo colore si apre una grande finestra con suggerimenti di colore, i colori usati di recente e grandi cursori per tonalità, luminosità e intensità – senza tastiera."
+    ]
+   }
+  },
   "1.18.112": {
    "date": "2026-11-17",
    "notes": {

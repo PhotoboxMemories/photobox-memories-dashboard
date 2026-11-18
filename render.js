@@ -479,6 +479,7 @@
   function adaptScreen(L, orient) {
     const F = SCREEN_SIZES[orient]; if (!L || !F) return L;
     if (L.orient === orient) return L;
+    if (L.kind === 'share') return !L.orient && (L.w >= L.h ? 'landscape' : 'portrait') === orient ? L : adaptShare(L, orient); // ohne Angabe: Seitenverhältnis zählt
     const out = JSON.parse(JSON.stringify(L)), sx = F.w / L.w, sy = F.h / L.h, k = Math.min(sx, sy), toPortrait = sy > sx;
     for (const e of out.elements || []) {
       const fullW = e.w >= L.w * .9, fullH = e.h >= L.h * .9, cx = (e.x + e.w / 2) * sx, cy = (e.y + e.h / 2) * sy;
@@ -490,6 +491,53 @@
     }
     out.orient = orient; out.w = F.w; out.h = F.h; out.adapted = true;
     return out;
+  }
+  // Bildschirm zum Teilen für die andere Ausrichtung (Betreiber 17.11.2026: Knöpfe lagen auf einem hochkant gestellten Bildschirm übereinander,
+  // halb aus dem Bild und unter der Filter-Leiste). Einfaches Umrechnen geht hier nicht: Die Knöpfe stehen dicht in einer Reihe und behalten
+  // ihre Größe, die Abstände schrumpfen. Darum stehen Foto, Filter-Leiste und Schaltflächen an den Stellen des Standard-Vorschlags für diese
+  // Ausrichtung – mit Farben, Texten, Symbolen und Ein/Aus aus der eigenen Gestaltung. Eigene Texte, Bilder und Formen werden umgerechnet.
+  const SHARE_ROW = ['bRetake', 'bDeco', 'bPrint', 'bQR', 'bDone']; // obere Reihe des Standard-Vorschlags
+  const shareKey = e => e.type === 'sbtn' ? e.key : e.type;
+  function adaptShare(L, orient) {
+    const F = SCREEN_SIZES[orient], src = L.elements || [], def = new Map(createShare(orient).elements.map(e => [shareKey(e), e]));
+    const other = adaptScreen({ ...L, kind: 'screen', elements: src.filter(e => !def.has(shareKey(e))) }, orient).elements;
+    const s = Math.min(F.w, F.h) / Math.min(L.w, L.h), mid = e => e.shape === 'pill' ? e.y + e.h / 2 : e.y + e.w / 2; // Höhe der Knopfmitte (rund: Kreis oben, Text darunter)
+    let i = 0;
+    const els = src.map(e => {
+      const d = def.get(shareKey(e)); if (!d) return other[i++];
+      const c = { ...e, x: d.x, y: d.y, w: d.w, h: d.h, rot: 0 };
+      if (e.type === 'sbtn' && (e.shape === 'pill') !== (d.shape === 'pill')) { // eigene Form (rund ↔ länglich): eigene Größe, auf einer Höhe mit den anderen
+        c.w = Math.round(Math.min(e.w * s, F.w * .9)); c.h = Math.round(Math.min(e.h * s, F.h * .2));
+        c.x = Math.round(Math.min(Math.max(d.x + d.w / 2 - c.w / 2, 0), F.w - c.w));
+        c.y = Math.round(Math.min(Math.max(mid(d) - (c.shape === 'pill' ? c.h : c.w) / 2, 0), F.h - c.h));
+      }
+      return c;
+    });
+    // ausgeblendete Knöpfe hinterlassen keine Lücke: die übrigen der oberen Reihe stehen wieder mittig
+    const row = SHARE_ROW.map(k => els.find(e => e.type === 'sbtn' && e.key === k && !e.hidden)).filter(Boolean), gap = 2.4 * Math.min(F.w, F.h) / 100;
+    let x = (F.w - row.reduce((a, e) => a + e.w, 0) - gap * (row.length - 1)) / 2;
+    if (x >= 0) for (const e of row) { e.x = Math.round(x); x += e.w + gap; }
+    // eigene Bilder, Texte, QR-Codes nicht auf Knöpfe, Filter-Leiste oder Foto legen: in die nächste freie Lücke darüber oder darunter, wenn nötig kleiner
+    const fixed = els.filter(e => def.has(shareKey(e)) && !e.hidden);
+    for (const e of els) if (!def.has(shareKey(e)) && !e.hidden && !(e.w >= F.w * .9 && e.h >= F.h * .9)) freeSpot(e, fixed, F);
+    return { ...JSON.parse(JSON.stringify({ ...L, elements: els })), orient, w: F.w, h: F.h, adapted: true };
+  }
+  function freeSpot(e, boxes, F) {
+    const overX = b => e.x < b.x + b.w && b.x < e.x + e.w, hit = b => overX(b) && e.y < b.y + b.h && b.y < e.y + e.h;
+    if (!boxes.some(hit)) return;
+    const col = boxes.filter(overX).sort((a, b) => a.y - b.y), gaps = [], pad = Math.round(Math.min(F.w, F.h) / 100), cy = e.y + e.h / 2;
+    let top = 0;
+    for (const b of col) { if (b.y > top) gaps.push([top, b.y]); top = Math.max(top, b.y + b.h); }
+    if (top < F.h) gaps.push([top, F.h]);
+    let best = null;
+    for (const [a, z] of gaps) {
+      const h = Math.min(e.h, z - a - 2 * pad); if (h < Math.min(e.h, 40)) continue;
+      const y = Math.min(Math.max(cy - h / 2, a + pad), z - pad - h), cost = Math.abs(y + h / 2 - cy) + (e.h - h) * 3; // lieber verschieben als stark verkleinern
+      if (!best || cost < best.cost) best = { y, h, cost };
+    }
+    if (!best) return;
+    if (best.h < e.h) { const k = best.h / e.h, cx = e.x + e.w / 2; e.w = Math.round(e.w * k); e.x = Math.round(cx - e.w / 2); e.h = Math.round(best.h); }
+    e.y = Math.round(best.y);
   }
   function applyTheme(L, id) {
     const t = SCREEN_THEMES.find(x => x.id === id); if (!t) return;
@@ -523,13 +571,14 @@
     const F = SCREEN_SIZES[orient] || SCREEN_SIZES.portrait, land = F.w > F.h, u = Math.min(F.w, F.h) / 100, R = Math.round, els = [];
     const ph = F.h * (land ? .56 : .5), pw = Math.min(F.w * .9, land ? ph * 1.6 : F.w * .9);
     els.push({ id: uid(), type: 'spic', x: R((F.w - pw) / 2), y: R(F.h * (land ? .28 : .3)), w: R(pw), h: R(ph), rot: 0 });
-    els.push({ id: uid(), type: 'sfil', x: R(F.w * .05), y: R(F.h * (land ? .165 : .19) - 3 * u), w: R(F.w * .9), h: R(6 * u), rot: 0 });
-    const d = 9 * u, rh = d * 1.32, cy = F.h * (land ? .085 : .07), row = ['bRetake', 'bDeco', 'bPrint', 'bQR', 'bDone'];
+    const d = 9 * u, rh = d * 1.32, cy = F.h * (land ? .085 : .07), row = SHARE_ROW;
+    // Filter-Leiste erst unter der Beschriftung der Knöpfe (im Querformat lag sie über „Drucken“, Betreiber 17.11.2026)
+    els.push({ id: uid(), type: 'sfil', x: R(F.w * .05), y: R(Math.max(F.h * (land ? .165 : .19) - 3 * u, cy - d / 2 + rh + 1.5 * u)), w: R(F.w * .9), h: R(6 * u), rot: 0 });
     const wOf = k => k === 'bRetake' ? 36 * u : k === 'bDone' ? 16 * u : d, gap = 2.4 * u;
     let x0 = (F.w - (row.reduce((a, k) => a + wOf(k), 0) + gap * (row.length - 1))) / 2;
     const btn = (key, x, y, w, h) => { const b = SHARE_DEF[key]; els.push({ id: uid(), type: 'sbtn', key, shape: b.shape, text: b.text, fill: b.fill, color: b.color, font: 'modern', x: R(x), y: R(y), w: R(w), h: R(h), rot: 0 }); };
     for (const k of row) { const w = wOf(k), pill = SHARE_DEF[k].shape === 'pill', h = pill ? 6 * u : rh; btn(k, x0, cy - (pill ? h : d) / 2, w, h); x0 += w + gap; }
-    btn('bMosaic', F.w - 3 * u - d, F.h * .5 - d / 2, d, rh); // erscheint nur, wenn Gäste selbst entscheiden, was ins Mosaik kommt
+    btn('bMosaic', F.w - 3 * u - d, land ? F.h * .5 - d / 2 : F.h * .86, d, rh); // Hochformat: unter dem Foto statt auf dessen Rand // erscheint nur, wenn Gäste selbst entscheiden, was ins Mosaik kommt
     return { id: uid(), screen: true, kind: 'share', orient: SCREEN_SIZES[orient] ? orient : 'portrait', w: F.w, h: F.h, theme: '', bg: '#222225', bgGrad: null, bgImage: '', bgFit: 'cover', live: false, elements: els };
   }
   // Magnetisches Einrasten beim Verschieben im Editor (Betreiber 04.11.2026): an Seitenrändern und -mitte, an Kanten und Mitten der anderen

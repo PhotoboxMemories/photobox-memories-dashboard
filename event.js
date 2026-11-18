@@ -2598,6 +2598,24 @@
   // Karikatur eingeschaltet, aber ohne gültigen Code (Voreinstellungen speichern ihn nie): neuen Code setzen, sonst prüft der Server keinen
   const withSecret = st => { const c = st?.x?.caricature; if (c && !/^[0-9a-f]{16,64}$/.test(c.secret || '')) c.secret = Caricature.newSecret(); return st; };
   const fmtDay = d => { try { return new Date(d).toLocaleDateString('de-DE'); } catch { return ''; } };
+  // Letztes normales Ereignis (Betreiber 18.11.2026: „wenn die Countdown einmal eingestellt haben, soll es immer so bleiben, bis sie es ändern“):
+  // Ohne Standard-Voreinstellung übernimmt ein neues Ereignis dessen ABLAUF (lastFlow) – nur allgemeine Einstellungen, nichts was zu einem
+  // bestimmten Ereignis gehört (Layouts, Start-/Teilen-Bilder, Mosaik-Bild, Begrüßungsvideo, Logos, Texte, Passwort, Codes).
+  // Sonder-Ereignisse (Live-Karikatur, 360°, nur Zeichenroboter) zählen nicht – sonst wäre ein neues Foto-Ereignis plötzlich eins davon.
+  const PHOTO_MODES = ['single', 'strip', 'grid'];
+  const evSpecial = s => !!(s?.x?.caricature?.on || s?.x?.slowmo?.enabled || (s?.x?.robot?.enabled && !PHOTO_MODES.some(k => s?.modes?.[k])));
+  const FLOW_KEYS = ['countdown', 'countdownNext', 'between', 'autoReturn', 'sound', 'mirror', 'mirrorPhoto', 'cropLive', 'faces', 'liveView', 'modes', 'gifFrames', 'gifDelay',
+    'gifReverse', 'boomerangLen', 'videoSecs', 'videoAudio', 'gifFromPhotos', 'guestLayouts', 'filtersOn', 'filters', 'stickers', 'share', 'autoPrint', 'printButton', 'askCopies',
+    'maxCopies', 'printLimit', 'showPrintsLeft', 'copies'];
+  const FLOW_X = { share: ['originals', 'deleteBtn', 'cloud', 'uploadOriginals', 'origUp'], gallery: ['link', 'guests', 'downloadAll'], lang: ['guest', 'pick', 'list'],
+    video: ['countdown', 'quality', 'saveOriginal'], gif: ['size', 'reverse', 'delay'] };
+  const lastFlow = st => { const s = st || {}, o = {};
+    for (const k of FLOW_KEYS) if (s[k] !== undefined) o[k] = structuredClone(s[k]);
+    for (const [g, ks] of Object.entries(FLOW_X)) for (const k of ks) if (s.x?.[g]?.[k] !== undefined) ((o.x ??= {})[g] ??= {})[k] = structuredClone(s.x[g][k]);
+    if (o.modes && !PHOTO_MODES.some(k => o.modes[k])) o.modes = { single: true, strip: false, grid: false, gif: false, boomerang: false, video: false }; // nur Video: neues Foto-Ereignis wieder mit Foto
+    return o; };
+  const lastEvent = (events, id) => { const ok = (events || []).filter(e => e && !e.lite && e.settings && typeof e.settings === 'object' && !evSpecial(e.settings));
+    return ok.find(e => id && e.id === id) || ok.slice().sort((a, b) => String(b.updated_at || '').localeCompare(String(a.updated_at || '')))[0] || null; };
 
   // „Erstellen Sie ein neues Ereignis“ – Ereignisart wählen
   // Live-Karikatur steht als eigene App ganz oben: nur Einzelfotos (jedes wird eine Karikatur, 1 Credit), Handy-Selfies an
@@ -2614,7 +2632,7 @@
       { modes: { single: false, strip: false, grid: false, gif: false, boomerang: false, video: false }, x: { robot: { enabled: true, cut: 'scene', guestPick: true } } }]
   ];
   function newEventDialog(events, onPick, opts = {}) {
-    const cariOk = !opts.extra || opts.extra('caricature');
+    const cariOk = !opts.extra || opts.extra('caricature'), last = lastEvent(events, opts.lastId);
     if (!document.getElementById('ws-css')) { const s = document.createElement('style'); s.id = 'ws-css'; s.textContent = CSS; document.head.appendChild(s); }
     const m = document.createElement('div'); m.id = 'wsModal';
     let sec = '';
@@ -2638,7 +2656,8 @@
       const t = TYPES.find(x => x[1] === b.dataset.type);
       if (t[1] === 'cari' && !cariOk) return (opts.toast || alert)('Live-Karikatur ist für Ihr Konto noch nicht freigeschaltet – bitte bei Photobox Memories melden.', 6000);
       // Standard-Voreinstellung: gilt für jedes neue Ereignis, die Ereignisart setzt ihre eigenen Werte darüber
-      const def = presets.find(x => x.is_default), set = def ? withSecret(deepMerge(Presets.clean(def.settings), structuredClone(t[5]))) : structuredClone(t[5]); m.remove();
+      const def = presets.find(x => x.is_default), base = def ? Presets.clean(def.settings) : last ? lastFlow(last.settings) : null;
+      const set = base ? withSecret(deepMerge(base, structuredClone(t[5]))) : structuredClone(t[5]); m.remove();
       if (!set.modes) set.modes = { single: true, strip: false, grid: false, gif: false, boomerang: false, video: false }; // neues Ereignis: nur „Foto“ an, alles andere schaltet der Betreiber selbst ein
       if (def?.logo_url) { if (t[1] === 'cari') { set.x.caricature.secret = Caricature.newSecret(); return onPick(set, def.logo_url, null, 'Live-Karikatur', 'cari'); }
         return onPick(set, def.logo_url, null, t[3], t[1] === 'robot' ? 'robot' : undefined); }
@@ -2648,10 +2667,11 @@
     });
     document.body.appendChild(m);
     // eigene Voreinstellungen oben anzeigen
-    loadP.then(() => { const L = presets; if (!L.length || !document.body.contains(m)) return;
+    loadP.then(() => { const L = presets; if (!document.body.contains(m)) return;
       const def = L.find(x => x.is_default);
+      if (!L.length) { if (last) $(m, '.presetBox').innerHTML = `<p style="margin:0 20px 6px;color:#777;font-size:12.5px"><span>Neue Ereignisse übernehmen den Ablauf Ihres letzten Ereignisses – Countdown, Aufnahme-Arten, Drucken und Teilen. Layouts, Bilder und Texte wählen Sie neu:</span> <b translate="no">${esc(last.name)}</b></p>`; return; }
       $(m, '.presetBox').innerHTML = `<div class="sec">MEINE VOREINSTELLUNGEN</div>${L.map(p => `<button class="et" data-preset="${esc(p.id)}"><span class="ei">${ICON(p.is_default ? 'star' : 'layers', 22)}</span><span><b style="font-family:inherit">${esc(p.name)}${p.is_default ? '<span class="stdtag">Standard</span>' : ''}</b><small>Alle Einstellungen übernehmen</small></span></button>`).join('')}
-        ${def ? `<p style="margin:0 20px 6px;color:#777;font-size:12.5px"><span>Bei jeder anderen Ereignisart werden die Einstellungen der Standard-Voreinstellung übernommen:</span> <b translate="no">${esc(def.name)}</b></p>` : ''}`;
+        ${def ? `<p style="margin:0 20px 6px;color:#777;font-size:12.5px"><span>Bei jeder anderen Ereignisart werden die Einstellungen der Standard-Voreinstellung übernommen:</span> <b translate="no">${esc(def.name)}</b></p>` : last ? `<p style="margin:0 20px 6px;color:#777;font-size:12.5px"><span>Neue Ereignisse übernehmen den Ablauf Ihres letzten Ereignisses – Countdown, Aufnahme-Arten, Drucken und Teilen. Layouts, Bilder und Texte wählen Sie neu:</span> <b translate="no">${esc(last.name)}</b></p>` : ''}`;
     });
   }
   // Themen für den Zeichenroboter (Aufnahme-Art „Zeichnung“): Gäste wählen vor dem Foto, die KI zeichnet sie passend als Strichzeichnung.
