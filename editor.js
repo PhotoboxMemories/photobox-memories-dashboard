@@ -734,6 +734,8 @@
           <div class="g3"><div><label class="l">Ecken-Radius</label><input type="number" min="0" data-p="radius" value="${e.radius || 0}"></div>
           <div><label class="l">Rahmenfarbe</label><input type="color" data-p="stroke" value="${hex(e.stroke, '#ffffff')}"></div>
           <div><label class="l">Rahmen (px)</label><input type="number" min="0" data-p="strokeW" value="${e.strokeW || 0}"></div></div>
+          <label class="l">Hintergrund entfernen</label><select data-p="nobg"><option value="" ${e.nobg ? '' : 'selected'}>Wie im Ereignis eingestellt</option><option value="1" ${e.nobg ? 'selected' : ''}>Nie – dieses Foto behält den echten Hintergrund</option></select>
+          <p class="muted">Wirkt nur, wenn im Ereignis „Hintergrund entfernen“ eingeschaltet ist. So kann ein Foto freigestellt sein und ein anderes den echten Hintergrund zeigen.</p>
           ${shadowSec(e)}<p class="muted">Tipp: Mehrere Felder mit derselben Nummer zeigen dasselbe Foto.</p>`;
       }
       if (e.type === 'text') {
@@ -860,7 +862,8 @@
       if (k === 'show') { e.hidden = !t.checked; draw(); commit(); renderProps(); return; }
       if (k === 'shadow') { e.shadow = t.checked; if (e.shadow) shadowDefaults(e); draw(); commit(); renderProps(); return; }
       if (k === 'outline') { if (t.checked) { e._fill = e.fill || e._fill; e.fill = ''; } else e.fill = e._fill || '#3a3a40'; draw(); commit(); renderProps(); return; }
-      if (k === 'nofill') { e.fill = t.value ? '' : (e._fill || '#ffffff'); }
+      if (k === 'nobg') { if (t.value) e.nobg = true; else delete e.nobg; } // Fotofeld: Hintergrund nie entfernen
+      else if (k === 'nofill') { e.fill = t.value ? '' : (e._fill || '#ffffff'); }
       else if (k === 'fill') { e.fill = t.value; e._fill = t.value; }
       else if (k === 'size') e.size = /^\d+$/.test(t.value.trim()) ? +t.value : 'auto';
       else if ((k === 'w' || k === 'h') && keepRatio(e)) {

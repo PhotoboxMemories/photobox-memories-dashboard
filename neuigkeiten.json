@@ -1,6 +1,267 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.125": {
+   "date": "2026-11-21",
+   "notes": {
+    "de": [
+     "Behoben: Mit einer Spiegelreflex- oder Systemkamera konnte die Fotobox nach der Aufnahme dauerhaft das Foto davor zeigen, bis sie neu gestartet wurde. Sie prüft jetzt vor jedem Auslösen neu, welches Foto das letzte war. Auch Kameras, die RAW und JPG zugleich speichern, liefern jetzt das richtige Bild.",
+     "Behoben: Auf einem selbst gestalteten Bildschirm zum Teilen (und im Fotolayout mit QR-Code) stand kurz noch der QR-Code der vorherigen Gäste. Wer sofort scannte, bekam das Foto davor. Jetzt erscheint der QR-Code erst, wenn er zum neuen Foto gehört."
+    ],
+    "en": [
+     "Fixed: with a DSLR or mirrorless camera, the photo booth could permanently show the previous photo after capture until it was restarted. It now checks before every shot which photo was the last one. Cameras that save RAW and JPG at the same time now deliver the right picture as well.",
+     "Fixed: on a custom-designed sharing screen (and in a photo layout with a QR code), the QR code of the previous guests was still shown for a moment. Anyone who scanned right away got the photo before. Now the QR code only appears once it belongs to the new photo."
+    ],
+    "tr": [
+     "Düzeltildi: DSLR veya aynasız fotoğraf makinesiyle, fotoğraf kabini çekimden sonra yeniden başlatılana kadar sürekli bir önceki fotoğrafı gösterebiliyordu. Artık her çekimden önce son fotoğrafın hangisi olduğunu yeniden kontrol ediyor. RAW ve JPG’yi aynı anda kaydeden makineler de artık doğru görüntüyü veriyor.",
+     "Düzeltildi: Kendi tasarladığınız paylaşım ekranında (ve QR kodlu fotoğraf düzeninde) kısa bir süre önceki misafirlerin QR kodu görünüyordu. Hemen tarayan kişi bir önceki fotoğrafı alıyordu. Artık QR kodu yalnızca yeni fotoğrafa ait olduğunda görünüyor."
+    ],
+    "fr": [
+     "Corrigé : avec un reflex ou un hybride, la photobooth pouvait afficher durablement la photo précédente après la prise de vue, jusqu’au redémarrage. Elle vérifie désormais avant chaque déclenchement quelle était la dernière photo. Les appareils qui enregistrent RAW et JPG en même temps fournissent maintenant aussi la bonne image.",
+     "Corrigé : sur un écran de partage personnalisé (et dans une mise en page avec QR code), le QR code des invités précédents restait affiché un court instant. Ceux qui scannaient tout de suite obtenaient la photo précédente. Désormais, le QR code n’apparaît que lorsqu’il correspond à la nouvelle photo."
+    ],
+    "es": [
+     "Corregido: con una cámara réflex o sin espejo, el fotomatón podía mostrar de forma permanente la foto anterior después de la captura, hasta reiniciarlo. Ahora comprueba antes de cada disparo cuál fue la última foto. Las cámaras que guardan RAW y JPG a la vez también entregan ya la imagen correcta.",
+     "Corregido: en una pantalla para compartir de diseño propio (y en un diseño de foto con código QR) se mostraba por un momento el código QR de los invitados anteriores. Quien escaneaba enseguida recibía la foto anterior. Ahora el código QR solo aparece cuando corresponde a la foto nueva."
+    ],
+    "it": [
+     "Corretto: con una reflex o una mirrorless il photobooth poteva mostrare stabilmente la foto precedente dopo lo scatto, fino al riavvio. Ora controlla prima di ogni scatto quale fosse l’ultima foto. Anche le fotocamere che salvano RAW e JPG insieme forniscono ora l’immagine giusta.",
+     "Corretto: in una schermata di condivisione personalizzata (e in un layout foto con codice QR) restava visibile per un attimo il codice QR degli ospiti precedenti. Chi scansionava subito riceveva la foto precedente. Ora il codice QR compare solo quando appartiene alla nuova foto."
+    ]
+   }
+  },
+  "1.18.124": {
+   "date": "2026-11-21",
+   "notes": {
+    "de": [
+     "Hintergrund entfernen je Foto wählbar: Im Layout-Editor legen Sie für jedes Fotofeld fest, ob der Hintergrund entfernt wird oder das Foto den echten Hintergrund behält. So zeigt ein Layout zum Beispiel ein freigestelltes Foto und daneben eines mit echtem Hintergrund."
+    ],
+    "en": [
+     "Background removal selectable per photo: in the layout editor you decide for each photo field whether the background is removed or the photo keeps the real background. A layout can then show, for example, one cut-out photo and next to it one with the real background."
+    ],
+    "tr": [
+     "Arka plan kaldırma fotoğraf bazında seçilebilir: Düzen düzenleyicide her fotoğraf alanı için arka planın kaldırılıp kaldırılmayacağını belirlersiniz. Böylece bir düzen örneğin arka plansız bir fotoğraf ile yanında gerçek arka planlı bir fotoğraf gösterebilir."
+    ],
+    "fr": [
+     "Suppression de l’arrière-plan au choix pour chaque photo : dans l’éditeur de mise en page, vous définissez pour chaque champ photo si l’arrière-plan est supprimé ou si la photo garde le vrai arrière-plan. Une mise en page peut ainsi montrer par exemple une photo détourée et, à côté, une photo avec le vrai arrière-plan."
+    ],
+    "es": [
+     "Eliminación del fondo seleccionable por foto: en el editor de diseños decide para cada campo de foto si se elimina el fondo o si la foto conserva el fondo real. Así un diseño puede mostrar, por ejemplo, una foto recortada y al lado otra con el fondo real."
+    ],
+    "it": [
+     "Rimozione dello sfondo selezionabile per ogni foto: nell’editor dei layout stabilisci per ogni campo foto se lo sfondo viene rimosso o se la foto mantiene lo sfondo reale. Un layout può così mostrare, ad esempio, una foto scontornata e accanto una con lo sfondo reale."
+    ]
+   }
+  },
+  "1.18.123": {
+   "date": "2026-11-21",
+   "notes": {
+    "de": [
+     "Originalfotos auf der Fotobox behalten: Unter Einstellungen → Allgemein → Verzeichnisse gibt es den neuen Schalter „Originalfotos im Datenverzeichnis speichern“. Dann liegt jedes einzelne Foto zusätzlich unbearbeitet im Ordner des Ereignisses."
+    ],
+    "en": [
+     "Keep original photos on the photo booth: under Settings → General → Folders there is the new switch “Save original photos in the data folder”. Every single photo is then additionally stored unedited in the event’s folder."
+    ],
+    "tr": [
+     "Orijinal fotoğrafları fotoğraf kabininde saklayın: Ayarlar → Genel → Klasörler altında yeni “Orijinal fotoğrafları veri klasörüne kaydet” seçeneği var. Böylece her fotoğraf ayrıca işlenmemiş olarak etkinlik klasöründe durur."
+    ],
+    "fr": [
+     "Conserver les photos originales sur la photobooth : sous Réglages → Général → Dossiers, vous trouvez la nouvelle option « Enregistrer les photos originales dans le dossier de données ». Chaque photo est alors enregistrée en plus sans retouche dans le dossier de l’événement."
+    ],
+    "es": [
+     "Conservar las fotos originales en el fotomatón: en Ajustes → General → Carpetas está la nueva opción «Guardar las fotos originales en la carpeta de datos». Así cada foto queda además sin editar en la carpeta del evento."
+    ],
+    "it": [
+     "Conservare le foto originali sul photobooth: in Impostazioni → Generale → Cartelle c’è la nuova opzione «Salva le foto originali nella cartella dati». Così ogni singola foto si trova in più, non modificata, nella cartella dell’evento."
+    ]
+   }
+  },
+  "1.18.122": {
+   "date": "2026-11-21",
+   "notes": {
+    "de": [
+     "Neu: Ereignisse nach Location ordnen. Tragen Sie bei jedem Ereignis die Location ein (Übersicht, neben Name und Datum) – in der Ereignis-Liste filtern Sie dann nach Location oder zeigen alles nach Location gruppiert.",
+     "Steht eine Fotobox fest an einem Ort? Unter „Geräte“ bekommt sie ihre Location. An der Fotobox stehen dann beim Ereignis-Wählen die Ereignisse dieser Location ganz oben, und neue Ereignisse bekommen die Location gleich mit.",
+     "Eine Voreinstellung merkt sich die Location ebenfalls."
+    ],
+    "en": [
+     "New: sort events by venue. Enter the venue for each event (overview, next to name and date) – in the event list you can then filter by venue or show everything grouped by venue.",
+     "Does a photo booth stay permanently in one place? Under “Devices” it gets its venue. On the photo booth, the events of this venue are then at the top when choosing an event, and new events get the venue right away.",
+     "A preset remembers the venue as well."
+    ],
+    "tr": [
+     "Yeni: Etkinlikleri mekâna göre düzenleyin. Her etkinlik için mekânı girin (genel bakış, ad ve tarihin yanında) – etkinlik listesinde mekâna göre filtreleyebilir veya her şeyi mekâna göre gruplu gösterebilirsiniz.",
+     "Bir fotoğraf kabini sabit bir yerde mi duruyor? “Cihazlar” altında mekânını alır. Kabinde etkinlik seçerken bu mekânın etkinlikleri en üstte durur ve yeni etkinlikler mekânı hemen alır.",
+     "Bir ön ayar mekânı da hatırlar."
+    ],
+    "fr": [
+     "Nouveau : classer les événements par lieu. Saisissez le lieu de chaque événement (aperçu, à côté du nom et de la date) – dans la liste des événements, vous pouvez ensuite filtrer par lieu ou tout afficher groupé par lieu.",
+     "Une photobooth reste en permanence au même endroit ? Sous « Appareils », elle reçoit son lieu. Sur la photobooth, les événements de ce lieu apparaissent alors en premier lors du choix de l’événement, et les nouveaux événements reçoivent directement ce lieu.",
+     "Un préréglage mémorise aussi le lieu."
+    ],
+    "es": [
+     "Novedad: ordenar los eventos por lugar. Introduzca el lugar de cada evento (resumen, junto al nombre y la fecha); en la lista de eventos puede filtrar por lugar o mostrar todo agrupado por lugar.",
+     "¿Un fotomatón está fijo en un lugar? En «Dispositivos» recibe su lugar. En el fotomatón, al elegir un evento, los eventos de ese lugar aparecen arriba y los eventos nuevos reciben el lugar directamente.",
+     "Un ajuste predefinido también recuerda el lugar."
+    ],
+    "it": [
+     "Novità: ordinare gli eventi per location. Inserisci la location di ogni evento (panoramica, accanto a nome e data) – nell’elenco degli eventi puoi poi filtrare per location o mostrare tutto raggruppato per location.",
+     "Un photobooth resta fisso in un posto? In «Dispositivi» riceve la sua location. Sul photobooth, nella scelta dell’evento, gli eventi di questa location sono in cima e i nuovi eventi ricevono subito la location.",
+     "Anche una preimpostazione ricorda la location."
+    ]
+   }
+  },
+  "1.18.121": {
+   "date": "2026-11-21",
+   "notes": {
+    "de": [
+     "Der Virtuelle Berater ist bei neuen Ereignissen immer erst aus und schaltet sich nicht mehr von selbst ein, wenn Sie eine Animation auswählen. Einschalten können Sie ihn jederzeit selbst.",
+     "Bei „Startanimation mit Logo“ läuft keine Berater-Animation mehr darüber – die Fotobox zeigt genau die Startanimation, die Sie im Dashboard eingestellt haben."
+    ],
+    "en": [
+     "The virtual assistant is always off at first for new events and no longer switches itself on when you choose an animation. You can switch it on yourself at any time.",
+     "With “Start animation with logo” no assistant animation plays on top any more – the photo booth shows exactly the start animation you set in the dashboard."
+    ],
+    "tr": [
+     "Sanal asistan yeni etkinliklerde her zaman önce kapalıdır ve bir animasyon seçtiğinizde artık kendiliğinden açılmaz. İstediğiniz zaman kendiniz açabilirsiniz.",
+     "“Logolu başlangıç animasyonu” seçiliyken üzerinde artık asistan animasyonu oynamaz – fotoğraf kabini tam olarak kontrol panelinde ayarladığınız başlangıç animasyonunu gösterir."
+    ],
+    "fr": [
+     "L’assistant virtuel est toujours désactivé au départ pour les nouveaux événements et ne s’active plus tout seul lorsque vous choisissez une animation. Vous pouvez l’activer vous-même à tout moment.",
+     "Avec « Animation de démarrage avec logo », plus aucune animation de l’assistant ne se superpose – la photobooth affiche exactement l’animation de démarrage réglée dans le tableau de bord."
+    ],
+    "es": [
+     "El asistente virtual está siempre desactivado al principio en los eventos nuevos y ya no se activa solo al elegir una animación. Puede activarlo usted mismo en cualquier momento.",
+     "Con «Animación de inicio con logotipo» ya no se reproduce encima ninguna animación del asistente: el fotomatón muestra exactamente la animación de inicio ajustada en el panel."
+    ],
+    "it": [
+     "L’assistente virtuale è sempre spento all’inizio nei nuovi eventi e non si accende più da solo quando scegli un’animazione. Puoi accenderlo tu in qualsiasi momento.",
+     "Con «Animazione iniziale con logo» non viene più riprodotta sopra alcuna animazione dell’assistente – il photobooth mostra esattamente l’animazione iniziale impostata nella dashboard."
+    ]
+   }
+  },
+  "1.18.120": {
+   "date": "2026-11-21",
+   "notes": {
+    "de": [
+     "Noch kein Konto? Im Anmeldebildschirm der Fotobox-Software gibt es jetzt den Knopf „Kostenlos registrieren“. Er öffnet die Registrierung im Browser und zeigt zusätzlich einen QR-Code für das Handy. Danach meldet man sich einfach mit derselben E-Mail und demselben Passwort an."
+    ],
+    "en": [
+     "No account yet? The sign-in screen of the photo booth software now has a “Register for free” button. It opens registration in the browser and also shows a QR code for your phone. Afterwards you simply sign in with the same email and password."
+    ],
+    "tr": [
+     "Henüz hesabınız yok mu? Fotoğraf kabini yazılımının giriş ekranında artık „Ücretsiz kaydol“ düğmesi var. Kayıt sayfasını tarayıcıda açar ve ayrıca telefon için bir QR kodu gösterir. Ardından aynı e-posta ve şifreyle oturum açmanız yeterli."
+    ],
+    "fr": [
+     "Pas encore de compte ? L’écran de connexion du logiciel photobooth propose désormais un bouton « S’inscrire gratuitement ». Il ouvre l’inscription dans le navigateur et affiche en plus un QR code pour le téléphone. Ensuite, il suffit de se connecter avec la même adresse e-mail et le même mot de passe."
+    ],
+    "es": [
+     "¿Aún no tiene cuenta? La pantalla de inicio de sesión del software del fotomatón tiene ahora el botón «Registrarse gratis». Abre el registro en el navegador y muestra además un código QR para el móvil. Después basta con iniciar sesión con el mismo correo y la misma contraseña."
+    ],
+    "it": [
+     "Non hai ancora un account? Nella schermata di accesso del software photobooth ora c’è il pulsante «Registrati gratis». Apre la registrazione nel browser e mostra anche un codice QR per il telefono. Poi basta accedere con la stessa e-mail e la stessa password."
+    ]
+   }
+  },
+  "1.18.119": {
+   "date": "2026-11-21",
+   "notes": {
+    "de": [
+     "Startbildschirm: Neue Auswahl „Startanimation mit Logo“. Auch wenn ein eigenes Video hochgeladen ist, können Sie jetzt jederzeit zur Startanimation mit Ihrem Logo zurückwechseln – das Video bleibt gespeichert.",
+     "Ein neues Ereignis startet jetzt mit der Aufnahme-Art „Foto“ und 5 Sekunden Countdown. Drucken und Teilen kommen von Ihrem letzten Ereignis. Alles können Sie danach selbst ändern.",
+     "Zeichenroboter: Die Ansicht „Fotos vom iPad“ erscheint nur noch bei Ereignissen, in denen der Zeichenroboter eingeschaltet ist. Normale Photo-Booth-Ereignisse starten wieder ganz normal – das iPad bleibt trotzdem gekoppelt."
+    ],
+    "en": [
+     "Start screen: new option “Start animation with logo”. Even if you have uploaded your own video, you can now switch back to the start animation with your logo at any time – the video stays saved.",
+     "A new event now starts with the capture mode “Photo” and a 5-second countdown. Printing and sharing come from your last event. You can change everything yourself afterwards.",
+     "Drawing robot: the “Photos from the iPad” view now only appears for events in which the drawing robot is switched on. Normal photo booth events start as usual again – the iPad stays paired anyway."
+    ],
+    "tr": [
+     "Başlangıç ekranı: Yeni seçenek „Logolu başlangıç animasyonu“. Kendi videonuzu yüklemiş olsanız bile artık istediğiniz zaman logolu başlangıç animasyonuna geri dönebilirsiniz – video kayıtlı kalır.",
+     "Yeni bir etkinlik artık “Fotoğraf” çekim türü ve 5 saniyelik geri sayımla başlar. Yazdırma ve paylaşım son etkinliğinizden gelir. Sonrasında her şeyi kendiniz değiştirebilirsiniz.",
+     "Çizim robotu: „iPad’den fotoğraflar“ görünümü artık yalnızca çizim robotunun açık olduğu etkinliklerde çıkıyor. Normal fotoğraf kabini etkinlikleri yine normal başlıyor – iPad yine de eşleşmiş kalır."
+    ],
+    "fr": [
+     "Écran de démarrage : nouvelle option « Animation de démarrage avec logo ». Même si vous avez téléversé votre propre vidéo, vous pouvez désormais revenir à tout moment à l’animation de démarrage avec votre logo – la vidéo reste enregistrée.",
+     "Un nouvel événement démarre désormais avec le mode de prise de vue « Photo » et un compte à rebours de 5 secondes. L’impression et le partage proviennent de votre dernier événement. Vous pouvez ensuite tout modifier vous-même.",
+     "Robot dessinateur : la vue « Photos depuis l’iPad » n’apparaît plus que pour les événements où le robot dessinateur est activé. Les événements photobooth normaux démarrent à nouveau normalement – l’iPad reste tout de même appairé."
+    ],
+    "es": [
+     "Pantalla de inicio: nueva opción «Animación de inicio con logotipo». Aunque haya subido su propio vídeo, ahora puede volver en cualquier momento a la animación de inicio con su logotipo; el vídeo sigue guardado.",
+     "Un evento nuevo empieza ahora con el modo de captura «Foto» y una cuenta atrás de 5 segundos. La impresión y el compartir vienen de su último evento. Después puede cambiarlo todo usted mismo.",
+     "Robot dibujante: la vista «Fotos desde el iPad» solo aparece ahora en los eventos en los que el robot dibujante está activado. Los eventos normales de fotomatón vuelven a empezar con normalidad; el iPad sigue vinculado."
+    ],
+    "it": [
+     "Schermata iniziale: nuova opzione «Animazione iniziale con logo». Anche se hai caricato un tuo video, ora puoi tornare in qualsiasi momento all’animazione iniziale con il tuo logo – il video resta salvato.",
+     "Un nuovo evento ora parte con la modalità di scatto «Foto» e un conto alla rovescia di 5 secondi. Stampa e condivisione arrivano dall’ultimo evento. In seguito puoi modificare tutto tu stesso.",
+     "Robot disegnatore: la vista «Foto dall’iPad» compare ora solo negli eventi in cui il robot disegnatore è attivo. Gli eventi photobooth normali ripartono normalmente – l’iPad resta comunque associato."
+    ]
+   }
+  },
+  "1.18.118": {
+   "date": "2026-11-22",
+   "notes": {
+    "de": [
+     "Spiegelreflexkameras (zum Beispiel EOS 1300D, 2000D): Der Spiegel klappt beim Fotografieren nicht mehr auf und zu. Neue Vorgabe „Automatisch“ beim Scharfstellen – der Spiegel bleibt offen, die Kamera stellt einmal im Countdown scharf und löst sofort aus.",
+     "Tipp in der Hilfe: Für die Fotobox am einfachsten ist ein fest eingestellter Fokus (Objektiv auf MF, Scharfstellen „Aus“)."
+    ],
+    "en": [
+     "DSLR cameras (for example EOS 1300D, 2000D): the mirror no longer flips up and down when taking photos. New default “Automatic” for focusing – the mirror stays open, the camera focuses once during the countdown and fires immediately.",
+     "Tip in the help: the simplest setup for a photo booth is a fixed focus (lens set to MF, focusing “Off”)."
+    ],
+    "tr": [
+     "DSLR kameralar (örneğin EOS 1300D, 2000D): Fotoğraf çekerken ayna artık açılıp kapanmıyor. Netlemede yeni varsayılan “Otomatik” – ayna açık kalır, kamera geri sayımda bir kez netler ve hemen çeker.",
+     "Yardımda ipucu: Fotoğraf kabini için en basit çözüm sabit netlemedir (objektif MF, netleme “Kapalı”)."
+    ],
+    "fr": [
+     "Reflex (par exemple EOS 1300D, 2000D) : le miroir ne bascule plus sans cesse lors des photos. Nouveau réglage par défaut « Automatique » pour la mise au point – le miroir reste ouvert, l’appareil fait la mise au point une fois pendant le compte à rebours et déclenche aussitôt.",
+     "Conseil dans l’aide : le plus simple pour une photobooth est une mise au point fixe (objectif sur MF, mise au point « Désactivé »)."
+    ],
+    "es": [
+     "Cámaras réflex (por ejemplo EOS 1300D, 2000D): el espejo ya no se abre y cierra al hacer fotos. Nuevo ajuste predeterminado «Automático» para el enfoque: el espejo permanece abierto, la cámara enfoca una vez durante la cuenta atrás y dispara al instante.",
+     "Consejo en la ayuda: lo más sencillo para un fotomatón es un enfoque fijo (objetivo en MF, enfoque «Desactivado»)."
+    ],
+    "it": [
+     "Reflex (ad esempio EOS 1300D, 2000D): lo specchio non si apre e chiude più durante lo scatto. Nuova impostazione predefinita “Automatico” per la messa a fuoco – lo specchio resta aperto, la fotocamera mette a fuoco una volta durante il conto alla rovescia e scatta subito.",
+     "Suggerimento nella guida: per una photo booth la soluzione più semplice è il fuoco fisso (obiettivo su MF, messa a fuoco “Disattivato”)."
+    ]
+   }
+  },
+  "1.18.117": {
+   "date": "2026-11-21",
+   "notes": {
+    "de": [
+     "Zeichenroboter deutlich schneller: Der Stift zeichnet zusammenhängende Linien jetzt in einem Zug, statt an jeder Abzweigung abzuheben. Eine Karikatur mit Szene ist in etwa der halben Zeit fertig.",
+     "Neuer Zeichenstil „Karikatur mit Szene“: großer Kopf auf kleinem Körper, kräftige klare Linien und eine aufgeräumte Szene – wie ein Ausmalbild.",
+     "Kräftige Linien werden als eine saubere Linie gezeichnet statt als zwei Ränder."
+    ],
+    "en": [
+     "Drawing robot much faster: the pen now draws connected lines in one go instead of lifting at every junction. A caricature with a scene is finished in about half the time.",
+     "New drawing style “Caricature with scene”: big head on a small body, bold clean lines and a tidy scene – like a colouring page.",
+     "Bold lines are drawn as one clean line instead of two edges."
+    ],
+    "tr": [
+     "Çizim robotu çok daha hızlı: Kalem artık birbirine bağlı çizgileri her kavşakta kalkmak yerine tek seferde çiziyor. Sahneli bir karikatür yaklaşık yarı sürede bitiyor.",
+     "Yeni çizim stili “Sahneli karikatür”: küçük gövde üzerinde büyük kafa, güçlü net çizgiler ve sade bir sahne – boyama sayfası gibi.",
+     "Kalın çizgiler iki kenar yerine tek temiz çizgi olarak çiziliyor."
+    ],
+    "fr": [
+     "Robot dessinateur bien plus rapide : le stylo trace désormais les lignes reliées d’un seul trait au lieu de se lever à chaque embranchement. Une caricature avec décor est terminée en moitié moins de temps environ.",
+     "Nouveau style « Caricature avec décor » : grosse tête sur un petit corps, traits nets et marqués, décor épuré – comme un coloriage.",
+     "Les traits épais sont dessinés en une seule ligne propre au lieu de deux bords."
+    ],
+    "es": [
+     "Robot de dibujo mucho más rápido: el bolígrafo dibuja ahora las líneas conectadas de un solo trazo en lugar de levantarse en cada cruce. Una caricatura con escena queda lista en aproximadamente la mitad de tiempo.",
+     "Nuevo estilo «Caricatura con escena»: cabeza grande sobre cuerpo pequeño, líneas claras y marcadas y una escena ordenada, como un dibujo para colorear.",
+     "Las líneas gruesas se dibujan como una sola línea limpia en lugar de dos bordes."
+    ],
+    "it": [
+     "Robot disegnatore molto più veloce: la penna ora traccia le linee collegate in un solo tratto invece di alzarsi a ogni incrocio. Una caricatura con scena è pronta in circa metà del tempo.",
+     "Nuovo stile “Caricatura con scena”: testa grande su corpo piccolo, linee decise e pulite e una scena ordinata – come un disegno da colorare.",
+     "Le linee spesse vengono disegnate come un’unica linea pulita invece di due bordi."
+    ]
+   }
+  },
   "1.18.116": {
    "date": "2026-11-18",
    "notes": {

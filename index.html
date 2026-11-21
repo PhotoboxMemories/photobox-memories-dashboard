@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Photobox Memories – Dashboard</title>
 <link rel="stylesheet" href="fonts-fredoka/fredoka.css">
-<script>window.I18N_V = '20261118-1';</script>
+<script>window.I18N_V = '20261121-1';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
@@ -14,12 +14,12 @@
 <script src="icons.js?v=20261021-5"></script>
 <script src="ad.js?v=20261022-1"></script>
 <script src="shop.js?v=20261023-2"></script>
-<script src="render.js?v=20261118-1"></script>
+<script src="render.js?v=20261121-1"></script>
 <script src="advisor-anim.js?v=20261117-4"></script>
 <script src="mosaic.js?v=20261017-2"></script>
 <script src="farbwahl.js?v=20261118-1"></script>
-<script src="editor.js?v=20261116-1"></script>
-<script src="ai-event.js?v=20261118-1"></script>
+<script src="editor.js?v=20261121-1"></script>
+<script src="ai-event.js?v=20261121-1"></script>
 <script src="sketch-draw.js?v=20261018-8"></script>
 <script src="caricature.js?v=20261024-1"></script>
 <script src="start-anim.js?v=20261020-1"></script>
@@ -30,7 +30,7 @@
 <script src="designs.js?v=20261116-2"></script>
 <script src="foto-aufgaben.js?v=20261108-1"></script>
 <script src="fernwartung.js?v=20261113-2"></script>
-<script src="event.js?v=20261118-1"></script>
+<script src="event.js?v=20261121-1"></script>
 <script src="studio.js?v=20261114-1"></script>
 <script src="vendor/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <style>
@@ -270,7 +270,7 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         </div>
         <p class="small hidden" id="startMail" style="margin-top:14px">📧 Den Download-Link haben wir dir auch per Mail geschickt.</p>
       </div>
-      <div class="pagehead"><h1>Laufende Ereignisse</h1><div class="row" style="gap:10px;flex-wrap:wrap"><button class="btn" id="creditChip" type="button" title="KI-Guthaben ansehen und kaufen">✨ <b id="creditChipN">–</b> KI-Credits</button><input id="evSearch" placeholder="🔍 Name oder Datum" style="max-width:260px"></div></div>
+      <div class="pagehead"><h1>Laufende Ereignisse</h1><div class="row" style="gap:10px;flex-wrap:wrap"><button class="btn" id="creditChip" type="button" title="KI-Guthaben ansehen und kaufen">✨ <b id="creditChipN">–</b> KI-Credits</button><select id="evLoc" class="hidden" title="Nach Location filtern" style="max-width:230px"></select><datalist id="locList"></datalist><input id="evSearch" placeholder="🔍 Name oder Datum" style="max-width:260px"></div></div>
       <div class="evgrid" id="eventList"></div>
       <h1 style="margin:28px 0 16px">Abgeschlossene Ereignisse</h1>
       <div class="evgrid" id="eventDone"></div>
@@ -610,16 +610,16 @@ function demoClient() {
     profiles: { id: 'demo', email: 'demo@fotobox.de', is_admin: true },
     events: [
       { id: 'e1', owner_id: 'demo', name: 'Hochzeit Anna & Tim', event_date: '2026-10-10', logo_url: null,
-        settings: { title: 'Anna & Tim', subtitle: '10. Oktober 2026', template: 'wedding', frame: '#fbf7ef', textColor: '#6b5a3a', accent: '#c9a45c', font: 'script', guestTemplates: true, templateChoices: ['wedding', 'floral', 'elegant'] } },
+        settings: { location: 'Schloss Seeblick', title: 'Anna & Tim', subtitle: '10. Oktober 2026', template: 'wedding', frame: '#fbf7ef', textColor: '#6b5a3a', accent: '#c9a45c', font: 'script', guestTemplates: true, templateChoices: ['wedding', 'floral', 'elegant'] } },
       { id: 'e2', owner_id: 'demo', name: 'Firmenfeier Müller AG', event_date: '2026-12-05', logo_url: null,
-        settings: { title: 'Müller AG', subtitle: 'Weihnachtsfeier 2026', template: 'business', frame: '#0d1b2a', textColor: '#ffffff', accent: '#e0b64a', font: 'modern' } },
+        settings: { location: 'Stadthalle', title: 'Müller AG', subtitle: 'Weihnachtsfeier 2026', template: 'business', frame: '#0d1b2a', textColor: '#ffffff', accent: '#e0b64a', font: 'modern' } },
       { id: 'e3', owner_id: 'demo', name: 'Geburtstag Lea (30)', event_date: '2026-11-14', logo_url: null,
         settings: { title: 'Lea wird 30!', subtitle: '14.11.2026', template: 'birthday', frame: '#fff6e5', textColor: '#3b3355', accent: '#ff7b54', font: 'modern' } }
     ],
     devices: [
-      { id: 'd1', name: 'FotoBox Weiß', event_id: 'e1', photos_total: 412, app_version: '1.15.0', last_seen: new Date().toISOString(), licenses: { customer_name: 'Fotoexakt', owner_id: 'demo' },
+      { id: 'd1', name: 'FotoBox Weiß', location: 'Schloss Seeblick', event_id: 'e1', photos_total: 412, app_version: '1.15.0', last_seen: new Date().toISOString(), licenses: { customer_name: 'Fotoexakt', owner_id: 'demo' },
         status: { at: new Date().toISOString(), screen: 'attract', event: 'Hochzeit Anna & Tim', prints: 63, printLimit: 100, camera: { name: 'Canon EOS R100', ready: true, direct: true, props: [{ id: 'camera.isonumber', label: 'ISO', cur: '800', list: ['100', '200', '400', '800', '1600', '3200'] }, { id: 'camera.fnumber', label: 'Blende', cur: '8', list: ['4', '5.6', '8', '11', '14'] }, { id: 'camera.shutterspeed', label: 'Verschlusszeit', cur: '1/100', list: ['1/30', '1/60', '1/100', '1/125', '1/200'] }] }, printer: { name: 'DNP DS620', ok: true }, last: '14:02:11 · Testdruck gesendet' } },
-      { id: 'd2', name: 'FotoBox Schwarz', event_id: 'e2', photos_total: 187, app_version: '1.5.0', last_seen: iso(-2), licenses: { customer_name: 'Fotoexakt', owner_id: 'demo' } },
+      { id: 'd2', name: 'FotoBox Schwarz', location: '', event_id: 'e2', photos_total: 187, app_version: '1.5.0', last_seen: iso(-2), licenses: { customer_name: 'Fotoexakt', owner_id: 'demo' } },
       { id: 'd3', name: 'Mietbox 1', event_id: null, photos_total: 1204, app_version: '1.4.0', last_seen: iso(-6), licenses: { customer_name: 'Studio Lichtblick', owner_id: 'k2' } }
     ],
     licenses: [
@@ -932,14 +932,35 @@ function evMatch(e, q) {
   if (name.includes(q) || evDateMatch(e.event_date, q.replace(/([./-])\s+/g, '$1').replace(/\s+/g, '.'))) return true;
   return q.replace(/(\d[./-])\s+(?=\d)/g, '$1').split(/\s+/).every(t => name.includes(t) || evDateMatch(e.event_date, t));
 }
+// Location (Betreiber 21.11.2026: „mehrere Locations, wo die Fotoboxen dauerhaft stehen … sortieren können“): jedes Ereignis hat
+// settings.location (Ereignis → Übersicht), jede Fotobox devices.location (Geräte). Nur in der bezahlten Version.
+const locOn = () => curTier() !== 'free';
+const locOf = e => String(e?.settings?.location || '').trim();
+const locKey = t => String(t || '').trim().toLowerCase();
+function allLocations() { // alle bisher benutzten Locations (Ereignisse + Fotoboxen), ohne Doppelte, nach Namen
+  const m = new Map();
+  for (const t of [...events.map(locOf), ...(typeof devices !== 'undefined' ? devices : []).map(d => String(d.location || '').trim())]) if (t && !m.has(locKey(t))) m.set(locKey(t), t);
+  return [...m.values()].sort((a, b) => a.localeCompare(b, 'de'));
+}
+let evLocSel = ''; // '' = alle, '__none' = ohne Location, '__group' = nach Location gruppiert, sonst die Location
+function fillLocations() {
+  const L = locOn() ? allLocations() : [], sel = $('#evLoc'); if (!sel) return L;
+  if (evLocSel && !['__none', '__group'].includes(evLocSel)) evLocSel = L.find(x => locKey(x) === locKey(evLocSel)) || ''; // Schreibweise wie in der Liste; gibt es sie nicht mehr: alle
+  sel.classList.toggle('hidden', !L.length); if (!L.length) evLocSel = '';
+  sel.innerHTML = `<option value="">Alle Locations</option>${L.map(x => `<option value="${esc(x)}" translate="no">📍 ${esc(x)}</option>`).join('')}<option value="__none">Ohne Location</option><option value="__group">Nach Location gruppiert</option>`;
+  sel.value = evLocSel;
+  $('#locList').innerHTML = L.map(x => `<option value="${esc(x)}">`).join('');
+  return L;
+}
 function renderEvents() {
-  const q = ($('#evSearch')?.value || '').toLowerCase().trim();
+  const q = ($('#evSearch')?.value || '').toLowerCase().trim(), locs = fillLocations();
+  const locPass = e => !evLocSel || evLocSel === '__group' ? true : evLocSel === '__none' ? !locOf(e) : locKey(locOf(e)) === locKey(evLocSel);
   const localDay = ms => new Date(ms - new Date(ms).getTimezoneOffset() * 6e4).toISOString().slice(0, 10), today = localDay(Date.now()); // Kalendertag vor Ort, nicht UTC
-  const list = events.filter(e => evMatch(e, q));
+  const list = events.filter(e => evMatch(e, q) && locPass(e));
   const card = e => {
     const n = devices.filter(d => d.event_id === e.id).length;
     return `<div class="evc" data-id="${e.id}"><button class="evdel" data-del="${e.id}" title="Ereignis löschen" aria-label="Ereignis löschen">${ICON('trash', 16)}</button><div class="cv ${photoCovers[e.id] ? 'photo' : ''}"><img src="${photoCovers[e.id] || eventCover(e)}" alt=""></div>
-      <b>${esc(e.name)}</b><small>${fmtDate(e.event_date)}${n ? ` · 📸 ${n}` : ''}</small></div>`;
+      <b>${esc(e.name)}</b><small>${fmtDate(e.event_date)}${n ? ` · 📸 ${n}` : ''}${locOn() && locOf(e) ? ` · 📍 <span translate="no">${esc(locOf(e))}</span>` : ''}</small></div>`;
   };
   // Ein Ereignis, dem eine Fotobox zugewiesen ist, läuft noch – auch wenn sein Datum vorbei ist (mehrere Tage, Betreiber 04.11.2026)
   const live = e => !e.event_date || e.event_date >= today || devices.some(d => d.event_id === e.id);
@@ -950,10 +971,14 @@ function renderEvents() {
   const byDate = (a, b) => a.event_date.localeCompare(b.event_date), head = t => `<h2 style="grid-column:1/-1;margin:14px 0 0;font-size:18px">${t}</h2>`;
   const next = running.filter(soon).sort(byDate), later = running.filter(e => e.event_date > in7).sort(byDate), none = running.filter(e => !e.event_date),
     stale = running.filter(e => e.event_date && e.event_date < today).sort((a, b) => b.event_date.localeCompare(a.event_date));
+  // „Nach Location gruppiert“: laufende Ereignisse je Location unter einer Überschrift (nächster Termin zuerst), ohne Location am Ende
+  const byLoc = () => { const run = running.slice().sort((a, b) => String(a.event_date || '9999').localeCompare(String(b.event_date || '9999')));
+    return locs.map(x => { const l = run.filter(e => locKey(locOf(e)) === locKey(x)); return l.length ? head(`📍 <span translate="no">${esc(x)}</span>`) + l.map(card).join('') : ''; }).join('')
+      + (run.some(e => !locOf(e)) ? head('Ohne Location') + run.filter(e => !locOf(e)).map(card).join('') : ''); };
   $('#eventList').innerHTML = `<div class="evc evnew" id="newEventCard"><div class="cv"><span>+</span>Erstellen Sie ein neues Ereignis</div></div>`
-    + (next.length ? head('Als Nächstes') + next.map(card).join('') : '') + (later.length ? head('In Zukunft') + later.map(card).join('') : '') + (none.length ? head('Ohne Datum') + none.map(card).join('') : '')
-    + (stale.length ? head('Datum vorbei, Fotobox noch zugewiesen') + stale.map(card).join('') : '');
-  $('#eventDone').innerHTML = done.map(card).join('') || `<div class="small muted">${q ? 'Kein Ereignis gefunden.' : 'Noch keine abgeschlossenen Ereignisse.'}</div>`;
+    + (evLocSel === '__group' ? byLoc() : (next.length ? head('Als Nächstes') + next.map(card).join('') : '') + (later.length ? head('In Zukunft') + later.map(card).join('') : '') + (none.length ? head('Ohne Datum') + none.map(card).join('') : '')
+    + (stale.length ? head('Datum vorbei, Fotobox noch zugewiesen') + stale.map(card).join('') : ''));
+  $('#eventDone').innerHTML = done.map(card).join('') || `<div class="small muted">${q || (evLocSel && evLocSel !== '__group') ? 'Kein Ereignis gefunden.' : 'Noch keine abgeschlossenen Ereignisse.'}</div>`;
   $$('.evc[data-id]').forEach(c => c.onclick = async ev => {
     const e = events.find(x => x.id === c.dataset.id);
     if (ev.target.closest('[data-del]')) { ev.stopPropagation(); if (await deleteEventFull(e)) loadEvents(); return; } // Mülleimer an der Kachel
@@ -962,6 +987,7 @@ function renderEvents() {
   $('#newEventCard').onclick = newEvent;
 }
 $('#evSearch').oninput = renderEvents;
+$('#evLoc').onchange = e => { evLocSel = e.target.value; renderEvents(); };
 
 // Datei (Logo, Bild, Design, Hintergrund) in den Speicher laden → öffentliche Adresse
 async function uploadFile(file) {
@@ -984,7 +1010,7 @@ async function uploadFile(file) {
 }
 function openEvent(ev, page) {
   EventWS.open(ev, {
-    sb, me, toast, uploadFile, devices, admin: !!profile?.is_admin, demo: DEMO, page, extra: hasExtra, tier: curTier,
+    sb, me, toast, uploadFile, devices, admin: !!profile?.is_admin, demo: DEMO, page, extra: hasExtra, tier: curTier, locations: allLocations,
     leadsCount: id => (typeof leads !== 'undefined' && leads.length) ? leads.filter(l => l.event_id === id).length : '–',
     onClose: () => loadEvents(),
     onDelete: async (e, closeWs) => { if (await deleteEventFull(e)) closeWs(); }
@@ -1030,6 +1056,8 @@ async function createEvent(settings, logo_url, name, typeName, page) {
   const today = new Date().toISOString().slice(0, 10);
   const row = { owner_id: me.id, name: name || new Date().toLocaleDateString('de-DE') + (typeName ? ' · ' + typeName.toLowerCase().replace(/(^|[\s-])\S/g, c => c.toUpperCase()) : ''),
     event_date: today, settings: settings || {}, logo_url: logo_url || null };
+  // gerade nach einer Location gefiltert: das neue Ereignis gehört dorthin (sonst verschwände es gleich aus der Liste)
+  if (locOn() && evLocSel && !['__none', '__group'].includes(evLocSel) && !row.settings.location) row.settings = { ...row.settings, location: evLocSel };
   const { data, error } = await sb.from('events').insert(row).select().single();
   if (error) return toast('Fehler: ' + error.message);
   openEvent(DEMO ? { ...row, id: 'demo-' + Date.now() } : data, page);
@@ -1145,7 +1173,7 @@ function renderDevices() {
       ? `<select data-dev="${d.id}" data-act="event"><option value="">– kein Event –</option>${events.map(e => `<option value="${e.id}" ${e.id === d.event_id ? 'selected' : ''}>${esc(e.name)}</option>`).join('')}</select>`
       : `<span class="muted small">${d.event_id ? 'zugewiesen' : '–'}</span>`;
     return `<tr>
-      <td><input value="${esc(d.name || 'FotoBox')}" data-dev="${d.id}" data-act="name" style="max-width:200px"></td>
+      <td><input value="${esc(d.name || 'FotoBox')}" data-dev="${d.id}" data-act="name" style="max-width:200px">${mine && locOn() && 'location' in d ? `<input value="${esc(d.location || '')}" data-dev="${d.id}" data-act="location" list="locList" maxlength="80" placeholder="📍 Location der Fotobox" title="Steht die Fotobox fest an einem Ort? Dann zeigt sie beim Ereignis-Wählen zuerst die Ereignisse dieser Location." style="display:block;max-width:200px;margin-top:4px;font-size:12.5px">` : ''}</td>
       <td><span class="dot ${online ? 'on' : ''}"></span>${online ? 'Online' : d.last_seen ? 'zuletzt ' + new Date(d.last_seen).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : 'nie'}${N(st.uploads) > 0 ? `<div class="small" style="color:#c98a00;margin-top:2px" title="Liegen sicher auf der Fotobox und werden automatisch hochgeladen, sobald der Foto-Speicher erreichbar ist">⏳ ${N(st.uploads)} ${N(st.uploads) === 1 ? 'Foto wartet' : 'Fotos warten'} auf den Upload</div>` : ''}</td>
       <td>${opts}</td>
       <td>${st.prints != null ? `<b>${N(st.prints)}</b>${N(st.printLimit) ? ' / ' + N(st.printLimit) : ''}` : '–'}${[].concat(st.media || []).filter(m => m && N(m.size)).map(m => `<div class="small" title="Druckerrolle" style="margin-top:2px;${N(m.left) <= 30 ? 'color:#d33;font-weight:600' : 'color:#888'}">🧻 ${N(m.left)} / ${N(m.size)}</div>`).join('')}</td>
@@ -1157,13 +1185,13 @@ function renderDevices() {
   }).join('');
 }
 $('#deviceList').addEventListener('change', async e => {
-  const id = e.target.dataset.dev, act = e.target.dataset.act; if (!id || !['event', 'name'].includes(act)) return;
-  const patch = act === 'event' ? { event_id: e.target.value || null } : { name: e.target.value.trim() || null };
+  const id = e.target.dataset.dev, act = e.target.dataset.act; if (!id || !['event', 'name', 'location'].includes(act)) return;
+  const patch = act === 'event' ? { event_id: e.target.value || null } : act === 'location' ? { location: e.target.value.trim().slice(0, 80) || null } : { name: e.target.value.trim() || null };
   const { error } = await sb.from('devices').update(patch).eq('id', id);
   if (error) return toast('Fehler: ' + error.message);
   // Fotobox gleich abgleichen lassen (Fernbefehl, etwa alle 15 s abgefragt) statt bis zum nächsten Abgleich zu warten
   if (act === 'event') await sb.from('devices').update({ command: cmdNew({ type: 'sync' }) }).eq('id', id).or(cmdFree()).then(() => {}, () => {});
-  toast(act === 'event' ? 'Event zugewiesen – die Fotobox übernimmt es in etwa 15 Sekunden, sobald keine Aufnahme läuft und ihr Menü geschlossen ist' : 'Name gespeichert', act === 'event' ? 6000 : 2200);
+  toast(act === 'event' ? 'Event zugewiesen – die Fotobox übernimmt es in etwa 15 Sekunden, sobald keine Aufnahme läuft und ihr Menü geschlossen ist' : act === 'location' ? 'Location gespeichert' : 'Name gespeichert', act === 'event' ? 6000 : 2200);
   loadDevices();
 });
 $('#deviceList').addEventListener('change', e => { // Auswahl merken, sonst setzt das Neuladen alle 15 s sie zurück

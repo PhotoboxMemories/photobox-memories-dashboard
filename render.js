@@ -897,7 +897,8 @@
         const rad = e.radius || 0;
         if (e.shadow) { x.save(); setShadow(x, e, w, h); x.fillStyle = '#fff'; rr(x, -w / 2, -h / 2, w, h, rad); x.fill(); x.restore(); }
         x.save(); rr(x, -w / 2, -h / 2, w, h, rad); x.clip();
-        const img = photos.length ? photos[((e.n || 1) - 1) % photos.length] : null;
+        // Feld mit „Hintergrund behalten“ (nobg): die Fassung ohne Hintergrund-Entfernung, wenn es eine eigene gibt (o.photosPlain)
+        const pi = photos.length ? ((e.n || 1) - 1) % photos.length : 0, img = photos.length ? (e.nobg && o.photosPlain && o.photosPlain[pi]) || photos[pi] : null;
         if (img) { if (o.filter && o.filter !== 'none') x.filter = o.filter; drawCover(x, img, -w / 2, -h / 2, w, h, o.sharpen); }
         else placeholderPhoto(x, e, w, h);
         x.restore();

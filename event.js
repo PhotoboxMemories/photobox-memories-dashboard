@@ -468,7 +468,7 @@
     ['warm', 'Warm', 'sepia(.18) saturate(1.3) brightness(1.04)'], ['cool', 'Kühl', 'saturate(.9) hue-rotate(12deg) brightness(1.05)'], ['glam', 'Glamour', 'brightness(1.12) contrast(1.08) saturate(1.1)']];
   const DEF = {
     ai: { enabled: false, prompt: '' },
-    title: '', subtitle: '', startText: 'Tippen zum Starten', startScreen: null, startScreen2: null, shareScreen: null, shareScreen2: null, attractP: null, attractL: null, accent: '#F7C838', attractUrl: '', attractType: '', attractFit: 'cover', startDisplay: 'media', font: 'modern', frame: '#ffffff', textColor: '#222222', template: 'classic',
+    title: '', subtitle: '', location: '', startText: 'Tippen zum Starten', startScreen: null, startScreen2: null, shareScreen: null, shareScreen2: null, attractP: null, attractL: null, accent: '#F7C838', attractUrl: '', attractType: '', attractFit: 'cover', startDisplay: 'media', font: 'modern', frame: '#ffffff', textColor: '#222222', template: 'classic',
     layouts: [], guestLayouts: false, gifFromPhotos: false,
     countdown: 3, countdownNext: 3, between: 2, autoReturn: 30, sound: true, mirror: true, mirrorPhoto: false, cropLive: true, faces: true, liveView: 'template',
     modes: { single: true, strip: true, grid: true, gif: true, boomerang: true, video: true }, gifFrames: 4, gifDelay: 600, gifReverse: false, boomerangLen: 'mittel', videoSecs: 10, videoAudio: true,
@@ -780,7 +780,7 @@
     });
     $(root, '.navshade').addEventListener('click', () => root.classList.remove('navopen'));
     // Hilfe-Suche (hilfe.js, dieselbe wie in der Fotobox): Stichwort eintippen → wie man es einstellt, „Hingehen“ öffnet die Seite
-    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261117-4'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261121-1'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     const closeEditor = () => close(); // Editor schließen (für Themen auf den Hauptseiten, z. B. „Meine Lizenzen“)
     async function openHelp() {
       try { await helpLib(); } catch { return ctx.toast('Die Hilfe konnte nicht geladen werden.'); }
@@ -946,8 +946,9 @@
             V.media = { ...(V.media || {}), [k]: multi ? [...(V.media?.[k] || []), m] : [m] }; }
           catch (err) { ctx.toast('Hochladen fehlgeschlagen: ' + err.message, 5000); status(''); return; }
         }
-        // Wer eine Animation oder Datei wählt, will sie auch sehen: Berater dann gleich einschalten (sonst läuft an der Fotobox nichts)
-        if ((va.dataset.vapick || va.dataset.vaup) && !S.voice) { S.voice = true; ctx.toast('Virtueller Berater eingeschaltet – die Animationen laufen jetzt an der Fotobox.', 5000); }
+        // Berater bleibt aus, bis der Kunde ihn selbst einschaltet (Betreiber 21.11.2026: „Virtueller Berater von Anfang an aus, soll
+        // einschaltbar sein, aber immer erst aus“) – früher schaltete die Wahl einer Animation ihn gleich ein
+        if ((va.dataset.vapick || va.dataset.vaup) && !S.voice) ctx.toast('Gespeichert. Der Virtuelle Berater ist aus – zum Abspielen an der Fotobox oben einschalten.', 6000);
         save(); render(); return;
       }
       const t = e.target.closest('[data-tab],[data-a],[data-mode],[data-flt],[data-lay]'); if (!t) return;
@@ -984,7 +985,7 @@
         rbBusy[c.id] = true; render();
         try {
           const cut = (S.x.robot || {}).cut || 'scene', photo = rbOwnPhoto || await rbHeadPhoto(cut !== 'heads' || ['bigheads', 'full'].includes(c.body)); if (!photo) throw new Error('Das Testfoto konnte nicht geladen werden.');
-          const head = cut === 'scene' ? RB_SCENE : RB_PROMPT + (cut === 'bigheads' ? ' ' + RB_BIGHEADS : ''), tail = ' Die Verkleidung und Szene ebenfalls nur als saubere Konturen, ohne Flächen und Schraffur.';
+          const head = cut === 'scene' ? RB_SCENE : RB_PROMPT + (cut === 'bigheads' ? ' ' + RB_BIGHEADS : ''), tail = cut === 'scene' ? '' : ' Die Verkleidung und Szene ebenfalls nur als saubere Konturen, ohne Flächen und Schraffur.';
           const prompt = head + ' ' + drawPrompt(c).slice(0, Math.max(0, Math.min(700, 1190 - head.length - tail.length))) + tail; // wie an der Fotobox, nie über 1200 Zeichen
           const { data, error } = await ctx.sb.functions.invoke('ai-generate', { body: { image: photo, prompt, consent: true, style: 'custom', eventId: ev.id, requestId: crypto.randomUUID(), test: true } });
           let r = data; if (error?.context?.json) { try { r = await error.context.json(); } catch {} }
@@ -1469,7 +1470,9 @@
           if (b.dataset.pstd) { const on = !p.is_default; await Presets.setDefault(ctx.sb, p.id, on); L.forEach(x => { x.is_default = on && x === p; }); return draw(); }
           if (!await ask(`Alle Einstellungen dieses Ereignisses durch „${p.name}“ ersetzen? Name, Datum, Titel, Fotos und Galerie-Passwort bleiben.`, 'Übernehmen')) return;
           const keep = { pw: S.x?.gallery?.password || '', secret: S.x?.caricature?.secret }, P = norm(Presets.clean(p.settings));
+          const loc0 = S.location || ''; // Voreinstellung ohne Location: die Location des Ereignisses bleibt
           for (const k of Object.keys(P)) if (!PRESET_SKIP.includes(k)) S[k] = P[k];
+          if (!S.location) S.location = loc0;
           S.x.gallery.password = keep.pw; if (keep.secret && S.x.caricature) S.x.caricature.secret = keep.secret; withSecret(S);
           E.logo_url = p.logo_url || null; // ganz ersetzen: ohne Logo in der Voreinstellung auch hier keins
           m.remove(); save(); renderNav(); render(); ctx.toast(`Voreinstellung „${p.name}“ übernommen`, 4000);
@@ -1730,7 +1733,9 @@
         const link = shareLink(), n = v => gal.list ? v : '…', sessions = P.filter(x => !isExtra(x)).length;
         const act = (a, ic, label, extra = '') => `<button data-a="${a}" ${extra}>${ICON(ic, 26)}<span>${label}</span></button>`;
         return `<h1>Übersicht</h1>
-          <div class="evhead"><input type="text" data-e="name" value="${esc(E.name)}" size="${Math.max(8, Math.min(40, (E.name || '').length + 1))}" title="Name des Ereignisses ändern"><span class="sep"></span><input type="date" data-e="event_date" value="${E.event_date || ''}" title="Datum ändern"></div>
+          <div class="evhead"><input type="text" data-e="name" value="${esc(E.name)}" size="${Math.max(8, Math.min(40, (E.name || '').length + 1))}" title="Name des Ereignisses ändern"><span class="sep"></span><input type="date" data-e="event_date" value="${E.event_date || ''}" title="Datum ändern"><span class="sep"></span>${freeTier()
+            ? '<input type="text" disabled placeholder="🔒 Location" title="Ereignisse nach Location ordnen gibt es mit dem Fotobox-Abo." size="12">'
+            : `<input type="text" data-s="location" list="wsLocs" maxlength="80" value="${esc(S.location || '')}" placeholder="📍 Location" size="${Math.max(18, Math.min(30, (S.location || '').length + 3))}" title="Location dieses Ereignisses – zum Ordnen und Filtern der Ereignisse"><datalist id="wsLocs">${(ctx.locations?.() || []).map(x => `<option value="${esc(x)}">`).join('')}</datalist>`}</div>
           <div class="dcards split">
             <div class="dcard"><div class="nums"><span>Sitzungen<b>${n(sessions)}</b></span><span>Bilder<b>${n(P.filter(x => x.kind !== 'video').length)}</b></span><span>Videos<b>${n(P.filter(x => x.kind === 'video').length)}</b></span></div>
               <div class="foot"><span></span><button class="more" data-a="go" data-pg="analytics">Analysen →</button></div></div>
@@ -1837,7 +1842,7 @@
           const L = S.x.startLogo, opt = [['own', 'Mein Firmenlogo (aus „Meine Lizenzen“ → Werbung)'], ['event', 'Logo dieses Ereignisses'], ['image', 'Eigenes Bild'], ['none', 'Nichts – nur das Kamera-Symbol']];
           return `<h2>Logo in der Startanimation</h2><div class="card">
             <p style="color:#6b6b78;margin:0 0 10px">In der Mitte der Startanimation ist eine weiße Scheibe – dort steht Ihr Logo. Die Vorschau zeigt es genau so wie auf der Fotobox.</p>
-            ${has || S.startDisplay === 'live' || S.startDisplay === 'anim' ? `<p style="background:#FFF3C4;color:#8a6400;border-radius:8px;padding:8px 10px;font-size:13px;margin:0 0 10px">${S.startDisplay === 'anim' ? 'Die Startanimation ist gerade nicht zu sehen, weil oben „Animation (selbst wählen)“ eingestellt ist.' : has ? 'Die Startanimation ist gerade nicht zu sehen, weil oben ein eigenes Video bzw. Bild hochgeladen ist. Zum Verwenden dort auf den Mülleimer klicken.' : 'Die Startanimation ist gerade nicht zu sehen, weil „Live-Bild der Kamera“ gewählt ist. Zum Verwenden oben „Standard-Video von Photobox Memories“ wählen.'}</p>` : ''}
+            ${(has && S.startDisplay !== 'std') || S.startDisplay === 'live' || S.startDisplay === 'anim' ? `<p style="background:#FFF3C4;color:#8a6400;border-radius:8px;padding:8px 10px;font-size:13px;margin:0 0 10px">${S.startDisplay === 'anim' ? 'Die Startanimation ist gerade nicht zu sehen, weil oben „Animation (selbst wählen)“ eingestellt ist.' : has ? 'Die Startanimation ist gerade nicht zu sehen, weil oben ein eigenes Video bzw. Bild gewählt ist. Zum Verwenden oben „Startanimation mit Logo“ wählen – das Video bleibt gespeichert.' : 'Die Startanimation ist gerade nicht zu sehen, weil „Live-Bild der Kamera“ gewählt ist. Zum Verwenden oben „Standard-Video von Photobox Memories“ wählen.'}</p>` : ''}
             <div class="row" style="align-items:flex-end;gap:12px;margin-bottom:4px"><canvas id="wsAnimP" width="288" height="512" style="width:144px;border-radius:8px;background:#111"></canvas><canvas id="wsAnimL" width="512" height="288" style="width:256px;max-width:calc(100% - 156px);border-radius:8px;background:#111"></canvas></div>
             <label class="l">Was steht in der Scheibe?</label><select data-s="x.startLogo.src" data-rerender="1">${opt.map(([k, n]) => `<option value="${k}" ${L.src === k ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
             ${L.src === 'image' ? up('x.startLogo.url', 'Bild für die Scheibe', 'image/*', 'Am schönsten: PNG mit durchsichtigem Hintergrund') : ''}
@@ -1869,8 +1874,8 @@
           <p style="color:#6b6b78;margin:0 0 6px">Läuft auf dem Startbildschirm in Endlosschleife – ein Tipp darauf startet die Fotobox. Die Fotobox erkennt selbst, ob ihr Bildschirm hoch oder quer steht, und nimmt das passende. Ist nur eins hochgeladen, gilt es für beide.</p>
           ${proOnly(slot('portrait') + slot('landscape'))}
           <p style="color:#777;font-size:12.5px;margin:8px 0 0">MP4-Video oder JPG/PNG-Bild · höchstens 50 MB · Tipp: In Canva oder CapCut gibt es fertige Vorlagen für Hochzeit, Geburtstag und Firmenfeier.</p>
-          <label class="l">Auf dem Startbildschirm zeigen</label><select data-s="startDisplay"><option value="media" ${S.startDisplay !== 'live' && S.startDisplay !== 'anim' ? 'selected' : ''}>${has ? 'Mein Video bzw. Bild' : 'Standard-Video von Photobox Memories'}</option><option value="anim" ${S.startDisplay === 'anim' ? 'selected' : ''}>Animation (selbst wählen)</option><option value="live" ${S.startDisplay === 'live' ? 'selected' : ''}>Live-Bild der Kamera</option></select>
-          ${S.startDisplay === 'anim' ? startAnimCard() : has ? '' : '<p style="color:#6b6b78;font-size:12.5px;margin:6px 0 0">Ohne eigenes Video zeigt die Fotobox unsere Startanimation (schwebende Fotos, in der Mitte Ihr Logo – passend für Hoch- und Querformat).</p>'}</div>
+          <label class="l">Auf dem Startbildschirm zeigen</label><select data-s="startDisplay"><option value="media" ${!['live', 'anim', 'std'].includes(S.startDisplay) || (S.startDisplay === 'std' && !has) ? 'selected' : ''}>${has ? 'Mein Video bzw. Bild' : 'Standard-Video von Photobox Memories'}</option>${has ? `<option value="std" ${S.startDisplay === 'std' ? 'selected' : ''}>Startanimation mit Logo</option>` : ''}<option value="anim" ${S.startDisplay === 'anim' ? 'selected' : ''}>Animation (selbst wählen)</option><option value="live" ${S.startDisplay === 'live' ? 'selected' : ''}>Live-Bild der Kamera</option></select>
+          ${S.startDisplay === 'anim' ? startAnimCard() : has && S.startDisplay === 'std' ? `<p style="color:#6b6b78;font-size:12.5px;margin:6px 0 0"><span>Ihr Video bzw. Bild bleibt gespeichert. Zum Zurückwechseln oben „Mein Video bzw. Bild“ wählen.</span>${S.startScreen ? ' <span>Die Gestaltung unter 2 wird bei der Startanimation nicht gezeigt.</span>' : ''}</p>` : has ? '' : '<p style="color:#6b6b78;font-size:12.5px;margin:6px 0 0">Ohne eigenes Video zeigt die Fotobox unsere Startanimation (schwebende Fotos, in der Mitte Ihr Logo – passend für Hoch- und Querformat).</p>'}</div>
           ${proOnly(stdLogoCard(has), 'Ab Basis', freeTier())}
           <h2>2 · Texte und Logo darüberlegen <span style="font-weight:400;color:#888;font-size:14px">(freiwillig)</span></h2><div class="card">
           <p style="color:#6b6b78;margin:0 0 12px">Name, Datum, Logo und Start-Knopf frei anordnen – wie beim Fotolayout. Gestaltest du nur eine Ausrichtung, passt die Fotobox sie für die andere automatisch an; du kannst beide aber auch einzeln gestalten.</p>
@@ -2604,16 +2609,18 @@
   // Sonder-Ereignisse (Live-Karikatur, 360°, nur Zeichenroboter) zählen nicht – sonst wäre ein neues Foto-Ereignis plötzlich eins davon.
   const PHOTO_MODES = ['single', 'strip', 'grid'];
   const evSpecial = s => !!(s?.x?.caricature?.on || s?.x?.slowmo?.enabled || (s?.x?.robot?.enabled && !PHOTO_MODES.some(k => s?.modes?.[k])));
-  const FLOW_KEYS = ['countdown', 'countdownNext', 'between', 'autoReturn', 'sound', 'mirror', 'mirrorPhoto', 'cropLive', 'faces', 'liveView', 'modes', 'gifFrames', 'gifDelay',
+  // Countdown und Aufnahme-Arten NICHT (Betreiber 21.11.2026: „neues Ereignis nur Aufnahme-Art Foto an und Countdown immer 5 Sekunden,
+  // Kunden sollen später selber ändern können“) – die setzt der Dialog für jedes neue Ereignis (NEW_EVENT)
+  const FLOW_KEYS = ['countdownNext', 'between', 'autoReturn', 'sound', 'mirror', 'mirrorPhoto', 'cropLive', 'faces', 'liveView', 'gifFrames', 'gifDelay',
     'gifReverse', 'boomerangLen', 'videoSecs', 'videoAudio', 'gifFromPhotos', 'guestLayouts', 'filtersOn', 'filters', 'stickers', 'share', 'autoPrint', 'printButton', 'askCopies',
     'maxCopies', 'printLimit', 'showPrintsLeft', 'copies'];
   const FLOW_X = { share: ['originals', 'deleteBtn', 'cloud', 'uploadOriginals', 'origUp'], gallery: ['link', 'guests', 'downloadAll'], lang: ['guest', 'pick', 'list'],
-    video: ['countdown', 'quality', 'saveOriginal'], gif: ['size', 'reverse', 'delay'] };
+    video: ['quality', 'saveOriginal'], gif: ['size', 'reverse', 'delay'] };
   const lastFlow = st => { const s = st || {}, o = {};
     for (const k of FLOW_KEYS) if (s[k] !== undefined) o[k] = structuredClone(s[k]);
     for (const [g, ks] of Object.entries(FLOW_X)) for (const k of ks) if (s.x?.[g]?.[k] !== undefined) ((o.x ??= {})[g] ??= {})[k] = structuredClone(s.x[g][k]);
-    if (o.modes && !PHOTO_MODES.some(k => o.modes[k])) o.modes = { single: true, strip: false, grid: false, gif: false, boomerang: false, video: false }; // nur Video: neues Foto-Ereignis wieder mit Foto
     return o; };
+  const NEW_EVENT = { countdown: 5, modes: { single: true, strip: false, grid: false, gif: false, boomerang: false, video: false } };
   const lastEvent = (events, id) => { const ok = (events || []).filter(e => e && !e.lite && e.settings && typeof e.settings === 'object' && !evSpecial(e.settings));
     return ok.find(e => id && e.id === id) || ok.slice().sort((a, b) => String(b.updated_at || '').localeCompare(String(a.updated_at || '')))[0] || null; };
 
@@ -2658,7 +2665,8 @@
       // Standard-Voreinstellung: gilt für jedes neue Ereignis, die Ereignisart setzt ihre eigenen Werte darüber
       const def = presets.find(x => x.is_default), base = def ? Presets.clean(def.settings) : last ? lastFlow(last.settings) : null;
       const set = base ? withSecret(deepMerge(base, structuredClone(t[5]))) : structuredClone(t[5]); m.remove();
-      if (!set.modes) set.modes = { single: true, strip: false, grid: false, gif: false, boomerang: false, video: false }; // neues Ereignis: nur „Foto“ an, alles andere schaltet der Betreiber selbst ein
+      if (!def) { if (set.countdown == null) set.countdown = NEW_EVENT.countdown; if (!set.modes) set.modes = structuredClone(NEW_EVENT.modes); } // ohne Standard-Voreinstellung: 5 s, nur Foto
+      if (!set.modes) set.modes = structuredClone(NEW_EVENT.modes); // neues Ereignis: nur „Foto“ an, alles andere schaltet der Betreiber selbst ein
       if (def?.logo_url) { if (t[1] === 'cari') { set.x.caricature.secret = Caricature.newSecret(); return onPick(set, def.logo_url, null, 'Live-Karikatur', 'cari'); }
         return onPick(set, def.logo_url, null, t[3], t[1] === 'robot' ? 'robot' : undefined); }
       if (t[1] === 'cari') { set.x.caricature.secret = Caricature.newSecret(); return onPick(set, null, null, 'Live-Karikatur', 'cari'); } // gleich auf der Karikatur-Seite öffnen
@@ -2669,16 +2677,16 @@
     // eigene Voreinstellungen oben anzeigen
     loadP.then(() => { const L = presets; if (!document.body.contains(m)) return;
       const def = L.find(x => x.is_default);
-      if (!L.length) { if (last) $(m, '.presetBox').innerHTML = `<p style="margin:0 20px 6px;color:#777;font-size:12.5px"><span>Neue Ereignisse übernehmen den Ablauf Ihres letzten Ereignisses – Countdown, Aufnahme-Arten, Drucken und Teilen. Layouts, Bilder und Texte wählen Sie neu:</span> <b translate="no">${esc(last.name)}</b></p>`; return; }
+      if (!L.length) { if (last) $(m, '.presetBox').innerHTML = `<p style="margin:0 20px 6px;color:#777;font-size:12.5px"><span>Neue Ereignisse starten mit der Aufnahme-Art „Foto“ und 5 Sekunden Countdown und übernehmen Drucken und Teilen von Ihrem letzten Ereignis. Danach können Sie alles selbst ändern:</span> <b translate="no">${esc(last.name)}</b></p>`; return; }
       $(m, '.presetBox').innerHTML = `<div class="sec">MEINE VOREINSTELLUNGEN</div>${L.map(p => `<button class="et" data-preset="${esc(p.id)}"><span class="ei">${ICON(p.is_default ? 'star' : 'layers', 22)}</span><span><b style="font-family:inherit">${esc(p.name)}${p.is_default ? '<span class="stdtag">Standard</span>' : ''}</b><small>Alle Einstellungen übernehmen</small></span></button>`).join('')}
-        ${def ? `<p style="margin:0 20px 6px;color:#777;font-size:12.5px"><span>Bei jeder anderen Ereignisart werden die Einstellungen der Standard-Voreinstellung übernommen:</span> <b translate="no">${esc(def.name)}</b></p>` : last ? `<p style="margin:0 20px 6px;color:#777;font-size:12.5px"><span>Neue Ereignisse übernehmen den Ablauf Ihres letzten Ereignisses – Countdown, Aufnahme-Arten, Drucken und Teilen. Layouts, Bilder und Texte wählen Sie neu:</span> <b translate="no">${esc(last.name)}</b></p>` : ''}`;
+        ${def ? `<p style="margin:0 20px 6px;color:#777;font-size:12.5px"><span>Bei jeder anderen Ereignisart werden die Einstellungen der Standard-Voreinstellung übernommen:</span> <b translate="no">${esc(def.name)}</b></p>` : last ? `<p style="margin:0 20px 6px;color:#777;font-size:12.5px"><span>Neue Ereignisse starten mit der Aufnahme-Art „Foto“ und 5 Sekunden Countdown und übernehmen Drucken und Teilen von Ihrem letzten Ereignis. Danach können Sie alles selbst ändern:</span> <b translate="no">${esc(last.name)}</b></p>` : ''}`;
     });
   }
   // Themen für den Zeichenroboter (Aufnahme-Art „Zeichnung“): Gäste wählen vor dem Foto, die KI zeichnet sie passend als Strichzeichnung.
   // prompt = Zusatz zum Grund-Prompt der Strichzeichnung; icon/bg wie bei den KI-Stilen (Kachel ohne Beispielbild)
   // Grund-Prompt der Strichzeichnung – gleicher Text wie RB_PROMPT in der Fotobox (app/index.html), für die Vorschau eigener Themen
   const RB_PROMPT = 'Wandle das Foto in eine saubere schwarze Strichzeichnung um: reinweißer Hintergrund, nur die Konturen der Personen (Gesichter, Haare, Kleidung) mit gleichmäßig dünnen schwarzen Linien, keine Flächen, keine Schraffur, keine Grautöne, keine Farben, kein Hintergrund, kein Text. Die Gesichter müssen klar erkennbar bleiben; nichts von den Personen weglassen (Frisur, Brille, Bart, Schmuck, Kopfbedeckung, Dinge in der Hand).';
-  const RB_SCENE = 'Wandle das Foto in eine saubere schwarze Strichzeichnung um. Zeichne die Personen aus dem Foto als liebevolle Karikatur im Stil eines Ausmalbilds für Kinder: großer Kopf (etwa so groß wie der restliche Körper) auf einem kleinen Körper, ganze Figur von Kopf bis Fuß in einer fröhlichen Pose, die Gesichter sofort erkennbar; nichts von den Personen weglassen (Frisur, Brille, Bart, Schmuck, Kopfbedeckung, Kleidung, Dinge in der Hand). Dazu eine einfache Szene mit wenigen großen Gegenständen oder Tieren passend zum Thema (ohne Thema: eine kleine fröhliche Szene). Nur klare, gleichmäßige schwarze Konturlinien auf reinweißem Hintergrund, große geschlossene Formen, keine Flächen, keine Schraffur, keine Grautöne, keine Farben, kein Text, nichts angeschnitten.'; // gleich wie in der Fotobox (index.html)
+  const RB_SCENE = 'Wandle das Foto in eine saubere schwarze Strichzeichnung um, wie ein Ausmalbild mit dickem Filzstift. Jede Person als Wackelkopf-Karikatur in ganzer Figur: riesiger Kopf, mehr als die halbe Figur und breiter als die Schultern, auf winzigem Körper mit kurzen Armen und Beinen. Gesicht wie vom Schnellzeichner: echte Kopfform, Haaransatz, Augen, Nase und Lächeln der Person, sofort erkennbar, keine Puppenaugen. Haare als große Form mit höchstens fünf Linien. Brille, Bart, Schmuck, Kopfbedeckung übernehmen. Dazu zwei, drei große einfache Gegenstände zum Thema (ohne Thema: eine kleine fröhliche Szene) und wenige Sterne oder Wolken, sonst weiß. Nur dicke, glatte, durchgehende, zusammenhängende schwarze Konturen, sehr wenige Linien, keine einzelnen Punkte oder Strichel, keine Schraffur, keine Grautöne, keine Flächen, kein Text, kein Rahmen, weißer Rand, nichts angeschnitten.'; // gleich wie in der Fotobox (index.html)
   const RB_BIGHEADS = 'Zeige die Personen in ganzer Figur von Kopf bis Fuß, aber mit stark vergrößerten Köpfen auf einem kleinen Körper (der Kopf etwa so groß wie der restliche Körper), wie eine freundliche Karikatur; die Gesichter bleiben sofort erkennbar.'; // gleich wie in der Fotobox (index.html)
   // Stichworte für die Suche im Dashboard (Zeichenroboter → Themen)
   const DRAW_KW = {"classic": "einfach normal kontur", "caricature": "lustig witzig übertrieben großer kopf", "superhero": "held umhang comic stark", "football": "sport fußball trikot tor ball", "astronaut": "weltall raumfahrt sterne planet", "pirate": "schiff meer säbel", "chef": "küche kochen essen", "doctor": "arzt ärztin medizin krankenhaus", "firefighter": "feuer helm einsatz", "police": "polizei uniform", "soldier": "militär armee uniform", "rockstar": "musik gitarre bühne band", "dj": "musik party club mischpult", "wedding": "hochzeit braut bräutigam heirat", "christmas": "weihnachten winter geschenk advent", "halloween": "grusel kostüm vampir hexe kürbis", "cowboy": "western wilder westen pferd", "knight": "mittelalter burg rüstung", "royal": "könig königin krone prinzessin", "robot": "technik zukunft maschine", "manga": "anime japan", "comic": "comic sprechblase", "surfer": "strand meer sommer welle urlaub", "skier": "ski winter schnee berge urlaub", "pilot": "flugzeug fliegen reise", "racer": "auto rennen formel motorsport", "boxer": "sport kampf boxen", "dancer": "tanz ballett party", "gardener": "garten blumen natur", "craftsman": "handwerk bau werkzeug", "scientist": "labor forschung schule", "teacher": "schule lehrer lehrerin abschluss", "farmer": "bauernhof landwirtschaft traktor", "captain": "schiff kapitän meer segeln", "detective": "krimi lupe ermittler", "angel": "engel himmel flügel"};
