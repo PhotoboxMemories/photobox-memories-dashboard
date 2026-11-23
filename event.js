@@ -780,7 +780,7 @@
     });
     $(root, '.navshade').addEventListener('click', () => root.classList.remove('navopen'));
     // Hilfe-Suche (hilfe.js, dieselbe wie in der Fotobox): Stichwort eintippen → wie man es einstellt, „Hingehen“ öffnet die Seite
-    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261121-1'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    const helpLib = () => G.FotoboxHelp ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'hilfe.js?v=20261123-3'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     const closeEditor = () => close(); // Editor schließen (für Themen auf den Hauptseiten, z. B. „Meine Lizenzen“)
     async function openHelp() {
       try { await helpLib(); } catch { return ctx.toast('Die Hilfe konnte nicht geladen werden.'); }
@@ -1513,8 +1513,17 @@
       for (const d of devs) if (d.status?.prints != null) m.set(d.id, +d.status.prints || 0);
       return [...m.values()].reduce((a, b) => a + b, 0);
     }
-    const fetchBlob = async path => { const r = await fetch(galUrl(path)); if (!r.ok) throw new Error('Datei nicht abrufbar'); return r.blob(); };
-    const saveBlob = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 20000); };
+    // Herunterladen holt die Datei immer frisch vom Foto-Speicher, nie aus dem Zwischenspeicher des Browsers (Kundenhinweis November 2026:
+    // „Wenn ich im Dashboard das Bild herunterladen möchte, funktioniert der Knopf nicht“). Die Großansicht hat das Foto schon als Bild
+    // geladen; diese Kopie im Browser trägt keine Freigabe für fetch (der Foto-Speicher schickt sie nur mit, wenn die Anfrage eine Herkunft
+    // nennt – ein <img> nennt keine). fetch nahm die Kopie, brach mit „Failed to fetch“ ab, und der Hinweis lag hinter der Großansicht.
+    // Aus demselben Grund fehlten in „Alle herunterladen“ still die Fotos, die vorher groß angesehen wurden. Zweite Adresse: Notfall-Kopie.
+    const fetchBlob = async path => {
+      for (const u of [galUrl(path), G.FOTOBOX_PHOTOS?.alt?.(path)]) { if (!u) continue;
+        try { const r = await fetch(u, { cache: 'no-store' }); if (r.ok) return await r.blob(); } catch { /* nächste Adresse */ } }
+      throw new Error('Datei nicht abrufbar');
+    };
+    const saveBlob = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 20000); };
     const galName = x => (x.name || x.path.split('/').pop()).replace(/[^\w.\-äöüÄÖÜß ]/g, '_');
     // Slideshow direkt im Dashboard (Vollbild, auch für Fernseher/Beamer): Fotos und GIFs des Ereignisses nacheinander,
     // neue Fotos kommen von selbst dazu (alle 30 s, neueste zuerst). Braucht keinen öffentlichen Galerie-Link.
@@ -1560,7 +1569,12 @@
         if (k === 'x') return close();
         if (k === 'prev') { n = (n + L.length - 1) % L.length; return draw(); }
         if (k === 'next') { n = (n + 1) % L.length; return draw(); }
-        if (k === 'dl') { try { saveBlob(await fetchBlob(x.path), galName(x)); } catch (err) { ctx.toast('Herunterladen fehlgeschlagen: ' + err.message, 4000); } return; }
+        if (k === 'dl') { // Knopf zeigt, dass geladen wird (ein Video braucht etwas). Klappt es nicht: Datei im neuen Tab öffnen und sagen, wie es weitergeht
+          const b = e.target.closest('[data-k]'), html = b.innerHTML; b.disabled = true; b.textContent = 'Wird geladen …';
+          try { saveBlob(await fetchBlob(x.path), galName(x)); }
+          catch { ctx.toast(window.open(galUrl(x.path), '_blank') ? 'Das Herunterladen hat nicht geklappt. Die Datei ist jetzt in einem neuen Tab geöffnet. Dort lässt sie sich speichern: mit der rechten Maustaste anklicken, am Tablet oder Handy gedrückt halten.'
+            : 'Das Herunterladen hat nicht geklappt. Bitte prüfe die Internetverbindung und versuche es noch einmal.', 10000); }
+          b.disabled = false; b.innerHTML = html; return; }
         if (k === 'rep') { if (await replacePhoto(x)) { draw(); render(); } return; }
         if (k === 'unhide') { const { data: nUn, error } = await ctx.sb.rpc('photo_unhide', { p_id: x.id }); if (error || !nUn) return ctx.toast('Wiederherstellen fehlgeschlagen' + (error ? ': ' + error.message : ''), 5000);
           x.hidden_at = null; ctx.toast('Wiederhergestellt – die Gäste sehen das Foto wieder.'); draw(); render(); return; }
@@ -1616,10 +1630,13 @@
       if (L.length > 400 && !await (G.pmConfirm || (async t => confirm(t)))(`${L.length} Dateien in eine ZIP-Datei packen? Das kann einige Minuten dauern und braucht viel Arbeitsspeicher.`, 'Herunterladen')) return;
       try {
         if (!G.JSZip) await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'vendor/jszip.min.js'; sc.onload = ok; sc.onerror = () => no(new Error('ZIP-Baustein nicht ladbar')); document.head.appendChild(sc); });
-        const zip = new G.JSZip(); let done = 0;
-        for (const x of L) { status(`Lade ${++done} von ${L.length} …`); try { zip.file(String(done).padStart(4, '0') + '_' + galName(x), await fetchBlob(x.path)); } catch {} }
+        const zip = new G.JSZip(); let done = 0, lost = 0; // lost: nicht abrufbare Dateien – vorher fehlten sie ohne ein Wort in der ZIP-Datei
+        for (const x of L) { status(`Lade ${++done} von ${L.length} …`); try { zip.file(String(done).padStart(4, '0') + '_' + galName(x), await fetchBlob(x.path)); } catch { lost++; } }
+        if (lost === L.length) throw new Error('Dateien nicht abrufbar'); // keine leere ZIP-Datei speichern
         status('Packe ZIP-Datei …');
         saveBlob(await zip.generateAsync({ type: 'blob', compression: 'STORE' }), (E.name || 'Ereignis').replace(/[^\w\-äöüÄÖÜß ]/g, '_') + '-Fotos.zip'); status('');
+        if (lost) ctx.toast(lost === 1 ? `1 von ${L.length} Dateien konnte nicht geladen werden und fehlt in der ZIP-Datei. Bitte später noch einmal herunterladen.`
+          : `${lost} von ${L.length} Dateien konnten nicht geladen werden und fehlen in der ZIP-Datei. Bitte später noch einmal herunterladen.`, 10000);
       } catch (e) { status(''); ctx.toast('Herunterladen fehlgeschlagen: ' + e.message, 5000); }
     }
     // Foto ersetzen (25.10.2026: Fotos kamen nach einem Absturz der Fotobox leer im Online-Speicher an – das Original liegt im
@@ -1897,8 +1914,10 @@
           : `${titleSw('Aufkleber', 'stickers')}<div class="card">Lassen Sie Ihre Gäste ihre Fotos mit lustigen Aufklebern verzieren.
 </div>`)}`; // eigene Aufkleber (x.fx.stickers) kann die Fotobox noch nicht – nur der Standard-Stil
       },
+      // Satz zu den Credits: Kundenhinweis November 2026 („Kostet Hintergrund entfernen Credits?“) – das Freistellen rechnet die Fotobox selbst (effects.js, bg-hq), kein Server
       bg() {
         return `<h1>Hintergrund entfernen <label class="sw"><input type="checkbox" data-a="bgon" ${S.bgMode !== 'off' ? 'checked' : ''}><i></i></label><span class="swl">${S.bgMode !== 'off' ? 'Ein' : 'Aus'}</span></h1><div class="card"><b>Ersetzen Sie den Hintergrund Ihrer Fotos</b>
+          <p style="color:#777;font-size:13px;margin:6px 0 0">Das Entfernen des Hintergrunds kostet keine Credits – auch nicht mit der KI-Hintergrundentfernung. Es läuft direkt auf der Fotobox. Credits brauchst du nur für AI-Fotos und andere Bilder, die die KI neu erzeugt.</p>
           <label class="l">Modus</label><div class="row">${[['ai', 'KI-Hintergrundentfernung'], ['green', 'Greenscreen']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="bgm" data-rerender="1" data-s="bgMode" value="${k}" ${S.bgMode === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
           ${S.bgMode === 'green' ? slider('keyStrength', 'Empfindlichkeit', 0, 100, 1, '') : ''}
           <label class="l">Hintergründe</label><div class="row">${[[false, 'Automatisch durchwechseln'], [true, 'Gäste wählen das Hintergrundbild']].map(([k, n]) => `<label class="row" style="gap:6px"><input type="radio" name="bgc" data-a="bgchoice" data-v="${k ? 1 : 0}" ${!!S.bgGuestChoice === k ? 'checked' : ''}> ${n}</label>`).join('')}</div>
@@ -2116,7 +2135,7 @@
       // Fotomosaik: viele Gästefotos ergeben ein großes Bild (Bildschirm und/oder Klebewand mit nummerierter Tafel)
       cari() { // Live-Karikatur: Foto → KI-Karikatur → live gezeichnet an der Fotobox und auf dem zweiten Bildschirm
         if (!allowed('caricature')) return lockedPage('Live-Karikatur', 'Jedes Foto wird zur Karikatur – live Strich für Strich gezeichnet, an der Fotobox und per Selfie vom Handy.');
-        S.x ??= {}; const c0 = S.x.caricature ??= {}; c0.secs ??= 20; c0.phone ??= true; c0.needCode ??= true; c0.print ??= true; c0.approve ??= false;
+        S.x ??= {}; const c0 = S.x.caricature ??= {}; c0.secs ??= Caricature.SECS; /* Vorgabe 30 s (caricature.js) */ c0.phone ??= true; c0.needCode ??= true; c0.print ??= true; c0.approve ??= false;
         if (!/^[0-9a-f]{16,64}$/.test(c0.secret || '')) { c0.secret = Caricature.newSecret(); save(); } // für den wechselnden Code auf der Wand
         const k2 = c0.resolution === '2k'; // Bildqualität: 1K = 1 Credit (Standard), 2K = 2 Credits – so rechnet ai-generate ab
         const c = Caricature.normalize(c0), link = (window.FOTOBOX_CONFIG?.dashboardUrl || location.origin + location.pathname.replace(/[^/]*$/, '')).replace(/\/?$/, '/') + 'karikatur.html?e=' + ev.id;

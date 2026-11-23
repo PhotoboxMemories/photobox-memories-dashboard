@@ -7,13 +7,16 @@
     'alle Personen auf dem Foto, Gesichter gut wiedererkennbar, gleiche Kleidung und Frisur. Kräftige, saubere schwarze Konturlinien wie mit Tusche ' +
     'gezeichnet, flache helle Farben, ein großer goldener Kreis hinter den Personen, sonst reiner weißer Hintergrund. Kein Text, keine Schrift, kein Rahmen.';
   const TITLE = 'Strich für Strich – dein Porträt entsteht';
+  // Vorgabe für „Dauer der Zeichnung“ in Sekunden (einstellbar 8–60). Bis November 2026 waren es 20 – einem Kunden war das zu schnell,
+  // der Betreiber wollte es langsamer. Gilt für Ereignisse ohne gespeicherten Wert; ein gespeicherter Wert bleibt.
+  const SECS = 30;
   const num = (v, a, b, d) => { const n = Math.round(+v); return Number.isFinite(n) ? Math.min(b, Math.max(a, n)) : d; };
   // phone: Gäste schicken Selfies vom Handy (QR-Code auf der Wand) · needCode: zweistelliger Code vom Bildschirm nötig ·
   // approve: jede Einsendung erst im Dashboard freigeben · print: Karikaturen vom Handy ausdrucken · secret: für den Code ·
   // resolution: Bildqualität der KI – '1k' (Standard, 1 Credit pro Bild) oder '2k' (2 Credits); ai-generate rechnet genauso
   function normalize(x) {
     const o = x && typeof x === 'object' ? x : {};
-    return { on: o.on === true, prompt: typeof o.prompt === 'string' && o.prompt.trim() ? o.prompt.slice(0, 1200) : '', secs: num(o.secs, 8, 60, 20),
+    return { on: o.on === true, prompt: typeof o.prompt === 'string' && o.prompt.trim() ? o.prompt.slice(0, 1200) : '', secs: num(o.secs, 8, 60, SECS),
       resolution: o.resolution === '2k' ? '2k' : '1k',
       title: typeof o.title === 'string' ? o.title.slice(0, 80) : '', phone: o.phone !== false, needCode: o.needCode !== false, approve: o.approve === true,
       print: o.print !== false, pos: ['br', 'bl', 'tr', 'tl'].includes(o.pos) ? o.pos : 'br', secret: typeof o.secret === 'string' && /^[0-9a-f]{16,64}$/.test(o.secret) ? o.secret : '' };
@@ -129,5 +132,5 @@
     if (now) return l.remove();
     l.style.opacity = '0'; setTimeout(() => l.remove(), 450);
   }
-  G.Caricature = { PROMPT, TITLE, SLOT, normalize, newSecret, code, compose, promptOf, aiSettings, stage, show, hide };
+  G.Caricature = { PROMPT, TITLE, SECS, SLOT, normalize, newSecret, code, compose, promptOf, aiSettings, stage, show, hide };
 })(window);

@@ -25,8 +25,9 @@
   .card h2{margin:0 0 10px;font:600 19px Fredoka,system-ui,sans-serif;display:flex;gap:10px;align-items:center}
   .card h2 .n{display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--y);color:var(--k);align-items:center;justify-content:center;font-size:16px;flex:none}
   .muted{color:var(--muted);font-size:14px}
-  .btn{background:var(--y);color:var(--k);border:0;border-radius:999px;padding:14px 20px;font:700 17px system-ui,sans-serif;cursor:pointer;width:100%}
-  .btn.ghost{background:#2a2a2e;color:#fff}
+  /* Haupt-Knöpfe in der Farbe des Vermieters, wenn er eine hinterlegt hat (ad.js paint) – sonst Gelb wie bisher (Kundenhinweis November 2026) */
+  .btn{background:var(--btn,var(--y));color:var(--btnk,var(--k));border:0;border-radius:999px;padding:14px 20px;font:700 17px system-ui,sans-serif;cursor:pointer;width:100%;box-shadow:inset 0 0 0 1px var(--btne,transparent)}
+  .btn.ghost{background:#2a2a2e;color:#fff;box-shadow:none}
   .btn:disabled{opacity:.5;cursor:default}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   input[type=text],textarea{width:100%;background:#111114;border:1px solid var(--line);color:#fff;border-radius:12px;padding:12px;font:16px system-ui,sans-serif}
@@ -76,7 +77,7 @@
 
 <script src="config.js?v=20261018-9"></script>
 <script src="icons.js?v=20261017-2"></script>
-<script src="ad.js?v=20261022-1"></script>
+<script src="ad.js?v=20261123-1"></script>
 <script>
 (function () {
   'use strict';
@@ -163,6 +164,7 @@
       if (b?.name) document.title = T('Live-Karikatur') + ' – ' + b.name;
       if (b?.privacy) { $('#privLink').href = b.privacy; $('#privLink').hidden = false; } // Datenschutzerklärung des Vermieters
       if (band) { PM_AD.addCss(); $('#pmad').innerHTML = PM_AD.html(b); }
+      PM_AD.paint?.(b); // Haupt-Knöpfe in der Farbe des Vermieters, Schrift passend hell oder dunkel
     } catch {} }
     let saved = null; try { saved = JSON.parse(localStorage.getItem(store) || 'null'); } catch {}
     if (saved?.id && Date.now() - saved.at < 6 * 3600e3) return watch(saved.id, saved.key);

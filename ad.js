@@ -8,7 +8,27 @@
   const cut = (s, n) => String(s ?? '').trim().slice(0, n);
   // Farbe des Knopfs (vom Vermieter gewählt): nur #rrggbb; Schrift darauf schwarz oder weiß – je nachdem, was besser lesbar ist
   const hex = c => /^#[0-9a-f]{6}$/i.test(String(c || '').trim()) ? String(c).trim().toLowerCase() : '';
-  const onColor = c => { const n = parseInt(c.slice(1), 16), [r, g, b] = [n >> 16, n >> 8 & 255, n & 255]; return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? '#1D1D1B' : '#fff'; };
+  // Kontrast nach WCAG (1 bis 21) zwischen zwei Farben #rrggbb
+  const lum = c => { const n = parseInt(c.slice(1), 16); return [n >> 16, n >> 8 & 255, n & 255].reduce((s, v, i) => { v /= 255; return s + [0.2126, 0.7152, 0.0722][i] * (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4); }, 0); };
+  const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  // Schrift auf der Farbe: die besser lesbare von Weiß und Dunkel (Kontrast immer mindestens 3,5 – die Knopf-Schrift ist fett).
+  // Ist Weiß schon gut lesbar (ab 3,5), bleibt es bei Weiß – auf kräftigem Rot oder Blau wirkt dunkle Schrift sonst fremd.
+  // Vorher nur nach Helligkeit: Weiß auf Orange, Türkis oder Hellgrün war schlecht zu lesen (Kundenhinweis November 2026).
+  const onColor = c => { const w = contrast(c, '#ffffff'); return w >= 3.5 || w >= contrast(c, '#1d1d1b') ? '#fff' : '#1D1D1B'; };
+  // Haupt-Knöpfe der Gäste-Seiten in der Farbe des Vermieters (Kundenhinweis November 2026: „Foto speichern“ blieb gelb, obwohl
+  // das Werbeband darüber schon seine Farbe hatte). Ohne eigene Farbe: null → alles bleibt gelb wie bisher.
+  // edge: heller Rand, wenn sich die Farbe kaum vom dunklen Seitenhintergrund abhebt; glow: Schein unter dem großen Knopf.
+  function button(b) {
+    const c = hex(b && b.color); if (!c) return null;
+    const n = parseInt(c.slice(1), 16);
+    return { bg: c, fg: onColor(c), edge: contrast(c, '#111110') < 2 ? 'rgba(255,255,255,.45)' : 'transparent', glow: `rgba(${n >> 16},${n >> 8 & 255},${n & 255},.25)` };
+  }
+  // … als CSS-Variablen an die Seite geben (galerie.html, karikatur.html, nachricht.html: .btn nutzt --btn/--btnk/--btne/--btng)
+  function paint(b, doc = document) {
+    const k = button(b), st = doc.documentElement.style;
+    for (const [v, key] of [['--btn', 'bg'], ['--btnk', 'fg'], ['--btne', 'edge'], ['--btng', 'glow']]) k ? st.setProperty(v, k[key]) : st.removeProperty(v);
+    return k;
+  }
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const httpUrl = u => {
     u = cut(u, 300); if (!u) return '';
@@ -101,5 +121,5 @@
       return normalize(await r.json(), owner, cfg);
     } catch { return null; }
   }
-  G.PM_AD = { normalize, has, html, addCss, path, publicUrl, ownerOf, load };
+  G.PM_AD = { normalize, has, html, addCss, path, publicUrl, ownerOf, load, button, paint, contrast };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -50,12 +50,15 @@ window.DesignKatalog = (() => {
       .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }).catch(e => { catP = null; throw e; }); }
     return catP;
   };
+  // Anlass-Knöpfe (.dkCats): brechen in mehrere Zeilen um, damit am Laptop ohne Touch alle erreichbar sind (Kundenhinweis November 2026:
+  // „Balken zum Blättern nach rechts fehlt“ – die Zeile war seitlich rollbar, der Rollbalken aber versteckt). Mehr als drei Zeilen rollen
+  // nach unten (Mausrad). Nur am schmalen Handy bleibt es eine Zeile zum Wischen, jetzt mit sichtbarem schmalem Rollbalken.
   const CSS = `#dkWrap{position:fixed;inset:0;z-index:100000;background:rgba(15,15,20,.6);display:grid;place-items:center;padding:2vmin;color:#1d1d1b;font-size:16px}
   #dkWrap .dkBox{background:#fff;border-radius:16px;width:min(1100px,100%);height:min(92vh,1100px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.45)}
   #dkWrap .dkHead{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #e8e6dc;flex-wrap:wrap}#dkWrap h3{margin:0;font-size:20px;color:#1d1d1b;flex:1;min-width:120px}
   #dkWrap input[type=search],#dkWrap input[type=text]{padding:10px 12px;border:1px solid #cfcdc4;border-radius:10px;font-size:16px;background:#fff;color:#1d1d1b;min-width:0;width:100%;box-sizing:border-box}#dkWrap .dkSearch{flex:1;min-width:150px;max-width:320px}
   #dkWrap button{font:inherit;cursor:pointer}#dkWrap .dkX{border:0;background:#f2f0e8;border-radius:50%;width:42px;height:42px;font-size:22px;line-height:1;color:#1d1d1b}
-  #dkWrap .dkCats{display:flex;gap:6px;padding:10px 16px;overflow-x:auto;flex:none;border-bottom:1px solid #f0eee6;scrollbar-width:none}#dkWrap .dkCats button{white-space:nowrap;border:1px solid #d8d6cc;background:#fff;border-radius:999px;padding:7px 14px;color:#1d1d1b}#dkWrap .dkCats button.on{background:#1d1d1b;color:#fff;border-color:#1d1d1b}
+  #dkWrap .dkCats{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px;max-height:152px;overflow-y:auto;flex:none;border-bottom:1px solid #f0eee6}#dkWrap .dkCats button{white-space:nowrap;border:1px solid #d8d6cc;background:#fff;border-radius:999px;padding:7px 14px;color:#1d1d1b}#dkWrap .dkCats button.on{background:#1d1d1b;color:#fff;border-color:#1d1d1b}
   #dkWrap .dkBody{flex:1;overflow-y:auto;padding:14px 16px;-webkit-overflow-scrolling:touch}#dkWrap .dkGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
   #dkWrap .dkItem{border:1px solid #e8e6dc;background:#fff;border-radius:12px;padding:8px;text-align:left;display:flex;flex-direction:column;gap:6px;color:#1d1d1b}#dkWrap .dkItem:hover{border-color:#1d1d1b}#dkWrap .dkItem img{width:100%;aspect-ratio:2/3;object-fit:contain;background:#f6f5f0;border-radius:8px}#dkWrap .dkItem b{font-size:14px;font-weight:600}#dkWrap .dkItem small{color:#77756c;font-size:12px}
   #dkWrap .dkFmt{cursor:pointer;position:relative}#dkWrap .dkFmt input{position:absolute;top:14px;left:14px;width:22px;height:22px}#dkWrap .dkFmt.on{border-color:#1d1d1b;box-shadow:0 0 0 2px #1d1d1b}
@@ -64,7 +67,8 @@ window.DesignKatalog = (() => {
   #dkWrap .dkTexts{display:grid;gap:12px;max-width:560px}#dkWrap .dkTexts label{display:grid;gap:4px;font-size:14px;color:#5f5d55}
   #dkWrap .dkFilt{display:flex;gap:8px;padding:10px 16px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #f0eee6;flex:none}#dkWrap .dkFilt select{font:inherit;font-size:15px;padding:8px 10px;border:1px solid #cfcdc4;border-radius:10px;background:#fff;color:#1d1d1b;max-width:100%}#dkWrap .dkFilt select.on{border-color:#1d1d1b;box-shadow:0 0 0 1px #1d1d1b}
   #dkWrap .dkCount{font-size:14px;color:#77756c;margin-left:auto}#dkWrap .dkReset,#dkWrap .dkAll,#dkWrap .dkZip{background:#fff;border:1px solid #cfcdc4;border-radius:10px;padding:8px 12px;color:#1d1d1b;font-size:14px}
-  #dkWrap .dkAll{margin:0 0 12px}#dkWrap .dkFmtLbl{font-size:12px;color:#77756c}`;
+  #dkWrap .dkAll{margin:0 0 12px}#dkWrap .dkFmtLbl{font-size:12px;color:#77756c}
+  @media(max-width:600px){#dkWrap .dkCats{flex-wrap:nowrap;max-height:none;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;-webkit-overflow-scrolling:touch}}`;
 
   // Unsichtbares Studio: lädt beim ersten Installieren und bleibt für weitere Designs geladen
   let frame = null, ready = null;
@@ -151,6 +155,7 @@ window.DesignKatalog = (() => {
       };
       grid();
       const body = box.querySelector('.dkBody'); body.scrollTop = top;
+      box.querySelector('.dkCats .on')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' }); // gewählter Anlass bleibt sichtbar (Handy: eine Zeile zum Wischen)
       const s = box.querySelector('[data-q]'); s.value = q; s.oninput = () => { q = s.value.toLowerCase().trim(); grid(); };
       box.querySelector('.dkCats').onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return; cat = b.dataset.c; box.querySelectorAll('[data-c]').forEach(x => x.classList.toggle('on', x === b)); grid(); body.scrollTop = 0; };
       const filt = box.querySelector('.dkFilt');

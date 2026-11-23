@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Photobox Memories – Dashboard</title>
 <link rel="stylesheet" href="fonts-fredoka/fredoka.css">
-<script>window.I18N_V = '20261121-1';</script>
+<script>window.I18N_V = '20261123-1';</script>
 <script src="i18n.js?v=20261021-4"></script>
 <script>// Sprache der Oberfläche: gespeichert, sonst die des Browsers. Das Wörterbuch kommt gleich mit (kein deutsches Aufblitzen).
 (function () { var l = ''; try { l = localStorage.getItem('pm-lang') || ''; } catch (e) {} if (I18N.CODES.indexOf(l) < 0) l = I18N.guess('en');
   window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
 <script src="config.js?v=20261025-3"></script>
 <script src="icons.js?v=20261021-5"></script>
-<script src="ad.js?v=20261022-1"></script>
+<script src="ad.js?v=20261123-1"></script>
 <script src="shop.js?v=20261023-2"></script>
 <script src="render.js?v=20261121-1"></script>
 <script src="advisor-anim.js?v=20261117-4"></script>
@@ -21,16 +21,16 @@
 <script src="editor.js?v=20261121-1"></script>
 <script src="ai-event.js?v=20261121-1"></script>
 <script src="sketch-draw.js?v=20261018-8"></script>
-<script src="caricature.js?v=20261024-1"></script>
+<script src="caricature.js?v=20261123-1"></script>
 <script src="start-anim.js?v=20261020-1"></script>
 <script src="admin-schutz.js?v=20261108-1"></script>
 <script src="admin-kunde.js?v=20261028-2"></script>
 <script src="admin-besucher.js?v=20261101-1"></script>
 <script src="admin-boothdesigner.js?v=20261101-1"></script>
-<script src="designs.js?v=20261116-2"></script>
+<script src="designs.js?v=20261123-1"></script>
 <script src="foto-aufgaben.js?v=20261108-1"></script>
 <script src="fernwartung.js?v=20261113-2"></script>
-<script src="event.js?v=20261121-1"></script>
+<script src="event.js?v=20261123-3"></script>
 <script src="studio.js?v=20261114-1"></script>
 <script src="vendor/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <style>
@@ -183,7 +183,11 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
 .evnew .cv span{font-size:34px;line-height:1}
 #newVer{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 32px);background:var(--accent);color:var(--accent-fg);padding:10px 14px 10px 18px;border-radius:12px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.25)}
 #newVer button{background:var(--accent-fg);color:#fff;border:0;border-radius:8px;padding:7px 14px;font:inherit;cursor:pointer}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:10px;font-weight:600;z-index:30;display:none}
+/* Hinweis liegt über allem (Kundenhinweis November 2026): mit z-index 30 lag er hinter dem Ereignis-Fenster (#ws 40) und hinter der
+   Großansicht eines Fotos (#wsLight 120) – Meldungen wie „Herunterladen fehlgeschlagen“ sah dort niemand. Der Wert liegt über jedem
+   Fenster des Dashboards (höchstes: Farbauswahl farbwahl.js). Rand: auch auf schwarzem Grund erkennbar. Weil er jetzt auch über Knöpfen
+   liegen kann (lange Meldung über der Knopfzeile der Großansicht): Ein Klick oder Tippen auf den Hinweis schließt ihn sofort (toast). */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:10px;font-weight:600;z-index:2147483600;display:none;cursor:pointer;width:max-content;max-width:min(92vw,640px);box-shadow:0 0 0 1px rgba(128,128,128,.5),0 8px 28px rgba(0,0,0,.35)}
 /* Kopfzeile: „Software“ (Download der Fotobox-Software) immer erreichbar – am Handy vorne in der Menüleiste */
 #navSw{background:var(--accent);color:var(--accent-fg);border:0;border-radius:999px;padding:8px 16px;font-weight:700;display:inline-flex;gap:7px;align-items:center;white-space:nowrap;cursor:pointer}
 #navSw:hover{filter:brightness(.97)}
@@ -598,7 +602,8 @@ async function checkNewVersion() {
 }
 setInterval(checkNewVersion, 5 * 60 * 1000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) checkNewVersion(); });
-const toast = (t, ms = 2200) => { const e = $('#toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => e.style.display = 'none', ms); };
+// Kundenhinweis November 2026: Der Hinweis liegt über allem – ein Klick darauf schließt ihn sofort, damit er nie Knöpfe verdeckt (z. B. 10 s lang die Knopfzeile der Großansicht)
+const toast = (t, ms = 2200) => { const e = $('#toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => e.style.display = 'none', ms); e.onclick = () => { clearTimeout(e._t); e.style.display = 'none'; }; };
 
 const CFG = window.FOTOBOX_CONFIG || {};
 // Demo-Modus: ohne Supabase mit Beispieldaten (Adresse mit ?demo aufrufen oder solange config.js leer ist)

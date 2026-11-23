@@ -1,6 +1,147 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.128": {
+   "date": "2026-11-23",
+   "notes": {
+    "de": [
+     "Die Seite „Kamera“ ist aufgeräumt und passt ohne Scrollen auf den Bildschirm. Oben wählst du einfach die Kamera – bei „Automatisch erkennen“ nimmt die Fotobox die Canon, sobald sie eingeschaltet ist, sonst die Webcam.",
+     "Verschlusszeit, Blende, ISO und Weißabgleich stellst du bequem über Auswahllisten ein. Im Reiter „Live-Ansicht“ gibt es eigene, hellere Werte nur fürs Livebild, im Reiter „GoPro“ alles für 360°-Videos.",
+     "Einstellungen speichern sich jetzt von selbst. Oben steht „Alle Änderungen gespeichert“, mit „Fertig“ geht es zurück.",
+     "Ein Tipp auf eine Menü-Gruppe öffnet sofort die erste Seite – bei „Aussehen“ zum Beispiel direkt den Bildschirm-Editor."
+    ],
+    "en": [
+     "The “Camera” page has been tidied up and fits on the screen without scrolling. At the top you simply choose the camera – with “Detect automatically” the photo booth uses the Canon as soon as it is switched on, otherwise the webcam.",
+     "You set shutter speed, aperture, ISO and white balance easily from drop-down lists. The “Live view” tab has its own, brighter values just for the live view, and the “GoPro” tab has everything for 360° videos.",
+     "Settings now save themselves. At the top it says “All changes saved”, and “Done” takes you back.",
+     "Tapping a menu group opens its first page right away – for “Appearance”, for example, the screen editor."
+    ],
+    "tr": [
+     "“Kamera” sayfası düzenlendi ve kaydırmadan ekrana sığıyor. En üstte kamerayı kolayca seçersiniz – “Otomatik algıla” seçiliyken fotoğraf kabini, açılır açılmaz Canon’u, yoksa web kamerasını kullanır.",
+     "Enstantane, diyafram, ISO ve beyaz dengesini açılır listelerden rahatça ayarlarsınız. “Canlı görüntü” sekmesinde yalnızca canlı görüntü için daha parlak kendi değerleri, “GoPro” sekmesinde 360° videolar için her şey var.",
+     "Ayarlar artık kendiliğinden kaydediliyor. Üstte “Tüm değişiklikler kaydedildi” yazar, “Tamam” ile geri dönersiniz.",
+     "Bir menü grubuna dokunmak ilk sayfayı hemen açar – örneğin “Görünüm”de doğrudan ekran düzenleyiciyi."
+    ],
+    "fr": [
+     "La page « Appareil photo » a été simplifiée et tient à l’écran sans défilement. En haut, tu choisis simplement l’appareil – avec « Détecter automatiquement », la photobooth utilise le Canon dès qu’il est allumé, sinon la webcam.",
+     "Vitesse d’obturation, ouverture, ISO et balance des blancs se règlent facilement avec des listes déroulantes. L’onglet « Vue en direct » propose des valeurs plus claires rien que pour l’aperçu, l’onglet « GoPro » tout ce qu’il faut pour les vidéos 360°.",
+     "Les réglages s’enregistrent désormais tout seuls. En haut s’affiche « Toutes les modifications sont enregistrées », « Terminé » te ramène en arrière.",
+     "Un appui sur un groupe du menu ouvre tout de suite sa première page – pour « Apparence », par exemple, directement l’éditeur d’écran."
+    ],
+    "es": [
+     "La página «Cámara» está ordenada y cabe en la pantalla sin desplazarse. Arriba eliges la cámara: con «Detectar automáticamente», el fotomatón usa la Canon en cuanto está encendida; si no, la webcam.",
+     "Velocidad de obturación, diafragma, ISO y balance de blancos se ajustan cómodamente con listas desplegables. La pestaña «Vista en directo» tiene valores propios, más claros, solo para la vista en directo, y la pestaña «GoPro» todo para los vídeos 360°.",
+     "Los ajustes se guardan ahora solos. Arriba pone «Todos los cambios guardados» y con «Listo» vuelves atrás.",
+     "Al tocar un grupo del menú se abre enseguida su primera página: en «Apariencia», por ejemplo, directamente el editor de pantalla."
+    ],
+    "it": [
+     "La pagina «Fotocamera» è stata riordinata e sta sullo schermo senza scorrere. In alto scegli semplicemente la fotocamera – con «Rileva automaticamente» il photobooth usa la Canon appena è accesa, altrimenti la webcam.",
+     "Tempo di scatto, diaframma, ISO e bilanciamento del bianco si impostano comodamente da elenchi a discesa. La scheda «Vista live» ha valori propri, più chiari, solo per l’anteprima, la scheda «GoPro» tutto per i video a 360°.",
+     "Le impostazioni ora si salvano da sole. In alto compare «Tutte le modifiche salvate», con «Fatto» torni indietro.",
+     "Toccando un gruppo del menu si apre subito la sua prima pagina – per «Aspetto», ad esempio, direttamente l’editor delle schermate."
+    ]
+   }
+  },
+  "1.18.127": {
+   "date": "2026-11-23",
+   "notes": {
+    "de": [
+     "Die Gäste sehen sich im Countdown besser: Ist das Livebild der Kamera dunkel, hellt die Fotobox es von selbst auf. An der Kamera und am Foto ändert sich nichts. Den Schalter „Livebild automatisch aufhellen“ findest du in den Kamera-Einstellungen.",
+     "Nach dem Auslösen ist der Übergang ruhiger: Statt „Bereit machen!“ und dem stehenden Livebild steht kurz „Einen Moment …“, bis das Foto da ist.",
+     "Auf der Seite für die Gäste hat der Knopf „Foto speichern“ jetzt deine Firmenfarbe – passend zu deiner Werbung darüber.",
+     "Im Dashboard klappt das Herunterladen von Fotos zuverlässig – einzeln aus der Großansicht und alle zusammen als ZIP-Datei. Hinweise im Ereignis-Fenster sind jetzt gut sichtbar.",
+     "Im Fenster „Designs“ siehst du alle Anlässe auf einen Blick, auch am Laptop.",
+     "Die Live-Karikatur zeichnet von Haus aus 30 Sekunden, damit die Gäste länger zusehen können.",
+     "Gut zu wissen: Das Entfernen des Hintergrunds kostet keine Credits. Der Hinweis steht jetzt direkt bei der Einstellung."
+    ],
+    "en": [
+     "Guests see themselves better during the countdown: if the camera’s live view is dark, the photo booth brightens it by itself. Nothing changes on the camera or in the photo. You will find the switch “Brighten live view automatically” in the camera settings.",
+     "The moment after the shot is calmer: instead of “Get ready!” and the frozen live view, “One moment …” is shown briefly until the photo is there.",
+     "On the guest page, the “Save photo” button now has your company colour – matching your advertisement above it.",
+     "Downloading photos in the dashboard works reliably – one at a time from the large view and all together as a ZIP file. Notices in the event window are now clearly visible.",
+     "In the “Designs” window you see all occasions at a glance, also on a laptop.",
+     "The live caricature now draws for 30 seconds by default, so guests can watch longer.",
+     "Good to know: removing the background costs no credits. The note is now shown right next to the setting."
+    ],
+    "tr": [
+     "Misafirler geri sayımda kendilerini daha iyi görür: Makinenin canlı görüntüsü karanlıksa fotoğraf kabini onu kendiliğinden aydınlatır. Makinede ve fotoğrafta hiçbir şey değişmez. “Canlı görüntüyü otomatik aydınlat” anahtarını makine ayarlarında bulursunuz.",
+     "Çekimden sonraki geçiş daha sakin: “Hazırlan!” ve donmuş canlı görüntü yerine, fotoğraf gelene kadar kısaca “Bir dakika …” görünür.",
+     "Misafir sayfasındaki “Fotoğrafı kaydet” düğmesi artık firma renginizde – üstündeki reklamınıza uygun.",
+     "Kontrol panelinde fotoğrafları indirmek güvenilir şekilde çalışıyor – büyük görünümden tek tek ve hepsi birlikte ZIP dosyası olarak. Etkinlik penceresindeki bildirimler artık iyi görünüyor.",
+     "“Tasarımlar” penceresinde tüm etkinlik türlerini bir bakışta görürsünüz, dizüstü bilgisayarda da.",
+     "Canlı karikatür artık varsayılan olarak 30 saniye çiziyor; böylece misafirler daha uzun izleyebilir.",
+     "Bilmekte fayda var: Arka planı kaldırmak kredi harcamaz. Bu not artık doğrudan ayarın yanında duruyor."
+    ],
+    "fr": [
+     "Les invités se voient mieux pendant le compte à rebours : si l’aperçu en direct de l’appareil est sombre, la photobooth l’éclaircit d’elle-même. Rien ne change sur l’appareil ni sur la photo. L’interrupteur « Éclaircir automatiquement l’aperçu en direct » se trouve dans les réglages de l’appareil photo.",
+     "Le moment après le déclenchement est plus calme : au lieu de « Prépare-toi ! » et de l’aperçu figé, « Un instant … » s’affiche brièvement jusqu’à ce que la photo soit là.",
+     "Sur la page des invités, le bouton « Enregistrer la photo » prend désormais la couleur de votre entreprise – assortie à votre publicité au-dessus.",
+     "Dans le tableau de bord, le téléchargement des photos fonctionne de manière fiable – une par une depuis la vue agrandie et toutes ensemble en fichier ZIP. Les messages dans la fenêtre de l’événement sont maintenant bien visibles.",
+     "Dans la fenêtre « Designs », vous voyez toutes les occasions d’un coup d’œil, même sur un ordinateur portable.",
+     "La caricature en direct dessine désormais 30 secondes par défaut, pour que les invités puissent regarder plus longtemps.",
+     "Bon à savoir : supprimer l’arrière-plan ne coûte aucun crédit. La remarque figure maintenant directement à côté du réglage."
+    ],
+    "es": [
+     "Los invitados se ven mejor durante la cuenta atrás: si la vista en directo de la cámara es oscura, el fotomatón la aclara por sí solo. En la cámara y en la foto no cambia nada. El interruptor «Aclarar automáticamente la vista en directo» está en los ajustes de la cámara.",
+     "El momento después del disparo es más tranquilo: en lugar de «¡Prepárate!» y la vista en directo congelada, aparece brevemente «Un momento …» hasta que llega la foto.",
+     "En la página de los invitados, el botón «Guardar foto» tiene ahora el color de tu empresa, a juego con tu publicidad de arriba.",
+     "En el panel, la descarga de fotos funciona de forma fiable: una a una desde la vista grande y todas juntas como archivo ZIP. Los avisos en la ventana del evento ahora se ven bien.",
+     "En la ventana «Diseños» ves todas las ocasiones de un vistazo, también en el portátil.",
+     "La caricatura en vivo dibuja ahora 30 segundos de forma predeterminada, para que los invitados puedan mirar más tiempo.",
+     "Bueno saberlo: quitar el fondo no cuesta créditos. La nota aparece ahora directamente junto al ajuste."
+    ],
+    "it": [
+     "Gli ospiti si vedono meglio durante il conto alla rovescia: se l’anteprima dal vivo della fotocamera è scura, il photobooth la schiarisce da solo. Sulla fotocamera e sulla foto non cambia nulla. L’interruttore «Schiarire automaticamente l’anteprima dal vivo» si trova nelle impostazioni della fotocamera.",
+     "Il momento dopo lo scatto è più tranquillo: invece di «Preparati!» e dell’anteprima ferma, compare brevemente «Un momento …» finché la foto è pronta.",
+     "Nella pagina per gli ospiti il pulsante «Salva foto» ha ora il colore della tua azienda – in tinta con la tua pubblicità sopra.",
+     "Nella dashboard il download delle foto funziona in modo affidabile – una per una dalla vista grande e tutte insieme come file ZIP. Gli avvisi nella finestra dell’evento sono ora ben visibili.",
+     "Nella finestra «Design» vedi tutte le occasioni a colpo d’occhio, anche sul portatile.",
+     "La caricatura dal vivo disegna ora 30 secondi per impostazione predefinita, così gli ospiti possono guardare più a lungo.",
+     "Buono a sapersi: rimuovere lo sfondo non costa crediti. La nota si trova ora direttamente accanto all’impostazione."
+    ]
+   }
+  },
+  "1.18.126": {
+   "date": "2026-11-22",
+   "notes": {
+    "de": [
+     "Scharfstellen ist jetzt ganz einfach: Die Canon stellt zu Beginn des Countdowns einmal scharf und löst bei 0 sofort aus – bei jeder Kamera gleich. Die Auswahl „Scharfstellen“ gibt es nicht mehr, es muss nichts eingestellt werden. Die Gäste bekommen immer ein Foto.",
+     "Neu in den Kamera-Einstellungen: „Fokus im Livebild“ – Schnell, Leise oder Gesichtserkennung, so wie die Kamera es anbietet. Die Fotobox ändert diese Einstellung nicht mehr von selbst.",
+     "Die Kamera wird geschont: Das Livebild läuft nur noch während der Aufnahme. Bei einer Spiegelreflexkamera ist der Spiegel zwischen den Gästen unten.",
+     "Tipp: Für einen festen Fokus das Objektiv auf MF stellen und einmal von Hand scharfstellen."
+    ],
+    "en": [
+     "Focusing is now very simple: the Canon focuses once at the start of the countdown and fires immediately at 0 – the same for every camera. The “Focusing” selection is gone, nothing needs to be set. Guests always get a photo.",
+     "New in the camera settings: “Focus in live view” – Fast, Quiet or Face detection, as offered by the camera. The photo booth no longer changes this setting by itself.",
+     "The camera is spared: live view now only runs during capture. With a DSLR, the mirror is down between guests.",
+     "Tip: for a fixed focus, set the lens to MF and focus once by hand."
+    ],
+    "tr": [
+     "Netleme artık çok basit: Canon geri sayımın başında bir kez netleme yapar ve 0’da hemen çeker – her makinede aynı. “Netleme” seçimi kaldırıldı, hiçbir şey ayarlamak gerekmiyor. Misafirler her zaman bir fotoğraf alır.",
+     "Makine ayarlarında yeni: “Canlı görüntüde odak” – makinenin sunduğu şekilde Hızlı, Sessiz veya Yüz algılama. Fotoğraf kabini bu ayarı artık kendiliğinden değiştirmiyor.",
+     "Makine korunuyor: Canlı görüntü artık yalnızca çekim sırasında çalışıyor. DSLR’de ayna misafirler arasında aşağıda duruyor.",
+     "İpucu: Sabit odak için objektifi MF’ye alın ve bir kez elle netleyin."
+    ],
+    "fr": [
+     "La mise au point est désormais très simple : le Canon fait la mise au point une fois au début du compte à rebours et déclenche immédiatement à 0 – pareil pour chaque appareil. Le choix « Mise au point » n’existe plus, rien n’est à régler. Les invités obtiennent toujours une photo.",
+     "Nouveau dans les réglages de l’appareil : « Mise au point en visée directe » – Rapide, Silencieux ou Détection des visages, selon ce que propose l’appareil. La photobooth ne modifie plus ce réglage d’elle-même.",
+     "L’appareil est ménagé : la visée directe ne fonctionne plus que pendant la prise de vue. Avec un reflex, le miroir est abaissé entre les invités.",
+     "Astuce : pour une mise au point fixe, mettez l’objectif sur MF et faites la mise au point une fois à la main."
+    ],
+    "es": [
+     "Enfocar ahora es muy sencillo: la Canon enfoca una vez al inicio de la cuenta atrás y dispara de inmediato en 0, igual en todas las cámaras. La selección «Enfoque» ya no existe, no hay que ajustar nada. Los invitados siempre reciben una foto.",
+     "Nuevo en los ajustes de la cámara: «Enfoque en vista en vivo»: Rápido, Silencioso o Detección de caras, según lo que ofrezca la cámara. El fotomatón ya no cambia este ajuste por sí solo.",
+     "Se cuida la cámara: la vista en vivo solo funciona durante la captura. En una réflex, el espejo está abajo entre invitados.",
+     "Consejo: para un enfoque fijo, ponga el objetivo en MF y enfoque una vez a mano."
+    ],
+    "it": [
+     "La messa a fuoco ora è semplicissima: la Canon mette a fuoco una volta all’inizio del conto alla rovescia e scatta subito allo 0 – uguale per ogni fotocamera. La scelta «Messa a fuoco» non c’è più, non c’è nulla da impostare. Gli ospiti ricevono sempre una foto.",
+     "Novità nelle impostazioni della fotocamera: «Messa a fuoco in live view» – Veloce, Silenzioso o Rilevamento volti, secondo ciò che offre la fotocamera. Il photobooth non modifica più questa impostazione da solo.",
+     "La fotocamera viene risparmiata: il live view funziona solo durante lo scatto. Con una reflex lo specchio è abbassato tra un ospite e l’altro.",
+     "Suggerimento: per un fuoco fisso, imposta l’obiettivo su MF e metti a fuoco una volta a mano."
+    ]
+   }
+  },
   "1.18.125": {
    "date": "2026-11-21",
    "notes": {

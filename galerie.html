@@ -20,8 +20,10 @@
   header p{margin:0;color:var(--muted)}
   main{max-width:1200px;margin:0 auto;padding:16px}
   .bar{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:14px;color:var(--muted);font-size:14px}
-  .btn{background:var(--y);color:var(--k);border:0;border-radius:999px;padding:11px 20px;font:700 15px system-ui,sans-serif;cursor:pointer}
-  .btn.ghost{background:#2a2a2e;color:#fff}
+  /* Haupt-Knöpfe: Farbe des Vermieters, wenn er eine hinterlegt hat (ad.js paint: --btn Fläche, --btnk Schrift, --btne Rand bei
+     sehr dunkler Farbe, --btng Schein) – sonst Gelb wie bisher. Kundenhinweis November 2026: „Foto speichern“ blieb gelb. */
+  .btn{background:var(--btn,var(--y));color:var(--btnk,var(--k));border:0;border-radius:999px;padding:11px 20px;font:700 15px system-ui,sans-serif;cursor:pointer;box-shadow:inset 0 0 0 1px var(--btne,transparent)}
+  .btn.ghost{background:#2a2a2e;color:#fff;box-shadow:none}
   .btn:disabled{opacity:.5;cursor:default}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
   @media(max-width:520px){.grid{grid-template-columns:repeat(2,1fr);gap:8px}}
@@ -78,7 +80,7 @@
   .ph b{font:600 18px Fredoka,system-ui,sans-serif;color:#1D1D1B}
   .ph small{font-size:13px;color:#777;max-width:280px}
   .acts{display:flex;gap:10px;margin:20px 0 8px}
-  .acts .btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:15px 18px;font-size:16px;box-shadow:0 6px 18px rgba(249,203,56,.25)}
+  .acts .btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:15px 18px;font-size:16px;box-shadow:inset 0 0 0 1px var(--btne,transparent),0 6px 18px var(--btng,rgba(249,203,56,.25))}
   .acts .btn.ghost{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:none}
   .tip{color:var(--muted);font-size:13px;text-align:center;margin:6px 0 0}
   body.solo footer{padding:22px 16px 30px;display:flex;flex-direction:column;align-items:center;gap:8px;color:#8a8a92}
@@ -109,7 +111,8 @@
   /* Bestellfenster: am Handy im Vollbild (Kopf oben, Fußleiste mit Preis und Bezahlen immer sichtbar), sonst als Fenster */
   .sdlg{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.72);display:none;align-items:stretch;justify-content:center;overscroll-behavior:contain}
   .sdlg.on{display:flex}
-  .sbox{position:relative;display:flex;flex-direction:column;width:100%;height:100%;height:100dvh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:#fff;color:#1D1D1B}
+  .sbox{position:relative;display:flex;flex-direction:column;width:100%;height:100%;height:100dvh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:#fff;color:#1D1D1B;
+    --btn:var(--y);--btnk:var(--k);--btne:transparent} /* Bestellfenster ist weiß mit goldenen Akzenten: Knopf bleibt gelb, auch mit Farbe des Vermieters */
   @media(min-width:600px) and (min-height:620px){.sdlg{align-items:center;padding:16px}.sbox{max-width:500px;height:auto;max-height:94vh;max-height:94dvh;border-radius:20px}}
   .sbox button{touch-action:manipulation}
   .shd{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;padding-top:calc(8px + env(safe-area-inset-top));background:#fff;border-bottom:1px solid #eee}
@@ -195,7 +198,7 @@
   .mtabs button{background:#2a2a2e;color:#fff;border:0;border-radius:999px;padding:9px 16px;font:600 14px system-ui,sans-serif;cursor:pointer}
   .mtabs button.on{background:var(--y);color:var(--k)}
   .mbar{position:sticky;top:0;z-index:5;background:rgba(17,17,16,.94);backdrop-filter:blur(6px);padding:10px 0}
-  .mbar .btn{padding:9px 16px;font-size:14px}.btn.red{background:#e05252;color:#fff}
+  .mbar .btn{padding:9px 16px;font-size:14px}.btn.red{background:#e05252;color:#fff;box-shadow:none}
   .grid.pick figure{cursor:pointer}
   .grid.pick figure.sel{outline:4px solid var(--y);outline-offset:-4px}
   .grid.pick figure .ck{position:absolute;right:6px;top:6px;width:26px;height:26px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--k)}
@@ -214,7 +217,7 @@
 
 <script src="config.js?v=20261025-1"></script>
 <script src="icons.js?v=20261017-2"></script>
-<script src="ad.js?v=20261022-1"></script>
+<script src="ad.js?v=20261123-1"></script>
 <script src="shop.js?v=20261023-2"></script>
 <script>
 (function () {
@@ -237,9 +240,13 @@
     if (window.FOTOBOX_PHOTOS?.retry?.(el)) return; // erst erneut beim Foto-Speicher, dann Notfall-Kopie (config.js)
     const a = !el.dataset.alt && window.FOTOBOX_PHOTOS?.altSrc?.(el.currentSrc || el.src);
     if (a) { el.dataset.alt = '1'; el.src = a; } else if (el.dataset.big) { el.src = el.dataset.big; el.dataset.big = ''; } }, true);
-  const fetchAny = async path => { // Herunterladen: erst Hetzner, sonst die Notfall-Kopie
-    try { const r = await fetch(url(path)); if (r.ok) return r; } catch {}
-    const a = window.FOTOBOX_PHOTOS?.alt?.(path); if (!a) throw new Error('nicht erreichbar'); const r = await fetch(a); if (!r.ok) throw new Error('nicht erreichbar'); return r;
+  // Herunterladen: erst Hetzner, sonst die Notfall-Kopie. Immer frisch vom Foto-Speicher (cache: 'no-store', Kundenhinweis November 2026):
+  // Das groß angesehene Foto liegt schon im Zwischenspeicher des Browsers, aber ohne Freigabe für fetch (ein <img> fragt ohne Herkunft,
+  // der Foto-Speicher schickt die Freigabe dann nicht mit). fetch scheiterte daran – statt zu speichern ging nur ein neuer Tab auf,
+  // und in „Alle herunterladen“ fehlten genau diese Fotos.
+  const fetchAny = async path => {
+    try { const r = await fetch(url(path), { cache: 'no-store' }); if (r.ok) return r; } catch {}
+    const a = window.FOTOBOX_PHOTOS?.alt?.(path); if (!a) throw new Error('nicht erreichbar'); const r = await fetch(a, { cache: 'no-store' }); if (!r.ok) throw new Error('nicht erreichbar'); return r;
   };
   let photos = [], current = 0, info = null;
   // Kein Photobox-Memories-Logo auf den Seiten der Gäste (White Label): Über und unter dem Foto steht das Logo des
@@ -258,6 +265,7 @@
     const b = window.PM_AD && owner ? await PM_AD.load(owner, CFG) : null;
     band = !show && !!b && PM_AD.has(b);
     if (!show && b?.privacy) { const a = document.createElement('a'); a.href = b.privacy; a.target = '_blank'; a.rel = 'noopener'; a.textContent = T('Datenschutz'); a.className = 'privLink'; $('footer').prepend(a); } // Datenschutzerklärung des Vermieters
+    window.PM_AD?.paint?.(b); // Haupt-Knöpfe („Foto speichern“ …) in der Farbe des Vermieters, Schrift passend hell oder dunkel
     if (b && (b.logo || b.name)) { brand = b; applyBrand(); if (single && b.name) document.title = document.title.replace(/ – .*$/, '') + ' – ' + b.name; }
     if (!band) return;
     PM_AD.addCss(); $('#pmad').innerHTML = PM_AD.html(b);
@@ -340,9 +348,11 @@
   async function zipAll() {
     const b = $('#zip'); b.disabled = true;
     try {
-      if (!window.JSZip) await new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
-      const zip = new window.JSZip();
-      for (let i = 0; i < photos.length; i++) { b.textContent = `Lade ${i + 1} von ${photos.length} …`; try { const r = await fetchAny(photos[i].path); zip.file(fileName(photos[i], i), await r.blob()); } catch {} }
+      // ZIP-Baustein vom eigenen Server (derselbe wie im Dashboard, gleiche Fassung 3.10.1) – keine fremden Server auf den Seiten der Gäste
+      if (!window.JSZip) await new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'vendor/jszip.min.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+      const zip = new window.JSZip(); let lost = 0;
+      for (let i = 0; i < photos.length; i++) { b.textContent = `Lade ${i + 1} von ${photos.length} …`; try { const r = await fetchAny(photos[i].path); zip.file(fileName(photos[i], i), await r.blob()); } catch { lost++; } }
+      if (lost === photos.length) throw 0; // nichts abrufbar: keine leere Datei speichern, Hinweis unten
       b.textContent = 'Packe Datei …';
       save(await zip.generateAsync({ type: 'blob', compression: 'STORE' }), (info.name || 'Fotos').replace(/[^\wäöüÄÖÜß \-]/g, '_') + '.zip');
     } catch { alert('Das Herunterladen hat nicht geklappt. Bitte später noch einmal versuchen.'); }
@@ -737,7 +747,7 @@
       const ac = new AbortController(); let stall = setTimeout(() => ac.abort(), 20000);
       const alive = () => { clearTimeout(stall); stall = setTimeout(() => ac.abort(), 15000); };
       try {
-        const r = await fetch(src, { signal: ac.signal }); if (!r.ok) throw 0;
+        const r = await fetch(src, { signal: ac.signal, cache: 'no-store' }); if (!r.ok) throw 0; // nie die Kopie im Browser: Ein vorher abgespieltes Video liegt dort ohne Freigabe für fetch, „Video speichern“ öffnete dann nur einen neuen Tab
         const len = +r.headers.get('content-length') || 0;
         if (!r.body?.getReader || !len) { alive(); const b = await r.blob(); onPct(100); return b; }
         const rd = r.body.getReader(), parts = []; let got = 0;
