@@ -32,8 +32,8 @@
 // admin_customer_marks(p_owner) (202610280010): [{ id, bd (Konto von boothdesigner.de), studio: 'vip'|'abo'|'geschenk'|'freigabe'|'test'|
 //   'frei'|'abgelaufen'|null, until, abo }] – fehlt die Funktion noch, gibt es eben keine Kennzeichen.
 window.AdminKunde = (() => {
-  const EXTRAS = [['mosaic', 'Fotomosaik'], ['caricature', 'Live-Karikatur'], ['videomsg', 'Videonachricht'], ['studio', 'BoothDesigner']];
-  const NAME = { mosaic: 'Fotomosaik', caricature: 'Live-Karikatur', videomsg: 'Videonachricht', offline: 'Offline-Warteschlange', studio: 'BoothDesigner' };
+  const EXTRAS = [['mosaic', 'Fotomosaik'], ['caricature', 'Live-Karikatur'], ['videomsg', 'Videonachricht'], ['studio', 'BoothDesigner'], ['plus', 'Plus-Paket']];
+  const NAME = { ...Object.fromEntries(EXTRAS), offline: 'Offline-Warteschlange' };
   const SRC = { test: 'Gratis/Test', geschenk: 'Geschenk', vip: 'VIP', abo: 'Abo', freigabe: 'Freigabe' };
   const TIER = { free: 'Kostenlos', basis: 'Basis', pro: 'Fotobox' };
   // Wie der Schalter VIP_STRIPE_GRATIS in license-shop (stripe-rabatt.md, Teil C): VIP stellt laufende Stripe-Abos auf 100 % Rabatt –
@@ -425,9 +425,9 @@ window.AdminKunde = (() => {
       });
     }
     if (k === 'gift' || k === 'gift-del') {
-      if (!NAME[x] || !EXTRAS.some(([e]) => e === x)) return;
+      if (!EXTRAS.some(([e]) => e === x)) return;
       if (k === 'gift-del') {
-        if (!await ask(`Geschenk „${NAME[x]}“ bei ${who} entfernen? Test, Abo oder Freigabe bleiben davon unberührt.`, 'Entfernen')) return;
+        if (!await ask(`Geschenk „${NAME[x]}“ bei ${who} entfernen? Test, Abo oder Freigabe bleiben davon unberührt.` + (x === 'plus' ? ' Die Gäste-Seiten zeigen dann sofort wieder unsere Werbung; Fotos, die älter als 1 Monat sind, werden nach 14 Tagen gelöscht.' : ''), 'Entfernen')) return;
         return run(keep, async () => { await rpc('admin_remove_gift', { p_owner: owner, p_extra: x }); return `Geschenk „${NAME[x]}“ entfernt.`; });
       }
       const s = String($(`input[data-k="giftdate"][data-x="${x}"]`, keep)?.value || '').trim(), t = s ? dayEnd(s) : null;
