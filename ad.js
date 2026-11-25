@@ -1,5 +1,5 @@
 // Photobox Memories – Werbung des Vermieters oben auf der Galerie- und Fotoseite der Gäste.
-// Jeder Kunde (mit Lizenz) pflegt seine Angaben im Dashboard unter „Meine Lizenzen“; gespeichert als
+// Jeder Kunde pflegt seine Angaben im Dashboard unter „Meine Lizenzen“ (ohne Plus-Paket zählen nur Telefon und WhatsApp); gespeichert als
 // photos/<Konto>/werbung.json im öffentlichen Supabase-Speicher (eigener Ordner, siehe Zugriffsregeln „fotos …“).
 // Die Galerie findet den Ordner über den Pfad der Fotos (hz/<Konto>/<Ereignis>/… bzw. <Konto>/<Ereignis>/…).
 (function (G) {
@@ -105,21 +105,41 @@
   const publicUrl = (owner, cfg) => `${cfg.supabaseUrl}/storage/v1/object/public/photos/${path(owner)}`;
   // Konto aus dem Pfad eines Fotos (hz/<Konto>/… oder <Konto>/…)
   const ownerOf = p => { const m = String(p || '').match(/^(?:hz\/)?([0-9a-f-]{36})\//i); return m && UUID.test(m[1]) ? m[1].toLowerCase() : ''; };
-  // raw: genau dieses Konto (Bearbeiten der eigenen Werbung). Sonst entscheidet der Tarif des Kontos (Server brand_info):
-  // im kostenlosen Tarif erscheinen Logo und Werbung von Photobox Memories statt der des Kunden.
+  // raw: genau dieses Konto (Bearbeiten der eigenen Werbung). Sonst entscheidet der Server (brand_info, SQL 202611210001):
+  // Mit Plus-Paket erscheinen Logo und Werbung des Vermieters. In der kostenlosen Version die von Photobox Memories – aber immer mit
+  // der Telefon- und WhatsApp-Nummer des Vermieters, nie mit unserer: Gäste sollen bei Fragen ihn erreichen.
+  const fetchAd = async (owner, cfg) => {
+    try {
+      const r = await fetch(publicUrl(owner, cfg) + '?t=' + Math.floor(Date.now() / 60000), { cache: 'no-store' });
+      return r.ok ? normalize(await r.json(), owner, cfg) : null;
+    } catch { return null; }
+  };
+  // Werbung von Photobox Memories (pm) mit den Nummern des Vermieters (own). Von uns kommen nur die Felder in FROM_PM – alles andere
+  // (auch Felder, die normalize() später dazubekommt) bleibt leer, damit nie unsere Nummer oder E-Mail bei Gästen fremder Kunden steht.
+  // Der Datenschutz-Link bleibt immer der des Vermieters (er ist für seine Gäste verantwortlich), auch wenn seine Werbung aus ist.
+  // Hat Photobox Memories die eigene Werbung ausgeschaltet, bleiben nur die Nummern des Vermieters.
+  const FROM_PM = ['name', 'text', 'logo', 'web', 'insta', 'cta', 'color'];
+  function withContact(pm, own) {
+    const x = normalize(), o = own && own.on ? own : null;
+    if (pm && pm.on) for (const k of FROM_PM) x[k] = pm[k];
+    return Object.assign(x, { on: true, tel: o ? o.tel : '', wa: o ? o.wa : '', privacy: own ? own.privacy : '' });
+  }
   async function load(owner, cfg, raw) {
     if (!UUID.test(owner || '') || !cfg?.supabaseUrl) return null;
+    owner = owner.toLowerCase();
+    const ownAd = fetchAd(owner, cfg); // wird in jedem Fall gebraucht → gleich starten, nicht erst nach brand_info
+    let brand = owner;
     if (!raw) try {
       const r = await fetch(cfg.supabaseUrl + '/rest/v1/rpc/brand_info', { method: 'POST', body: JSON.stringify({ p_owner: owner }),
         headers: { 'Content-Type': 'application/json', apikey: cfg.supabaseAnonKey, Authorization: 'Bearer ' + cfg.supabaseAnonKey } });
       const j = r.ok ? await r.json() : null;
-      if (UUID.test(j?.brand_owner || '')) owner = j.brand_owner.toLowerCase();
+      // ad_owner (SQL 202611210001) entscheidet; ältere Datenbank: brand_owner wie bisher
+      const k = UUID.test(j?.ad_owner || '') ? j.ad_owner : j?.brand_owner;
+      if (UUID.test(k || '')) brand = k.toLowerCase();
     } catch {} // ältere Datenbank ohne Tarife: wie bisher die Werbung des Kunden
-    try {
-      const r = await fetch(publicUrl(owner, cfg) + '?t=' + Math.floor(Date.now() / 60000), { cache: 'no-store' });
-      if (!r.ok) return null;
-      return normalize(await r.json(), owner, cfg);
-    } catch { return null; }
+    if (brand === owner) return ownAd;
+    const [pm, own] = await Promise.all([fetchAd(brand, cfg), ownAd]);
+    return pm || own ? withContact(pm, own) : null;
   }
-  G.PM_AD = { normalize, has, html, addCss, path, publicUrl, ownerOf, load, button, paint, contrast };
+  G.PM_AD = { normalize, has, html, addCss, path, publicUrl, ownerOf, load, withContact, button, paint, contrast };
 })(typeof window !== 'undefined' ? window : globalThis);
