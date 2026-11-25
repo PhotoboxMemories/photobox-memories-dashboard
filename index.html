@@ -12,7 +12,7 @@
   window.PM_LANG = l; document.documentElement.lang = l; if (l !== 'de') document.write('<script src="lang/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
 <script src="config.js?v=20261025-3"></script>
 <script src="icons.js?v=20261021-5"></script>
-<script src="ad.js?v=20261123-1"></script>
+<script src="ad.js?v=20261125-1"></script>
 <script src="shop.js?v=20261023-2"></script>
 <script src="render.js?v=20261121-1"></script>
 <script src="advisor-anim.js?v=20261117-4"></script>
@@ -24,13 +24,13 @@
 <script src="caricature.js?v=20261123-1"></script>
 <script src="start-anim.js?v=20261020-1"></script>
 <script src="admin-schutz.js?v=20261108-1"></script>
-<script src="admin-kunde.js?v=20261028-2"></script>
+<script src="admin-kunde.js?v=20261125-1"></script>
 <script src="admin-besucher.js?v=20261101-1"></script>
 <script src="admin-boothdesigner.js?v=20261101-1"></script>
 <script src="designs.js?v=20261123-1"></script>
 <script src="foto-aufgaben.js?v=20261108-1"></script>
 <script src="fernwartung.js?v=20261113-2"></script>
-<script src="event.js?v=20261123-3"></script>
+<script src="event.js?v=20261125-1"></script>
 <script src="studio.js?v=20261114-1"></script>
 <script src="vendor/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <style>
@@ -140,6 +140,13 @@ tr:last-child td{border-bottom:0}
 .tablewrap{overflow-x:auto}
 .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
 .plan{display:flex;flex-direction:column;gap:8px}
+.plusGrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px;align-items:start}
+.plusGrid ul{padding-left:20px}.plusGrid li{margin:5px 0}
+.plusEx{display:grid;grid-template-columns:1fr 1fr;gap:12px}.plusEx figure{margin:0;text-align:center}
+.plusEx img{display:block;width:100%;height:auto;border-radius:14px;border:1px solid var(--line);background:#f4f4f6}
+.plusEx figcaption{margin-top:8px;font-size:13px;line-height:1.35}.plusEx figcaption b{display:block;font-size:14px}
+.plusEx figure.on img{border:2px solid #F7C838}
+@media(max-width:760px){.plusGrid{grid-template-columns:1fr}}
 .plan .price{font:600 26px/1.15 Fredoka,system-ui,sans-serif}
 .plan.cur{border:2px solid var(--accent,#F7C838)}.pick{box-shadow:0 0 0 3px #F7C838;border-radius:12px}.plan .tag{align-self:flex-start;background:#F7C838;color:#1D1D1B;font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px}
 .billSw{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}.billSw button{background:none;border:0;padding:6px 14px;cursor:pointer;font:inherit;color:inherit}.billSw button.on{background:#F7C838;color:#1D1D1B;font-weight:700}.plan .price small{display:block;font:400 13px system-ui,sans-serif;color:var(--muted);margin-top:2px}
@@ -336,8 +343,33 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <div class="plans" id="shopAddons" data-paid></div>
         <p class="small muted" style="margin:16px 0 0" data-paid><a href="agb.html" target="_blank" rel="noopener">AGB</a> · <span>Nur für Unternehmer. Abos verlängern sich automatisch und sind jederzeit zum Ende der Laufzeit kündbar.</span></p>
       </div>
+      <div class="card hidden" id="plusCard" style="margin-top:20px">
+        <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Plus-Paket</h2><div class="row" style="gap:8px"><div class="billSw" id="plusBill"><button type="button" data-bill="month" class="on">Monatlich</button><button type="button" data-bill="year">Jährlich</button></div><button class="btn hidden" id="plusPortal" type="button">Abo &amp; Rechnungen verwalten</button></div></div>
+        <p class="small muted" style="margin:0 0 16px">Die Fotobox-Software bleibt kostenlos – mit allen Funktionen. Mit dem Plus-Paket zeigt die Seite hinter dem QR-Code deine eigene Werbung, und deine Fotos bleiben so lange online, wie du möchtest.</p>
+        <div class="plusGrid">
+          <div class="plan" id="plusPlan" data-addon="1" data-net="1">
+            <b class="hidden">Plus-Paket</b>
+            <div class="price" id="plusPrice"></div>
+            <ul>
+              <li><b>Eigene Werbung beim QR-Code:</b> <span>dein Logo, dein Text, deine Webseite und alle deine Kontaktdaten – auf jeder Foto- und Galerieseite deiner Gäste.</span></li>
+              <li><b>25 GB Speicher</b> <span>für deine Online-Galerien statt 5 GB.</span></li>
+              <li><b>Löschen, wann du willst:</b> <span>Fotos bleiben 1 Monat, 3 Monate, 6 Monate oder 1 Jahr online – das stellst du selbst ein.</span></li>
+            </ul>
+            <div id="plusState"></div>
+            <p class="small muted" style="margin:6px 0 0"><a href="agb.html" target="_blank" rel="noopener">AGB</a> · <span>Nur für Unternehmer. Alle Preise zzgl. USt. Das Plus-Paket verlängert sich automatisch und ist jederzeit zum Ende der Laufzeit kündbar.</span></p>
+          </div>
+          <div>
+            <div class="plusEx">
+              <figure><img src="plus-kostenlos.jpg?v=20261121-1" alt="" loading="lazy" width="780" height="1386"><figcaption><b>Kostenlos</b><span>Werbung von Photobox Memories, dazu deine Telefonnummer</span></figcaption></figure>
+              <figure class="on"><img src="plus-eigene.jpg?v=20261121-1" alt="" loading="lazy" width="780" height="1386"><figcaption><b>Mit Plus-Paket</b><span>Dein Logo, deine Werbung, deine Kontaktdaten</span></figcaption></figure>
+            </div>
+            <p class="small muted" style="margin:10px 0 0;text-align:center">Beispiel: Das sehen deine Gäste, wenn sie den QR-Code an der Fotobox scannen.</p>
+          </div>
+        </div>
+      </div>
       <div class="card hidden" id="adCard" style="margin-top:20px">
         <p class="small" id="adFreeNote" hidden style="background:#FFFAEA;border-radius:10px;padding:8px 12px;margin:0 0 10px">In der kostenlosen Version zeigen die Fotobox und die Gäste-Seiten das Logo und die Werbung von Photobox Memories. Mit dem Fotobox-Abo erscheint hier deine eigene.</p>
+        <p class="small hidden" id="adPlusNote" style="background:#FFFAEA;border-radius:10px;padding:8px 12px;margin:0 0 10px"></p>
         <div class="pagehead" style="margin-bottom:6px"><h2 style="margin:0">Deine Werbung in der Galerie</h2><label class="row" style="gap:8px;margin:0;font-size:14px"><input type="checkbox" id="adOn" checked> anzeigen</label></div>
         <p class="small muted" style="margin-bottom:14px">Erscheint oben auf jeder Foto- und Galerieseite deiner Gäste (QR-Code an der Fotobox und Freigabe-Link der Galerie). Leere Felder werden nicht gezeigt.</p>
         <div class="grid2">
@@ -357,6 +389,8 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         </div>
         <label style="margin-top:16px">Vorschau</label>
         <div id="adPreview" style="border-radius:12px;overflow:hidden;border:1px solid var(--line)"></div>
+        <div id="adNowWrap" class="hidden"><label style="margin-top:16px">Das sehen deine Gäste jetzt (ohne Plus-Paket)</label>
+          <div id="adNow" style="border-radius:12px;overflow:hidden;border:1px solid var(--line)"></div></div>
         <div class="row" style="margin-top:14px"><button class="btn primary" id="adSave" type="button">Speichern</button></div>
       </div>
       <div class="card hidden" id="printCard" style="margin-top:20px">
@@ -381,6 +415,12 @@ code.key{white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;fo
         <h2>Speicher für deine Online-Galerien</h2>
         <p class="small muted" style="margin:4px 0 12px"><span>Zählt alle Fotos, Videos und Videonachrichten deiner Online-Galerien.</span> <span id="storeKeep">Sie werden nach 1 Monat automatisch gelöscht.</span><span id="storeKeepPm" class="hidden">Sie werden nach 6 Monaten automatisch gelöscht.</span></p>
         <div id="storeBar" class="small muted">Wird berechnet …</div>
+        <div id="keepBox" class="hidden" style="margin-top:18px">
+          <label for="keepSel">Fotos automatisch löschen</label>
+          <div class="row" style="gap:10px;flex-wrap:wrap"><select id="keepSel" style="max-width:240px"><option value="30">Nach 1 Monat</option><option value="90">Nach 3 Monaten</option><option value="180">Nach 6 Monaten</option><option value="365">Nach 1 Jahr</option></select>
+            <button class="btn primary" id="keepSave" type="button">Speichern</button></div>
+          <p class="small muted" id="keepNote" style="margin:8px 0 0"></p>
+        </div>
       </div>
     </div>
 
@@ -827,7 +867,7 @@ async function boot() {
   $$('.adminCol').forEach(e => e.classList.toggle('hidden', !profile.is_admin));
   // Fotos bleiben beim Betreiber 6 Monate online, in der kostenlosen Version 1 Monat (Server photo_keep_days, 17.11.2026)
   $('#storeKeep')?.classList.toggle('hidden', !!profile.is_admin); $('#storeKeepPm')?.classList.toggle('hidden', !profile.is_admin);
-  await loadMyTier(); // zuerst: Kostenlos-Modus entscheidet, ob Tarife und Preise erscheinen
+  await Promise.all([loadMyTier(), loadMyPlus()]); // zuerst: Kostenlos-Modus entscheidet, ob Tarife und Preise erscheinen; Plus-Paket
   await welcomeCredits(); // vor den Lizenzen: kostenlose Lizenz sofort, neue Konten einmal 20 KI-Credits (der Server prüft, ob schon bekommen)
   welcomeMail(); // danach: neue Konten bekommen einmal die Willkommens-Mail mit Download-Link (samt Lizenzschlüssel)
   await Promise.all([loadEvents(), loadDevices(), loadLicenses()]);
@@ -1048,7 +1088,7 @@ async function deleteEventFull(e) {
     await Promise.all(Array.from({ length: 6 }, async () => { while (todo.length) { const f = todo.shift(); try { await P.del(f, token); } catch { failed++; }
       if (++done % 20 === 0) toast(`Lösche Fotos … ${done} von ${hz.length}`, 2000); } }));
     for (let i = 0; i < local.length; i += 100) await sb.storage.from('photos').remove(local.slice(i, i + 100)).catch(() => {});
-    if (failed) toast(`${failed} Dateien konnten nicht gelöscht werden – sie verschwinden spätestens nach 6 Monaten von selbst.`, 6000);
+    if (failed) toast(`${failed} Dateien konnten nicht gelöscht werden – sie verschwinden spätestens nach 1 Jahr von selbst.`, 6000);
   }
   const { error } = await sb.from('events').delete().eq('id', e.id);
   if (error) { toast('Fehler: ' + error.message, 6000); return false; }
@@ -1295,7 +1335,7 @@ function licStatus(l) {
 }
 const kindName = k => k === 'lifetime' ? 'Einmalkauf' : 'Abo';
 // Zusatzfunktionen, die der Betreiber je Lizenz freischaltet (Spalte licenses.extras); der Betreiber selbst hat immer alle
-const EXTRAS = [['mosaic', 'Fotomosaik'], ['caricature', 'Live-Karikatur'], ['videomsg', 'Videonachricht'], ['studio', 'BoothDesigner'], ['offline', 'Offline-Warteschlange'], ['export', 'Echtzeit-Export']];
+const EXTRAS = [['mosaic', 'Fotomosaik'], ['caricature', 'Live-Karikatur'], ['videomsg', 'Videonachricht'], ['studio', 'BoothDesigner'], ['offline', 'Offline-Warteschlange'], ['export', 'Echtzeit-Export'], ['plus', 'Plus-Paket']];
 // Template-Studio (studio.js): eigene Seite im Menü; #studio springt nach der Anmeldung dorthin (Link von der Studio-Webseite)
 const openStudio = () => StudioPage.open({ sb, me, toast, uploadFile, extra: hasExtra, tier: () => myTier, reloadTier: loadMyTier,
   events: () => events, reloadEvents: loadEvents, admin: !!profile?.is_admin, demo: DEMO });
@@ -1377,6 +1417,23 @@ function adPreview() {
   PM_AD.addCss();
   const b = PM_AD.normalize(adCollect(), me.id, CFG);
   $('#adPreview').innerHTML = PM_AD.has(b) ? PM_AD.html(b) : `<div class="small muted" style="padding:14px">${$('#adOn').checked ? 'Noch nichts eingetragen – die Galerie zeigt dann keine Werbung.' : 'Ausgeschaltet – die Galerie zeigt keine Werbung.'}</div>`;
+  adNow();
+}
+// Ohne Plus-Paket (SQL 202611210001) sehen Gäste die Werbung von Photobox Memories mit der Telefon-/WhatsApp-Nummer des Kunden –
+// genau das zeigt die zweite Vorschau. Im Übergang (ad_until) und mit Plus-Paket erscheint die eigene Werbung: keine zweite Vorschau.
+let pmAd; // Werbung von Photobox Memories (einmal geladen, als Versprechen)
+async function adNow() {
+  const own = !myPlus || myPlus.ad_own;
+  $('#adNowWrap').classList.toggle('hidden', own); if (own) return;
+  const pm = await (pmAd ||= PM_AD.load(myPlus.pm_owner, CFG, true));
+  const x = PM_AD.withContact(pm, PM_AD.normalize(adCollect(), me.id, CFG));
+  $('#adNow').innerHTML = PM_AD.has(x) ? PM_AD.html(x) : '<div class="small muted" style="padding:14px">Ohne Plus-Paket zeigt die Galerie die Werbung von Photobox Memories.</div>';
+}
+function adNote() {
+  const el = $('#adPlusNote'), grace = !!myPlus?.ad_until, off = !!myPlus && !myPlus.ad_own; // ad_until kommt nur ohne Plus-Paket
+  el.classList.toggle('hidden', !grace && !off);
+  el.innerHTML = grace ? `<span>Deine eigene Werbung erscheint noch bis</span> ${fmtDate(myPlus.ad_until)}. <span>Danach zeigen die Gäste-Seiten die Werbung von Photobox Memories mit deiner Telefonnummer – mit dem Plus-Paket bleibt es deine eigene.</span>`
+    : off ? '<span>Ohne Plus-Paket zeigen die Gäste-Seiten das Logo und die Werbung von Photobox Memories – mit deiner Telefon- und WhatsApp-Nummer. Mit dem Plus-Paket erscheint alles, was du hier einträgst.</span>' : '';
 }
 $('#adCard').addEventListener('input', adPreview);
 $('#adCard').addEventListener('change', adPreview);
@@ -1400,6 +1457,52 @@ document.addEventListener('click', e => {
   const k = e.target.dataset?.copy; if (!k) return;
   navigator.clipboard.writeText(k).then(() => toast('Schlüssel kopiert'));
 });
+
+/* ---------- Plus-Paket (SQL 202611210001, Betreiber 21.11.2026): 10 €/Monat bzw. 100 €/Jahr zzgl. USt. – eigene Werbung beim QR-Code,
+   25 GB Speicher, Lösch-Frist selbst wählen. Die Software bleibt kostenlos. myPlus = null: der Server kennt das Paket noch nicht. ---------- */
+let myPlus = null;
+async function loadMyPlus() {
+  if (DEMO) { myPlus = { plus: false, keep_days: 30, storage_gb: 5, ad_own: true }; return; }
+  const { data, error } = await sb.rpc('my_plus');
+  myPlus = !error && data ? data : null;
+}
+const PLUS_PRICE = { month: 1000, year: 10000 }; // Vorgabe, bis die Pläne plus-monat/plus-jahr eingeschaltet sind
+const KEEP_TXT = { 30: '1 Monat', 90: '3 Monate', 180: '6 Monate', 365: '1 Jahr' };
+function renderPlus() {
+  $('#plusCard').classList.toggle('hidden', !myPlus); renderKeep(); if (!myPlus) return;
+  const { p, any, cents, save } = addonOffer('plus', PLUS_PRICE, shopBill);
+  $$('#plusBill button').forEach(b => b.classList.toggle('on', b.dataset.bill === shopBill));
+  Object.assign($('#plusPlan').dataset, { plan: `plus-${shopBill === 'year' ? 'jahr' : 'monat'}`, cents });
+  $('#plusPrice').innerHTML = `${euro(cents)}<small><span>${PER[shopBill]}</span> · <span>zzgl. USt.</span>${save > 0 ? ` · <span>${save} % gespart</span>` : ''}</small>`;
+  const until = myPlus.until ? fmtDate(myPlus.until) : '';
+  $('#plusState').innerHTML = myPlus.plus
+    ? `<span class="tag">${profile?.is_admin ? 'Für dich als Betreiber immer dabei' : 'Gebucht'}</span>${!profile?.is_admin && until ? ` <span class="small muted"><span>${myPlus.abo ? 'verlängert sich am' : 'bis'}</span> ${until}</span>` : ''}`
+    : p ? `<button class="btn primary" data-buy type="button" ${shop.ready ? '' : 'disabled'}>Plus-Paket buchen</button>${shop.ready ? '' : ' <span class="small muted">Der Kauf wird gerade eingerichtet und ist bald verfügbar.</span>'}`
+    : '<button class="btn" type="button" disabled>Bald buchbar</button>';
+  if (profile?.is_admin && !any) $('#plusState').innerHTML += ' <span class="small muted">Für Kunden noch nicht buchbar – einschalten unter Verwaltung → Tarife („Für Kunden sichtbar“).</span>';
+  $('#plusPortal').classList.toggle('hidden', !myPlus.abo || !shop.ready);
+}
+$('#plusPortal').onclick = () => $('#shopPortal').onclick();
+$('#plusCard').addEventListener('click', buyPlan);
+// Lösch-Frist der Online-Galerien: mit Plus-Paket wählbar (Server set_photo_keep), sonst fest 1 Monat
+function renderKeep() {
+  $('#keepBox').classList.toggle('hidden', !myPlus); if (!myPlus) return;
+  const d = myPlus.keep_days, can = !!myPlus.plus;
+  $('#storeKeep')?.classList.add('hidden'); $('#storeKeepPm')?.classList.add('hidden'); // die Auswahl darunter sagt es genauer
+  $('#keepSel').value = String(d); $('#keepSel').disabled = !can; $('#keepSave').classList.toggle('hidden', !can);
+  $('#keepNote').innerHTML = can ? '<span>So lange bleiben Fotos, Videos und Videonachrichten online. Danach werden sie automatisch gelöscht – auf dem PC der Fotobox bleiben sie.</span>'
+    : '<span>Ohne Plus-Paket werden Fotos nach 1 Monat automatisch gelöscht. Mit dem Plus-Paket stellst du das selbst ein: 1 Monat, 3 Monate, 6 Monate oder 1 Jahr.</span>';
+}
+$('#keepSave').onclick = async () => {
+  if (DEMO) return toast('Demo-Modus – es wird nichts gespeichert');
+  const d = +$('#keepSel').value, cur = myPlus?.keep_days || 30; if (!KEEP_TXT[d] || d === cur) return;
+  if (d < cur && !await pmConfirm(`Fotos, die älter sind als ${KEEP_TXT[d]}, werden in der nächsten Nacht aus deinen Online-Galerien gelöscht. Das lässt sich nicht rückgängig machen. Trotzdem speichern?`, 'Speichern')) { $('#keepSel').value = String(cur); return; }
+  $('#keepSave').disabled = true;
+  const { data, error } = await sb.rpc('set_photo_keep', { p_days: d });
+  $('#keepSave').disabled = false;
+  if (error) { $('#keepSel').value = String(cur); return toast(error.message, 6000); }
+  myPlus.keep_days = +data || d; renderKeep(); toast('Gespeichert');
+};
 
 /* ---------- Foto-Shop für Gäste (Verwaltung): Produkte, Preise, Rechtstexte – gespeichert als photos/<Konto>/shop.json ---------- */
 let shCfg = null, shSample = '';
@@ -1542,7 +1645,7 @@ $('#hzSetup').onclick = async () => {
     const line = (ok, text) => `<div>${ok ? '✅' : '❌'} ${text}</div>`;
     out.innerHTML = line(r.cors === 200, 'Zugriff für Fotobox und Galerie (CORS)' + (r.corsText ? ': ' + esc(r.corsText) : ''))
       + line(r.policy < 300, 'Fotos über den Link lesbar (Regel gesetzt)' + (r.policyText ? ': ' + esc(r.policyText) : ''))
-      + line(r.lifecycleDays === 180, 'Fotos nach 6 Monaten automatisch löschen' + (r.lifecycleText ? ': ' + esc(r.lifecycleText) : ''))
+      + line(r.lifecycleDays === (r.lifecycleWant || 366), 'Fotos spätestens nach 1 Jahr automatisch löschen' + (r.lifecycleText ? ': ' + esc(r.lifecycleText) : ''))
       + line(r.write === 200, 'Probe-Datei schreiben' + (r.writeText ? ': ' + esc(r.writeText) : ''))
       + line(r.publicRead === 200, 'Probe-Datei ohne Anmeldung lesen')
       + line(r.publicList !== 200, 'Liste aller Fotos für Fremde gesperrt')
@@ -1803,7 +1906,7 @@ let shop = { plans: [], ready: false, addons: [] }, shopBill = 'month';
 const PER = { month: 'pro Monat', year: 'pro Jahr', once: 'einmalig' };
 const TIER_NAME = { free: 'Kostenlos', basis: 'Basis', pro: 'Fotobox' };
 // AGB-Fassung, die der Kunde vor dem Kauf bestätigt – gleich in supabase/functions/license-shop (sonst lehnt der Server den Kauf ab)
-const AGB_V = '2026-11-05';
+const AGB_V = '2026-11-21';
 // Karten der Preisübersicht. Preise und Kauf kommen aus der Tabelle plans (Kennung <tarif>-monat bzw. -jahr); solange ein Tarif
 // noch nicht eingeschaltet ist, zeigt die Karte den geplanten Preis und „bald buchbar“. Fotobox-Abo (Betreiber 05.11.2026): ein Preis
 // für beliebig viele Fotoboxen, 10 € im Monat oder 100 € im Jahr. devices_included >= FLAT_DEVICES bedeutet „beliebig viele“.
@@ -1814,6 +1917,13 @@ const TIER_CARDS = [
     lines: ['Beliebig viele Fotoboxen', 'Alle Fotobox-Funktionen: GIF, Boomerang, Video, Filter, Hintergrund entfernen, Virtueller Berater, Umfrage, Fernsteuerung', 'Beliebig viele Layouts, eigene Vorlagen und Bildschirme', 'Dein eigenes Logo, keine Wasserzeichen', 'Offline-Warteschlange inklusive'] },
 ];
 const ADDON_CARDS = [['mosaik', 'mosaic', 'Fotomosaik', { month: 500, year: 5400 }], ['karikatur', 'caricature', 'Live-Karikatur', { month: 500, year: 5400 }], ['videonachricht', 'videomsg', 'Videonachricht', { month: 500, year: 5400 }]];
+// Zusatzfunktion bzw. Plus-Paket im gewählten Abrechnungszeitraum: p = eingeschalteter Plan (sonst noch nicht buchbar), any = mindestens
+// einer der beiden Pläne ist eingeschaltet, cents = sein Preis bzw. der geplante, save = Rabatt des Jahrespreises – aus den
+// eingeschalteten Plänen, sonst aus den geplanten Preisen (nie gemischt)
+const addonOffer = (id, price, bill) => {
+  const plan = s => shop.plans.find(x => x.id === `${id}-${s}` && x.addon), m = plan('monat'), y = plan('jahr'), p = bill === 'year' ? y : m;
+  return { p, any: !!(m || y), cents: p ? p.cents : price[bill], save: bill !== 'year' ? 0 : m && y ? yearOff(m.cents, y.cents) : !m && !y ? yearOff(price.month, price.year) : 0 };
+};
 const yearOff = (m, y) => m > 0 && y > 0 ? Math.round(100 - y / (m * 12) * 100) : 0; // Rabatt des Jahrespreises in Prozent
 const showTarife = () => { $('#nav [data-tab="licenses"]')?.click(); setTimeout(() => $('#shopCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150); };
 window.showTarife = showTarife; // auch aus dem Ereignis-Editor („Tarife ansehen“)
@@ -1858,7 +1968,7 @@ const askBuy = c => new Promise(res => {
     ${addon ? '<p style="margin:10px 0 6px;color:#666;font-size:13px">Zusatzfunktion für dein ganzes Konto</p>' : flat ? '<p style="margin:10px 0 6px;font-weight:600">Beliebig viele Fotoboxen</p>' : `<p style="margin:10px 0 6px;font-weight:600">Für wie viele Fotoboxen?</p>
     <input type="number" min="1" max="50" value="${devN(dev?.value || incl)}" style="width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:10px;font:16px system-ui,sans-serif;margin-bottom:8px">
     <p style="margin:0 0 4px;color:#666;font-size:13px">${perBox ? `<span>je Fotobox</span> ${euro(cents)}` : `<span>${incl > 1 ? `${incl} Fotoboxen inklusive` : '1 Fotobox inklusive'}</span>${extra ? ` · <span>je weitere Fotobox</span> ${euro(extra)}` : ''}`}</p>`}
-    <p style="margin:0 0 12px"><span>Zusammen</span> <b data-s></b> <span>${per}</span></p>
+    <p style="margin:0 0 12px"><span>Zusammen</span> <b data-s></b> <span>${per}</span>${c.dataset.net ? ' <span>zzgl. USt.</span>' : ''}</p>
     <label style="display:flex;gap:8px;align-items:flex-start;margin:0 0 4px;font-size:14px;font-weight:400;color:#1d1d24;cursor:pointer"><input type="checkbox" data-agb style="width:auto;margin-top:4px"> <span>Ich habe die AGB gelesen und akzeptiere sie. Ich buche als Unternehmer.</span></label>
     <p style="margin:0 0 16px 24px;font-size:13px"><a href="agb.html" target="_blank" rel="noopener">AGB öffnen</a></p>
     <div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn" data-r="0">Abbrechen</button><button class="btn primary" data-r="1" disabled>Weiter zur Bezahlung</button></div></div>`;
@@ -1873,6 +1983,13 @@ const askBuy = c => new Promise(res => {
   document.addEventListener('keydown', key); document.body.appendChild(o); setTimeout(() => inp ? inp.select() : agb.focus(), 50);
 });
 async function pickTarif(q) {
+  if (/^plus(-monat|-jahr)?$/.test(String(q))) { // Link der Webseite zum Plus-Paket (auch im Kostenlos-Modus buchbar)
+    shopBill = /-jahr$/.test(q) ? 'year' : 'month';
+    $('#nav [data-tab="licenses"]')?.click();
+    await loadShop();
+    if ($('#plusCard').classList.contains('hidden')) return toast('Das Plus-Paket ist bald buchbar.', 6000);
+    $('#plusCard').classList.add('pick'); setTimeout(() => $('#plusCard').scrollIntoView({ behavior: 'smooth', block: 'center' }), 300); return;
+  }
   q = String(q).replace(/^(basis|pro|alles)-(monat|jahr)$/, 'fotobox-$2'); // alte Tarife der Webseite → Fotobox-Abo
   shopPick = q; shopBill = /-jahr$/.test(q) ? 'year' : /-monat$/.test(q) ? 'month' : shopBill;
   $('#nav [data-tab="licenses"]')?.click();
@@ -1912,7 +2029,7 @@ function renderShop() {
   $$('#shopCard [data-paid]').forEach(e => e.classList.toggle('hidden', FREE)); $$('#shopCard [data-freemode]').forEach(e => e.classList.toggle('hidden', !FREE));
   $('#shopPortal').classList.toggle('hidden', FREE || !bought || !shop.ready);
   $$('#shopBill button').forEach(b => b.classList.toggle('on', b.dataset.bill === shopBill));
-  $('#adFreeNote').hidden = cur !== 'free';
+  $('#adFreeNote').hidden = cur !== 'free' || !!myPlus; adNote();
   // Neues Preismodell: bezahlt (Fotobox-Abo bzw. eingetragene Lizenz, Betreiber immer), Test läuft oder kostenlos → Karte „Dein Tarif“
   const testOn = trialOn(), paid = !!profile?.is_admin || mine.some(paidLic) || new Date(myTier?.paid_until || 0) > Date.now();
   const shown = !cur ? null : paid ? 'pro' : testOn ? 'test' : 'free', boxes = mine.filter(paidLic).reduce((n, l) => n + (l.max_devices || 1), 0);
@@ -1948,15 +2065,17 @@ function renderShop() {
   const addonPaid = k => shop.addons.some(a => a.extra === k && a.plan !== 'test' && (!a.valid_until || new Date(a.valid_until) > Date.now()))
     || mine.some(l => l.active && (l.extras || []).includes(k));
   $('#shopAddons').innerHTML = ADDON_CARDS.map(([id, k, name, price]) => {
-    const p = shop.plans.find(x => x.id === `${id}-${sfx}` && x.addon), has = (myTier?.extras || []).includes(k), cents = p ? p.cents : price[shopBill];
-    const testOnly = !FREE && has && testOn && !addonPaid(k), plan = s => shop.plans.find(x => x.id === `${id}-${s}` && x.addon), save = off(plan('monat'), plan('jahr'), price);
+    const { p, cents, save } = addonOffer(id, price, shopBill), has = (myTier?.extras || []).includes(k);
+    const testOnly = !FREE && has && testOn && !addonPaid(k);
     return `<div class="card plan" data-plan="${esc(`${id}-${sfx}`)}" data-addon="1" data-cents="${cents}"><b>${esc(name)}</b><div class="price">${euro(cents)}<small><span>${per}</span>${save > 0 ? ` · <span>${save} % gespart</span>` : ''}</small></div>
       ${has && !testOnly ? '<span class="tag">Gebucht</span>' : `${testOnly ? '<span class="tag">Im Test</span>' : ''}${p && (FREE ? cur === 'pro' : mine.length || profile?.is_admin)
         ? `<button class="btn primary" data-buy ${shop.ready ? '' : 'disabled'}>Dazubuchen</button>` : `<button class="btn" disabled>${!p ? 'Bald buchbar' : FREE ? 'Zu Pro buchbar' : 'Mit Lizenz buchbar'}</button>`}`}</div>`;
   }).join('');
+  renderPlus();
   if (shopPick) (shopPick === 'test' ? $('#trialRow') : shopPick === 'kostenlos' ? $('#shopPlans [data-tier="free"]') : $(`#shopCard [data-plan="${shopPick}"]`))?.classList.add('pick');
 }
-$('#shopBill').addEventListener('click', e => { const b = e.target.closest('[data-bill]'); if (!b) return; shopBill = b.dataset.bill; renderShop(); });
+for (const id of ['#shopBill', '#plusBill']) // ein Schalter für beide Karten (renderShop zeichnet auch die Plus-Karte)
+  $(id).addEventListener('click', e => { const b = e.target.closest('[data-bill]'); if (!b) return; shopBill = b.dataset.bill; renderShop(); });
 $('#shopPlans').addEventListener('input', e => {
   const c = e.target.closest('.plan'); if (!c || !e.target.matches('[data-dev]')) return;
   c.querySelector('[data-sum] b').textContent = euro(planSum(+c.dataset.cents, +c.dataset.incl, +c.dataset.extra, devN(e.target.value)));
@@ -1970,6 +2089,10 @@ $('#shopCard').addEventListener('click', async e => {
     toast('Deine kostenlose Lizenz ist bereit. Melde dich in der Fotobox mit diesem Konto an.', 7000);
     await Promise.all([loadLicenses(), loadMyTier()]); renderShop(); return;
   }
+  return buyPlan(e);
+});
+// Knopf [data-buy] in einer Karte .plan (Tarif, Zusatzfunktion oder Plus-Paket): Rückfrage, dann die Bezahlseite von Stripe
+async function buyPlan(e) {
   const b = e.target.closest('[data-buy]'); if (!b) return;
   const c = b.closest('.plan'), dev = c.querySelector('[data-dev]');
   const n = await askBuy(c); if (!n) return; // Anzahl Fotoboxen, Gesamtpreis und AGB bestätigen
@@ -1978,7 +2101,7 @@ $('#shopCard').addEventListener('click', async e => {
   const { data, error } = await sb.functions.invoke('license-shop', { body: { action: 'checkout', plan: c.dataset.plan, devices: n, agb: AGB_V } });
   if (error || !/^https:\/\/checkout\.stripe\.com\//.test(data?.url || '')) { b.disabled = false; return toast(data?.error || 'Die Bezahlseite konnte nicht geöffnet werden.', 5000); }
   location.href = data.url;
-});
+}
 $('#shopPortal').onclick = async () => {
   $('#shopPortal').disabled = true;
   const { data, error } = await sb.functions.invoke('license-shop', { body: { action: 'portal' } });
@@ -2039,7 +2162,7 @@ $('#trialGo').onclick = async () => {
 { // Rückkehr von der Bezahlseite (Lizenz)
   const k = new URLSearchParams(location.search).get('lizenz');
   if (k) { history.replaceState(null, '', location.pathname); setTimeout(() => toast(k === 'ok' ? 'Danke! Die Zahlung ist eingegangen – deine Lizenz wird in wenigen Sekunden freigeschaltet.' : 'Kauf abgebrochen – es wurde nichts berechnet.', 7000), 800);
-    if (k === 'ok') setTimeout(() => me && Promise.all([loadLicenses(), loadMyTier()]).then(loadShop), 6000); } // loadShop: auch gebuchte Zusatzfunktionen neu
+    if (k === 'ok') setTimeout(() => me && Promise.all([loadLicenses(), loadMyTier(), loadMyPlus()]).then(() => { loadShop(); loadStorage(); }), 6000); } // loadShop: auch gebuchte Zusatzfunktionen neu
 }
 // Verwaltung: Tarife pflegen
 const BILLING = [['month', 'Abo monatlich'], ['year', 'Abo jährlich'], ['once', 'Einmalkauf']];
@@ -2051,7 +2174,7 @@ async function loadPlans() {
   $('#planList').innerHTML = list.length ? list.map(p => `<div class="planrow" data-id="${esc(p.id)}" data-sort="${p.sort || 0}">
       <div class="grid3"><div><label>Name</label><input data-f="name" value="${esc(p.name)}"></div>
         <div><label>Abrechnung</label><select data-f="billing">${BILLING.map(([k, n]) => `<option value="${k}" ${p.billing === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
-        <div><label>${'devices_included' in p ? 'Preis (€, brutto)' : 'Preis pro Fotobox (€, brutto)'}</label><input data-f="price" type="number" min="0" step="0.01" value="${(p.cents / 100).toFixed(2)}"></div>
+        <div><label>${(p.extras || []).includes('plus') ? 'Preis (€, netto – die USt. kommt beim Kauf dazu)' : 'devices_included' in p ? 'Preis (€, brutto)' : 'Preis pro Fotobox (€, brutto)'}</label><input data-f="price" type="number" min="0" step="0.01" value="${(p.cents / 100).toFixed(2)}"></div>
         ${'tier' in p ? `<div><label>Tarif-Stufe</label><select data-f="tier">${Object.entries(TIER_NAME).map(([k, n]) => `<option value="${k}" ${p.tier === k ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
         <div><label>Enthaltene Fotoboxen (999 = beliebig viele)</label><input data-f="incl" type="number" min="1" max="999" value="${p.devices_included || 1}"></div>
         <div><label>Je weitere Fotobox (€)</label><input data-f="extra" type="number" min="0" step="0.01" value="${((p.extra_cents || 0) / 100).toFixed(2)}"></div>
@@ -2091,10 +2214,12 @@ $('#planAdd').onclick = async () => {
 };
 /* ---------- Übersicht (Verwaltung): wer ist registriert, wer hat wie viel Guthaben bekommen und verbraucht ---------- */
 let ov = null;
+// wirksame Speicher-Grenze eines Kunden in GB: vom Server (mit Plus-Paket 25), ältere Datenbank: die eingetragene Grenze
+const quotaGb = id => ov?.quota?.[id] || ov?.storage?.[id]?.quota_gb || 5;
 async function loadOverview() {
   if (!profile?.is_admin || !$('#ovStats')) return;
   window.AdminBD?.load(sb, $('#bdPage'), esc, fmtDate); // Verwaltung → BoothDesigner: Konten, Tests, Abos, Besucher (admin-boothdesigner.js)
-  const [p, w, l, j, st, mk] = await Promise.all([
+  const [p, w, l, j, st, mk, pl] = await Promise.all([
     sb.from('profiles').select('id,email,name,is_admin,created_at').order('created_at', { ascending: false }),
     sb.from('ai_wallets').select('owner_id,balance'),
     (async () => { // Spalte „cents“ gibt es erst nach der Stripe-Migration
@@ -2103,11 +2228,13 @@ async function loadOverview() {
     })(),
     sb.from('ai_jobs').select('owner_id,cost,status,created_at').order('created_at', { ascending: false }).limit(5000),
     sb.from('storage_usage').select('owner_id,quota_gb,bytes,updated_at'), // erst nach SQL 202610240002
-    sb.rpc('admin_customer_marks') // BoothDesigner-Kennzeichen, erst nach SQL 202610280010
+    sb.rpc('admin_customer_marks'), // BoothDesigner-Kennzeichen, erst nach SQL 202610280010
+    sb.rpc('admin_storage_gb') // wirksame Speicher-Grenze je Konto (Plus-Paket 25 GB), erst nach SQL 202611210001
   ]);
   ov = { profiles: [].concat(p.data || []), wallets: [].concat(w.data || []), ledger: [].concat(l.data || []), jobs: [].concat(j.data || []).filter(x => x.status === 'succeeded'),
     storage: Object.fromEntries([].concat(st.data || []).map(x => [x.owner_id, x])),
-    marks: Object.fromEntries([].concat(mk?.data || []).filter(x => x && x.id).map(x => [x.id, x])) };
+    marks: Object.fromEntries([].concat(mk?.data || []).filter(x => x && x.id).map(x => [x.id, x])),
+    quota: pl?.data && typeof pl.data === 'object' ? pl.data : {} };
   renderOverview();
 }
 function renderOverview() {
@@ -2131,7 +2258,7 @@ function renderOverview() {
     tile(`${online} / ${devices.length}`, 'Eigene Fotoboxen online', 'gerade verbunden / gesamt') +
     tile(sum(lm, x => x.amount), 'Credits vergeben', `diesen Monat · gesamt ${sum(ov.ledger.filter(x => x.amount > 0), x => x.amount)}`) +
     tile(jm.length, 'KI-Bilder', `diesen Monat · ${sum(jm, x => x.cost)} Credits verbraucht`) +
-    tile(gbTxt(sum(Object.values(ov.storage || {}), x => +x.bytes || 0)) + ' GB', 'Speicher belegt', `alle Kunden zusammen · ${Object.values(ov.storage || {}).filter(x => x.bytes > (x.quota_gb || 5) * 1e9).length} über ihrer Grenze`) +
+    tile(gbTxt(sum(Object.values(ov.storage || {}), x => +x.bytes || 0)) + ' GB', 'Speicher belegt', `alle Kunden zusammen · ${Object.values(ov.storage || {}).filter(x => x.bytes > quotaGb(x.owner_id) * 1e9).length} über ihrer Grenze`) +
     tile(sum(ov.wallets, x => x.balance), 'Offenes Guthaben', 'Credits aller Kunden zusammen') +
     tile(euro(sum(ov.ledger.filter(inMonth), x => x.cents || 0)), 'Umsatz Guthaben', `diesen Monat über Stripe · gesamt ${euro(sum(ov.ledger, x => x.cents || 0))}`);
   const q = $('#ovSearch').value.toLowerCase(), mail = Object.fromEntries(ov.profiles.map(x => [x.id, x.email]));
@@ -2176,7 +2303,7 @@ $('#ovCustomers').addEventListener('click', async e => {
 // Speicher je Kunde (Standard 5 GB, nur Hinweis): Zelle „1,2 / 5 GB“ – Klick ändert die Grenze; „Speicher neu berechnen“ zählt bei Hetzner
 const gbTxt = b => (b / 1e9).toLocaleString('de-DE', { maximumFractionDigits: b < 1e10 ? 1 : 0 });
 function storeCell(id) {
-  const u = ov?.storage?.[id], q = u?.quota_gb || 5, b = +u?.bytes || 0, c = b > q * 1e9 ? 'var(--bad,#e5484d)' : b > q * 8e8 ? '#b8860b' : 'inherit';
+  const u = ov?.storage?.[id], q = quotaGb(id), b = +u?.bytes || 0, c = b > q * 1e9 ? 'var(--bad,#e5484d)' : b > q * 8e8 ? '#b8860b' : 'inherit';
   return `<a href="#" data-store="${esc(id)}" title="Grenze ändern" style="color:${c};white-space:nowrap">${u?.updated_at ? gbTxt(b) : '–'} / ${q} GB</a>`;
 }
 $('#ovCustomers').addEventListener('click', async e => {
@@ -2217,10 +2344,10 @@ async function loadStorage() {
     if (r) u = { bytes: r.bytes, quota_gb: r.quota_gb, updated_at: new Date().toISOString() };
   } catch (e) { console.warn('Speicher:', e.message); }
   if (!u?.updated_at) { el.textContent = 'Noch nicht berechnet.'; return; }
-  const q = u.quota_gb || 5, p = (+u.bytes || 0) / (q * 1e9);
+  const q = myPlus?.storage_gb || u.quota_gb || 5, p = (+u.bytes || 0) / (q * 1e9), more = myPlus && !myPlus.plus; // Plus-Paket: 25 GB
   el.innerHTML = `<div style="display:flex;justify-content:space-between;gap:10px;font-weight:600;color:inherit"><span>${gbTxt(+u.bytes || 0)} GB von ${q} GB belegt</span><span>${Math.round(p * 100)} %</span></div>
     <div style="height:10px;border-radius:99px;background:#e9e9ee;overflow:hidden;margin:8px 0"><div style="height:100%;width:${Math.min(100, p * 100).toFixed(1)}%;background:${p >= 1 ? '#e5484d' : p >= .8 ? '#F7C838' : '#3fb950'}"></div></div>
-    ${p >= 1 ? '<div class="msg err">Dein Speicher ist voll. Es wird trotzdem weiter hochgeladen – wenn du mehr Speicher brauchst, melde dich bei Photobox Memories.</div>' : p >= .8 ? '<div class="msg">Dein Speicher ist fast voll.</div>' : ''}`;
+    ${p >= 1 ? `<div class="msg err">${more ? 'Dein Speicher ist voll. Es wird trotzdem weiter hochgeladen – mit dem Plus-Paket hast du 25 GB.' : 'Dein Speicher ist voll. Es wird trotzdem weiter hochgeladen – wenn du mehr Speicher brauchst, melde dich bei Photobox Memories.'}</div>` : p >= .8 ? `<div class="msg">${more ? 'Dein Speicher ist fast voll. Mit dem Plus-Paket hast du 25 GB.' : 'Dein Speicher ist fast voll.'}</div>` : ''}`;
 }
 // Kunde hat sein Passwort vergessen (Funktion license-mail, nur Betreiber): Einmal-Passwort vergeben – der Kunde bekommt es per
 // Mail, der Betreiber sieht es einmal zum Vorlesen am Telefon – oder einen Link zum Festlegen eines neuen Passworts mailen
