@@ -1425,14 +1425,14 @@ let pmAd; // Werbung von Photobox Memories (einmal geladen, als Versprechen)
 async function adNow() {
   const own = !myPlus || myPlus.ad_own;
   $('#adNowWrap').classList.toggle('hidden', own); if (own) return;
-  const pm = await (pmAd ||= PM_AD.load(myPlus.pm_owner, CFG, true));
+  const pm = await (pmAd ||= PM_AD.load(myPlus.pm_owner, CFG, true).then(x => { if (!x) pmAd = undefined; return x; })); // Ladefehler nicht merken
   const x = PM_AD.withContact(pm, PM_AD.normalize(adCollect(), me.id, CFG));
   $('#adNow').innerHTML = PM_AD.has(x) ? PM_AD.html(x) : '<div class="small muted" style="padding:14px">Ohne Plus-Paket zeigt die Galerie die Werbung von Photobox Memories.</div>';
 }
 function adNote() {
   const el = $('#adPlusNote'), grace = !!myPlus?.ad_until, off = !!myPlus && !myPlus.ad_own; // ad_until kommt nur ohne Plus-Paket
   el.classList.toggle('hidden', !grace && !off);
-  el.innerHTML = grace ? `<span>Deine eigene Werbung erscheint noch bis</span> ${fmtDate(myPlus.ad_until)}. <span>Danach zeigen die Gäste-Seiten die Werbung von Photobox Memories mit deiner Telefonnummer – mit dem Plus-Paket bleibt es deine eigene.</span>`
+  el.innerHTML = grace ? `<span>Deine eigene Werbung erscheint noch bis</span> ${new Date(myPlus.ad_until).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}. <span>Danach zeigen die Gäste-Seiten die Werbung von Photobox Memories mit deiner Telefonnummer – mit dem Plus-Paket bleibt es deine eigene.</span>`
     : off ? '<span>Ohne Plus-Paket zeigen die Gäste-Seiten das Logo und die Werbung von Photobox Memories – mit deiner Telefon- und WhatsApp-Nummer. Mit dem Plus-Paket erscheint alles, was du hier einträgst.</span>' : '';
 }
 $('#adCard').addEventListener('input', adPreview);
