@@ -217,7 +217,7 @@
 
 <script src="config.js?v=20261025-1"></script>
 <script src="icons.js?v=20261017-2"></script>
-<script src="ad.js?v=20261123-1"></script>
+<script src="ad.js?v=20261125-1"></script>
 <script src="shop.js?v=20261023-2"></script>
 <script>
 (function () {
@@ -280,9 +280,15 @@
       .then(r => r.ok ? r.json() : 30).then(d => typeof d === 'number' && d > 0 ? d : 30).catch(() => 30));
     return keepMemo.get(owner);
   };
-  const keepAll = d => d >= 180 ? 'Die Fotos bleiben 6 Monate online und werden danach automatisch gelöscht.' : 'Die Fotos bleiben 1 Monat online und werden danach automatisch gelöscht.';
-  const keepOne = (d, vid) => vid ? (d >= 180 ? 'Dein Video bleibt 6 Monate online und wird danach automatisch gelöscht.' : 'Dein Video bleibt 1 Monat online und wird danach automatisch gelöscht.')
-    : (d >= 180 ? 'Dein Foto bleibt 6 Monate online und wird danach automatisch gelöscht.' : 'Dein Foto bleibt 1 Monat online und wird danach automatisch gelöscht.');
+  // Mit Plus-Paket wählt der Vermieter selbst: 1 Monat, 3 Monate, 6 Monate oder 1 Jahr (SQL 202611210001).
+  // Je Frist drei ganze Sätze (alle Fotos, ein Foto, ein Video) – ganze Sätze, damit die Übersetzung sie findet.
+  const KEEP = [
+    [365, 'Die Fotos bleiben 1 Jahr online und werden danach automatisch gelöscht.', 'Dein Foto bleibt 1 Jahr online und wird danach automatisch gelöscht.', 'Dein Video bleibt 1 Jahr online und wird danach automatisch gelöscht.'],
+    [180, 'Die Fotos bleiben 6 Monate online und werden danach automatisch gelöscht.', 'Dein Foto bleibt 6 Monate online und wird danach automatisch gelöscht.', 'Dein Video bleibt 6 Monate online und wird danach automatisch gelöscht.'],
+    [90, 'Die Fotos bleiben 3 Monate online und werden danach automatisch gelöscht.', 'Dein Foto bleibt 3 Monate online und wird danach automatisch gelöscht.', 'Dein Video bleibt 3 Monate online und wird danach automatisch gelöscht.'],
+    [0, 'Die Fotos bleiben 1 Monat online und werden danach automatisch gelöscht.', 'Dein Foto bleibt 1 Monat online und wird danach automatisch gelöscht.', 'Dein Video bleibt 1 Monat online und wird danach automatisch gelöscht.']];
+  const keepRow = d => KEEP.find(r => d >= r[0]);
+  const keepAll = d => keepRow(d)[1], keepOne = (d, vid) => keepRow(d)[vid ? 3 : 2];
   async function fetchGallery(password) {
     const res = await fetch(CFG.supabaseUrl + '/rest/v1/rpc/gallery_public', { method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey },
