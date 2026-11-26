@@ -1,6 +1,41 @@
 {
  "_hinweis": "Was ist neu in der Fotobox-Software – erscheint im Dashboard als Hinweis, sobald diese Version zum Herunterladen bereitsteht. Für Kunden verständlich, kurz, in allen 6 Sprachen. Neueste Version oben ergänzen.",
  "versions": {
+  "1.18.129": {
+   "date": "2026-11-25",
+   "notes": {
+    "de": [
+     "Drucken: „Maximale Anzahl an Kopien pro Gast“ gilt jetzt für die ganze Aufnahme. Hat ein Gast seine Kopien gedruckt, verschwindet die Drucken-Taste – er kann nicht mehr erneut drucken. Bei der nächsten Aufnahme ist die Taste wieder da.",
+     "Das gilt auch in der Gäste-Galerie: Jedes Foto lässt sich dort höchstens so oft nachdrucken, wie Sie eingestellt haben.",
+     "Teilen: Auf der Seite „Teilen“ gibt es jetzt den Schalter „QR-Code anzeigen“. Damit blenden Sie den QR-Code auf dem Bildschirm zum Teilen mit einem Klick ein oder aus – gleich daneben auch die Schaltfläche „Drucken“."
+    ],
+    "en": [
+     "Printing: “Maximum number of copies per guest” now applies to the whole session. Once a guest has printed their copies, the print button disappears – they can no longer print again. For the next session the button is back.",
+     "This also applies in the guest gallery: each photo can be reprinted there at most as often as you have set.",
+     "Sharing: the “Sharing” page now has a “Show QR code” switch. With it you show or hide the QR code on the sharing screen with one click – and right next to it the “Print” button."
+    ],
+    "tr": [
+     "Yazdırma: „Misafir başına en fazla kopya sayısı“ artık tüm çekim için geçerli. Misafir kopyalarını yazdırdığında yazdırma düğmesi kaybolur – yeniden yazdıramaz. Sonraki çekimde düğme yeniden görünür.",
+     "Bu, misafir galerisinde de geçerlidir: Her fotoğraf orada en fazla ayarladığınız sayıda yeniden yazdırılabilir.",
+     "Paylaşım: „Paylaşım“ sayfasında artık „QR kodu göster“ anahtarı var. Bununla paylaşım ekranındaki QR kodu tek tıkla gösterir veya gizlersiniz – hemen yanında „Yazdır“ düğmesi de var."
+    ],
+    "fr": [
+     "Impression : « Nombre maximal de copies par invité » vaut désormais pour toute la prise de vue. Une fois ses copies imprimées, le bouton d’impression disparaît – l’invité ne peut plus réimprimer. À la prise de vue suivante, le bouton est de retour.",
+     "Cela vaut aussi dans la galerie des invités : chaque photo peut y être réimprimée au maximum autant de fois que vous l’avez réglé.",
+     "Partage : la page « Partage » propose désormais l’interrupteur « Afficher le QR code ». Vous affichez ou masquez ainsi le QR code sur l’écran de partage en un clic – et juste à côté le bouton « Imprimer »."
+    ],
+    "es": [
+     "Impresión: «Número máximo de copias por invitado» se aplica ahora a toda la sesión. Cuando un invitado ha impreso sus copias, el botón de imprimir desaparece: ya no puede volver a imprimir. En la siguiente sesión el botón vuelve a estar.",
+     "Esto también se aplica en la galería de invitados: cada foto puede reimprimirse allí como máximo tantas veces como haya configurado.",
+     "Compartir: la página «Compartir» tiene ahora el interruptor «Mostrar código QR». Con él muestra u oculta el código QR en la pantalla de compartir con un clic, y justo al lado el botón «Imprimir»."
+    ],
+    "it": [
+     "Stampa: «Numero massimo di copie per ospite» vale ora per l’intera sessione. Quando un ospite ha stampato le sue copie, il pulsante di stampa scompare – non può più ristampare. Alla sessione successiva il pulsante è di nuovo presente.",
+     "Vale anche nella galleria degli ospiti: ogni foto può essere ristampata lì al massimo quante volte avete impostato.",
+     "Condivisione: nella pagina «Condivisione» c’è ora l’interruttore «Mostra il codice QR». Con esso mostrate o nascondete il codice QR nella schermata di condivisione con un clic – e subito accanto il pulsante «Stampa»."
+    ]
+   }
+  },
   "1.18.128": {
    "date": "2026-11-23",
    "notes": {
